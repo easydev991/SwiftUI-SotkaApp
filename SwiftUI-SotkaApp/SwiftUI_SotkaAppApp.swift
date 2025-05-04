@@ -26,6 +26,7 @@ struct SwiftUI_SotkaAppApp: App {
     var body: some Scene {
         WindowGroup {
             ContentView()
+                .dynamicTypeSize(...DynamicTypeSize.accessibility2)
         }
         .modelContainer(sharedModelContainer)
     }
