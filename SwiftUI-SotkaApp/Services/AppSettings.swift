@@ -59,6 +59,7 @@ import Observation
         ) as? String
     ) ?? "4.0.0"
 
+    @MainActor
     func setWorkoutNotificationsEnabled(_ enabled: Bool) {
         guard enabled else {
             workoutNotificationsEnabled = false
