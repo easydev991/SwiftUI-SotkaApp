@@ -4,6 +4,16 @@
     "%@" : {
 
     },
+    "About app" : {
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "О приложении"
+          }
+        }
+      }
+    },
     "Add Item" : {
 
     },
@@ -27,6 +37,16 @@
         }
       }
     },
+    "Cancel" : {
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Отмена"
+          }
+        }
+      }
+    },
     "Dark" : {
       "localizations" : {
         "ru" : {
@@ -43,6 +63,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Демо"
+          }
+        }
+      }
+    },
+    "Go to settings" : {
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Перейти"
           }
         }
       }
@@ -70,6 +100,38 @@
         }
       }
     },
+    "Notification permission denied" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "To receive workout reminders, you need to enable notification access in your phone settings"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Для напоминаний о тренировках необходимо дать доступ к уведомлениям в настройках телефона"
+          }
+        }
+      }
+    },
+    "Notification Time" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Notification time"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Время тренировки"
+          }
+        }
+      }
+    },
     "Rate the app" : {
       "localizations" : {
         "ru" : {
@@ -93,6 +155,16 @@
         }
       }
     },
+    "Settings" : {
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Настройки"
+          }
+        }
+      }
+    },
     "Share the app" : {
       "localizations" : {
         "ru" : {
@@ -109,6 +181,42 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Системная"
+          }
+        }
+      }
+    },
+    "Time for your daily workout!" : {
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Пришло время изменить себя!"
+          }
+        }
+      }
+    },
+    "Workout notifications" : {
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Напоминать о тренировке"
+          }
+        }
+      }
+    },
+    "Workout Reminder" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "SOTKA"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "SOTKA"
           }
         }
       }

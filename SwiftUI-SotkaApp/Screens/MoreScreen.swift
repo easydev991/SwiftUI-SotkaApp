@@ -14,31 +14,69 @@ struct MoreScreen: View {
 
     var body: some View {
         NavigationStack {
+            @Bindable var settings = appSettings
             List {
-                appThemePicker
-                rateAppButton
-                feedbackButton
-                shareAppButton
-                appVersionText
+                Section("Settings") {
+                    appThemePicker
+                    notificationToggle
+                    if settings.workoutNotificationsEnabled {
+                        makeNotificationTimePicker(
+                            $settings.workoutNotificationTime
+                        )
+                    }
+                }
+                Section("About app") {
+                    rateAppButton
+                    feedbackButton
+                    shareAppButton
+                    appVersionText
+                }
+            }
+            .animation(.default, value: appSettings.workoutNotificationsEnabled)
+            .navigationTitle("More")
+            .alert(
+                isPresented: $settings.showNotificationError,
+                error: appSettings.notificationError
+            ) {
+                Button("Cancel") {}
+                Button("Go to settings") {
+                    if let url = URL(string: UIApplication.openSettingsURLString), UIApplication.shared.canOpenURL(url) {
+                        UIApplication.shared.open(url)
+                    }
+                }
             }
         }
-        .scrollBounceBehavior(.basedOnSize)
-        .navigationTitle("More")
     }
 
+    @ViewBuilder
     private var appThemePicker: some View {
-        Picker(
-            "App theme",
-            selection: .init(
-                get: { appSettings.appTheme },
-                set: { appSettings.appTheme = $0 }
-            )
-        ) {
+        @Bindable var settings = appSettings
+        Picker("App theme", selection: $settings.appTheme) {
             ForEach(AppTheme.allCases) {
                 Text($0.title).tag($0)
             }
         }
         .accessibilityIdentifier("appThemeButton")
+    }
+
+    private var notificationToggle: some View {
+        Toggle(
+            "Workout notifications",
+            isOn: .init(
+                get: { appSettings.workoutNotificationsEnabled },
+                set: {
+                    appSettings.setWorkoutNotificationsEnabled($0)
+                }
+            )
+        )
+    }
+
+    private func makeNotificationTimePicker(_ value: Binding<Date>) -> some View {
+        DatePicker(
+            "Notification Time",
+            selection: value,
+            displayedComponents: .hourAndMinute
+        )
     }
 
     private var feedbackButton: some View {
