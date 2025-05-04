@@ -29,9 +29,22 @@
 		674A8A7A2DC758BC003F6E50 /* SwiftUI-SotkaAppUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = "SwiftUI-SotkaAppUITests.xctest"; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
+/* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
+		676FF2DF2DC7D02700FEE8D8 /* Exceptions for "SwiftUI-SotkaApp" folder in "SwiftUI-SotkaApp" target */ = {
+			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
+			membershipExceptions = (
+				SupportingFiles/Info.plist,
+			);
+			target = 674A8A602DC758BB003F6E50 /* SwiftUI-SotkaApp */;
+		};
+/* End PBXFileSystemSynchronizedBuildFileExceptionSet section */
+
 /* Begin PBXFileSystemSynchronizedRootGroup section */
 		674A8A632DC758BB003F6E50 /* SwiftUI-SotkaApp */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
+			exceptions = (
+				676FF2DF2DC7D02700FEE8D8 /* Exceptions for "SwiftUI-SotkaApp" folder in "SwiftUI-SotkaApp" target */,
+			);
 			path = "SwiftUI-SotkaApp";
 			sourceTree = "<group>";
 		};
@@ -192,6 +205,7 @@
 			knownRegions = (
 				en,
 				Base,
+				ru,
 			);
 			mainGroup = 674A8A582DC758BB003F6E50;
 			minimizedProjectReferenceProxies = 1;
@@ -329,6 +343,7 @@
 				ONLY_ACTIVE_ARCH = YES;
 				SDKROOT = iphoneos;
 				SWIFT_ACTIVE_COMPILATION_CONDITIONS = "DEBUG $(inherited)";
+				SWIFT_EMIT_LOC_STRINGS = YES;
 				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
 			};
 			name = Debug;
@@ -386,6 +401,7 @@
 				MTL_FAST_MATH = YES;
 				SDKROOT = iphoneos;
 				SWIFT_COMPILATION_MODE = wholemodule;
+				SWIFT_EMIT_LOC_STRINGS = YES;
 				VALIDATE_PRODUCT = YES;
 			};
 			name = Release;
@@ -400,7 +416,9 @@
 				DEVELOPMENT_TEAM = 3PHS45582J;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = "SwiftUI-SotkaApp/SupportingFiles/Info.plist";
 				INFOPLIST_KEY_CFBundleDisplayName = SOTKA;
+				INFOPLIST_KEY_NSCameraUsageDescription = "Camera access is required to create your profile and progress photos";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchStoryboardName = LaunchScreen.storyboard;
@@ -432,7 +450,9 @@
 				DEVELOPMENT_TEAM = 3PHS45582J;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = "SwiftUI-SotkaApp/SupportingFiles/Info.plist";
 				INFOPLIST_KEY_CFBundleDisplayName = SOTKA;
+				INFOPLIST_KEY_NSCameraUsageDescription = "Camera access is required to create your profile and progress photos";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchStoryboardName = LaunchScreen.storyboard;

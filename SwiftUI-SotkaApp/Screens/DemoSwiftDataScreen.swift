@@ -1,5 +1,5 @@
 //
-//  ContentView.swift
+//  DemoSwiftDataScreen.swift
 //  SwiftUI-SotkaApp
 //
 //  Created by Олег Еременко on 04.05.2025.
@@ -8,7 +8,7 @@
 import SwiftUI
 import SwiftData
 
-struct ContentView: View {
+struct DemoSwiftDataScreen: View {
     @Environment(\.modelContext) private var modelContext
     @Query private var items: [Item]
 
@@ -55,7 +55,9 @@ struct ContentView: View {
     }
 }
 
+#if DEBUG
 #Preview {
-    ContentView()
+    DemoSwiftDataScreen()
         .modelContainer(for: Item.self, inMemory: true)
 }
+#endif
