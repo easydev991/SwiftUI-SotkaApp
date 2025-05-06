@@ -110,7 +110,7 @@
         },
         "ru" : {
           "stringUnit" : {
-            "state" : "needs_review",
+            "state" : "translated",
             "value" : "Для напоминаний о тренировках необходимо дать доступ к уведомлениям в настройках телефона"
           }
         }
@@ -126,8 +126,18 @@
         },
         "ru" : {
           "stringUnit" : {
-            "state" : "needs_review",
+            "state" : "translated",
             "value" : "Время тренировки"
+          }
+        }
+      }
+    },
+    "Official website" : {
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Официальный сайт"
           }
         }
       }
@@ -189,7 +199,7 @@
       "localizations" : {
         "ru" : {
           "stringUnit" : {
-            "state" : "needs_review",
+            "state" : "translated",
             "value" : "Пришло время изменить себя!"
           }
         }
@@ -215,7 +225,7 @@
         },
         "ru" : {
           "stringUnit" : {
-            "state" : "needs_review",
+            "state" : "translated",
             "value" : "SOTKA"
           }
         }

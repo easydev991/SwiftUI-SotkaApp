@@ -28,6 +28,7 @@ struct MoreScreen: View {
                 Section("About app") {
                     rateAppButton
                     feedbackButton
+                    officialSiteButton
                     shareAppButton
                     appVersionText
                 }
@@ -89,6 +90,14 @@ struct MoreScreen: View {
         if let appReviewLink = URL(string: "https://apps.apple.com/app/\(appId)?action=write-review") {
             Link("Rate the app", destination: appReviewLink)
                 .accessibilityIdentifier("rateAppButton")
+        }
+    }
+    
+    @ViewBuilder
+    private var officialSiteButton: some View {
+        if let officialSiteLink = URL(string: "https://workout.su") {
+            Link("Official website", destination: officialSiteLink)
+                .accessibilityIdentifier("officialSiteButton")
         }
     }
 
