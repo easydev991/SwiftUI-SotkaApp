@@ -67,6 +67,16 @@
         }
       }
     },
+    "GitHub page" : {
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ссылка на GitHub"
+          }
+        }
+      }
+    },
     "Go to settings" : {
       "localizations" : {
         "ru" : {
@@ -185,6 +195,16 @@
         }
       }
     },
+    "Support the project" : {
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Поддержать проект"
+          }
+        }
+      }
+    },
     "System" : {
       "localizations" : {
         "ru" : {
@@ -227,6 +247,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "SOTKA"
+          }
+        }
+      }
+    },
+    "WORKOUT shop" : {
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Магазин WORKOUT"
           }
         }
       }

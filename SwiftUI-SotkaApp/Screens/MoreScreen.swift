@@ -32,6 +32,10 @@ struct MoreScreen: View {
                     shareAppButton
                     appVersionText
                 }
+                Section("Support the project") {
+                    workoutShopButton
+                    githubButton
+                }
             }
             .animation(.default, value: appSettings.workoutNotificationsEnabled)
             .navigationTitle("More")
@@ -119,6 +123,22 @@ struct MoreScreen: View {
             Text("\(appSettings.appVersion)")
         }
         .foregroundStyle(.secondary)
+    }
+    
+    @ViewBuilder
+    private var workoutShopButton: some View {
+        if let shopLink = URL(string: "https://workoutshop.ru/?utm_source=iOS&utm_medium=100&utm_campaign=NASTROIKI") {
+            Link("WORKOUT shop", destination: shopLink)
+                .accessibilityIdentifier("workoutShopButton")
+        }
+    }
+    
+    @ViewBuilder
+    private var githubButton: some View {
+        if let githubLink = URL(string: "https://github.com/easydev991/SwiftUI-SotkaApp") {
+            Link("GitHub page", destination: githubLink)
+                .accessibilityIdentifier("githubButton")
+        }
     }
 }
 
