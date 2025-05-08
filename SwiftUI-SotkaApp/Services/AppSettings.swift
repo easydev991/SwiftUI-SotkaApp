@@ -9,6 +9,10 @@ import SwiftUI
 import Observation
 
 @Observable final class AppSettings {
+    private let audioPlayer = AudioPlayerManager(fileName: "timerSound", fileExtension: "mp3")
+    let appVersion = (
+        Bundle.main.object(forInfoDictionaryKey: "CFBundleShortVersionString") as? String
+    ) ?? "4.0.0"
     var showNotificationError = false
     var notificationError: NotificationError?
 
@@ -64,12 +68,6 @@ import Observation
             }
         }
     }
-
-    let appVersion = (
-        Bundle.main.object(
-            forInfoDictionaryKey: "CFBundleShortVersionString"
-        ) as? String
-    ) ?? "4.0.0"
 
     @MainActor
     func setWorkoutNotificationsEnabled(_ enabled: Bool) {
