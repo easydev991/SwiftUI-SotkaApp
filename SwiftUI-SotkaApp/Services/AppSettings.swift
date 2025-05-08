@@ -28,11 +28,16 @@ import Observation
     var workoutNotificationsEnabled: Bool {
         get {
             access(keyPath: \.workoutNotificationsEnabled)
-            return UserDefaults.standard.bool(forKey: "workoutNotificationsEnabled")
+            return UserDefaults.standard.bool(
+                forKey: Key.workoutNotificationsEnabled.rawValue
+            )
         }
         set {
             withMutation(keyPath: \.workoutNotificationsEnabled) {
-                UserDefaults.standard.set(newValue, forKey: "workoutNotificationsEnabled")
+                UserDefaults.standard.set(
+                    newValue,
+                    forKey: Key.workoutNotificationsEnabled.rawValue
+                )
             }
         }
     }
@@ -40,12 +45,19 @@ import Observation
     var workoutNotificationTime: Date {
         get {
             access(keyPath: \.workoutNotificationTime)
-            let storedTime = UserDefaults.standard.double(forKey: "workoutNotificationTime")
-            return storedTime == 0 ? defaultNotificationTime : Date(timeIntervalSinceReferenceDate: storedTime)
+            let storedTime = UserDefaults.standard.double(
+                forKey: Key.workoutNotificationTime.rawValue
+            )
+            return storedTime == 0
+            ? defaultNotificationTime
+            : Date(timeIntervalSinceReferenceDate: storedTime)
         }
         set {
             withMutation(keyPath: \.workoutNotificationTime) {
-                UserDefaults.standard.set(newValue.timeIntervalSinceReferenceDate, forKey: "workoutNotificationTime")
+                UserDefaults.standard.set(
+                    newValue.timeIntervalSinceReferenceDate,
+                    forKey: Key.workoutNotificationTime.rawValue
+                )
             }
             if workoutNotificationsEnabled {
                 scheduleDailyNotification()
@@ -137,5 +149,19 @@ enum NotificationError: Error, LocalizedError {
 
     var errorDescription: String? {
         NSLocalizedString("Notification permission denied", comment: "")
+    }
+}
+
+extension AppSettings {
+    private enum Key: String {
+        case appTheme
+        /// Тоггл для ежедневных уведомлений о тренировках
+        ///
+        /// Значение взял из старого приложения
+        case workoutNotificationsEnabled = "WorkoutTrainNotification"
+        /// Время ежедневного уведомления о тренировке
+        ///
+        /// Значение взял из старого приложения
+        case workoutNotificationTime = "WorkoutTrainNotificationDate"
     }
 }
