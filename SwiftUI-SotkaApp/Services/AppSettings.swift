@@ -10,6 +10,7 @@ import Observation
 
 @Observable final class AppSettings {
     private let audioPlayer = AudioPlayerManager(fileName: "timerSound", fileExtension: "mp3")
+    private let vibrationService = VibrationService()
     let appVersion = (
         Bundle.main.object(forInfoDictionaryKey: "CFBundleShortVersionString") as? String
     ) ?? "4.0.0"
@@ -19,12 +20,15 @@ import Observation
     var appTheme: AppTheme {
         get {
             access(keyPath: \.appTheme)
-            let rawValue = UserDefaults.standard.integer(forKey: "appTheme")
+            let rawValue = UserDefaults.standard.integer(forKey: Key.appTheme.rawValue)
             return .init(rawValue: rawValue) ?? .system
         }
         set {
             withMutation(keyPath: \.appTheme) {
-                UserDefaults.standard.setValue(newValue.rawValue, forKey: "appTheme")
+                UserDefaults.standard.setValue(
+                    newValue.rawValue,
+                    forKey: Key.appTheme.rawValue
+                )
             }
         }
     }
@@ -65,6 +69,35 @@ import Observation
             }
             if workoutNotificationsEnabled {
                 scheduleDailyNotification()
+            }
+        }
+    }
+    
+    var playTimerSound: Bool {
+        get {
+            access(keyPath: \.playTimerSound)
+            return UserDefaults.standard.bool(forKey: Key.playTimerSound.rawValue)
+        }
+        set {
+            withMutation(keyPath: \.playTimerSound) {
+                UserDefaults.standard.set(newValue, forKey: Key.playTimerSound.rawValue)
+            }
+            if newValue { audioPlayer.play() }
+        }
+    }
+    
+    @MainActor
+    var vibrate: Bool {
+        get {
+            access(keyPath: \.vibrate)
+            return UserDefaults.standard.bool(forKey: Key.vibrate.rawValue)
+        }
+        set {
+            withMutation(keyPath: \.vibrate) {
+                UserDefaults.standard.set(newValue, forKey: Key.vibrate.rawValue)
+            }
+            if newValue {
+                vibrationService.perform()
             }
         }
     }
@@ -153,7 +186,7 @@ enum NotificationError: Error, LocalizedError {
 extension AppSettings {
     private enum Key: String {
         case appTheme
-        /// Тоггл для ежедневных уведомлений о тренировках
+        /// Ежедневные уведомления о тренировках
         ///
         /// Значение взял из старого приложения
         case workoutNotificationsEnabled = "WorkoutTrainNotification"
@@ -161,5 +194,13 @@ extension AppSettings {
         ///
         /// Значение взял из старого приложения
         case workoutNotificationTime = "WorkoutTrainNotificationDate"
+        /// Воспроизводить звук по окончании отдыха
+        ///
+        /// Значение взял из старого приложения
+        case playTimerSound = "WorkoutPlayTimerSound"
+        /// Вибрировать по окончании отдыха
+        ///
+        /// Значение взял из старого приложения
+        case vibrate = "WorkoutPlayVibrate"
     }
 }

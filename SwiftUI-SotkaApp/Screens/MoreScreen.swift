@@ -24,6 +24,8 @@ struct MoreScreen: View {
                             $settings.workoutNotificationTime
                         )
                     }
+                    makeTimerSoundToggle($settings.playTimerSound)
+                    makeVibrateToggle($settings.vibrate)
                 }
                 Section("About app") {
                     rateAppButton
@@ -82,6 +84,14 @@ struct MoreScreen: View {
             selection: value,
             displayedComponents: .hourAndMinute
         )
+    }
+    
+    private func makeTimerSoundToggle(_ value: Binding<Bool>) -> some View {
+        Toggle("TimerSoundToggle", isOn: value)
+    }
+    
+    private func makeVibrateToggle(_ value: Binding<Bool>) -> some View {
+        Toggle("TimerVibrateToggle", isOn: value)
     }
 
     private var feedbackButton: some View {

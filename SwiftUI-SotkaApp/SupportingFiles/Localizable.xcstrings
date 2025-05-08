@@ -225,6 +225,38 @@
         }
       }
     },
+    "TimerSoundToggle" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Play sound after rest"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Звук после отдыха"
+          }
+        }
+      }
+    },
+    "TimerVibrateToggle" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Vibrate after rest"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Вибрация после отдыха"
+          }
+        }
+      }
+    },
     "Workout notifications" : {
       "localizations" : {
         "ru" : {

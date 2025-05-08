@@ -32,6 +32,7 @@ final class AudioPlayerManager {
             try session.setActive(true)
         } catch {
             logger.error("Ошибка audioSession: \(error.localizedDescription, privacy: .public)")
+            assertionFailure()
         }
     }
     
@@ -41,6 +42,7 @@ final class AudioPlayerManager {
             withExtension: fileExtension
         ) else {
             logger.error("Звуковой файл с названием \(fileName).\(fileExtension) не найден")
+            assertionFailure()
             return
         }
         do {
@@ -48,6 +50,7 @@ final class AudioPlayerManager {
             audioPlayer?.prepareToPlay()
         } catch {
             logger.error("Ошибка инициализации аудиоплеера: \(error.localizedDescription, privacy: .public)")
+            assertionFailure()
         }
     }
     
