@@ -9,7 +9,7 @@ import SwiftUI
 import SwiftData
 
 struct RootScreen: View {
-    @State private var tab = Tab.demo
+    @State private var tab = Tab.home
 
     var body: some View {
         TabView(selection: $tab) {
@@ -24,22 +24,30 @@ struct RootScreen: View {
 
 extension RootScreen {
     private enum Tab: CaseIterable {
-        case demo
+        case home
+        case profile
         case more
 
         private var localizedTitle: LocalizedStringKey {
-            self == .demo ? "Demo" : "More"
+            switch self {
+            case .home: "Home"
+            case .profile: "Profile"
+            case .more: "More"
+            }
         }
 
         private var systemImageName: String {
-            self == .demo
-            ? "list.bullet"
-            : "gear"
+            switch self {
+            case .home: "house"
+            case .profile: "person"
+            case .more: "gear"
+            }
         }
 
         private var accessibilityId: String {
             switch self {
-            case .demo: "demoTabButton"
+            case .home: "demoTabButton"
+            case .profile: "profileTabButton"
             case .more: "moreTabButton"
             }
         }
@@ -55,7 +63,8 @@ extension RootScreen {
         @MainActor @ViewBuilder
         var screen: some View {
             switch self {
-            case .demo: DemoSwiftDataScreen()
+            case .home: DemoSwiftDataScreen()
+            case .profile: ProfileScreen()
             case .more: MoreScreen()
             }
         }
