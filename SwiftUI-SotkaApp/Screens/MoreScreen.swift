@@ -18,6 +18,7 @@ struct MoreScreen: View {
             List {
                 Section("Settings") {
                     appThemePicker
+                    appLanguageButton
                     notificationToggle
                     if settings.workoutNotificationsEnabled {
                         makeNotificationTimePicker(
@@ -44,17 +45,6 @@ struct MoreScreen: View {
             }
             .animation(.default, value: appSettings.workoutNotificationsEnabled)
             .navigationTitle("More")
-            .alert(
-                isPresented: $settings.showNotificationError,
-                error: appSettings.notificationError
-            ) {
-                Button("Cancel") {}
-                Button("Go to settings") {
-                    if let url = URL(string: UIApplication.openSettingsURLString), UIApplication.shared.canOpenURL(url) {
-                        UIApplication.shared.open(url)
-                    }
-                }
-            }
         }
     }
 
@@ -68,8 +58,28 @@ struct MoreScreen: View {
         }
         .accessibilityIdentifier("appThemeButton")
     }
+    
+    @ViewBuilder
+    private var appLanguageButton: some View {
+        @Bindable var settings = appSettings
+        Picker("App language", selection: .constant(AppLanguage.makeCurrentValue(locale.identifier))) {
+            ForEach(AppLanguage.allCases) {
+                Text($0.title).tag($0)
+            }
+        }
+        .overlay { Rectangle().opacity(0.0001) }
+        .onTapGesture {
+            settings.showLanguageAlert.toggle()
+        }
+        .alert("Change language alert title", isPresented: $settings.showLanguageAlert) {
+            cancelButton
+            settingsButton
+        }
+    }
 
+    @ViewBuilder
     private var notificationToggle: some View {
+        @Bindable var settings = appSettings
         Toggle(
             "Workout notifications",
             isOn: .init(
@@ -79,6 +89,13 @@ struct MoreScreen: View {
                 }
             )
         )
+        .alert(
+            isPresented: $settings.showNotificationError,
+            error: appSettings.notificationError
+        ) {
+            cancelButton
+            settingsButton
+        }
     }
 
     private func makeNotificationTimePicker(_ value: Binding<Date>) -> some View {
@@ -159,6 +176,20 @@ struct MoreScreen: View {
         if let githubLink = URL(string: "https://github.com/easydev991/SwiftUI-SotkaApp") {
             Link("GitHub page", destination: githubLink)
                 .accessibilityIdentifier("githubButton")
+        }
+    }
+    
+    private var cancelButton: some View {
+        Button("Cancel", role: .cancel) {}
+    }
+    
+    private var settingsButton: some View {
+        Button("Go to settings") {
+            guard let url = URL(string: UIApplication.openSettingsURLString),
+                  UIApplication.shared.canOpenURL(url) else {
+                return
+            }
+            UIApplication.shared.open(url)
         }
     }
 }

@@ -17,6 +17,16 @@
     "Add Item" : {
 
     },
+    "App language" : {
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Язык приложения"
+          }
+        }
+      }
+    },
     "App theme" : {
       "localizations" : {
         "ru" : {
@@ -47,6 +57,22 @@
         }
       }
     },
+    "Change language alert title" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The language can be changed in the phone settings"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Язык можно поменять в настройках телефона"
+          }
+        }
+      }
+    },
     "Dark" : {
       "localizations" : {
         "ru" : {
@@ -57,12 +83,12 @@
         }
       }
     },
-    "Demo" : {
+    "English" : {
       "localizations" : {
         "ru" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Демо"
+            "value" : "Английский"
           }
         }
       }
@@ -83,6 +109,19 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Перейти"
+          }
+        }
+      }
+    },
+    "Hello, World!" : {
+
+    },
+    "Home" : {
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Главная"
           }
         }
       }
@@ -162,12 +201,32 @@
         }
       }
     },
+    "Profile" : {
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Профиль"
+          }
+        }
+      }
+    },
     "Rate the app" : {
       "localizations" : {
         "ru" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "Оценить приложение"
+          }
+        }
+      }
+    },
+    "Russian" : {
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Русский"
           }
         }
       }

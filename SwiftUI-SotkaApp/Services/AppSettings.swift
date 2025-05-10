@@ -14,6 +14,7 @@ import Observation
     let appVersion = (
         Bundle.main.object(forInfoDictionaryKey: "CFBundleShortVersionString") as? String
     ) ?? "4.0.0"
+    var showLanguageAlert = false
     var showNotificationError = false
     var notificationError: NotificationError?
 
