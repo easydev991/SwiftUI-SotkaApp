@@ -63,7 +63,7 @@ extension RootScreen {
         @MainActor @ViewBuilder
         var screen: some View {
             switch self {
-            case .home: DemoSwiftDataScreen()
+            case .home: HomeScreen()
             case .profile: ProfileScreen()
             case .more: MoreScreen()
             }

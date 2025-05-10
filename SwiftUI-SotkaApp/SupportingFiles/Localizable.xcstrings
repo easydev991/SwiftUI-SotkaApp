@@ -47,6 +47,16 @@
         }
       }
     },
+    "Australian pull-ups" : {
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Подтягивания австралийские"
+          }
+        }
+      }
+    },
     "Cancel" : {
       "localizations" : {
         "ru" : {
@@ -73,6 +83,16 @@
         }
       }
     },
+    "Cycles" : {
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Круги"
+          }
+        }
+      }
+    },
     "Dark" : {
       "localizations" : {
         "ru" : {
@@ -82,6 +102,9 @@
           }
         }
       }
+    },
+    "Demo SwiftData" : {
+      "shouldTranslate" : false
     },
     "English" : {
       "localizations" : {
@@ -98,7 +121,7 @@
         "ru" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Ссылка на GitHub"
+            "value" : "Страница GitHub"
           }
         }
       }
@@ -113,9 +136,6 @@
         }
       }
     },
-    "Hello, World!" : {
-
-    },
     "Home" : {
       "localizations" : {
         "ru" : {
@@ -129,12 +149,32 @@
     "Item at %@" : {
 
     },
+    "Knees push-ups" : {
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Отжимания с колен"
+          }
+        }
+      }
+    },
     "Light" : {
       "localizations" : {
         "ru" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "Светлая"
+          }
+        }
+      }
+    },
+    "Lunges" : {
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Выпады"
           }
         }
       }
@@ -211,12 +251,48 @@
         }
       }
     },
+    "Pull-ups" : {
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Подтягивания"
+          }
+        }
+      }
+    },
+    "Push-ups" : {
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Отжимания"
+          }
+        }
+      }
+    },
     "Rate the app" : {
       "localizations" : {
         "ru" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "Оценить приложение"
+          }
+        }
+      }
+    },
+    "RestDay" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Rest"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Отдых"
           }
         }
       }
@@ -244,6 +320,16 @@
         }
       }
     },
+    "Sets" : {
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Подходы"
+          }
+        }
+      }
+    },
     "Settings" : {
       "localizations" : {
         "ru" : {
@@ -264,12 +350,54 @@
         }
       }
     },
+    "SickDay" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sick"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Болезнь"
+          }
+        }
+      }
+    },
+    "Squats" : {
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Приседания"
+          }
+        }
+      }
+    },
     "Street Workout: Parks" : {
       "localizations" : {
         "ru" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "Street Workout: Площадки"
+          }
+        }
+      }
+    },
+    "StretchDay" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Stretch"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Растяжка"
           }
         }
       }
@@ -336,6 +464,342 @@
         }
       }
     },
+    "Turbo 93-1" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Х pull-ups in lower part of the movement\\nХ pull-ups in upper part of the movement\\nХ pull-ups in full range of motion"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Х подтягиваний в нижней половине движения\\nХ подтягиваний в верхней половине движения\\nХ подтягиваний в полную амплитуду"
+          }
+        }
+      }
+    },
+    "Turbo 93-2" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Pull-ups with grip change"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Подтягивания с изменением хвата"
+          }
+        }
+      }
+    },
+    "Turbo 93-3" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Х pull-ups - Y seconds chin above the bar hang,\\nХ pull-ups - Y seconds flexed elbows 90 degrees hang,\\nХ pull-ups - Y seconds dead hang,\\nХ pull-ups - Y seconds flexed elbows 90 degrees hang,\\nХ pull-ups - Y seconds chin above the bar hang"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Х подтягиваний - Y секунд вис подбородок за перекладиной,\\nХ подтягиваний - Y секунд вис с углом 90 градусов в руках голова под перекладиной,\\nХ подтягиваний - Y секунд вис в нижнем положении(полный разгиб),\\nХ подтягиваний - Y секунд вис с углом 90 градусов в руках голова под перекладиной,\\nХ подтягиваний - Y секунд вис подбородок за перекладиной"
+          }
+        }
+      }
+    },
+    "Turbo 93-4" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Pull-ups with grip change"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Подтягивания с изменением хвата"
+          }
+        }
+      }
+    },
+    "Turbo 93-5" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Maximum neutral grip pull-ups on single bar"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Максимум подтягиваний нейтральным хватом на одной перекладине"
+          }
+        }
+      }
+    },
+    "Turbo 94 pull-ups" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tuck L-sit pull-ups"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Подтягивания с согнутыми ногами"
+          }
+        }
+      }
+    },
+    "Turbo 94 push-ups" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Hindu push-ups"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Индийские отжимания"
+          }
+        }
+      }
+    },
+    "Turbo 94 squats" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Spartan squats"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Спартанские наклоны"
+          }
+        }
+      }
+    },
+    "Turbo 95-1" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "1 minute Horseman - 10 jump squats - 1 minute Horsemen - 10 jump squats - 1 minute Horseman - 10 jump squats"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "1 минута стульчик - 10 прыжков - 1 минута стульчик - 10 прыжков - 1 минута стульчик - 10 прыжков"
+          }
+        }
+      }
+    },
+    "Turbo 95-2" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "1 minute Horseman - 10 jump squats - 1 minute Horsemen - 10 jump squats"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "1 минута стульчик - 10 прыжков - 1 минута стульчик - 10 прыжков"
+          }
+        }
+      }
+    },
+    "Turbo 95-3" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "1 minute Horseman - 10 jump squats"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "1 минута стульчик - 10 прыжков"
+          }
+        }
+      }
+    },
+    "Turbo 95-4" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "1 minute Horseman - 10 jump squats - 1 minute Horsemen - 10 jump squats"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "1 минута стульчик - 10 прыжков - 1 минута стульчик - 10 прыжков"
+          }
+        }
+      }
+    },
+    "Turbo 95-5" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "1 minute Horseman - 10 jump squats - 1 minute Horsemen - 10 jump squats - 1 minute Horseman - 10 jump squats"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "1 минута стульчик - 10 прыжков - 1 минута стульчик - 10 прыжков - 1 минута стульчик - 10 прыжков"
+          }
+        }
+      }
+    },
+    "Turbo 96 pull-ups" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Pull-ups (slow)"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Медленные подтягивания"
+          }
+        }
+      }
+    },
+    "Turbo 96 push-ups" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Push-ups (slow)"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Медленные отжимания"
+          }
+        }
+      }
+    },
+    "Turbo 96 squats" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Squats (slow)"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Медленные приседания"
+          }
+        }
+      }
+    },
+    "Turbo 97 push-ups high" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Decline push-ups"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Отжимания с ногами на возвышенности"
+          }
+        }
+      }
+    },
+    "Turbo 97 push-ups high arms" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Incline push-ups"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Отжимания с руками на возвышенности"
+          }
+        }
+      }
+    },
+    "Turbo 98 pull-ups" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Pull-ups (ladder)"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Подтягивания (лесенка)"
+          }
+        }
+      }
+    },
+    "Turbo 98 push-ups" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Push-ups (ladder)"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Отжимания (лесенка)"
+          }
+        }
+      }
+    },
+    "Turbo 98 squats" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Squats (ladder)"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Приседания (лесенка)"
+          }
+        }
+      }
+    },
     "Workout notifications" : {
       "localizations" : {
         "ru" : {
@@ -368,6 +832,22 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Магазин WORKOUT"
+          }
+        }
+      }
+    },
+    "WorkoutDay" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Workout"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Тренировка"
           }
         }
       }
