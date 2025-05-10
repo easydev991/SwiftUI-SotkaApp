@@ -152,6 +152,16 @@
         }
       }
     },
+    "Other apps" : {
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Другие приложения"
+          }
+        }
+      }
+    },
     "Rate the app" : {
       "localizations" : {
         "ru" : {
@@ -191,6 +201,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Поделиться приложением"
+          }
+        }
+      }
+    },
+    "Street Workout: Parks" : {
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Street Workout: Площадки"
           }
         }
       }

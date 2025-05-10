@@ -34,6 +34,9 @@ struct MoreScreen: View {
                     shareAppButton
                     appVersionText
                 }
+                Section("Other apps") {
+                    swParksButton
+                }
                 Section("Support the project") {
                     workoutShopButton
                     githubButton
@@ -136,6 +139,14 @@ struct MoreScreen: View {
     }
     
     @ViewBuilder
+    private var swParksButton: some View {
+        if let githubLink = URL(string: "https://apps.apple.com/app/id1035159361") {
+            Link("Street Workout: Parks", destination: githubLink)
+                .accessibilityIdentifier("swParksButton")
+        }
+    }
+    
+    @ViewBuilder
     private var workoutShopButton: some View {
         if let shopLink = URL(string: "https://workoutshop.ru/?utm_source=iOS&utm_medium=100&utm_campaign=NASTROIKI") {
             Link("WORKOUT shop", destination: shopLink)
@@ -151,8 +162,6 @@ struct MoreScreen: View {
         }
     }
 }
-
-
 
 #if DEBUG
 #Preview {
