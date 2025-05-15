@@ -7,6 +7,7 @@
 
 import SwiftUI
 import Observation
+import SWUtils
 
 @Observable final class AppSettings {
     private let audioPlayer = AudioPlayerManager(fileName: "timerSound", fileExtension: "mp3")
@@ -121,8 +122,59 @@ import Observation
             }
         }
     }
+    
+    @MainActor
+    func sendFeedback() {
+        let subject = "\(ProcessInfo.processInfo.processName): Обратная связь"
+        let question = "Над чем нам стоит поработать?"
+        let sysVersion = "iOS: \(ProcessInfo.processInfo.operatingSystemVersionString)"
+        let appVersion = "App version: " + appVersion
+        let body = """
+            \(sysVersion)
+            \(appVersion)
+            \(question)
+            \n
+        """
+        FeedbackSender.sendFeedback(
+            subject: subject,
+            messageBody: body,
+            recipients: ["info@workout.su"]
+        )
+    }
+}
 
-    private func checkNotificationPermissions() async -> Bool {
+enum NotificationError: Error, LocalizedError {
+    case denied
+
+    var errorDescription: String? {
+        NSLocalizedString("Notification permission denied", comment: "")
+    }
+}
+
+private extension AppSettings {
+    enum Key: String {
+        case appTheme
+        /// Ежедневные уведомления о тренировках
+        ///
+        /// Значение взял из старого приложения
+        case workoutNotificationsEnabled = "WorkoutTrainNotification"
+        /// Время ежедневного уведомления о тренировке
+        ///
+        /// Значение взял из старого приложения
+        case workoutNotificationTime = "WorkoutTrainNotificationDate"
+        /// Воспроизводить звук по окончании отдыха
+        ///
+        /// Значение взял из старого приложения
+        case playTimerSound = "WorkoutPlayTimerSound"
+        /// Вибрировать по окончании отдыха
+        ///
+        /// Значение взял из старого приложения
+        case vibrate = "WorkoutPlayVibrate"
+    }
+}
+
+private extension AppSettings {
+    func checkNotificationPermissions() async -> Bool {
         let center = UNUserNotificationCenter.current()
         let settings = await center.notificationSettings()
 
@@ -140,7 +192,7 @@ import Observation
         }
     }
 
-    private func scheduleDailyNotification() {
+    func scheduleDailyNotification() {
         removePendingNotifications()
 
         let content = UNMutableNotificationContent()
@@ -164,44 +216,15 @@ import Observation
         UNUserNotificationCenter.current().add(request)
     }
 
-    private func removePendingNotifications() {
+    #warning("Удалить только ежедневное уведомление")
+    func removePendingNotifications() {
         UNUserNotificationCenter.current().removeAllPendingNotificationRequests()
     }
 
-    private var defaultNotificationTime: Date {
+    var defaultNotificationTime: Date {
         var components = DateComponents()
         components.hour = 19
         components.minute = 0
         return Calendar.current.date(from: components) ?? .now
-    }
-}
-
-enum NotificationError: Error, LocalizedError {
-    case denied
-
-    var errorDescription: String? {
-        NSLocalizedString("Notification permission denied", comment: "")
-    }
-}
-
-extension AppSettings {
-    private enum Key: String {
-        case appTheme
-        /// Ежедневные уведомления о тренировках
-        ///
-        /// Значение взял из старого приложения
-        case workoutNotificationsEnabled = "WorkoutTrainNotification"
-        /// Время ежедневного уведомления о тренировке
-        ///
-        /// Значение взял из старого приложения
-        case workoutNotificationTime = "WorkoutTrainNotificationDate"
-        /// Воспроизводить звук по окончании отдыха
-        ///
-        /// Значение взял из старого приложения
-        case playTimerSound = "WorkoutPlayTimerSound"
-        /// Вибрировать по окончании отдыха
-        ///
-        /// Значение взял из старого приложения
-        case vibrate = "WorkoutPlayVibrate"
     }
 }

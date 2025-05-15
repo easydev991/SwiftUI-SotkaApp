@@ -7,10 +7,12 @@
 
 import SwiftUI
 import SwiftData
+import SWUtils
 
 @main
 struct SwiftUI_SotkaAppApp: App {
     @State private var appSettings = AppSettings()
+    @State private var networkStatus = NetworkStatus()
 
     var sharedModelContainer: ModelContainer = {
         let schema = Schema([Item.self])
@@ -27,6 +29,7 @@ struct SwiftUI_SotkaAppApp: App {
             RootScreen()
                 .dynamicTypeSize(...DynamicTypeSize.accessibility2)
                 .environment(appSettings)
+                .environment(\.isNetworkConnected, networkStatus.isConnected)
                 .preferredColorScheme(appSettings.appTheme.colorScheme)
         }
         .modelContainer(sharedModelContainer)

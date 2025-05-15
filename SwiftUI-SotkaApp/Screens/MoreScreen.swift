@@ -6,6 +6,7 @@
 //
 
 import SwiftUI
+import SWUtils
 
 struct MoreScreen: View {
     @Environment(\.locale) private var locale
@@ -115,7 +116,7 @@ struct MoreScreen: View {
     }
 
     private var feedbackButton: some View {
-        Button("Send feedback", action: FeedbackSender.sendFeedback)
+        Button("Send feedback", action: appSettings.sendFeedback)
             .accessibilityIdentifier("sendFeedbackButton")
     }
 
@@ -185,11 +186,8 @@ struct MoreScreen: View {
     
     private var settingsButton: some View {
         Button("Go to settings") {
-            guard let url = URL(string: UIApplication.openSettingsURLString),
-                  UIApplication.shared.canOpenURL(url) else {
-                return
-            }
-            UIApplication.shared.open(url)
+            let settingsUrl = URL(string: UIApplication.openSettingsURLString)
+            URLOpener.open(settingsUrl)
         }
     }
 }

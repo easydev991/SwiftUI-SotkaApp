@@ -57,6 +57,9 @@
         }
       }
     },
+    "Authorization" : {
+
+    },
     "Cancel" : {
       "localizations" : {
         "ru" : {
@@ -169,6 +172,26 @@
         }
       }
     },
+    "Log in" : {
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Войти"
+          }
+        }
+      }
+    },
+    "Login or emal" : {
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Логин или email"
+          }
+        }
+      }
+    },
     "Lunges" : {
       "localizations" : {
         "ru" : {
@@ -241,6 +264,16 @@
         }
       }
     },
+    "Password" : {
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Пароль"
+          }
+        }
+      }
+    },
     "Profile" : {
       "localizations" : {
         "ru" : {
@@ -293,6 +326,22 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Отдых"
+          }
+        }
+      }
+    },
+    "Restore password" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Restore your password"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Восстановить пароль"
           }
         }
       }
