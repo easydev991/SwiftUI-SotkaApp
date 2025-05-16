@@ -12,7 +12,7 @@
         },
         "ru" : {
           "stringUnit" : {
-            "state" : "needs_review",
+            "state" : "translated",
             "value" : "Запрос содержит ошибку"
           }
         }
@@ -29,7 +29,7 @@
         },
         "ru" : {
           "stringUnit" : {
-            "state" : "needs_review",
+            "state" : "translated",
             "value" : "Не удалось декодировать ответ"
           }
         }
@@ -46,7 +46,7 @@
         },
         "ru" : {
           "stringUnit" : {
-            "state" : "needs_review",
+            "state" : "translated",
             "value" : "Некорректное имя пользователя или пароль"
           }
         }
@@ -63,7 +63,7 @@
         },
         "ru" : {
           "stringUnit" : {
-            "state" : "needs_review",
+            "state" : "translated",
             "value" : "Некорректный идентификатор пользователя"
           }
         }
@@ -80,7 +80,7 @@
         },
         "ru" : {
           "stringUnit" : {
-            "state" : "needs_review",
+            "state" : "translated",
             "value" : "Сервер не прислал данные для обработки ответа"
           }
         }
@@ -97,7 +97,7 @@
         },
         "ru" : {
           "stringUnit" : {
-            "state" : "needs_review",
+            "state" : "translated",
             "value" : "Нет соединения с сетью"
           }
         }
@@ -114,7 +114,7 @@
         },
         "ru" : {
           "stringUnit" : {
-            "state" : "needs_review",
+            "state" : "translated",
             "value" : "Запрашиваемый ресурс не найден"
           }
         }
@@ -131,7 +131,7 @@
         },
         "ru" : {
           "stringUnit" : {
-            "state" : "needs_review",
+            "state" : "translated",
             "value" : "Объем данных для загрузки на сервер превышает лимит"
           }
         }
@@ -148,7 +148,7 @@
         },
         "ru" : {
           "stringUnit" : {
-            "state" : "needs_review",
+            "state" : "translated",
             "value" : "Внутренняя ошибка сервера"
           }
         }
@@ -165,7 +165,7 @@
         },
         "ru" : {
           "stringUnit" : {
-            "state" : "needs_review",
+            "state" : "translated",
             "value" : "Неизвестная ошибка"
           }
         }

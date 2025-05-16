@@ -59,10 +59,12 @@ public final class SWAlert {
             presentDefaultUIKit(
                 title: NSLocalizedString(
                     "Error.NoConnectionTitle",
+                    bundle: .module,
                     comment: "Нет соединения с сетью"
                 ),
                 message: NSLocalizedString(
                     "Error.NoConnectionMessage",
+                    bundle: .module,
                     comment: "Не удалось загрузить данные. Проверьте подключение к интернету."
                 )
             )
