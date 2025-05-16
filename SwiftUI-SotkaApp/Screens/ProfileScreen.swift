@@ -6,22 +6,26 @@
 //
 
 import SwiftUI
+import SwiftData
 
 struct ProfileScreen: View {
+    @Environment(\.modelContext) private var modelContext
     @Environment(AuthHelperImp.self) private var authHelper
+    @Query private var users: [User]
+    private var user: User? { users.first }
     @State private var showLogoutDialog = false
     
     var body: some View {
         NavigationStack {
             VStack {
-                Text("Profile")
-                    .navigationTitle("Profile")
-                if let userInfo = authHelper.userInfo {
-                    Text("User info: \(userInfo)")
-                        .multilineTextAlignment(.leading)
+                if let user {
+                    Text("userId: \(user.id)")
+                    Text("userName: \(user.fullName)")
+                    Text("userEmail: \(user.email)")
                 }
                 Spacer()
             }
+            .navigationTitle("Profile")
             .toolbar {
                 ToolbarItem(placement: .topBarTrailing) {
                     logoutButton
@@ -40,7 +44,12 @@ struct ProfileScreen: View {
             titleVisibility: .visible
         ) {
             Button("Log out", role: .destructive) {
-                authHelper.triggerLogout()
+                do {
+                    authHelper.triggerLogout()
+                    try modelContext.delete(model: User.self)
+                } catch {
+                    fatalError("Не удалось удалить пользователя: \(error.localizedDescription)")
+                }
             }
         }
     }

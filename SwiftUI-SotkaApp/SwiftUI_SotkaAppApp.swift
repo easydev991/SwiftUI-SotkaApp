@@ -15,8 +15,8 @@ struct SwiftUI_SotkaAppApp: App {
     @State private var authHelper = AuthHelperImp()
     @State private var networkStatus = NetworkStatus()
 
-    var sharedModelContainer: ModelContainer = {
-        let schema = Schema([Item.self])
+    private var sharedModelContainer: ModelContainer = {
+        let schema = Schema([User.self])
         let modelConfiguration = ModelConfiguration(schema: schema, isStoredInMemoryOnly: false)
         do {
             return try ModelContainer(for: schema, configurations: [modelConfiguration])

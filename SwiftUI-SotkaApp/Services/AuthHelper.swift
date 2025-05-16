@@ -26,7 +26,17 @@ final class AuthHelperImp: AuthHelper {
     @KeychainWrapper(Key.authData.rawValue)
     private var authData: AuthData?
 
-    var isAuthorized: Bool { userInfo != nil }
+    private(set) var isAuthorized: Bool {
+        get {
+            access(keyPath: \.isAuthorized)
+            return defaults.bool(forKey: Key.isAuthorized.rawValue)
+        }
+        set {
+            withMutation(keyPath: \.isAuthorized) {
+                defaults.set(newValue, forKey: Key.isAuthorized.rawValue)
+            }
+        }
+    }
     
     var authToken: String? { authData?.token }
     
@@ -34,48 +44,19 @@ final class AuthHelperImp: AuthHelper {
         self.authData = authData
     }
     
-    #warning("Временный код, переделать на Swift Data")
-    private(set) var userInfo: UserResponse? {
-        get {
-            access(keyPath: \.userInfo)
-            guard let data = defaults.data(forKey: Key.userInfo.rawValue),
-                  let info = try? JSONDecoder().decode(UserResponse.self, from: data)
-            else {
-                return nil
-            }
-            return info
-        }
-        set {
-            withMutation(keyPath: \.userInfo) {
-                if let newValue {
-                    do {
-                        let data = try JSONEncoder().encode(newValue)
-                        withMutation(keyPath: \.userInfo) {
-                            defaults.set(data, forKey: Key.userInfo.rawValue)
-                        }
-                    } catch {
-                        assertionFailure("Не смогли сохранить данные пользователя")
-                    }
-                } else {
-                    defaults.removeObject(forKey: Key.userInfo.rawValue)
-                }
-            }
-        }
-    }
-    
-    func didAuthorize(_ userResponse: UserResponse) {
-        self.userInfo = userResponse
+    func didAuthorize() {
+        isAuthorized = true
     }
     
     func triggerLogout() {
         authData = nil
-        userInfo = nil
+        isAuthorized = false
     }
 }
 
 private extension AuthHelperImp {
     enum Key: String {
         case authData
-        case userInfo
+        case isAuthorized
     }
 }

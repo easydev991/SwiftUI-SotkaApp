@@ -8,9 +8,11 @@
 import SwiftUI
 import SWKeychain
 import SWUtils
+import SwiftData
 
 struct LoginScreen: View {
     @Environment(AuthHelperImp.self) private var authHelper
+    @Environment(\.modelContext) private var modelContext
     @Environment(\.isNetworkConnected) private var isNetworkConnected
     @State private var credentials = LoginCredentials()
     @FocusState private var focus: FocusableField?
@@ -119,7 +121,9 @@ private extension LoginScreen {
                 let userId = try await client.logIn(with: authData.token)
                 authHelper.saveAuthData(authData)
                 let userInfo = try await client.getUserByID(userId)
-                authHelper.didAuthorize(userInfo)
+                authHelper.didAuthorize()
+                let user = User(from: userInfo)
+                modelContext.insert(user)
             } catch ClientError.noConnection {
                 SWAlert.shared.presentNoConnection(true)
             } catch {

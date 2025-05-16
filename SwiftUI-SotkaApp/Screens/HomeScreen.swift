@@ -12,15 +12,6 @@ struct HomeScreen: View {
         NavigationStack {
             Text("Home")
                 .navigationTitle("Home")
-            #if DEBUG
-                .toolbar {
-                    ToolbarItem(placement: .topBarTrailing) {
-                        NavigationLink(destination: DemoSwiftDataScreen()) {
-                            Text("Demo SwiftData")
-                        }
-                    }
-                }
-            #endif
         }
     }
 }

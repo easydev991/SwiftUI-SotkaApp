@@ -14,9 +14,6 @@
         }
       }
     },
-    "Add Item" : {
-
-    },
     "Alert.language" : {
       "localizations" : {
         "en" : {
@@ -161,9 +158,6 @@
         }
       }
     },
-    "Demo SwiftData" : {
-      "shouldTranslate" : false
-    },
     "Done" : {
       "localizations" : {
         "ru" : {
@@ -262,9 +256,6 @@
           }
         }
       }
-    },
-    "Item at %@" : {
-
     },
     "Knees push-ups" : {
       "localizations" : {
@@ -495,9 +486,6 @@
           }
         }
       }
-    },
-    "Select an item" : {
-
     },
     "Send feedback" : {
       "localizations" : {
@@ -978,6 +966,9 @@
           }
         }
       }
+    },
+    "userId: %lld" : {
+      "shouldTranslate" : false
     },
     "Workout notifications" : {
       "localizations" : {
