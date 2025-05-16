@@ -12,6 +12,7 @@ import SWUtils
 @main
 struct SwiftUI_SotkaAppApp: App {
     @State private var appSettings = AppSettings()
+    @State private var authHelper = AuthHelperImp()
     @State private var networkStatus = NetworkStatus()
 
     var sharedModelContainer: ModelContainer = {
@@ -26,11 +27,19 @@ struct SwiftUI_SotkaAppApp: App {
 
     var body: some Scene {
         WindowGroup {
-            RootScreen()
-                .dynamicTypeSize(...DynamicTypeSize.accessibility2)
-                .environment(appSettings)
-                .environment(\.isNetworkConnected, networkStatus.isConnected)
-                .preferredColorScheme(appSettings.appTheme.colorScheme)
+            ZStack {
+                if authHelper.isAuthorized {
+                    RootScreen()
+                } else {
+                    LoginScreen()
+                }
+            }
+            .animation(.default, value: authHelper.isAuthorized)
+            .dynamicTypeSize(...DynamicTypeSize.accessibility2)
+            .environment(appSettings)
+            .environment(authHelper)
+            .environment(\.isNetworkConnected, networkStatus.isConnected)
+            .preferredColorScheme(appSettings.appTheme.colorScheme)
         }
         .modelContainer(sharedModelContainer)
     }

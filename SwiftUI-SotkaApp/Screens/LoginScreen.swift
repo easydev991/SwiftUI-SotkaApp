@@ -6,8 +6,12 @@
 //
 
 import SwiftUI
+import SWKeychain
+import SWUtils
 
 struct LoginScreen: View {
+    @Environment(AuthHelperImp.self) private var authHelper
+    @Environment(\.isNetworkConnected) private var isNetworkConnected
     @State private var credentials = LoginCredentials()
     @FocusState private var focus: FocusableField?
     @State private var isLoading = false
@@ -17,26 +21,32 @@ struct LoginScreen: View {
     @State private var authErrorMessage = ""
     @State private var loginTask: Task<Void, Never>?
     @State private var restorePasswordTask: Task<Void, Never>?
+    private var client: SWClient { SWClient(with: authHelper) }
     
     var body: some View {
-        VStack(spacing: 0) {
-            VStack(spacing: 12) {
-                loginField
-                passwordField
+        NavigationStack {
+            VStack(spacing: 0) {
+                VStack(spacing: 12) {
+                    loginField
+                    passwordField
+                }
+                .textFieldStyle(.roundedBorder)
+                Spacer()
+                VStack(spacing: 12) {
+                    loginButton
+                    forgotPasswordButton
+                }
             }
-            .textFieldStyle(.roundedBorder)
-            Spacer()
-            VStack(spacing: 12) {
-                loginButton
-                forgotPasswordButton
+            .loadingOverlay(isLoading)
+            .padding()
+            .navigationTitle("Authorization")
+            .onChange(of: credentials) { _, _ in clearErrorMessages() }
+            .onChange(of: isLoading) { _, newValue in
+                if newValue { focus = nil }
             }
-        }
-        .loadingOverlay(isLoading)
-        .padding()
-        .navigationTitle("Authorization")
-        .onChange(of: credentials) { _, _ in clearErrorMessages() }
-        .onDisappear {
-            [loginTask, restorePasswordTask].forEach { $0?.cancel() }
+            .onDisappear {
+                [loginTask, restorePasswordTask].forEach { $0?.cancel() }
+            }
         }
     }
 }
@@ -76,12 +86,9 @@ private extension LoginScreen {
     }
     
     var loginButton: some View {
-        Button("Log in") {
-            focus = nil
-            performLogin()
-        }
-        .buttonStyle(.borderedProminent)
-        .disabled(!canLogIn)
+        Button("Log in", action: performLogin)
+            .buttonStyle(.borderedProminent)
+            .disabled(!canLogIn)
     }
     
     var forgotPasswordButton: some View {
@@ -104,21 +111,49 @@ private extension LoginScreen {
     func performLogin() {
         isLoading = true
         loginTask = Task {
-            print("Авторизуемся")
-            try? await Task.sleep(for: .seconds(2))
+            do {
+                let authData = AuthData(
+                    login: credentials.login,
+                    password: credentials.password
+                )
+                let userId = try await client.logIn(with: authData.token)
+                authHelper.saveAuthData(authData)
+                let userInfo = try await client.getUserByID(userId)
+                authHelper.didAuthorize(userInfo)
+            } catch ClientError.noConnection {
+                SWAlert.shared.presentNoConnection(true)
+            } catch {
+                authErrorMessage = error.localizedDescription
+            }
             isLoading = false
-            authErrorMessage = "Demo error"
         }
     }
     
     func performRestorePassword() {
+        guard credentials.canRestorePassword else {
+            let localizedString = NSLocalizedString("Alert.restorePassword", comment: "")
+            SWAlert.shared.presentDefaultUIKit(
+                message: localizedString,
+                completion: { focus = .username }
+            )
+            return
+        }
+        guard !SWAlert.shared.presentNoConnection(isNetworkConnected) else { return }
         clearErrorMessages()
         isLoading = true
         restorePasswordTask = Task {
-            print("Восстанавливаем пароль")
-            try? await Task.sleep(for: .seconds(4))
+            do {
+                try await client.resetPassword(for: credentials.login)
+                SWAlert.shared.presentDefaultUIKit(
+                    title: NSLocalizedString("Done", comment: ""),
+                    message: NSLocalizedString("Alert.resetSuccessful", comment: "")
+                )
+            } catch ClientError.noConnection {
+                SWAlert.shared.presentNoConnection(true)
+            } catch {
+                resetErrorMessage = error.localizedDescription
+            }
             isLoading = false
-            resetErrorMessage = "Demo error"
         }
     }
     
@@ -130,4 +165,5 @@ private extension LoginScreen {
 
 #Preview {
     LoginScreen()
+        .environment(AuthHelperImp())
 }

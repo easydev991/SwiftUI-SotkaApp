@@ -108,7 +108,7 @@ import SWUtils
     func setWorkoutNotificationsEnabled(_ enabled: Bool) {
         guard enabled else {
             workoutNotificationsEnabled = false
-            removePendingNotifications()
+            removePendingDailyNotifications()
             return
         }
         Task {
@@ -147,7 +147,7 @@ enum NotificationError: Error, LocalizedError {
     case denied
 
     var errorDescription: String? {
-        NSLocalizedString("Notification permission denied", comment: "")
+        NSLocalizedString("Error.NotificationPermission", comment: "")
     }
 }
 
@@ -170,6 +170,8 @@ private extension AppSettings {
         ///
         /// Значение взял из старого приложения
         case vibrate = "WorkoutPlayVibrate"
+        /// Идентификатор для ежедневного уведомления
+        case dailyWorkoutReminder
     }
 }
 
@@ -193,11 +195,11 @@ private extension AppSettings {
     }
 
     func scheduleDailyNotification() {
-        removePendingNotifications()
+        removePendingDailyNotifications()
 
         let content = UNMutableNotificationContent()
-        content.title = NSLocalizedString("Workout Reminder", comment: "")
-        content.body = NSLocalizedString("Time for your daily workout!", comment: "")
+        content.title = NSLocalizedString("Notification.DailyWorkoutTitle", comment: "")
+        content.body = NSLocalizedString("Notification.DailyWorkoutBody", comment: "")
         content.sound = .default
 
         let components = Calendar.current.dateComponents(
@@ -209,16 +211,17 @@ private extension AppSettings {
             repeats: true
         )
         let request = UNNotificationRequest(
-            identifier: "dailyWorkoutReminder",
+            identifier: Key.dailyWorkoutReminder.rawValue,
             content: content,
             trigger: trigger
         )
         UNUserNotificationCenter.current().add(request)
     }
 
-    #warning("Удалить только ежедневное уведомление")
-    func removePendingNotifications() {
-        UNUserNotificationCenter.current().removeAllPendingNotificationRequests()
+    func removePendingDailyNotifications() {
+        UNUserNotificationCenter.current().removePendingNotificationRequests(
+            withIdentifiers: [Key.dailyWorkoutReminder.rawValue]
+        )
     }
 
     var defaultNotificationTime: Date {

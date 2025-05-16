@@ -17,6 +17,70 @@
     "Add Item" : {
 
     },
+    "Alert.language" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The language can be changed in the phone settings"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Язык можно поменять в настройках телефона"
+          }
+        }
+      }
+    },
+    "Alert.logout" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Log out of your profile?"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Выйти из учетной записи?"
+          }
+        }
+      }
+    },
+    "Alert.resetSuccessful" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Instructions for recovering your password have been sent to the email specified during registration"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Инструкция для восстановления пароля выслана на email, указанный при регистрации"
+          }
+        }
+      }
+    },
+    "Alert.restorePassword" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "To recover your password, enter your login or email"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Для восстановления пароля введите логин или email"
+          }
+        }
+      }
+    },
     "App language" : {
       "localizations" : {
         "ru" : {
@@ -58,7 +122,14 @@
       }
     },
     "Authorization" : {
-
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Авторизация"
+          }
+        }
+      }
     },
     "Cancel" : {
       "localizations" : {
@@ -66,22 +137,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Отмена"
-          }
-        }
-      }
-    },
-    "Change language alert title" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "The language can be changed in the phone settings"
-          }
-        },
-        "ru" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Язык можно поменять в настройках телефона"
           }
         }
       }
@@ -109,12 +164,71 @@
     "Demo SwiftData" : {
       "shouldTranslate" : false
     },
+    "Done" : {
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Готово"
+          }
+        }
+      }
+    },
     "English" : {
       "localizations" : {
         "ru" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "Английский"
+          }
+        }
+      }
+    },
+    "Error.ForceLogout" : {
+      "comment" : "401",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Re-login required for the app to function properly"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Для корректной работы приложения нужен повторный вход"
+          }
+        }
+      }
+    },
+    "Error.NoConnection" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Failed to load data. Check your internet connection."
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Не удалось загрузить данные. Проверьте подключение к интернету."
+          }
+        }
+      }
+    },
+    "Error.NotificationPermission" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "To receive workout reminders, you need to enable notification access in your phone settings"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Для напоминаний о тренировках необходимо дать доступ к уведомлениям в настройках телефона"
           }
         }
       }
@@ -182,6 +296,16 @@
         }
       }
     },
+    "Log out" : {
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Выйти"
+          }
+        }
+      }
+    },
     "Login or emal" : {
       "localizations" : {
         "ru" : {
@@ -212,22 +336,6 @@
         }
       }
     },
-    "Notification permission denied" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "To receive workout reminders, you need to enable notification access in your phone settings"
-          }
-        },
-        "ru" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Для напоминаний о тренировках необходимо дать доступ к уведомлениям в настройках телефона"
-          }
-        }
-      }
-    },
     "Notification Time" : {
       "localizations" : {
         "en" : {
@@ -240,6 +348,38 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Время тренировки"
+          }
+        }
+      }
+    },
+    "Notification.DailyWorkoutBody" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Time for your daily workout!"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Пришло время изменить себя!"
+          }
+        }
+      }
+    },
+    "Notification.DailyWorkoutTitle" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "SOTKA"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "SOTKA"
           }
         }
       }
@@ -340,7 +480,7 @@
         },
         "ru" : {
           "stringUnit" : {
-            "state" : "needs_review",
+            "state" : "translated",
             "value" : "Восстановить пароль"
           }
         }
@@ -467,16 +607,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Системная"
-          }
-        }
-      }
-    },
-    "Time for your daily workout!" : {
-      "localizations" : {
-        "ru" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Пришло время изменить себя!"
           }
         }
       }
@@ -855,22 +985,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Напоминать о тренировке"
-          }
-        }
-      }
-    },
-    "Workout Reminder" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "SOTKA"
-          }
-        },
-        "ru" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "SOTKA"
           }
         }
       }

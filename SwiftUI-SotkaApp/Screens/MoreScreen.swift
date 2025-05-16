@@ -72,7 +72,7 @@ struct MoreScreen: View {
         .onTapGesture {
             settings.showLanguageAlert.toggle()
         }
-        .alert("Change language alert title", isPresented: $settings.showLanguageAlert) {
+        .alert("Alert.language", isPresented: $settings.showLanguageAlert) {
             cancelButton
             settingsButton
         }

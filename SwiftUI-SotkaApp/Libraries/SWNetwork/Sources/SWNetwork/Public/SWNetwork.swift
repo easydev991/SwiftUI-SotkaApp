@@ -5,6 +5,7 @@ public protocol SWNetworkProtocol: Sendable {
     /// Делает запрос и возвращает данные в ответе
     func requestData<T: Decodable>(components: RequestComponents) async throws -> T
     /// Делает запрос и возвращает `true/false` в ответе
+    @discardableResult
     func requestStatus(components: RequestComponents) async throws -> Bool
 }
 
@@ -18,11 +19,13 @@ public struct SWNetworkService {
 
     public init(
         timeoutIntervalForRequest: Double = 30,
-        timeoutIntervalForResource: Double = 60
+        timeoutIntervalForResource: Double = 60,
+        decodingStrategy: JSONDecoder.KeyDecodingStrategy = .convertFromSnakeCase
     ) {
         let configuration = URLSessionConfiguration.default
         configuration.timeoutIntervalForRequest = timeoutIntervalForRequest
         configuration.timeoutIntervalForResource = timeoutIntervalForResource
+        decoder.keyDecodingStrategy = decodingStrategy
         self.session = URLSession(configuration: configuration)
     }
 }
@@ -63,6 +66,7 @@ extension SWNetworkService: SWNetworkProtocol {
         }
     }
 
+    @discardableResult
     public func requestStatus(components: RequestComponents) async throws -> Bool {
         guard let request = components.urlRequest else {
             throw APIError.badRequest

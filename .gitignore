@@ -4,3 +4,4 @@
 *.xcodeproj/xcuserdata/
 *.xcworkspace/xcuserdata/
 .DS_Store
+/SwiftUI-SotkaApp.xcodeproj/xcuserdata

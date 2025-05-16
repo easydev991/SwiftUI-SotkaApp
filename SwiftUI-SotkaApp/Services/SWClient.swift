@@ -23,15 +23,45 @@ struct SWClient: Sendable {
     }
 }
 
+extension SWClient {
+    /// Выполняет авторизацию
+    /// - Parameter token: Токен авторизации
+    /// - Returns: `id` авторизованного пользователя
+    func logIn(with token: String?) async throws -> Int {
+        struct Response: Decodable { let userId: Int }
+        let endpoint = Endpoint.login
+        let finalComponents = try await makeComponents(for: endpoint, with: token)
+        let result: Response = try await service.requestData(components: finalComponents)
+        return result.userId
+    }
+    
+    /// Запрашивает данные пользователя по `id`
+    ///
+    /// В случае успеха сохраняет данные главного пользователя в `defaults` и авторизует, если еще не авторизован
+    /// - Parameters:
+    ///   - userID: `id` пользователя
+    /// - Returns: вся информация о пользователе
+    func getUserByID(_ userID: Int) async throws -> UserResponse {
+        let endpoint = Endpoint.getUser(id: userID)
+        return try await makeResult(for: endpoint)
+    }
+    
+    /// Сбрасывает пароль для неавторизованного пользователя с указанным логином
+    /// - Parameter login: `login` пользователя
+    func resetPassword(for login: String) async throws {
+        let endpoint = Endpoint.resetPassword(login: login)
+        try await makeStatus(for: endpoint)
+    }
+}
+
 enum ClientError: Error, LocalizedError {
     case forceLogout
     case noConnection
-
-    #warning("Доделать локализацию")
+    
     var errorDescription: String? {
         switch self {
-        case .forceLogout: "ForceLogoutError"
-        case .noConnection: "NoConnectionError"
+        case .forceLogout: NSLocalizedString("Error.ForceLogout", comment: "")
+        case .noConnection: NSLocalizedString("Error.NoConnection", comment: "")
         }
     }
 }
@@ -41,38 +71,54 @@ enum Endpoint {
     /// **POST** ${API}/auth/login
     case login
     
+    // MARK: Получить профиль пользователя
+    /// **GET** ${API}/users/<user_id>
+    /// `id` - идентификатор пользователя, чей профиль нужно получить
+    case getUser(id: Int)
+    
+    // MARK: Восстановление пароля
+    /// **POST** ${API}/auth/reset
+    case resetPassword(login: String)
+    
     var urlPath: String {
         switch self {
         case .login: "/auth/login"
+        case let .getUser(id): "/users/\(id)"
+        case .resetPassword: "/auth/reset"
         }
     }
     
     var method: HTTPMethod {
         switch self {
-        case .login: .post
+        case .login, .resetPassword: .post
+        case .getUser: .get
         }
     }
     
     var hasMultipartFormData: Bool {
         switch self {
-        case .login: false
+        case .login, .getUser, .resetPassword: false
         }
     }
     
     var queryItems: [URLQueryItem] {
         switch self {
-        case .login: []
+        case .login, .getUser, .resetPassword: []
         }
     }
     
     var bodyParts: BodyMaker.Parts? {
         switch self {
-        case .login: nil
+        case .login, .getUser:
+            nil
+        case let .resetPassword(login):
+            .init(["username_or_email": login], nil)
         }
     }
 }
 
 private extension SWClient {
+    @discardableResult
     func makeStatus(for endpoint: Endpoint) async throws -> Bool {
         do {
             let finalComponents = try await makeComponents(for: endpoint)

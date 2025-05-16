@@ -7,6 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		671E09232DD715820007350F /* SWKeychain in Frameworks */ = {isa = PBXBuildFile; productRef = 671E09222DD715820007350F /* SWKeychain */; };
 		675FDD152DD5E67A0040CA20 /* SWUtils in Frameworks */ = {isa = PBXBuildFile; productRef = 675FDD142DD5E67A0040CA20 /* SWUtils */; };
 		675FDD182DD5E6DE0040CA20 /* SWNetwork in Frameworks */ = {isa = PBXBuildFile; productRef = 675FDD172DD5E6DE0040CA20 /* SWNetwork */; };
 /* End PBXBuildFile section */
@@ -38,6 +39,7 @@
 		676FF2DF2DC7D02700FEE8D8 /* Exceptions for "SwiftUI-SotkaApp" folder in "SwiftUI-SotkaApp" target */ = {
 			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
 			membershipExceptions = (
+				Libraries/SWKeychain,
 				Libraries/SWNetwork,
 				Libraries/SWUtils,
 				SupportingFiles/Info.plist,
@@ -74,6 +76,7 @@
 			files = (
 				675FDD152DD5E67A0040CA20 /* SWUtils in Frameworks */,
 				675FDD182DD5E6DE0040CA20 /* SWNetwork in Frameworks */,
+				671E09232DD715820007350F /* SWKeychain in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -144,6 +147,7 @@
 			packageProductDependencies = (
 				675FDD142DD5E67A0040CA20 /* SWUtils */,
 				675FDD172DD5E6DE0040CA20 /* SWNetwork */,
+				671E09222DD715820007350F /* SWKeychain */,
 			);
 			productName = "SwiftUI-SotkaApp";
 			productReference = 674A8A612DC758BB003F6E50 /* SwiftUI-SotkaApp.app */;
@@ -609,6 +613,10 @@
 /* End XCConfigurationList section */
 
 /* Begin XCSwiftPackageProductDependency section */
+		671E09222DD715820007350F /* SWKeychain */ = {
+			isa = XCSwiftPackageProductDependency;
+			productName = SWKeychain;
+		};
 		675FDD142DD5E67A0040CA20 /* SWUtils */ = {
 			isa = XCSwiftPackageProductDependency;
 			productName = SWUtils;

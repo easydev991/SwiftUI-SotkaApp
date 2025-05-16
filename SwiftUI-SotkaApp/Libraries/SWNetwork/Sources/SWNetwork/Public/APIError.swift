@@ -59,27 +59,27 @@ public enum APIError: Error, LocalizedError, Equatable {
     public var errorDescription: String? {
         switch self {
         case .noData:
-            "Сервер не прислал данные для обработки ответа"
+            NSLocalizedString("Error.NoData", comment: "Сервер не прислал данные для обработки ответа")
         case .unknown:
-            "Неизвестная ошибка"
+            NSLocalizedString("Error.Unknown", comment: "Неизвестная ошибка")
         case .badRequest:
-            "Запрос содержит ошибку"
+            NSLocalizedString("Error.BadRequest", comment: "Запрос содержит ошибку")
         case .invalidCredentials:
-            "Некорректное имя пользователя или пароль"
+            NSLocalizedString("Error.InvalidCredentials", comment: "Некорректное имя пользователя или пароль")
         case .notFound:
-            "Запрашиваемый ресурс не найден"
+            NSLocalizedString("Error.NotFound", comment: "Запрашиваемый ресурс не найден")
         case .payloadTooLarge:
-            "Объем данных для загрузки на сервер превышает лимит"
+            NSLocalizedString("Error.PayloadTooLarge", comment: "Объем данных для загрузки на сервер превышает лимит")
         case .serverError:
-            "Внутренняя ошибка сервера"
+            NSLocalizedString("Error.ServerError", comment: "Внутренняя ошибка сервера")
         case .invalidUserID:
-            "Некорректный идентификатор пользователя"
+            NSLocalizedString("Error.InvalidUserID", comment: "Некорректный идентификатор пользователя")
         case let .customError(code, error):
             "\(code), \(error)"
         case .decodingError:
-            "Не удалось декодировать ответ"
+            NSLocalizedString("Error.Decoding", comment: "Не удалось декодировать ответ")
         case .notConnectedToInternet:
-            "Нет соединения с сетью"
+            NSLocalizedString("Error.NoInternet", comment: "Нет соединения с сетью")
         }
     }
 }
