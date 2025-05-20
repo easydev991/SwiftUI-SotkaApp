@@ -20,8 +20,8 @@ struct ProfileScreen: View {
             VStack {
                 if let user {
                     Text("userId: \(user.id)")
-                    Text("userName: \(user.fullName)")
-                    Text("userEmail: \(user.email)")
+                    Text("userName: \(String(describing: user.fullName))")
+                    Text("userEmail: \(String(describing: user.email))")
                 }
                 Spacer()
             }
@@ -59,5 +59,6 @@ struct ProfileScreen: View {
 #Preview {
     ProfileScreen()
         .environment(AuthHelperImp())
+        .modelContainer(PreviewModelContainer.make(with: .init(from: .preview)))
 }
 #endif

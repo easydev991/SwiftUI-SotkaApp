@@ -33,6 +33,7 @@
 		674A8A612DC758BB003F6E50 /* SwiftUI-SotkaApp.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "SwiftUI-SotkaApp.app"; sourceTree = BUILT_PRODUCTS_DIR; };
 		674A8A702DC758BC003F6E50 /* SwiftUI-SotkaAppTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = "SwiftUI-SotkaAppTests.xctest"; sourceTree = BUILT_PRODUCTS_DIR; };
 		674A8A7A2DC758BC003F6E50 /* SwiftUI-SotkaAppUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = "SwiftUI-SotkaAppUITests.xctest"; sourceTree = BUILT_PRODUCTS_DIR; };
+		67A1D4382DDC74B1008B1C9D /* SwiftUI-SotkaAppTests.xctestplan */ = {isa = PBXFileReference; lastKnownFileType = text; name = "SwiftUI-SotkaAppTests.xctestplan"; path = "SwiftUI-SotkaAppTests/SwiftUI-SotkaAppTests.xctestplan"; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
@@ -100,10 +101,10 @@
 		674A8A582DC758BB003F6E50 = {
 			isa = PBXGroup;
 			children = (
+				67A1D4382DDC74B1008B1C9D /* SwiftUI-SotkaAppTests.xctestplan */,
 				674A8A632DC758BB003F6E50 /* SwiftUI-SotkaApp */,
 				674A8A732DC758BC003F6E50 /* SwiftUI-SotkaAppTests */,
 				674A8A7D2DC758BC003F6E50 /* SwiftUI-SotkaAppUITests */,
-				675FDD132DD5E67A0040CA20 /* Frameworks */,
 				674A8A622DC758BB003F6E50 /* Products */,
 			);
 			sourceTree = "<group>";
@@ -116,13 +117,6 @@
 				674A8A7A2DC758BC003F6E50 /* SwiftUI-SotkaAppUITests.xctest */,
 			);
 			name = Products;
-			sourceTree = "<group>";
-		};
-		675FDD132DD5E67A0040CA20 /* Frameworks */ = {
-			isa = PBXGroup;
-			children = (
-			);
-			name = Frameworks;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */

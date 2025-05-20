@@ -10,6 +10,7 @@ import Observation
 import SWUtils
 
 @Observable final class AppSettings {
+    private let notificationCenter = UNUserNotificationCenter.current()
     private let audioPlayer = AudioPlayerManager(fileName: "timerSound", fileExtension: "mp3")
     private let vibrationService = VibrationService()
     let appVersion = (
@@ -141,6 +142,11 @@ import SWUtils
             recipients: ["info@workout.su"]
         )
     }
+    
+    @MainActor
+    func didLogout() {
+        notificationCenter.removeAllPendingNotificationRequests()
+    }
 }
 
 enum NotificationError: Error, LocalizedError {
@@ -177,15 +183,16 @@ private extension AppSettings {
 
 private extension AppSettings {
     func checkNotificationPermissions() async -> Bool {
-        let center = UNUserNotificationCenter.current()
-        let settings = await center.notificationSettings()
+        let settings = await notificationCenter.notificationSettings()
 
         switch settings.authorizationStatus {
         case .authorized, .provisional, .ephemeral:
             return true
         case .notDetermined:
             do {
-                return try await center.requestAuthorization(options: [.alert, .sound])
+                return try await notificationCenter.requestAuthorization(
+                    options: [.alert, .sound]
+                )
             } catch {
                 return false
             }
@@ -215,11 +222,11 @@ private extension AppSettings {
             content: content,
             trigger: trigger
         )
-        UNUserNotificationCenter.current().add(request)
+        notificationCenter.add(request)
     }
 
     func removePendingDailyNotifications() {
-        UNUserNotificationCenter.current().removePendingNotificationRequests(
+        notificationCenter.removePendingNotificationRequests(
             withIdentifiers: [Key.dailyWorkoutReminder.rawValue]
         )
     }

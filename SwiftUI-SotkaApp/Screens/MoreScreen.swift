@@ -73,8 +73,11 @@ struct MoreScreen: View {
             settings.showLanguageAlert.toggle()
         }
         .alert("Alert.language", isPresented: $settings.showLanguageAlert) {
-            cancelButton
-            settingsButton
+            Button("Cancel", role: .cancel) {}
+            Button("Go to settings") {
+                let settingsUrl = URL(string: UIApplication.openSettingsURLString)
+                URLOpener.open(settingsUrl)
+            }
         }
     }
 
@@ -90,13 +93,6 @@ struct MoreScreen: View {
                 }
             )
         )
-        .alert(
-            isPresented: $settings.showNotificationError,
-            error: appSettings.notificationError
-        ) {
-            cancelButton
-            settingsButton
-        }
     }
 
     private func makeNotificationTimePicker(_ value: Binding<Date>) -> some View {
@@ -177,17 +173,6 @@ struct MoreScreen: View {
         if let githubLink = URL(string: "https://github.com/easydev991/SwiftUI-SotkaApp") {
             Link("GitHub page", destination: githubLink)
                 .accessibilityIdentifier("githubButton")
-        }
-    }
-    
-    private var cancelButton: some View {
-        Button("Cancel", role: .cancel) {}
-    }
-    
-    private var settingsButton: some View {
-        Button("Go to settings") {
-            let settingsUrl = URL(string: UIApplication.openSettingsURLString)
-            URLOpener.open(settingsUrl)
         }
     }
 }

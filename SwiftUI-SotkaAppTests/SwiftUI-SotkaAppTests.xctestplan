@@ -1,0 +1,46 @@
+{
+  "configurations" : [
+    {
+      "id" : "D7067B90-51FF-4354-8658-478B9DCD3BEF",
+      "name" : "Test Scheme Action",
+      "options" : {
+
+      }
+    }
+  ],
+  "defaultOptions" : {
+
+  },
+  "testTargets" : [
+    {
+      "parallelizable" : true,
+      "target" : {
+        "containerPath" : "container:SwiftUI-SotkaApp.xcodeproj",
+        "identifier" : "674A8A6F2DC758BC003F6E50",
+        "name" : "SwiftUI-SotkaAppTests"
+      }
+    },
+    {
+      "target" : {
+        "containerPath" : "container:SwiftUI-SotkaApp\/Libraries\/SWUtils",
+        "identifier" : "SWUtilsTests",
+        "name" : "SWUtilsTests"
+      }
+    },
+    {
+      "target" : {
+        "containerPath" : "container:SwiftUI-SotkaApp\/Libraries\/SWKeychain",
+        "identifier" : "SWKeychainTests",
+        "name" : "SWKeychainTests"
+      }
+    },
+    {
+      "target" : {
+        "containerPath" : "container:SwiftUI-SotkaApp\/Libraries\/SWNetwork",
+        "identifier" : "SWNetworkTests",
+        "name" : "SWNetworkTests"
+      }
+    }
+  ],
+  "version" : 1
+}

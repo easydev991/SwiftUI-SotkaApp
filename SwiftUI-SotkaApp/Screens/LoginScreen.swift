@@ -81,7 +81,7 @@ private extension LoginScreen {
     
     var passwordField: some View {
         VStack(alignment: .leading, spacing: 6) {
-            TextField("Password", text: $credentials.password)
+            SecureField("Password", text: $credentials.password)
                 .focused($focus, equals: .password)
             makeErrorView(for: authErrorMessage)
         }

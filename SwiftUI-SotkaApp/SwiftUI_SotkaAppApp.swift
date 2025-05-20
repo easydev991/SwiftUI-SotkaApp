@@ -42,5 +42,11 @@ struct SwiftUI_SotkaAppApp: App {
             .preferredColorScheme(appSettings.appTheme.colorScheme)
         }
         .modelContainer(sharedModelContainer)
+        .onChange(of: authHelper.isAuthorized) { _, isAuthorized in
+            appSettings.setWorkoutNotificationsEnabled(isAuthorized)
+            if !isAuthorized {
+                appSettings.didLogout()
+            }
+        }
     }
 }

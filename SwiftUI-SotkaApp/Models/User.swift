@@ -7,6 +7,7 @@
 
 import Foundation
 import SwiftData
+import SWUtils
 
 @Model
 final class User {
@@ -54,5 +55,36 @@ final class User {
             genderCode: response.genderCode,
             birthDateIsoString: response.birthDateIsoString
         )
+    }
+}
+
+extension User {
+    var avatarUrl: URL? {
+        imageStringURL.queryAllowedURL
+    }
+    
+    var genderWithAge: String {
+        let localizedAgeString = String.localizedStringWithFormat(
+            NSLocalizedString("ageInYears", comment: ""),
+            age
+        )
+        return genderString.isEmpty
+        ? localizedAgeString
+        : genderString + ", " + localizedAgeString
+    }
+}
+
+private extension User {
+    var birthDate: Date {
+        DateFormatterService.dateFromString(birthDateIsoString, format: .isoShortDate)
+    }
+    
+    var genderString: String {
+        guard let genderCode, let gender = Gender(genderCode) else { return "" }
+        return gender.description
+    }
+    
+    var age: Int {
+        Calendar.current.dateComponents([.year], from: birthDate, to: .now).year ?? 0
     }
 }

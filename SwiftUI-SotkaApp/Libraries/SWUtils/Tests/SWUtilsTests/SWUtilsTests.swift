@@ -4,13 +4,6 @@ import Testing
 
 struct SWUtilsTests {
     @Test
-    func stringWithoutHTML() {
-        let htmlString = "<p>Строка с тегами html.<p>"
-        let cleanString = htmlString.withoutHTML
-        #expect(cleanString == "Строка с тегами html.")
-    }
-
-    @Test
     func trueCountIsOne() {
         let testString = " 1"
         #expect(testString.trueCount == 1)

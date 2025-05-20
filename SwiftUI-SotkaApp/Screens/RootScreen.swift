@@ -7,16 +7,29 @@
 
 import SwiftUI
 import SwiftData
+import SWUtils
 
 struct RootScreen: View {
+    @Environment(AppSettings.self) private var appSettings
     @State private var tab = Tab.home
 
     var body: some View {
+        @Bindable var settings = appSettings
         TabView(selection: $tab) {
             ForEach(Tab.allCases, id: \.self) { tab in
                 tab.screen
                     .tabItem { tab.tabItemLabel }
                     .tag(tab)
+            }
+        }
+        .alert(
+            isPresented: $settings.showNotificationError,
+            error: appSettings.notificationError
+        ) {
+            Button("Cancel", role: .cancel) {}
+            Button("Go to settings") {
+                let settingsUrl = URL(string: UIApplication.openSettingsURLString)
+                URLOpener.open(settingsUrl)
             }
         }
     }
