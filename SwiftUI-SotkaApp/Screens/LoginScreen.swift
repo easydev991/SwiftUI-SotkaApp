@@ -9,6 +9,7 @@ import SwiftUI
 import SWKeychain
 import SWUtils
 import SwiftData
+import SWDesignSystem
 
 struct LoginScreen: View {
     @Environment(AuthHelperImp.self) private var authHelper
@@ -32,14 +33,12 @@ struct LoginScreen: View {
                     loginField
                     passwordField
                 }
-                .textFieldStyle(.roundedBorder)
                 Spacer()
                 VStack(spacing: 12) {
                     loginButton
                     forgotPasswordButton
                 }
             }
-            .loadingOverlay(isLoading)
             .padding()
             .navigationTitle("Authorization")
             .onChange(of: credentials) { _, _ in clearErrorMessages() }
@@ -50,6 +49,7 @@ struct LoginScreen: View {
                 [loginTask, restorePasswordTask].forEach { $0?.cancel() }
             }
         }
+        .loadingOverlay(if: isLoading)
     }
 }
 
@@ -66,48 +66,53 @@ private extension LoginScreen {
         credentials.canLogIn(isError: isError)
     }
     
+    @ViewBuilder
     var loginField: some View {
-        VStack(alignment: .leading, spacing: 6) {
-            TextField("Login or emal", text: $credentials.login)
-                .focused($focus, equals: .username)
-                .task {
-                    guard focus == nil else { return }
-                    try? await Task.sleep(for: .seconds(0.5))
-                    focus = .username
-                }
-            makeErrorView(for: resetErrorMessage)
+        let localizedPlaceholder = NSLocalizedString("Login or email", comment: "")
+        SWTextField(
+            placeholder: localizedPlaceholder,
+            text: $credentials.login,
+            isFocused: focus == .username,
+            errorState: isError ? .message(resetErrorMessage) : nil
+        )
+        .focused($focus, equals: .username)
+        .task {
+            guard focus == nil else { return }
+            try? await Task.sleep(for: .seconds(0.5))
+            focus = .username
         }
+        .accessibilityIdentifier("loginField")
     }
     
+    @ViewBuilder
     var passwordField: some View {
-        VStack(alignment: .leading, spacing: 6) {
-            SecureField("Password", text: $credentials.password)
-                .focused($focus, equals: .password)
-            makeErrorView(for: authErrorMessage)
+        let localizedPlaceholder = NSLocalizedString("Password", comment: "")
+        SWTextField(
+            placeholder: localizedPlaceholder,
+            text: $credentials.password,
+            isSecure: true,
+            isFocused: focus == .password,
+            errorState: !authErrorMessage.isEmpty ? .message(authErrorMessage) : nil
+        )
+        .focused($focus, equals: .password)
+        .onSubmit {
+            if credentials.isReady {
+                performLogin()
+            }
         }
+        .accessibilityIdentifier("passwordField")
     }
     
     var loginButton: some View {
         Button("Log in", action: performLogin)
-            .buttonStyle(.borderedProminent)
+            .buttonStyle(SWButtonStyle(mode: .filled, size: .large))
             .disabled(!canLogIn)
+            .accessibilityIdentifier("loginButton")
     }
     
     var forgotPasswordButton: some View {
         Button("Restore password", action: performRestorePassword)
-            .buttonStyle(.bordered)
-    }
-    
-    func makeErrorView(for message: String) -> some View {
-        ZStack {
-            if !message.isEmpty {
-                Text(message)
-                    .foregroundStyle(.red)
-                    .multilineTextAlignment(.leading)
-                    .font(.footnote)
-            }
-        }
-        .animation(.default, value: message)
+            .tint(.swMainText)
     }
     
     func performLogin() {
