@@ -42,6 +42,7 @@ struct ProfileScreen: View {
                             genderWithAge: user.genderWithAge,
                             countryAndCity: userAddress
                         )
+                        .id(user.avatarUrl)
                         .padding(24)
                         makeEditProfileButton(for: user)
                         logoutButton
