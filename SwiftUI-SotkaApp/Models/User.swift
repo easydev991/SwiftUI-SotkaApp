@@ -16,8 +16,8 @@ final class User {
     var fullName: String?
     var email: String?
     var imageStringURL: String?
-    var cityID: Int?
-    var countryID: Int?
+    var cityId: Int?
+    var countryId: Int?
     var genderCode: Int?
     var birthDateIsoString: String?
     
@@ -37,8 +37,8 @@ final class User {
         self.fullName = fullName
         self.email = email
         self.imageStringURL = imageStringURL
-        self.cityID = cityID
-        self.countryID = countryID
+        self.cityId = cityID
+        self.countryId = countryID
         self.genderCode = genderCode
         self.birthDateIsoString = birthDateIsoString
     }
@@ -46,14 +46,14 @@ final class User {
     convenience init(from response: UserResponse) {
         self.init(
             id: response.id,
-            userName: response.userName,
-            fullName: response.fullName,
+            userName: response.name,
+            fullName: response.fullname,
             email: response.email,
-            imageStringURL: response.imageStringURL,
-            cityID: response.cityID,
-            countryID: response.countryID,
-            genderCode: response.genderCode,
-            birthDateIsoString: response.birthDateIsoString
+            imageStringURL: response.image,
+            cityID: response.cityId,
+            countryID: response.countryId,
+            genderCode: response.gender,
+            birthDateIsoString: response.birthDate
         )
     }
 }
@@ -72,13 +72,13 @@ extension User {
         ? localizedAgeString
         : genderString + ", " + localizedAgeString
     }
-}
-
-private extension User {
+    
     var birthDate: Date {
         DateFormatterService.dateFromString(birthDateIsoString, format: .isoShortDate)
     }
-    
+}
+
+private extension User {
     var genderString: String {
         guard let genderCode, let gender = Gender(genderCode) else { return "" }
         return gender.description

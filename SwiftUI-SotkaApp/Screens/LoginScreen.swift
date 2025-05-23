@@ -40,6 +40,8 @@ struct LoginScreen: View {
                 }
             }
             .padding()
+            .loadingOverlay(if: isLoading)
+            .background(Color.swBackground)
             .navigationTitle("Authorization")
             .onChange(of: credentials) { _, _ in clearErrorMessages() }
             .onChange(of: isLoading) { _, newValue in
@@ -49,7 +51,6 @@ struct LoginScreen: View {
                 [loginTask, restorePasswordTask].forEach { $0?.cancel() }
             }
         }
-        .loadingOverlay(if: isLoading)
     }
 }
 

@@ -13,9 +13,7 @@ import SWUtils
     private let notificationCenter = UNUserNotificationCenter.current()
     private let audioPlayer = AudioPlayerManager(fileName: "timerSound", fileExtension: "mp3")
     private let vibrationService = VibrationService()
-    let appVersion = (
-        Bundle.main.object(forInfoDictionaryKey: "CFBundleShortVersionString") as? String
-    ) ?? "4.0.0"
+    let appVersion = Constants.appVersion
     var showLanguageAlert = false
     var showNotificationError = false
     var notificationError: NotificationError?
@@ -126,20 +124,10 @@ import SWUtils
     
     @MainActor
     func sendFeedback() {
-        let subject = "\(ProcessInfo.processInfo.processName): Обратная связь"
-        let question = "Над чем нам стоит поработать?"
-        let sysVersion = "iOS: \(ProcessInfo.processInfo.operatingSystemVersionString)"
-        let appVersion = "App version: " + appVersion
-        let body = """
-            \(sysVersion)
-            \(appVersion)
-            \(question)
-            \n
-        """
         FeedbackSender.sendFeedback(
-            subject: subject,
-            messageBody: body,
-            recipients: ["info@workout.su"]
+            subject: CommonFeedback.subject,
+            messageBody: CommonFeedback.body,
+            recipients: Constants.feedbackRecipients
         )
     }
     

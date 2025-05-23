@@ -43,6 +43,18 @@ extension SWClient: LoginClient {
     }
 }
 
+extension SWClient: ProfileClient {
+    func editUser(_ id: Int, model: MainUserForm) async throws -> UserResponse {
+        let endpoint = Endpoint.editUser(id: id, form: model)
+        return try await makeResult(for: endpoint)
+    }
+    
+    func changePassword(current: String, new: String) async throws {
+        let endpoint = Endpoint.changePassword(currentPass: current, newPass: new)
+        try await makeStatus(for: endpoint)
+    }
+}
+
 extension SWClient: CountryClient {
     func getCountries() async throws -> [CountryResponse] {
         let endpoint = Endpoint.getCountries
@@ -76,6 +88,14 @@ enum Endpoint {
     /// **POST** ${API}/auth/reset
     case resetPassword(login: String)
     
+    // MARK: Изменить данные пользователя
+    /// **POST** ${API}/users/<user_id>
+    case editUser(id: Int, form: MainUserForm)
+    
+    // MARK: Изменить пароль
+    /// **POST** ${API}/auth/changepass
+    case changePassword(currentPass: String, newPass: String)
+    
     // MARK: Получить список стран/городов
     /// **GET** ${API}/countries
     case getCountries
@@ -85,35 +105,63 @@ enum Endpoint {
         case .login: "/auth/login"
         case let .getUser(id): "/users/\(id)"
         case .resetPassword: "/auth/reset"
+        case let .editUser(userID, _): "/users/\(userID)"
+        case .changePassword: "/auth/changepass"
         case .getCountries: "/countries"
         }
     }
     
     var method: HTTPMethod {
         switch self {
-        case .login, .resetPassword: .post
+        case .login, .resetPassword, .editUser, .changePassword: .post
         case .getUser, .getCountries: .get
         }
     }
     
     var hasMultipartFormData: Bool {
         switch self {
-        case .login, .getUser, .resetPassword, .getCountries: false
+        case .editUser: true
+        case .login, .getUser, .resetPassword, .getCountries, .changePassword: false
         }
     }
     
     var queryItems: [URLQueryItem] {
         switch self {
-        case .login, .getUser, .resetPassword, .getCountries: []
+        case .login, .getUser, .resetPassword, .getCountries, .editUser, .changePassword: []
         }
     }
     
     var bodyParts: BodyMaker.Parts? {
         switch self {
         case .login, .getUser, .getCountries:
-            nil
+            return nil
+        case let .editUser(_, form):
+            let parameters: [String: String] = [
+                "name": form.userName,
+                "fullname": form.fullName,
+                "email": form.email,
+                "gender": form.genderCode.description,
+                "country_id": form.country.id,
+                "city_id": form.city.id,
+                "birth_date": form.birthDateIsoString
+            ]
+            let mediaFiles: [BodyMaker.MediaFile]? = if let image = form.image {
+                [
+                    BodyMaker.MediaFile(
+                        key: "image",
+                        filename: "\(UUID().uuidString).jpg",
+                        data: image.data,
+                        mimeType: image.mimeType
+                    )
+                ]
+            } else {
+                nil
+            }
+            return .init(parameters, mediaFiles)
+        case let .changePassword(current, new):
+            return .init(["password": current, "new_password": new], nil)
         case let .resetPassword(login):
-            .init(["username_or_email": login], nil)
+            return .init(["username_or_email": login], nil)
         }
     }
 }

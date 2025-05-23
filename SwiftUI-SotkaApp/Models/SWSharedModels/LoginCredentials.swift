@@ -16,7 +16,7 @@ struct LoginCredentials: Equatable {
     init(
         login: String = "",
         password: String = "",
-        minPasswordSize: Int = 6
+        minPasswordSize: Int = Constants.minPasswordSize
     ) {
         self.login = login
         self.password = password

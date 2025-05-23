@@ -1,6 +1,6 @@
 struct CountryResponse: Codable, Identifiable, Hashable, Sendable {
     let cities: [CityResponse]
-    var id, name: String
+    let id, name: String
 
     /// Россия
     static var defaultCountry: Self {

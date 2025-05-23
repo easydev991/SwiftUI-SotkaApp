@@ -44,6 +44,18 @@ final class AuthHelperImp: AuthHelper {
         self.authData = authData
     }
     
+    func updateAuthData(login: String, newPassword: String? = nil) {
+        let updatedModel: AuthData? = if let newPassword {
+            AuthData(login: login, password: newPassword)
+        } else if let currentPassword = authData?.password {
+            AuthData(login: login, password: currentPassword)
+        } else {
+            nil
+        }
+        guard let updatedModel else { return }
+        saveAuthData(updatedModel)
+    }
+    
     func didAuthorize() {
         isAuthorized = true
     }

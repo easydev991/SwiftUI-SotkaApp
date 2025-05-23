@@ -1,6 +1,7 @@
 struct CityResponse: Codable, Identifiable, Hashable, Sendable {
     let id, name, lat, lon: String
 
+    /// Инициализатор для профиля пользователя
     init(id: String) {
         self.id = id
         self.name = ""

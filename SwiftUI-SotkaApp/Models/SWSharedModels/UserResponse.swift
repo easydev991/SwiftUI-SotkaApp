@@ -9,20 +9,8 @@ import Foundation
 
 struct UserResponse: Codable, Identifiable, Hashable, Sendable {
     let id: Int
-    let userName, fullName, email, imageStringURL: String?
-    let cityID, countryID, genderCode: Int?
+    let name, fullname, email, image: String?
+    let cityId, countryId, gender: Int?
     /// Пример: "1990-11-25"
-    let birthDateIsoString: String?
-    
-    enum CodingKeys: String, CodingKey {
-        case id
-        case userName = "name"
-        case imageStringURL = "image"
-        case cityID = "city_id"
-        case countryID = "country_id"
-        case genderCode = "gender"
-        case birthDateIsoString = "birth_date"
-        case fullName = "fullname"
-        case email
-    }
+    let birthDate: String?
 }
