@@ -8,15 +8,19 @@
 import SwiftUI
 import SwiftData
 import SWUtils
+import SWDesignSystem
 
 @main
 struct SwiftUI_SotkaAppApp: App {
+    @Environment(\.scenePhase) private var scenePhase
+    @State private var countriesService = CountriesUpdateService()
     @State private var appSettings = AppSettings()
     @State private var authHelper = AuthHelperImp()
     @State private var networkStatus = NetworkStatus()
+    private var client: SWClient { SWClient(with: authHelper) }
 
-    private var sharedModelContainer: ModelContainer = {
-        let schema = Schema([User.self])
+    private var modelContainer: ModelContainer = {
+        let schema = Schema([User.self, Country.self])
         let modelConfiguration = ModelConfiguration(schema: schema, isStoredInMemoryOnly: false)
         do {
             return try ModelContainer(for: schema, configurations: [modelConfiguration])
@@ -31,17 +35,25 @@ struct SwiftUI_SotkaAppApp: App {
                 if authHelper.isAuthorized {
                     RootScreen()
                 } else {
-                    LoginScreen()
+                    LoginScreen(client: client)
                 }
             }
+            .loadingOverlay(if: countriesService.isLoading)
             .animation(.default, value: authHelper.isAuthorized)
             .dynamicTypeSize(...DynamicTypeSize.accessibility2)
             .environment(appSettings)
             .environment(authHelper)
             .environment(\.isNetworkConnected, networkStatus.isConnected)
             .preferredColorScheme(appSettings.appTheme.colorScheme)
+            .task(id: scenePhase) {
+                guard scenePhase == .active else { return }
+                await countriesService.update(
+                    modelContainer.mainContext,
+                    client: client
+                )
+            }
         }
-        .modelContainer(sharedModelContainer)
+        .modelContainer(modelContainer)
         .onChange(of: authHelper.isAuthorized) { _, isAuthorized in
             appSettings.setWorkoutNotificationsEnabled(isAuthorized)
             if !isAuthorized {

@@ -23,10 +23,7 @@ struct SWClient: Sendable {
     }
 }
 
-extension SWClient {
-    /// Выполняет авторизацию
-    /// - Parameter token: Токен авторизации
-    /// - Returns: `id` авторизованного пользователя
+extension SWClient: LoginClient {
     func logIn(with token: String?) async throws -> Int {
         struct Response: Decodable { let userId: Int }
         let endpoint = Endpoint.login
@@ -35,22 +32,21 @@ extension SWClient {
         return result.userId
     }
     
-    /// Запрашивает данные пользователя по `id`
-    ///
-    /// В случае успеха сохраняет данные главного пользователя в `defaults` и авторизует, если еще не авторизован
-    /// - Parameters:
-    ///   - userID: `id` пользователя
-    /// - Returns: вся информация о пользователе
     func getUserByID(_ userID: Int) async throws -> UserResponse {
         let endpoint = Endpoint.getUser(id: userID)
         return try await makeResult(for: endpoint)
     }
     
-    /// Сбрасывает пароль для неавторизованного пользователя с указанным логином
-    /// - Parameter login: `login` пользователя
     func resetPassword(for login: String) async throws {
         let endpoint = Endpoint.resetPassword(login: login)
         try await makeStatus(for: endpoint)
+    }
+}
+
+extension SWClient: CountryClient {
+    func getCountries() async throws -> [CountryResponse] {
+        let endpoint = Endpoint.getCountries
+        return try await makeResult(for: endpoint)
     }
 }
 
@@ -80,36 +76,41 @@ enum Endpoint {
     /// **POST** ${API}/auth/reset
     case resetPassword(login: String)
     
+    // MARK: Получить список стран/городов
+    /// **GET** ${API}/countries
+    case getCountries
+    
     var urlPath: String {
         switch self {
         case .login: "/auth/login"
         case let .getUser(id): "/users/\(id)"
         case .resetPassword: "/auth/reset"
+        case .getCountries: "/countries"
         }
     }
     
     var method: HTTPMethod {
         switch self {
         case .login, .resetPassword: .post
-        case .getUser: .get
+        case .getUser, .getCountries: .get
         }
     }
     
     var hasMultipartFormData: Bool {
         switch self {
-        case .login, .getUser, .resetPassword: false
+        case .login, .getUser, .resetPassword, .getCountries: false
         }
     }
     
     var queryItems: [URLQueryItem] {
         switch self {
-        case .login, .getUser, .resetPassword: []
+        case .login, .getUser, .resetPassword, .getCountries: []
         }
     }
     
     var bodyParts: BodyMaker.Parts? {
         switch self {
-        case .login, .getUser:
+        case .login, .getUser, .getCountries:
             nil
         case let .resetPassword(login):
             .init(["username_or_email": login], nil)

@@ -267,6 +267,22 @@
         }
       }
     },
+    "Error.CountriesUpdate" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Failed to update countries"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Не удалось загрузить справочник стран и городов"
+          }
+        }
+      }
+    },
     "Error.ForceLogout" : {
       "comment" : "401",
       "localizations" : {
@@ -1180,6 +1196,18 @@
           }
         }
       }
+    },
+    "Городов нет" : {
+
+    },
+    "Список городов" : {
+
+    },
+    "Список стран" : {
+
+    },
+    "Стран нет" : {
+
     }
   },
   "version" : "1.0"

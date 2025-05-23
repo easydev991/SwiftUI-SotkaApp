@@ -24,7 +24,7 @@ struct LoginScreen: View {
     @State private var authErrorMessage = ""
     @State private var loginTask: Task<Void, Never>?
     @State private var restorePasswordTask: Task<Void, Never>?
-    private var client: SWClient { SWClient(with: authHelper) }
+    let client: LoginClient
     
     var body: some View {
         NavigationStack {
@@ -172,7 +172,14 @@ private extension LoginScreen {
     }
 }
 
-#Preview {
-    LoginScreen()
+#Preview("Успех") {
+    LoginScreen(client: MockLoginClient(result: .success))
         .environment(AuthHelperImp())
+        .environment(\.isNetworkConnected, true)
+}
+
+#Preview("Ошибка") {
+    LoginScreen(client: MockLoginClient(result: .failure()))
+        .environment(AuthHelperImp())
+        .environment(\.isNetworkConnected, true)
 }

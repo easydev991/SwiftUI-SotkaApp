@@ -38,7 +38,7 @@ public final class SWAlert {
     /// Показывает стандартный алерт с сообщение об ошибке
     ///
     /// Игнорирует `CancellationError`
-    public func presentDefaultUIKit(_ error: Error) {
+    public func presentDefaultUIKit(_ error: Error, title: String = "") {
         guard type(of: error) != CancellationError.self else {
             // Баг в NavigationView + searchable приводит к ошибке отмены,
             // если сначала нажать на поле поиска, а следующий модальный
@@ -46,7 +46,7 @@ public final class SWAlert {
             // на iOS 16 min + NavigationStack
             return
         }
-        presentDefaultUIKit(message: error.localizedDescription)
+        presentDefaultUIKit(title: title, message: error.localizedDescription)
     }
 
     /// Показывает алерт об отсутствии интернета
