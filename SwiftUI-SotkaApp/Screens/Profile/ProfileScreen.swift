@@ -36,15 +36,12 @@ struct ProfileScreen: View {
             ScrollView {
                 VStack(spacing: 0) {
                     if let user {
-                        ProfileView(
-                            imageURL: user.avatarUrl,
-                            login: user.userName ?? "",
-                            genderWithAge: user.genderWithAge,
-                            countryAndCity: userAddress
-                        )
-                        .id(user.avatarUrl)
-                        .padding(24)
+                        makeProfileView(for: user)
                         makeEditProfileButton(for: user)
+                        VStack(spacing: 12) {
+                            makeJournalButton(for: user)
+                            makeProgressButton(for: user)
+                        }
                         logoutButton
                     }
                 }
@@ -58,6 +55,17 @@ struct ProfileScreen: View {
 }
 
 private extension ProfileScreen {
+    func makeProfileView(for user: User) -> some View {
+        ProfileView(
+            imageURL: user.avatarUrl,
+            login: user.userName ?? "",
+            genderWithAge: user.genderWithAge,
+            countryAndCity: userAddress
+        )
+        .id(user.avatarUrl)
+        .padding(24)
+    }
+    
     func makeEditProfileButton(for user: User) -> some View {
         NavigationLink(
             "Edit profile",
@@ -65,6 +73,26 @@ private extension ProfileScreen {
         )
         .buttonStyle(SWButtonStyle(icon: .pencil, mode: .tinted, size: .large))
         .padding(.bottom, 24)
+    }
+    
+    func makeJournalButton(for user: User) -> some View {
+        NavigationLink(destination: JournalScreen(user: user)) {
+            let localizedString = NSLocalizedString("Journal", comment: "")
+            FormRowView(
+                title: localizedString,
+                trailingContent: .textWithChevron("")
+            )
+        }
+    }
+    
+    func makeProgressButton(for user: User) -> some View {
+        NavigationLink(destination: ProgressScreen(user: user)) {
+            let localizedString = NSLocalizedString("Progress", comment: "")
+            FormRowView(
+                title: localizedString,
+                trailingContent: .textWithChevron("")
+            )
+        }
     }
     
     var logoutButton: some View {
