@@ -7,6 +7,7 @@
 
 import Foundation
 import Observation
+import SWUtils
 import OSLog
 
 @MainActor
@@ -54,17 +55,52 @@ import OSLog
         isLoading = true
         do {
             let currentRun = try await client.current()
-            guard let startDate = currentRun.date else {
-                // TODO: стартовать сотку
+            let siteStartDate = currentRun.date
+            switch (startDate, siteStartDate) {
+            case (.none, .none):
                 logger.info("Сотку еще не стартовали")
-                return
+                try await start(client: client)
+            case let (.none, .some(date)):
+                // TODO: syncUsingSiteData
+                // Сайт - источник истины
+                logger.info("Статус загрузили, дата старта есть только на сайте: \(date.description)")
+                self.startDate = date
+            case let (.some(date), .none):
+                // TODO: syncUsingAppData
+                // Приложение - источник истины
+                logger.info("Статус загрузили, на сайте нет даты старта, а в приложении есть: \(date.description)")
+                try await start(client: client)
+            case let (.some(appDate), .some(siteDate)):
+                /*
+                 Если даты без учета часов совпадают, то делаем обычную синхронизацию,
+                 иначе - показываем алерт с предложением выбрать источник истины
+                 showSyncOptionsWithSiteDate
+                 */
+                logger.info("Статус загружен, дата старта в приложении: \(appDate.description), и на сайте: \(siteDate.description)")
+                break
             }
-            logger.info("Статус загружен: \(startDate.description)")
-            self.startDate = startDate
+            try await start(client: client)
         } catch {
             logger.error("\(error.localizedDescription)")
         }
         isLoading = false
+    }
+    
+    @discardableResult
+    func start(client: StatusClient) async throws -> CurrentRun {
+        let isoDateString = DateFormatterService.stringFromFullDate(.now, iso: true)
+        let currentRun = try await client.start(date: isoDateString)
+        // TODO: синхронизировать дневник и прогресс (посты, параметры, фото)
+        return currentRun
+    }
+    
+    func syncWithSiteData(client: StatusClient, siteDate: Date? = nil) async {
+        if let siteDate {
+            self.startDate = siteDate
+        } else {
+            await getStatus(client: client)
+        }
+        // TODO: синхронизировать дневник и прогресс (посты, параметры, фото)
     }
     
     func didLogout() {
@@ -74,6 +110,9 @@ import OSLog
 
 private extension StatusManager {
     enum Key: String {
-        case startDate
+        /// Дата начала сотки
+        ///
+        /// Значение взял из старого приложения
+        case startDate = "WorkoutStartDate"
     }
 }
