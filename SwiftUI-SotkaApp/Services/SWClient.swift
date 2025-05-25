@@ -62,6 +62,18 @@ extension SWClient: CountryClient {
     }
 }
 
+extension SWClient: StatusClient {
+    func start(date: String) async throws -> CurrentRun {
+        let endpoint = Endpoint.start(date)
+        return try await makeResult(for: endpoint)
+    }
+    
+    func current() async throws -> CurrentRun {
+        let endpoint = Endpoint.current
+        return try await makeResult(for: endpoint)
+    }
+}
+
 enum ClientError: Error, LocalizedError {
     case forceLogout
     case noConnection
@@ -75,6 +87,10 @@ enum ClientError: Error, LocalizedError {
 }
 
 enum Endpoint {
+    // MARK: Получить список стран/городов
+    /// **GET** ${API}/countries
+    case getCountries
+    
     // MARK: Авторизация
     /// **POST** ${API}/auth/login
     case login
@@ -96,44 +112,50 @@ enum Endpoint {
     /// **POST** ${API}/auth/changepass
     case changePassword(currentPass: String, newPass: String)
     
-    // MARK: Получить список стран/городов
-    /// **GET** ${API}/countries
-    case getCountries
+    // MARK: Стартовать сотку
+    /// **POST** ${API}/100/start
+    case start(_ date: String)
+    
+    // MARK: Статус сотки пользователя
+    /// **GET** ${API}/100/current_run
+    case current
     
     var urlPath: String {
         switch self {
+        case .getCountries: "/countries"
         case .login: "/auth/login"
         case let .getUser(id): "/users/\(id)"
         case .resetPassword: "/auth/reset"
         case let .editUser(userID, _): "/users/\(userID)"
         case .changePassword: "/auth/changepass"
-        case .getCountries: "/countries"
+        case .start: "/100/start"
+        case .current: "/100/current_run"
         }
     }
     
     var method: HTTPMethod {
         switch self {
-        case .login, .resetPassword, .editUser, .changePassword: .post
-        case .getUser, .getCountries: .get
+        case .login, .resetPassword, .editUser, .changePassword, .start: .post
+        case .getUser, .getCountries, .current: .get
         }
     }
     
     var hasMultipartFormData: Bool {
         switch self {
         case .editUser: true
-        case .login, .getUser, .resetPassword, .getCountries, .changePassword: false
+        case .login, .getUser, .resetPassword, .getCountries, .changePassword, .start, .current: false
         }
     }
     
     var queryItems: [URLQueryItem] {
         switch self {
-        case .login, .getUser, .resetPassword, .getCountries, .editUser, .changePassword: []
+        case .login, .getUser, .resetPassword, .getCountries, .editUser, .changePassword, .start, .current: []
         }
     }
     
     var bodyParts: BodyMaker.Parts? {
         switch self {
-        case .login, .getUser, .getCountries:
+        case .login, .getUser, .getCountries, .current:
             return nil
         case let .editUser(_, form):
             let parameters: [String: String] = [
@@ -162,6 +184,8 @@ enum Endpoint {
             return .init(["password": current, "new_password": new], nil)
         case let .resetPassword(login):
             return .init(["username_or_email": login], nil)
+        case let .start(date):
+            return .init(["date": date], nil)
         }
     }
 }

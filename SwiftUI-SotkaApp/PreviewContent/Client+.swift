@@ -45,3 +45,29 @@ struct MockLoginClient: LoginClient {
         }
     }
 }
+
+extension MockLoginClient: StatusClient {
+    func start(date: String) async throws -> CurrentRun {
+        print("Имитируем запрос start")
+        try await Task.sleep(for: .seconds(1))
+        switch result {
+        case .success:
+            print("Успешно cтартовали сотку")
+            return .init(date: .now)
+        case let .failure(error):
+            throw error
+        }
+    }
+    
+    func current() async throws -> CurrentRun {
+        print("Имитируем запрос current")
+        try await Task.sleep(for: .seconds(1))
+        switch result {
+        case .success:
+            print("Успешно получили статус прохождения сотки")
+            return .init(date: .now)
+        case let .failure(error):
+            throw error
+        }
+    }
+}

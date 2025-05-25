@@ -26,6 +26,7 @@ public struct SWNetworkService {
         configuration.timeoutIntervalForRequest = timeoutIntervalForRequest
         configuration.timeoutIntervalForResource = timeoutIntervalForResource
         decoder.keyDecodingStrategy = decodingStrategy
+        decoder.dateDecodingStrategy = .iso8601
         self.session = URLSession(configuration: configuration)
     }
 }

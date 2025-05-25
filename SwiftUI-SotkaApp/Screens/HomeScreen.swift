@@ -6,12 +6,19 @@
 //
 
 import SwiftUI
+import SWDesignSystem
 
 struct HomeScreen: View {
+    @Environment(StatusManager.self) private var statusManager
+    
     var body: some View {
         NavigationStack {
-            Text("Home")
-                .navigationTitle("Home")
+            ScrollView {
+                Text("Start date: \(statusManager.startDate)")
+            }
+            .frame(maxWidth: .infinity)
+            .background(Color.swBackground)
+            .navigationTitle("Home")
         }
     }
 }
@@ -19,5 +26,6 @@ struct HomeScreen: View {
 #if DEBUG
 #Preview {
     HomeScreen()
+        .environment(StatusManager())
 }
 #endif

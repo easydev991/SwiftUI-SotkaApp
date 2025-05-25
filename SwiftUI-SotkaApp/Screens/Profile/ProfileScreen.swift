@@ -108,12 +108,7 @@ private extension ProfileScreen {
             titleVisibility: .visible
         ) {
             Button("Log out", role: .destructive) {
-                do {
-                    authHelper.triggerLogout()
-                    try modelContext.delete(model: User.self)
-                } catch {
-                    fatalError("Не удалось удалить пользователя: \(error.localizedDescription)")
-                }
+                authHelper.triggerLogout()
             }
         }
     }

@@ -14,6 +14,7 @@ import SWDesignSystem
 struct SwiftUI_SotkaAppApp: App {
     @Environment(\.scenePhase) private var scenePhase
     @State private var countriesService = CountriesUpdateService()
+    @State private var statusManager = StatusManager()
     @State private var appSettings = AppSettings()
     @State private var authHelper = AuthHelperImp()
     @State private var networkStatus = NetworkStatus()
@@ -38,11 +39,12 @@ struct SwiftUI_SotkaAppApp: App {
                     LoginScreen(client: client)
                 }
             }
-            .loadingOverlay(if: countriesService.isLoading)
+            .loadingOverlay(if: countriesService.isLoading || statusManager.isLoading)
             .animation(.default, value: authHelper.isAuthorized)
             .dynamicTypeSize(...DynamicTypeSize.accessibility2)
             .environment(appSettings)
             .environment(authHelper)
+            .environment(statusManager)
             .environment(\.isNetworkConnected, networkStatus.isConnected)
             .preferredColorScheme(appSettings.appTheme.colorScheme)
             .task(id: scenePhase) {
@@ -51,6 +53,7 @@ struct SwiftUI_SotkaAppApp: App {
                     modelContainer.mainContext,
                     client: client
                 )
+                await statusManager.getStatus(client: client)
             }
         }
         .modelContainer(modelContainer)
@@ -58,6 +61,12 @@ struct SwiftUI_SotkaAppApp: App {
             appSettings.setWorkoutNotificationsEnabled(isAuthorized)
             if !isAuthorized {
                 appSettings.didLogout()
+                statusManager.didLogout()
+                do {
+                    try modelContainer.mainContext.delete(model: User.self)
+                } catch {
+                    fatalError("Не удалось удалить пользователя: \(error.localizedDescription)")
+                }
             }
         }
     }

@@ -13,6 +13,7 @@ import SWDesignSystem
 
 struct LoginScreen: View {
     @Environment(AuthHelperImp.self) private var authHelper
+    @Environment(StatusManager.self) private var statusManager
     @Environment(\.modelContext) private var modelContext
     @Environment(\.isNetworkConnected) private var isNetworkConnected
     @State private var credentials = LoginCredentials()
@@ -24,7 +25,7 @@ struct LoginScreen: View {
     @State private var authErrorMessage = ""
     @State private var loginTask: Task<Void, Never>?
     @State private var restorePasswordTask: Task<Void, Never>?
-    let client: LoginClient
+    let client: LoginClient & StatusClient
     
     var body: some View {
         NavigationStack {
@@ -130,6 +131,7 @@ private extension LoginScreen {
                 authHelper.didAuthorize()
                 let user = User(from: userInfo)
                 modelContext.insert(user)
+                await statusManager.getStatus(client: client)
             } catch ClientError.noConnection {
                 SWAlert.shared.presentNoConnection(true)
             } catch {
