@@ -61,10 +61,9 @@ import OSLog
                 logger.info("Сотку еще не стартовали")
                 try await start(client: client)
             case let (.none, .some(date)):
-                // TODO: syncUsingSiteData
                 // Сайт - источник истины
                 logger.info("Статус загрузили, дата старта есть только на сайте: \(date.description)")
-                self.startDate = date
+                await syncWithSiteDate(client: client, siteDate: date)
             case let (.some(date), .none):
                 // TODO: syncUsingAppData
                 // Приложение - источник истины
@@ -94,12 +93,9 @@ import OSLog
         return currentRun
     }
     
-    func syncWithSiteData(client: StatusClient, siteDate: Date? = nil) async {
-        if let siteDate {
-            self.startDate = siteDate
-        } else {
-            await getStatus(client: client)
-        }
+    func syncWithSiteDate(client: StatusClient, siteDate: Date) async {
+        self.startDate = siteDate
+        await getStatus(client: client)
         // TODO: синхронизировать дневник и прогресс (посты, параметры, фото)
     }
     
