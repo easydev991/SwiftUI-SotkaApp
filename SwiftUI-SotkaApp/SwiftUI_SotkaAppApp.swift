@@ -53,6 +53,7 @@ struct SwiftUI_SotkaAppApp: App {
                     modelContainer.mainContext,
                     client: client
                 )
+                guard authHelper.isAuthorized else { return }
                 await statusManager.getStatus(client: client)
             }
         }

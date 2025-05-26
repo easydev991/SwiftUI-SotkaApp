@@ -60,14 +60,14 @@ import OSLog
             case (.none, .none):
                 logger.info("Сотку еще не стартовали")
                 await start(client: client, appDate: nil)
-            case let (.none, .some(date)):
-                // Сайт - источник истины
-                logger.info("Дата старта есть только на сайте: \(date.description)")
-                await syncWithSiteDate(client: client, siteDate: date)
             case let (.some(date), .none):
                 // Приложение - источник истины
                 logger.info("Дата старта есть только в приложении: \(date.description)")
                 await start(client: client, appDate: date)
+            case let (.none, .some(date)):
+                // Сайт - источник истины
+                logger.info("Дата старта есть только на сайте: \(date.description)")
+                await syncWithSiteDate(client: client, siteDate: date)
             case let (.some(appDate), .some(siteDate)):
                 logger.info("Дата старта в приложении: \(appDate.description), и на сайте: \(siteDate.description)")
                 if appDate.isTheSameDayIgnoringTime(siteDate) {
@@ -117,6 +117,6 @@ private extension StatusManager {
 
 private extension StatusManager {
     func syncJournalAndProgress() async {
-        assertionFailure("Реализовать синхронизацию дневника и прогресса")
+        logger.error("Реализовать синхронизацию дневника и прогресса")
     }
 }
