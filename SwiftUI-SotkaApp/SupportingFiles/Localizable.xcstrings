@@ -7,9 +7,6 @@
     "%@" : {
       "shouldTranslate" : false
     },
-    "%lld" : {
-
-    },
     "About app" : {
       "localizations" : {
         "ru" : {
@@ -265,6 +262,54 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Изменить фотографию"
+          }
+        }
+      }
+    },
+    "Congratulations.Body" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "You have successfully completed SOTKA!"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Вы успешно прошли программу SOTKA!"
+          }
+        }
+      }
+    },
+    "Congratulations.Subtitle" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "days behind"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "дней позади"
+          }
+        }
+      }
+    },
+    "Congratulations.Title" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Congratulations!"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Поздравляем!"
           }
         }
       }

@@ -11,6 +11,8 @@ struct DayCalculator {
     let currentDay: Int
     let daysLeft: Int
     
+    var isOver: Bool { currentDay == 100 }
+    
     init?(_ currentDay: Int?) {
         guard let currentDay else {
             return nil

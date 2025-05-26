@@ -86,7 +86,7 @@ import OSLog
                 return
             }
             let daysBetween = DateFormatterService.days(from: startDate, to: .now)
-            currentDay = daysBetween + 1
+            currentDay = min(daysBetween + 1, 100)
         } catch {
             logger.error("\(error.localizedDescription)")
         }
