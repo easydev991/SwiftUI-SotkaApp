@@ -19,7 +19,7 @@ import OSLog
     private let defaults = UserDefaults.standard
     
     /// Дата старта сотки
-    private(set) var startDate: Date? {
+    private var startDate: Date? {
         get {
             access(keyPath: \.startDate)
             let storedTime = defaults.double(
@@ -44,6 +44,8 @@ import OSLog
             }
         }
     }
+    /// Номер текущего дня сотки
+    private(set) var currentDay: Int?
     
     private(set) var isLoading = false
     
@@ -74,9 +76,17 @@ import OSLog
                     await syncJournalAndProgress()
                 } else {
                     // TODO: showSyncOptionsWithSiteDate
-                    assertionFailure("Показать алерт с предложением выбрать источник истины")
+                    logger.error("Показать алерт с предложением выбрать источник истины")
                 }
             }
+            guard let startDate else {
+                let message = "Дата старта не настроена"
+                logger.error("\(message)")
+                assertionFailure(message)
+                return
+            }
+            let daysBetween = DateFormatterService.days(from: startDate, to: .now)
+            currentDay = daysBetween + 1
         } catch {
             logger.error("\(error.localizedDescription)")
         }
@@ -103,6 +113,7 @@ import OSLog
     
     func didLogout() {
         startDate = nil
+        currentDay = nil
     }
 }
 

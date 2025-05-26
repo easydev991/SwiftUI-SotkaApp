@@ -7,6 +7,9 @@
     "%@" : {
       "shouldTranslate" : false
     },
+    "%lld" : {
+
+    },
     "About app" : {
       "localizations" : {
         "ru" : {
@@ -266,6 +269,22 @@
         }
       }
     },
+    "Current day" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Current day"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Текущий день"
+          }
+        }
+      }
+    },
     "Current password" : {
       "localizations" : {
         "ru" : {
@@ -288,10 +307,32 @@
     },
     "Dark" : {
       "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Dark"
+          }
+        },
         "ru" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "Тёмная"
+          }
+        }
+      }
+    },
+    "Days left" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Remaining"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Осталось"
           }
         }
       }
@@ -1137,6 +1178,22 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Болезнь"
+          }
+        }
+      }
+    },
+    "SOTKA" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "SOTKA"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "SOTKA"
           }
         }
       }
