@@ -59,44 +59,46 @@ import OSLog
             switch (startDate, siteStartDate) {
             case (.none, .none):
                 logger.info("Сотку еще не стартовали")
-                try await start(client: client)
+                await start(client: client, appDate: nil)
             case let (.none, .some(date)):
                 // Сайт - источник истины
-                logger.info("Статус загрузили, дата старта есть только на сайте: \(date.description)")
+                logger.info("Дата старта есть только на сайте: \(date.description)")
                 await syncWithSiteDate(client: client, siteDate: date)
             case let (.some(date), .none):
-                // TODO: syncUsingAppData
                 // Приложение - источник истины
-                logger.info("Статус загрузили, на сайте нет даты старта, а в приложении есть: \(date.description)")
-                try await start(client: client)
+                logger.info("Дата старта есть только в приложении: \(date.description)")
+                await start(client: client, appDate: date)
             case let (.some(appDate), .some(siteDate)):
-                /*
-                 Если даты без учета часов совпадают, то делаем обычную синхронизацию,
-                 иначе - показываем алерт с предложением выбрать источник истины
-                 showSyncOptionsWithSiteDate
-                 */
-                logger.info("Статус загружен, дата старта в приложении: \(appDate.description), и на сайте: \(siteDate.description)")
-                break
+                logger.info("Дата старта в приложении: \(appDate.description), и на сайте: \(siteDate.description)")
+                if appDate.isTheSameDayIgnoringTime(siteDate) {
+                    await syncJournalAndProgress()
+                } else {
+                    // TODO: showSyncOptionsWithSiteDate
+                    assertionFailure("Показать алерт с предложением выбрать источник истины")
+                }
             }
-            try await start(client: client)
         } catch {
             logger.error("\(error.localizedDescription)")
         }
         isLoading = false
     }
     
-    @discardableResult
-    func start(client: StatusClient) async throws -> CurrentRun {
-        let isoDateString = DateFormatterService.stringFromFullDate(.now, iso: true)
-        let currentRun = try await client.start(date: isoDateString)
-        // TODO: синхронизировать дневник и прогресс (посты, параметры, фото)
-        return currentRun
+    func start(client: StatusClient, appDate: Date?) async {
+        let newStartDate = appDate ?? .now
+        let isoDateString = DateFormatterService.stringFromFullDate(newStartDate, iso: true)
+        let currentRun = try? await client.start(date: isoDateString)
+        startDate = if let siteStartDate = currentRun?.date {
+            siteStartDate
+        } else {
+            newStartDate
+        }
+        await syncJournalAndProgress()
     }
     
     func syncWithSiteDate(client: StatusClient, siteDate: Date) async {
         self.startDate = siteDate
         await getStatus(client: client)
-        // TODO: синхронизировать дневник и прогресс (посты, параметры, фото)
+        await syncJournalAndProgress()
     }
     
     func didLogout() {
@@ -110,5 +112,11 @@ private extension StatusManager {
         ///
         /// Значение взял из старого приложения
         case startDate = "WorkoutStartDate"
+    }
+}
+
+private extension StatusManager {
+    func syncJournalAndProgress() async {
+        assertionFailure("Реализовать синхронизацию дневника и прогресса")
     }
 }
