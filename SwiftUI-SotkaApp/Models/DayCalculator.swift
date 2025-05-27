@@ -30,7 +30,6 @@ struct DayCalculator {
         guard let startDate else {
             let message = "Дата старта не настроена"
             logger.error("\(message)")
-            assertionFailure(message)
             return nil
         }
         let daysBetween = DateFormatterService.days(from: startDate, to: endDate)
