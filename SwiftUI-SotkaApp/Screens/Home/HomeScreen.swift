@@ -13,16 +13,21 @@ struct HomeScreen: View {
     
     var body: some View {
         NavigationStack {
-            if let calculator = DayCalculator(statusManager.currentDay) {
-                ScrollView {
-                    DayCountView(calculator: calculator)
-                        .padding()
+            ZStack {
+                Color.swBackground.ignoresSafeArea()
+                if let calculator = statusManager.currentDayCalculator {
+                    ScrollView {
+                        DayCountView(calculator: calculator)
+                            .padding()
+                    }
+                    .frame(maxWidth: .infinity)
+                } else {
+                    Text("Loading")
                 }
-                .frame(maxWidth: .infinity)
-                .background(Color.swBackground)
-                .navigationTitle("SOTKA")
-                .navigationBarTitleDisplayMode(.inline)
             }
+            .frame(maxWidth: .infinity)
+            .navigationTitle("SOTKA")
+            .navigationBarTitleDisplayMode(.inline)
         }
     }
 }

@@ -44,8 +44,8 @@ import OSLog
             }
         }
     }
-    /// Номер текущего дня сотки
-    private(set) var currentDay: Int?
+    /// Калькулятор текущего дня сотки
+    private(set) var currentDayCalculator: DayCalculator?
     
     private(set) var isLoading = false
     
@@ -79,14 +79,7 @@ import OSLog
                     logger.error("Показать алерт с предложением выбрать источник истины")
                 }
             }
-            guard let startDate else {
-                let message = "Дата старта не настроена"
-                logger.error("\(message)")
-                assertionFailure(message)
-                return
-            }
-            let daysBetween = DateFormatterService.days(from: startDate, to: .now)
-            currentDay = min(daysBetween + 1, 100)
+            currentDayCalculator = .init(startDate, .now)
         } catch {
             logger.error("\(error.localizedDescription)")
         }
@@ -113,7 +106,7 @@ import OSLog
     
     func didLogout() {
         startDate = nil
-        currentDay = nil
+        currentDayCalculator = nil
     }
 }
 

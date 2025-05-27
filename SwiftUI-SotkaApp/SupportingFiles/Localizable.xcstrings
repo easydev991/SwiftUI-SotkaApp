@@ -719,6 +719,16 @@
         }
       }
     },
+    "Loading" : {
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Загрузка"
+          }
+        }
+      }
+    },
     "Log in" : {
       "localizations" : {
         "ru" : {

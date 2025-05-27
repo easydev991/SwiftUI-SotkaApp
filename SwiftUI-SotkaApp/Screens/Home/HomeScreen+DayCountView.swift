@@ -86,16 +86,16 @@ private extension HomeScreen.DayCountView {
 }
 
 #Preview("День 1") {
-    HomeScreen.DayCountView(calculator: .init(1)!)
+    HomeScreen.DayCountView(calculator: .init(previewDay: 1))
         .padding()
 }
 
 #Preview("День 49") {
-    HomeScreen.DayCountView(calculator: .init(49)!)
+    HomeScreen.DayCountView(calculator: .init(previewDay: 49))
         .padding()
 }
 
 #Preview("День 100") {
-    HomeScreen.DayCountView(calculator: .init(100)!)
+    HomeScreen.DayCountView(calculator: .init(previewDay: 100))
         .padding()
 }
