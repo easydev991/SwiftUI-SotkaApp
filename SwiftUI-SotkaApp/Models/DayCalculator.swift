@@ -2,11 +2,12 @@ import Foundation
 import OSLog
 import SWUtils
 
+private let logger = Logger(
+    subsystem: Bundle.main.bundleIdentifier!,
+    category: String(describing: DayCalculator.self)
+)
+
 struct DayCalculator {
-    private let logger = Logger(
-        subsystem: Bundle.main.bundleIdentifier!,
-        category: String(describing: DayCalculator.self)
-    )
     /// Номер текущего дня
     let currentDay: Int
     /// Количество дней, оставшихся для завершения программы
@@ -15,7 +16,7 @@ struct DayCalculator {
     /// `true` - программа завершена, `false` - программа не завершена
     var isOver: Bool { currentDay == 100 }
 
-    /// Инициализатор
+    /// Инициализатор опциональный
     /// - Parameters:
     ///   - startDate: Дата старта сотки (на сайте или в приложении)
     ///   - endDate: Текущая дата, с которой нужно сравнить дату старта
@@ -25,6 +26,14 @@ struct DayCalculator {
             logger.error("\(message)")
             return nil
         }
+        self.init(startDate, endDate)
+    }
+
+    /// Инициализатор обычный
+    /// - Parameters:
+    ///   - startDate: Дата старта сотки (на сайте или в приложении)
+    ///   - endDate: Текущая дата, с которой нужно сравнить дату старта
+    init(_ startDate: Date, _ endDate: Date) {
         let daysBetween = DateFormatterService.days(from: startDate, to: endDate)
         let currentDay = min(daysBetween + 1, 100)
         self.currentDay = currentDay
