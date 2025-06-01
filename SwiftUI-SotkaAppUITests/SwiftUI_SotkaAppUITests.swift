@@ -7,26 +7,30 @@
 
 import XCTest
 
+@MainActor
 final class SwiftUI_SotkaAppUITests: XCTestCase {
-    override func setUpWithError() throws {
-        // Put setup code here. This method is called before the invocation of each test method in the class.
+    private let springBoard = XCUIApplication(bundleIdentifier: "com.apple.springboard")
+    private var app: XCUIApplication!
+    private let login = "testuserapple"
+    private let password = "111111"
 
-        // In UI tests it is usually best to stop immediately when a failure occurs.
+    override func setUp() async throws {
         continueAfterFailure = false
-
-        // In UI tests it’s important to set the initial state - such as interface orientation - required for your tests before they run. The setUp method is a good place to do this.
-    }
-
-    override func tearDownWithError() throws {
-        // Put teardown code here. This method is called after the invocation of each test method in the class.
-    }
-
-    @MainActor
-    func testExample() throws {
-        // UI tests must launch the application that they test.
-        let app = XCUIApplication()
+        app = XCUIApplication()
+        app.launchArguments.append("UITest")
+        setupSnapshot(app)
         app.launch()
-        // Use XCTAssert and related functions to verify your tests produce the correct results.
+    }
+
+    override func tearDown() async throws {
+        try super.tearDownWithError()
+        app.launchArguments.removeAll()
+        app = nil
+    }
+
+    func testMakeScreenshots() {
+        handleNotificationAlert()
+        // TODO: реализовать тесты для скриншотов
     }
 
     @MainActor
@@ -35,5 +39,18 @@ final class SwiftUI_SotkaAppUITests: XCTestCase {
         measure(metrics: [XCTApplicationLaunchMetric()]) {
             XCUIApplication().launch()
         }
+    }
+}
+
+private extension SwiftUI_SotkaAppUITests {
+    func handleNotificationAlert() {
+        let alert = springBoard.alerts.firstMatch
+        let button = alert.buttons.element(
+            matching: NSPredicate(
+                format:
+                "label IN {'Allow', 'Разрешить'}"
+            )
+        )
+        waitAndTap(timeout: 5, element: button)
     }
 }

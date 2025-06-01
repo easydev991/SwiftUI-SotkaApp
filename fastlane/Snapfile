@@ -1,0 +1,35 @@
+# Список устройств, на которых будут делаться скриншоты
+devices(["iPhone 16 Pro Max", "iPhone 16 Pro", "iPhone SE (3rd generation)"])
+
+# Список языков, которые будут использоваться. Смотри https://docs.fastlane.tools/actions/snapshot/#available-language-codes
+languages(["en-US", "ru"])
+
+# Имя схемы, в которой находятся UI-тесты
+scheme("SwiftUI-SotkaAppUITests")
+
+# Удалить все старые скриншоты перед созданием новых
+clear_previous_screenshots(true)
+
+# Не устанавливать зависимости пакетов перед запуском
+skip_package_dependencies_resolution(true)
+
+# Не обновлять пакеты автоматически
+disable_package_automatic_updates(true)
+
+# Не открывать html-файл с результатами после завершения
+skip_open_summary(true)
+
+# Переустанавливать приложение перед запуском
+reinstall_app(true)
+
+# Включение этой опции настроит язык системы симулятора
+localize_simulator(true)
+
+# Остановить выполнение сразу, если тесты полностью провалились на одном из устройств
+stop_after_first_error(true)
+
+# Сколько раз пробовать снова в случае ошибок
+number_of_retries(0)
+
+# Для получения дополнительной информации обо всех доступных опциях запусти команду:
+# fastlane action snapshot

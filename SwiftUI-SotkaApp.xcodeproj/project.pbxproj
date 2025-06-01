@@ -49,6 +49,13 @@
 			);
 			target = 674A8A602DC758BB003F6E50 /* SwiftUI-SotkaApp */;
 		};
+		6777B2CC2DEC4B330030E93A /* Exceptions for "SwiftUI-SotkaApp" folder in "SwiftUI-SotkaAppUITests" target */ = {
+			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
+			membershipExceptions = (
+				SupportingFiles/Localizable.xcstrings,
+			);
+			target = 674A8A792DC758BC003F6E50 /* SwiftUI-SotkaAppUITests */;
+		};
 /* End PBXFileSystemSynchronizedBuildFileExceptionSet section */
 
 /* Begin PBXFileSystemSynchronizedRootGroup section */
@@ -56,6 +63,7 @@
 			isa = PBXFileSystemSynchronizedRootGroup;
 			exceptions = (
 				676FF2DF2DC7D02700FEE8D8 /* Exceptions for "SwiftUI-SotkaApp" folder in "SwiftUI-SotkaApp" target */,
+				6777B2CC2DEC4B330030E93A /* Exceptions for "SwiftUI-SotkaApp" folder in "SwiftUI-SotkaAppUITests" target */,
 			);
 			path = "SwiftUI-SotkaApp";
 			sourceTree = "<group>";
