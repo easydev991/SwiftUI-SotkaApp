@@ -1,12 +1,5 @@
-//
-//  HomeScreen+DayCountView.swift
-//  SwiftUI-SotkaApp
-//
-//  Created by Олег Еременко on 26.05.2025.
-//
-
-import SwiftUI
 import SWDesignSystem
+import SwiftUI
 
 extension HomeScreen {
     /// Вьюха с днями сотки (текущий день и оставшиеся дни)
@@ -14,7 +7,7 @@ extension HomeScreen {
     /// В старом приложении это `HomeCountCell`
     struct DayCountView: View {
         let calculator: DayCalculator
-        
+
         var body: some View {
             ZStack {
                 if calculator.isOver {
@@ -48,7 +41,7 @@ private extension HomeScreen.DayCountView {
         .bold()
         .frame(maxWidth: .infinity)
     }
-    
+
     var notFinishedView: some View {
         HStack(spacing: 0) {
             let currentDayTitle = NSLocalizedString("Current day", comment: "")
@@ -60,7 +53,7 @@ private extension HomeScreen.DayCountView {
             makeDayStack(title: daysLeftTitle, day: calculator.daysLeft)
         }
     }
-    
+
     func makeDayStack(title: String, day: Int) -> some View {
         VStack(spacing: 4) {
             Text(title)
@@ -69,13 +62,13 @@ private extension HomeScreen.DayCountView {
         }
         .frame(maxWidth: .infinity)
     }
-    
+
     func makeNumberView(for day: Int) -> some View {
         HStack(spacing: 2) {
             // Форматируем число как строку с ведущим нулём (например, "07")
             let formattedDay = String(format: "%02d", day)
             let digits = Array(formattedDay)
-            
+
             ForEach(digits.indices, id: \.self) { index in
                 Image(String(digits[index]))
                     .resizable()

@@ -1,24 +1,18 @@
-//
-//  CountriesUpdateService.swift
-//  SwiftUI-SotkaApp
-//
-//  Created by Oleg991 on 23.05.2025.
-//
-
 import Foundation
 import Observation
-import SWUtils
-import SwiftData
 import OSLog
+import SwiftData
+import SWUtils
 
 @MainActor
-@Observable final class CountriesUpdateService {
+@Observable
+final class CountriesUpdateService {
     private let logger = Logger(
         subsystem: Bundle.main.bundleIdentifier!,
         category: String(describing: CountriesUpdateService.self)
     )
     private let defaults = UserDefaults.standard
-    
+
     /// Нужно ли обновлять справочник
     ///
     /// По статистике Антона справочник на сервере обновляется в среднем раз в месяц
@@ -29,7 +23,7 @@ import OSLog
             true
         }
     }
-    
+
     /// Дата предыдущего обновления справочника
     private var lastCountriesUpdateDate: Date? {
         get {
@@ -52,10 +46,9 @@ import OSLog
             }
         }
     }
-    
+
     private(set) var isLoading = false
-    
-    
+
     /// Обновляет справочник стран и городов при необходимости
     /// - Parameters:
     ///   - context: Контекст `Swift Data`

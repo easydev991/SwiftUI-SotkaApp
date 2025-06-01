@@ -1,13 +1,6 @@
-//
-//  DayCalculator.swift
-//  SwiftUI-SotkaApp
-//
-//  Created by Олег Еременко on 26.05.2025.
-//
-
 import Foundation
-import SWUtils
 import OSLog
+import SWUtils
 
 struct DayCalculator {
     private let logger = Logger(
@@ -18,10 +11,10 @@ struct DayCalculator {
     let currentDay: Int
     /// Количество дней, оставшихся для завершения программы
     let daysLeft: Int
-    
+
     /// `true` - программа завершена, `false` - программа не завершена
     var isOver: Bool { currentDay == 100 }
-    
+
     /// Инициализатор
     /// - Parameters:
     ///   - startDate: Дата старта сотки (на сайте или в приложении)

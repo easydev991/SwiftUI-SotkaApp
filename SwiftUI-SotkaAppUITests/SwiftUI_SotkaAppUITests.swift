@@ -1,10 +1,3 @@
-//
-//  SwiftUI_SotkaAppUITests.swift
-//  SwiftUI-SotkaAppUITests
-//
-//  Created by Олег Еременко on 04.05.2025.
-//
-
 import XCTest
 
 @MainActor

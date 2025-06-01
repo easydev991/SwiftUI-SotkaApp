@@ -1,14 +1,7 @@
-//
-//  SwiftUI_SotkaAppApp.swift
-//  SwiftUI-SotkaApp
-//
-//  Created by Олег Еременко on 04.05.2025.
-//
-
-import SwiftUI
-import SwiftData
-import SWUtils
 import SWDesignSystem
+import SwiftData
+import SwiftUI
+import SWUtils
 
 @main
 struct SwiftUI_SotkaAppApp: App {

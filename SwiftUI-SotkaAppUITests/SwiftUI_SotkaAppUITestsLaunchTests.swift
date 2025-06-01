@@ -1,14 +1,6 @@
-//
-//  SwiftUI_SotkaAppUITestsLaunchTests.swift
-//  SwiftUI-SotkaAppUITests
-//
-//  Created by Олег Еременко on 04.05.2025.
-//
-
 import XCTest
 
 final class SwiftUI_SotkaAppUITestsLaunchTests: XCTestCase {
-
     override class var runsForEachTargetApplicationUIConfiguration: Bool {
         true
     }

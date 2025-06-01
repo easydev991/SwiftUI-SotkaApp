@@ -1,95 +1,88 @@
-//
-//  ExerciseType.swift
-//  SwiftUI-SotkaApp
-//
-//  Created by Oleg991 on 11.05.2025.
-//
-
 import SwiftUI
 
 /// Упражнение с соответствующим `type_id` для отправки на сервер
 enum ExerciseType: Int {
     /// подтягивания
     case pullups = 0
-    
+
     /// австралийские подтягивания
     case austrPullups = 1
-    
+
     /// приседания
     case squats = 2
-    
+
     /// отжимания
     case pushups = 3
-    
+
     /// отжимания на коленях
     case pushupsKnees = 4
-    
+
     /// выпады
     case lunges = 5
-    
+
     /// турбо-упражнение 93.1
     case turbo93_1 = 93
-    
+
     /// турбо-упражнение 93.2
     case turbo93_2 = 932
-    
+
     /// турбо-упражнение 93.3
     case turbo93_3 = 933
-    
+
     /// турбо-упражнение 93.4
     case turbo93_4 = 934
-    
+
     /// турбо-упражнение 93.5
     case turbo93_5 = 935
-    
+
     /// турбо-отжимания 94 (индийские)
     case turbo94Pushups = 94
-    
+
     /// турбо-приседания 94 (спартанские наклоны)
     case turbo94Squats = 942
-    
+
     /// турбо-подтягивания 94 (подтягивания с согнутыми ногами)
     case turbo94Pullups = 943
-    
+
     /// турбо-упражнение 95.1
     case turbo95_1 = 95
-    
+
     /// турбо-упражнение 95.2
     case turbo95_2 = 952
-    
+
     /// турбо-упражнение 95.3
     case turbo95_3 = 953
-    
+
     /// турбо-упражнение 95.4
     case turbo95_4 = 954
-    
+
     /// турбо-упражнение 95.5
     case turbo95_5 = 955
-    
+
     /// турбо-отжимания 96 (медленные)
     case turbo96Pushups = 96
-    
+
     /// турбо-приседания 96 (медленные)
     case turbo96Squats = 962
-    
+
     /// турбо-подтягивания 96 (медленные)
     case turbo96Pullups = 963
-    
+
     /// высокие отжимания 97 (с ногами на возвышенности)
     case turbo97PushupsHigh = 97
-    
+
     /// высокие отжимания с упором (с руками на возвышенности)
     case turbo97PushupsHighArms = 973
-    
+
     /// турбо-подтягивания 98 (лесенка)
     case turbo98Pullups = 98
-    
+
     /// турбо-отжимания 98 (лесенка)
     case turbo98Pushups = 982
-    
+
     /// турбо-приседания 98 (лесенка)
     case turbo98Squats = 983
-    
+
     var localizedTitle: LocalizedStringKey {
         switch self {
         case .pullups: "Pull-ups"
@@ -121,7 +114,7 @@ enum ExerciseType: Int {
         case .turbo98Pullups: "Turbo 98 pull-ups"
         }
     }
-    
+
     var image: Image {
         switch self {
         case .pushups, .turbo94Pushups, .turbo96Pushups, .turbo97PushupsHigh, .turbo97PushupsHighArms, .turbo98Pushups:
@@ -161,7 +154,7 @@ extension ExerciseType {
         case pushupsDecline
         case pushupsIncline
         case squatsPistol
-        
+
         var image: Image {
             switch self {
             case .pushups: .init(.pushups)

@@ -1,16 +1,9 @@
-//
-//  HomeScreen.swift
-//  SwiftUI-SotkaApp
-//
-//  Created by Oleg991 on 11.05.2025.
-//
-
-import SwiftUI
 import SWDesignSystem
+import SwiftUI
 
 struct HomeScreen: View {
     @Environment(StatusManager.self) private var statusManager
-    
+
     var body: some View {
         NavigationStack {
             ZStack {

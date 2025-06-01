@@ -1,12 +1,5 @@
-//
-//  MainUserFormTests.swift
-//  SwiftUI-SotkaApp
-//
-//  Created by Oleg991 on 23.05.2025.
-//
-
-@testable import SwiftUI_SotkaApp
 import Foundation
+@testable import SwiftUI_SotkaApp
 import Testing
 
 struct MainUserFormTests {
@@ -157,7 +150,7 @@ struct MainUserFormTests {
         let newForm = makeForm()
         #expect(newForm.isReadyToSave(comparedTo: oldForm))
     }
-    
+
     @Test
     func shouldUpdateOnAppear() {
         let form1 = makeForm(country: .init(cities: [], id: "1", name: ""), city: .init(id: "1"))

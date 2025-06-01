@@ -1,10 +1,3 @@
-//
-//  UserResponse.swift
-//  SwiftUI-SotkaApp
-//
-//  Created by Oleg991 on 16.05.2025.
-//
-
 import Foundation
 
 struct UserResponse: Codable, Identifiable, Hashable, Sendable {

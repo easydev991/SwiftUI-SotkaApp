@@ -7,7 +7,7 @@ final class SecureStorage {
         subsystem: Bundle.main.bundleIdentifier!,
         category: String(describing: SecureStorage.self)
     )
-    
+
     init() {}
 
     enum KeychainError: Error, LocalizedError {

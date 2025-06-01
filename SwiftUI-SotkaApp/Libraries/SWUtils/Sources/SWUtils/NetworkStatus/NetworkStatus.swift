@@ -7,11 +7,11 @@ import Observation
 public final class NetworkStatus {
     public private(set) var isConnected = false
     private var monitorTask: Task<Void, Never>?
-    
+
     public init() {
         startModernMonitoring()
     }
-    
+
     private func startModernMonitoring() {
         let monitor = NetworkMonitorActor()
         monitorTask = Task {
@@ -24,7 +24,7 @@ public final class NetworkStatus {
 
 private actor NetworkMonitorActor {
     private let monitor = NWPathMonitor()
-    
+
     nonisolated var updates: AsyncStream<Bool> {
         AsyncStream { continuation in
             let handle = Task {
@@ -35,7 +35,7 @@ private actor NetworkMonitorActor {
             }
         }
     }
-    
+
     private func startMonitoring(continuation: AsyncStream<Bool>.Continuation) async {
         monitor.pathUpdateHandler = { path in
             continuation.yield(path.status == .satisfied)

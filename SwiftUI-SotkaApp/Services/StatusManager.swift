@@ -1,23 +1,17 @@
-//
-//  StatusManager.swift
-//  SwiftUI-SotkaApp
-//
-//  Created by Oleg991 on 25.05.2025.
-//
-
 import Foundation
 import Observation
-import SWUtils
 import OSLog
+import SWUtils
 
 @MainActor
-@Observable final class StatusManager {
+@Observable
+final class StatusManager {
     private let logger = Logger(
         subsystem: Bundle.main.bundleIdentifier!,
         category: String(describing: StatusManager.self)
     )
     private let defaults = UserDefaults.standard
-    
+
     /// Дата старта сотки
     private var startDate: Date? {
         get {
@@ -44,11 +38,12 @@ import OSLog
             }
         }
     }
+
     /// Калькулятор текущего дня сотки
     private(set) var currentDayCalculator: DayCalculator?
-    
+
     private(set) var isLoading = false
-    
+
     /// Получает статус прохождения пользователя
     /// - Parameters:
     ///   - client: Сервис для загрузки статуса
@@ -85,7 +80,7 @@ import OSLog
         }
         isLoading = false
     }
-    
+
     func start(client: StatusClient, appDate: Date?) async {
         let newStartDate = appDate ?? .now
         let isoDateString = DateFormatterService.stringFromFullDate(newStartDate, iso: true)
@@ -97,13 +92,13 @@ import OSLog
         }
         await syncJournalAndProgress()
     }
-    
+
     func syncWithSiteDate(client: StatusClient, siteDate: Date) async {
-        self.startDate = siteDate
+        startDate = siteDate
         await getStatus(client: client)
         await syncJournalAndProgress()
     }
-    
+
     func didLogout() {
         startDate = nil
         currentDayCalculator = nil

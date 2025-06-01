@@ -31,7 +31,7 @@ struct MainUserForm: Codable, Equatable, Sendable {
         self.genderCode = gender
         self.image = image
     }
-    
+
     init(_ user: User) {
         self.init(
             userName: user.userName ?? "",
@@ -56,7 +56,7 @@ extension MainUserForm {
         case country
         case city
         case gender
-        
+
         var localizedString: String {
             switch self {
             case .userName: NSLocalizedString("Placeholder.Login", comment: "")
@@ -102,7 +102,7 @@ extension MainUserForm {
             && birthDate <= Constants.minUserAge
         return isNewFormNotEmpty && self != oldForm
     }
-    
+
     /// Нужно ли обновить форму при появлении экрана
     ///
     /// При появлении экрана мы не знаем страну/город пользователя,

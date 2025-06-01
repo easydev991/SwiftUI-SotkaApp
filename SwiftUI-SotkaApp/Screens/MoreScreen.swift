@@ -1,10 +1,3 @@
-//
-//  MoreScreen.swift
-//  SwiftUI-SotkaApp
-//
-//  Created by Олег Еременко on 04.05.2025.
-//
-
 import SwiftUI
 import SWUtils
 
@@ -59,7 +52,7 @@ struct MoreScreen: View {
         }
         .accessibilityIdentifier("appThemeButton")
     }
-    
+
     @ViewBuilder
     private var appLanguageButton: some View {
         @Bindable var settings = appSettings
@@ -102,11 +95,11 @@ struct MoreScreen: View {
             displayedComponents: .hourAndMinute
         )
     }
-    
+
     private func makeTimerSoundToggle(_ value: Binding<Bool>) -> some View {
         Toggle("TimerSoundToggle", isOn: value)
     }
-    
+
     private func makeVibrateToggle(_ value: Binding<Bool>) -> some View {
         Toggle("TimerVibrateToggle", isOn: value)
     }
@@ -123,7 +116,7 @@ struct MoreScreen: View {
                 .accessibilityIdentifier("rateAppButton")
         }
     }
-    
+
     @ViewBuilder
     private var officialSiteButton: some View {
         if let officialSiteLink = URL(string: "https://workout.su") {
@@ -151,7 +144,7 @@ struct MoreScreen: View {
         }
         .foregroundStyle(.secondary)
     }
-    
+
     @ViewBuilder
     private var swParksButton: some View {
         if let githubLink = URL(string: "https://apps.apple.com/app/id1035159361") {
@@ -159,7 +152,7 @@ struct MoreScreen: View {
                 .accessibilityIdentifier("swParksButton")
         }
     }
-    
+
     @ViewBuilder
     private var workoutShopButton: some View {
         if let shopLink = URL(string: "https://workoutshop.ru/?utm_source=iOS&utm_medium=100&utm_campaign=NASTROIKI") {
@@ -167,7 +160,7 @@ struct MoreScreen: View {
                 .accessibilityIdentifier("workoutShopButton")
         }
     }
-    
+
     @ViewBuilder
     private var githubButton: some View {
         if let githubLink = URL(string: "https://github.com/easydev991/SwiftUI-SotkaApp") {

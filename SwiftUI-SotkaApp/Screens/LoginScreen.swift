@@ -1,15 +1,8 @@
-//
-//  LoginScreen.swift
-//  SwiftUI-SotkaApp
-//
-//  Created by Oleg991 on 15.05.2025.
-//
-
+import SWDesignSystem
+import SwiftData
 import SwiftUI
 import SWKeychain
 import SWUtils
-import SwiftData
-import SWDesignSystem
 
 struct LoginScreen: View {
     @Environment(AuthHelperImp.self) private var authHelper
@@ -26,7 +19,7 @@ struct LoginScreen: View {
     @State private var loginTask: Task<Void, Never>?
     @State private var restorePasswordTask: Task<Void, Never>?
     let client: LoginClient & StatusClient
-    
+
     var body: some View {
         NavigationStack {
             VStack(spacing: 0) {
@@ -59,7 +52,7 @@ private extension LoginScreen {
     enum FocusableField: Hashable {
         case username, password
     }
-    
+
     var isError: Bool {
         !authErrorMessage.isEmpty || !resetErrorMessage.isEmpty
     }
@@ -67,7 +60,7 @@ private extension LoginScreen {
     var canLogIn: Bool {
         credentials.canLogIn(isError: isError)
     }
-    
+
     @ViewBuilder
     var loginField: some View {
         let localizedPlaceholder = NSLocalizedString("Login or email", comment: "")
@@ -85,7 +78,7 @@ private extension LoginScreen {
         }
         .accessibilityIdentifier("loginField")
     }
-    
+
     @ViewBuilder
     var passwordField: some View {
         let localizedPlaceholder = NSLocalizedString("Password", comment: "")
@@ -104,19 +97,19 @@ private extension LoginScreen {
         }
         .accessibilityIdentifier("passwordField")
     }
-    
+
     var loginButton: some View {
         Button("Log in", action: performLogin)
             .buttonStyle(SWButtonStyle(mode: .filled, size: .large))
             .disabled(!canLogIn)
             .accessibilityIdentifier("loginButton")
     }
-    
+
     var forgotPasswordButton: some View {
         Button("Restore password", action: performRestorePassword)
             .tint(.swMainText)
     }
-    
+
     func performLogin() {
         isLoading = true
         loginTask = Task {
@@ -140,7 +133,7 @@ private extension LoginScreen {
             isLoading = false
         }
     }
-    
+
     func performRestorePassword() {
         guard credentials.canRestorePassword else {
             let localizedString = NSLocalizedString("Alert.restorePassword", comment: "")
@@ -168,7 +161,7 @@ private extension LoginScreen {
             isLoading = false
         }
     }
-    
+
     func clearErrorMessages() {
         authErrorMessage = ""
         resetErrorMessage = ""

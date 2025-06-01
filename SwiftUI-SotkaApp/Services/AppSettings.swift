@@ -1,15 +1,9 @@
-//
-//  AppSettings.swift
-//  SwiftUI-SotkaApp
-//
-//  Created by Олег Еременко on 04.05.2025.
-//
-
-import SwiftUI
 import Observation
+import SwiftUI
 import SWUtils
 
-@Observable final class AppSettings {
+@Observable
+final class AppSettings {
     private let notificationCenter = UNUserNotificationCenter.current()
     private let audioPlayer = AudioPlayerManager(fileName: "timerSound", fileExtension: "mp3")
     private let vibrationService = VibrationService()
@@ -58,8 +52,8 @@ import SWUtils
                 forKey: Key.workoutNotificationTime.rawValue
             )
             return storedTime == 0
-            ? defaultNotificationTime
-            : Date(timeIntervalSinceReferenceDate: storedTime)
+                ? defaultNotificationTime
+                : Date(timeIntervalSinceReferenceDate: storedTime)
         }
         set {
             withMutation(keyPath: \.workoutNotificationTime) {
@@ -73,7 +67,7 @@ import SWUtils
             }
         }
     }
-    
+
     var playTimerSound: Bool {
         get {
             access(keyPath: \.playTimerSound)
@@ -86,7 +80,7 @@ import SWUtils
             if newValue { audioPlayer.play() }
         }
     }
-    
+
     @MainActor
     var vibrate: Bool {
         get {
@@ -121,7 +115,7 @@ import SWUtils
             }
         }
     }
-    
+
     @MainActor
     func sendFeedback() {
         FeedbackSender.sendFeedback(
@@ -130,7 +124,7 @@ import SWUtils
             recipients: Constants.feedbackRecipients
         )
     }
-    
+
     @MainActor
     func didLogout() {
         notificationCenter.removeAllPendingNotificationRequests()

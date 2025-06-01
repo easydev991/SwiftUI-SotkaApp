@@ -1,10 +1,3 @@
-//
-//  ProfileClient.swift
-//  SwiftUI-SotkaApp
-//
-//  Created by Oleg991 on 23.05.2025.
-//
-
 import Foundation
 
 protocol ProfileClient: Sendable {
@@ -14,7 +7,7 @@ protocol ProfileClient: Sendable {
     ///   - model: данные для изменения
     /// - Returns: Актуальные данные пользователя
     func editUser(_ id: Int, model: MainUserForm) async throws -> UserResponse
-    
+
     /// Меняет текущий пароль на новый
     /// - Parameters:
     ///   - current: текущий пароль

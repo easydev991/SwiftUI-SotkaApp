@@ -1,10 +1,3 @@
-//
-//  AudioPlayerService.swift
-//  SwiftUI-SotkaApp
-//
-//  Created by Oleg991 on 08.05.2025.
-//
-
 import AVFoundation
 import OSLog
 
@@ -15,7 +8,7 @@ final class AudioPlayerManager {
     )
     private var audioPlayer: AVAudioPlayer?
     private let session: AVAudioSession
-    
+
     init(
         fileName: String,
         fileExtension: String,
@@ -25,7 +18,7 @@ final class AudioPlayerManager {
         configureAudioSession()
         setupAudioPlayer(fileName: fileName, fileExtension: fileExtension)
     }
-    
+
     private func configureAudioSession() {
         do {
             try session.setCategory(.playback, mode: .default)
@@ -35,7 +28,7 @@ final class AudioPlayerManager {
             assertionFailure()
         }
     }
-    
+
     private func setupAudioPlayer(fileName: String, fileExtension: String) {
         guard let url = Bundle.main.url(
             forResource: fileName,
@@ -53,7 +46,7 @@ final class AudioPlayerManager {
             assertionFailure()
         }
     }
-    
+
     func play() {
         audioPlayer?.play()
     }

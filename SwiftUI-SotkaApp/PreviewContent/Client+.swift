@@ -1,16 +1,9 @@
-//
-//  Client+.swift
-//  SwiftUI-SotkaApp
-//
-//  Created by Oleg991 on 23.05.2025.
-//
-
 import Foundation
 
 struct MockLoginClient: LoginClient {
     let result: MockResult
-    
-    func logIn(with token: String?) async throws -> Int {
+
+    func logIn(with _: String?) async throws -> Int {
         print("Имитируем запрос logIn")
         try await Task.sleep(for: .seconds(1))
         switch result {
@@ -21,8 +14,8 @@ struct MockLoginClient: LoginClient {
             throw error
         }
     }
-    
-    func getUserByID(_ userID: Int) async throws -> UserResponse {
+
+    func getUserByID(_: Int) async throws -> UserResponse {
         print("Имитируем запрос getUserByID")
         try await Task.sleep(for: .seconds(1))
         switch result {
@@ -33,8 +26,8 @@ struct MockLoginClient: LoginClient {
             throw error
         }
     }
-    
-    func resetPassword(for login: String) async throws {
+
+    func resetPassword(for _: String) async throws {
         print("Имитируем запрос resetPassword")
         try await Task.sleep(for: .seconds(1))
         switch result {
@@ -47,7 +40,7 @@ struct MockLoginClient: LoginClient {
 }
 
 extension MockLoginClient: StatusClient {
-    func start(date: String) async throws -> CurrentRun {
+    func start(date _: String) async throws -> CurrentRun {
         print("Имитируем запрос start")
         try await Task.sleep(for: .seconds(1))
         switch result {
@@ -58,7 +51,7 @@ extension MockLoginClient: StatusClient {
             throw error
         }
     }
-    
+
     func current() async throws -> CurrentRun {
         print("Имитируем запрос current")
         try await Task.sleep(for: .seconds(1))

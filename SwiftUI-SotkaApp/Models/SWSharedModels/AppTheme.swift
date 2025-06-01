@@ -1,10 +1,3 @@
-//
-//  AppTheme.swift
-//  SwiftUI-SotkaApp
-//
-//  Created by Олег Еременко on 04.05.2025.
-//
-
 import SwiftUI
 
 enum AppTheme: Int, CaseIterable, Identifiable {
@@ -29,4 +22,3 @@ enum AppTheme: Int, CaseIterable, Identifiable {
         }
     }
 }
-

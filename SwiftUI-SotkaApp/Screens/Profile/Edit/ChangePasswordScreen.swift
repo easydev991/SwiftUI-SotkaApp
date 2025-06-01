@@ -57,8 +57,8 @@ private extension ChangePasswordScreen {
             func check(with new: String) -> String {
                 guard !text.isEmpty else { return "" }
                 return text == new
-                ? ""
-                : NSLocalizedString("Error.PasswordNotMatch", comment: "")
+                    ? ""
+                    : NSLocalizedString("Error.PasswordNotMatch", comment: "")
             }
         }
 

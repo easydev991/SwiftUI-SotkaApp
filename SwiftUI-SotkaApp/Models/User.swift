@@ -1,10 +1,3 @@
-//
-//  User.swift
-//  SwiftUI-SotkaApp
-//
-//  Created by Oleg991 on 16.05.2025.
-//
-
 import Foundation
 import SwiftData
 import SWUtils
@@ -20,7 +13,7 @@ final class User {
     var countryId: Int?
     var genderCode: Int?
     var birthDateIsoString: String?
-    
+
     init(
         id: Int,
         userName: String? = nil,
@@ -62,17 +55,17 @@ extension User {
     var avatarUrl: URL? {
         imageStringURL.queryAllowedURL
     }
-    
+
     var genderWithAge: String {
         let localizedAgeString = String.localizedStringWithFormat(
             NSLocalizedString("ageInYears", comment: ""),
             age
         )
         return genderString.isEmpty
-        ? localizedAgeString
-        : genderString + ", " + localizedAgeString
+            ? localizedAgeString
+            : genderString + ", " + localizedAgeString
     }
-    
+
     var birthDate: Date {
         DateFormatterService.dateFromString(birthDateIsoString, format: .isoShortDate)
     }
@@ -83,7 +76,7 @@ private extension User {
         guard let genderCode, let gender = Gender(genderCode) else { return "" }
         return gender.description
     }
-    
+
     var age: Int {
         Calendar.current.dateComponents([.year], from: birthDate, to: .now).year ?? 0
     }

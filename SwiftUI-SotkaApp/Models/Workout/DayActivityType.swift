@@ -1,10 +1,3 @@
-//
-//  DayActivityType.swift
-//  SwiftUI-SotkaApp
-//
-//  Created by Oleg991 on 14.05.2025.
-//
-
 import SwiftUI
 
 /// Тип активности на день
@@ -17,7 +10,7 @@ enum DayActivityType {
     case stretch
     /// Пропуск из-за болезни/травмы
     case sick
-    
+
     var localizedTitle: LocalizedStringKey {
         switch self {
         case .workout: "WorkoutDay"

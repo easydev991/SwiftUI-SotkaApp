@@ -1,10 +1,3 @@
-//
-//  CurrentRun.swift
-//  SwiftUI-SotkaApp
-//
-//  Created by Oleg991 on 25.05.2025.
-//
-
 import Foundation
 
 /// Текущее прохождение программы

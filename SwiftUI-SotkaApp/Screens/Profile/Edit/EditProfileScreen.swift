@@ -1,13 +1,6 @@
-//
-//  EditProfileScreen.swift
-//  SwiftUI-SotkaApp
-//
-//  Created by Oleg991 on 23.05.2025.
-//
-
-import SwiftUI
-import SwiftData
 import SWDesignSystem
+import SwiftData
+import SwiftUI
 import SWUtils
 
 struct EditProfileScreen: View {
@@ -20,6 +13,7 @@ struct EditProfileScreen: View {
         else { return [] }
         return selected.cities.sorted { $0.name < $1.name }
     }
+
     @State private var isLoading = false
     @State private var oldUserForm: MainUserForm
     @State private var userForm: MainUserForm
@@ -30,13 +24,13 @@ struct EditProfileScreen: View {
     @FocusState private var focus: FocusableField?
     private var client: ProfileClient { SWClient(with: authHelper) }
     let user: User
-    
+
     init(user: User) {
         self.user = user
         self._oldUserForm = .init(initialValue: .init(user))
         self._userForm = .init(initialValue: .init(user))
     }
-    
+
     var body: some View {
         VStack(spacing: 12) {
             ScrollView {
@@ -75,7 +69,7 @@ private extension EditProfileScreen {
         let id = UUID().uuidString
         let uiImage: UIImage
     }
-    
+
     var avatarPicker: some View {
         VStack(spacing: 20) {
             if let model = newAvatarImageModel {
@@ -115,7 +109,7 @@ private extension EditProfileScreen {
             .ignoresSafeArea()
         }
     }
-    
+
     var loginField: some View {
         SWTextField(
             placeholder: userForm.placeholder(.userName),
@@ -142,7 +136,7 @@ private extension EditProfileScreen {
         )
         .focused($focus, equals: .fullName)
     }
-    
+
     @ViewBuilder
     var changePasswordButton: some View {
         if let userName = user.userName {
@@ -152,7 +146,7 @@ private extension EditProfileScreen {
             }
         }
     }
-    
+
     var genderPicker: some View {
         Menu {
             Picker("", selection: $userForm.genderCode) {
@@ -224,7 +218,7 @@ private extension EditProfileScreen {
             )
         }
     }
-    
+
     func prepareUserForm() {
         guard oldUserForm.shouldUpdateOnAppear else { return }
         let userCountry = countries.first(where: { $0.id == oldUserForm.country.id })
@@ -252,7 +246,7 @@ private extension EditProfileScreen {
         }
         userForm = oldUserForm
     }
-    
+
     func selectCountry(name countryName: String) {
         guard let newCountry = countries.first(where: { $0.name == countryName }) else {
             return
@@ -292,7 +286,7 @@ private extension EditProfileScreen {
             .padding([.horizontal, .bottom])
             .disabled(!userForm.isReadyToSave(comparedTo: oldUserForm))
     }
-    
+
     func sendFeedback(mode: ItemListScreen.Mode) {
         let (subject, body) = switch mode {
         case .city: (LocationFeedback.city.subject, LocationFeedback.city.body)
@@ -304,7 +298,7 @@ private extension EditProfileScreen {
             recipients: Constants.feedbackRecipients
         )
     }
-    
+
     func saveChangesAction() {
         guard !SWAlert.shared.presentNoConnection(isNetworkConnected) else { return }
         isLoading = true

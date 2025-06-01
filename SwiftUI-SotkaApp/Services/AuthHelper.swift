@@ -1,13 +1,6 @@
-//
-//  AuthHelper.swift
-//  SwiftUI-SotkaApp
-//
-//  Created by Oleg991 on 15.05.2025.
-//
-
 import Foundation
-import SWKeychain
 import Observation
+import SWKeychain
 
 @MainActor
 protocol AuthHelper: AnyObject, Sendable {
@@ -21,7 +14,7 @@ protocol AuthHelper: AnyObject, Sendable {
 @Observable
 final class AuthHelperImp: AuthHelper {
     private let defaults = UserDefaults.standard
-    
+
     @ObservationIgnored
     @KeychainWrapper(Key.authData.rawValue)
     private var authData: AuthData?
@@ -37,13 +30,13 @@ final class AuthHelperImp: AuthHelper {
             }
         }
     }
-    
+
     var authToken: String? { authData?.token }
-    
+
     func saveAuthData(_ authData: AuthData) {
         self.authData = authData
     }
-    
+
     func updateAuthData(login: String, newPassword: String? = nil) {
         let updatedModel: AuthData? = if let newPassword {
             AuthData(login: login, password: newPassword)
@@ -55,11 +48,11 @@ final class AuthHelperImp: AuthHelper {
         guard let updatedModel else { return }
         saveAuthData(updatedModel)
     }
-    
+
     func didAuthorize() {
         isAuthorized = true
     }
-    
+
     func triggerLogout() {
         authData = nil
         isAuthorized = false

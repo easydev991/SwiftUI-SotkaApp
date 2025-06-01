@@ -1,13 +1,6 @@
-//
-//  ProfileScreen.swift
-//  SwiftUI-SotkaApp
-//
-//  Created by Oleg991 on 10.05.2025.
-//
-
-import SwiftUI
-import SwiftData
 import SWDesignSystem
+import SwiftData
+import SwiftUI
 
 struct ProfileScreen: View {
     @Environment(\.modelContext) private var modelContext
@@ -30,7 +23,7 @@ struct ProfileScreen: View {
             return country.name
         }
     }
-    
+
     var body: some View {
         NavigationStack {
             ScrollView {
@@ -65,7 +58,7 @@ private extension ProfileScreen {
         .id(user.avatarUrl)
         .padding(24)
     }
-    
+
     func makeEditProfileButton(for user: User) -> some View {
         NavigationLink(
             "Edit profile",
@@ -74,7 +67,7 @@ private extension ProfileScreen {
         .buttonStyle(SWButtonStyle(icon: .pencil, mode: .tinted, size: .large))
         .padding(.bottom, 24)
     }
-    
+
     func makeJournalButton(for user: User) -> some View {
         NavigationLink(destination: JournalScreen(user: user)) {
             let localizedString = NSLocalizedString("Journal", comment: "")
@@ -84,7 +77,7 @@ private extension ProfileScreen {
             )
         }
     }
-    
+
     func makeProgressButton(for user: User) -> some View {
         NavigationLink(destination: ProgressScreen(user: user)) {
             let localizedString = NSLocalizedString("Progress", comment: "")
@@ -94,7 +87,7 @@ private extension ProfileScreen {
             )
         }
     }
-    
+
     var logoutButton: some View {
         Button("Log out") {
             showLogoutDialog = true

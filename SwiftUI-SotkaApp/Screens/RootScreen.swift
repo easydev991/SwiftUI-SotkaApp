@@ -1,12 +1,5 @@
-//
-//  RootScreen.swift
-//  SwiftUI-SotkaApp
-//
-//  Created by Олег Еременко on 04.05.2025.
-//
-
-import SwiftUI
 import SwiftData
+import SwiftUI
 import SWUtils
 
 struct RootScreen: View {

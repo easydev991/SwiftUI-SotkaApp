@@ -1,10 +1,3 @@
-//
-//  UserResponse+.swift
-//  SwiftUI-SotkaApp
-//
-//  Created by Oleg991 on 20.05.2025.
-//
-
 #if DEBUG
 extension UserResponse {
     static let preview = Self(
