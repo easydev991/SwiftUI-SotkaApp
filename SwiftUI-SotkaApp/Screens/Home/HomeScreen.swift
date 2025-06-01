@@ -6,6 +6,7 @@ struct HomeScreen: View {
 
     var body: some View {
         NavigationStack {
+            @Bindable var statusManager = statusManager
             ZStack {
                 Color.swBackground.ignoresSafeArea()
                 if let calculator = statusManager.currentDayCalculator {
@@ -19,6 +20,9 @@ struct HomeScreen: View {
                 }
             }
             .frame(maxWidth: .infinity)
+            .sheet(item: $statusManager.conflictingSyncModel) { model in
+                ResolveDateConflictView(model: model)
+            }
             .navigationTitle("SOTKA")
             .navigationBarTitleDisplayMode(.inline)
         }

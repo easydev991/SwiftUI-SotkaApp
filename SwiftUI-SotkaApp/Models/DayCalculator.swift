@@ -7,7 +7,10 @@ private let logger = Logger(
     category: String(describing: DayCalculator.self)
 )
 
-struct DayCalculator {
+struct DayCalculator: Identifiable, Equatable {
+    var id: String { "\(currentDay)-\(daysLeft)" }
+    /// Дата начала прохождения программы
+    let startDate: Date
     /// Номер текущего дня
     let currentDay: Int
     /// Количество дней, оставшихся для завершения программы
@@ -34,9 +37,16 @@ struct DayCalculator {
     ///   - startDate: Дата старта сотки (на сайте или в приложении)
     ///   - endDate: Текущая дата, с которой нужно сравнить дату старта
     init(_ startDate: Date, _ endDate: Date) {
-        let daysBetween = DateFormatterService.days(from: startDate, to: endDate)
-        let currentDay = min(daysBetween + 1, 100)
-        self.currentDay = currentDay
-        self.daysLeft = 100 - currentDay
+        self.startDate = startDate
+        if startDate > endDate {
+            // Старт в будущем: программа ещё не началась
+            self.currentDay = 1
+            self.daysLeft = 99
+        } else {
+            let daysBetween = DateFormatterService.days(from: startDate, to: endDate)
+            let currentDay = min(daysBetween + 1, 100)
+            self.currentDay = currentDay
+            self.daysLeft = 100 - currentDay
+        }
     }
 }

@@ -52,4 +52,15 @@ struct DayCalculatorTests {
         let calculator = try #require(DayCalculator(startDate, endDate))
         #expect(calculator.isOver)
     }
+
+    @Test
+    func initializesWithFutureStartDate() throws {
+        // Стартовая дата в будущем относительно endDate
+        let startDate = try #require(calendar.date(byAdding: .day, value: 5, to: now))
+        let endDate = now
+        let calculator = DayCalculator(startDate, endDate)
+        #expect(calculator.currentDay == 1)
+        #expect(calculator.daysLeft == 99)
+        #expect(!calculator.isOver)
+    }
 }

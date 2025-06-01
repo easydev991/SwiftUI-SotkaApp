@@ -41,6 +41,8 @@ final class StatusManager {
 
     /// Калькулятор текущего дня сотки
     private(set) var currentDayCalculator: DayCalculator?
+    /// Конфликтующие даты начала программы
+    var conflictingSyncModel: ConflictingStartDate?
 
     private(set) var isLoading = false
 
@@ -70,8 +72,7 @@ final class StatusManager {
                 if appDate.isTheSameDayIgnoringTime(siteDate) {
                     await syncJournalAndProgress()
                 } else {
-                    // TODO: showSyncOptionsWithSiteDate
-                    logger.error("Показать алерт с предложением выбрать источник истины")
+                    conflictingSyncModel = .init(appDate, siteDate)
                 }
             }
             currentDayCalculator = .init(startDate, .now)
@@ -82,6 +83,7 @@ final class StatusManager {
     }
 
     func start(client: StatusClient, appDate: Date?) async {
+        isLoading = true
         let newStartDate = appDate ?? .now
         let isoDateString = DateFormatterService.stringFromFullDate(newStartDate, iso: true)
         let currentRun = try? await client.start(date: isoDateString)
@@ -93,9 +95,8 @@ final class StatusManager {
         await syncJournalAndProgress()
     }
 
-    func syncWithSiteDate(client: StatusClient, siteDate: Date) async {
+    func syncWithSiteDate(client _: StatusClient, siteDate: Date) async {
         startDate = siteDate
-        await getStatus(client: client)
         await syncJournalAndProgress()
     }
 
@@ -116,6 +117,10 @@ private extension StatusManager {
 
 private extension StatusManager {
     func syncJournalAndProgress() async {
+        currentDayCalculator = .init(startDate, .now)
+        isLoading = true
         logger.error("Реализовать синхронизацию дневника и прогресса")
+        conflictingSyncModel = nil
+        isLoading = false
     }
 }
