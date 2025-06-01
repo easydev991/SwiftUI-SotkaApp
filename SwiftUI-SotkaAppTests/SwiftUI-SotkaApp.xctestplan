@@ -1,30 +1,29 @@
 {
   "configurations" : [
     {
-      "id" : "D7067B90-51FF-4354-8658-478B9DCD3BEF",
-      "name" : "Test Scheme Action",
+      "id" : "4BE8844A-C557-4C40-9ACD-5BBD01ADE13A",
+      "name" : "Configuration 1",
       "options" : {
 
       }
     }
   ],
   "defaultOptions" : {
-
+    "testTimeoutsEnabled" : true
   },
   "testTargets" : [
-    {
-      "parallelizable" : true,
-      "target" : {
-        "containerPath" : "container:SwiftUI-SotkaApp.xcodeproj",
-        "identifier" : "674A8A6F2DC758BC003F6E50",
-        "name" : "SwiftUI-SotkaAppTests"
-      }
-    },
     {
       "target" : {
         "containerPath" : "container:SwiftUI-SotkaApp\/Libraries\/SWUtils",
         "identifier" : "SWUtilsTests",
         "name" : "SWUtilsTests"
+      }
+    },
+    {
+      "target" : {
+        "containerPath" : "container:SwiftUI-SotkaApp.xcodeproj",
+        "identifier" : "674A8A6F2DC758BC003F6E50",
+        "name" : "SwiftUI-SotkaAppTests"
       }
     },
     {
