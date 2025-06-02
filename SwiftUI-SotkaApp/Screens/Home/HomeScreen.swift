@@ -21,7 +21,7 @@ struct HomeScreen: View {
             }
             .frame(maxWidth: .infinity)
             .sheet(item: $statusManager.conflictingSyncModel) { model in
-                ResolveDateConflictView(model: model)
+                SyncStartDateView(model: model)
             }
             .navigationTitle("SOTKA")
             .navigationBarTitleDisplayMode(.inline)

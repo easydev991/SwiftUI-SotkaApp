@@ -382,18 +382,146 @@
         }
       }
     },
-    "DateSync.SelectAppDate" : {
+    "DateSync.Help.AppChoiceDescription" : {
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Use app date"
+            "value" : "Your current day and progress in the app will become primary. You will continue the program from the day you stopped in the app. All training data and achievements (height, weight, number of repetitions in exercises) from the app will be saved, and the data on the website will be updated."
           }
         },
         "ru" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Выбрать дату приложения"
+            "value" : "Ваш текущий день и прогресс в приложении станут основными. Вы продолжите программу с того дня, где остановились в приложении. Все данные о тренировках и достижениях (рост, вес, количество повторений в упражнениях) из приложения сохранятся, а данные на сайте будут изменены."
+          }
+        }
+      }
+    },
+    "DateSync.Help.AppChoiceTitle" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "If you choose progress from the app"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Если выбрать прогресс из приложения"
+          }
+        }
+      }
+    },
+    "DateSync.Help.Introduction" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "We want to help you choose which progress in the SOTKA program will be considered primary — data from the app or data from the website. Your choice will affect the start date from which you continue the program, as well as which training and progress data will be saved. Let's break down what happens in each case."
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Мы хотим помочь вам выбрать, какой прогресс в программе SOTKA будет считаться основным — данные из приложения или данные с сайта. Ваш выбор повлияет на то, с какой даты вы продолжите прохождение программы, а также на то, какие данные о тренировках и прогрессе будут сохранены. Давайте разберем, что произойдет в каждом случае."
+          }
+        }
+      }
+    },
+    "DateSync.Help.SiteChoiceDescription" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Your current day and progress from the website will become primary. In the app, the program will start from the day you stopped on the website. All training data and achievements (height, weight, number of repetitions in exercises) from the website will be saved, and the data in the app will be replaced."
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ваш текущий день и прогресс с сайта станут основными. В приложении программа начнется с того дня, где вы остановились на сайте. Все данные о тренировках и достижениях (рост, вес, количество повторений в упражнениях) с сайта сохранятся, а данные в приложении будут заменены."
+          }
+        }
+      }
+    },
+    "DateSync.Help.SiteChoiceTitle" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "If you choose progress from the website"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Если выбрать прогресс с сайта"
+          }
+        }
+      }
+    },
+    "DateSync.Help.Summary" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "After your choice, the data in the app and on the website will become the same - the information about your training and progress will match, so you can continue the program from the same day in both the app and on the website."
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "После вашего выбора данные в приложении и на сайте станут одинаковыми - информация о тренировках и вашем прогрессе будет совпадать, чтобы вы могли продолжить программу с одного и того же дня и в приложении, и на сайте."
+          }
+        }
+      }
+    },
+    "DateSync.Help.Title" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Details on Synchronization"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Подробно о синхронизации"
+          }
+        }
+      }
+    },
+    "DateSync.Help.Warning" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "After your choice, data from the other option (the one you didn't select) will be replaced."
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "После выбора данные из второго варианта (который вы не выбрали) будут заменены."
+          }
+        }
+      }
+    },
+    "DateSync.SelectAppDate" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Use app data"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Выбрать приложение"
           }
         }
       }
@@ -403,13 +531,13 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Use website date"
+            "value" : "Use website data"
           }
         },
         "ru" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Выбрать дату сайта"
+            "value" : "Выбрать сайт"
           }
         }
       }

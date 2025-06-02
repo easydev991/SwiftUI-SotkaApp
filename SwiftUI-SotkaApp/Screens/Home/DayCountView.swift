@@ -1,29 +1,27 @@
 import SWDesignSystem
 import SwiftUI
 
-extension HomeScreen {
-    /// Вьюха с днями сотки (текущий день и оставшиеся дни)
-    ///
-    /// В старом приложении это `HomeCountCell`
-    struct DayCountView: View {
-        let calculator: DayCalculator
+/// Вьюха с днями сотки (текущий день и оставшиеся дни)
+///
+/// В старом приложении это `HomeCountCell`
+struct DayCountView: View {
+    let calculator: DayCalculator
 
-        var body: some View {
-            ZStack {
-                if calculator.isOver {
-                    finishedView
-                } else {
-                    notFinishedView
-                        .frame(height: 90)
-                }
+    var body: some View {
+        ZStack {
+            if calculator.isOver {
+                finishedView
+            } else {
+                notFinishedView
+                    .frame(height: 90)
             }
-            .foregroundStyle(Color.swMainText)
-            .insideCardBackground()
         }
+        .foregroundStyle(Color.swMainText)
+        .insideCardBackground()
     }
 }
 
-private extension HomeScreen.DayCountView {
+private extension DayCountView {
     var finishedView: some View {
         VStack(spacing: 4) {
             VStack(spacing: 12) {
@@ -79,16 +77,16 @@ private extension HomeScreen.DayCountView {
 }
 
 #Preview("День 1") {
-    HomeScreen.DayCountView(calculator: .init(previewDay: 1))
+    DayCountView(calculator: .init(previewDay: 1))
         .padding()
 }
 
 #Preview("День 49") {
-    HomeScreen.DayCountView(calculator: .init(previewDay: 49))
+    DayCountView(calculator: .init(previewDay: 49))
         .padding()
 }
 
 #Preview("День 100") {
-    HomeScreen.DayCountView(calculator: .init(previewDay: 100))
+    DayCountView(calculator: .init(previewDay: 100))
         .padding()
 }
