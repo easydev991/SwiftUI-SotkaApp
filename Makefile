@@ -1,4 +1,4 @@
-.PHONY: help setup setup_hook setup_fastlane update update_bundle update_swiftformat format screenshots
+.PHONY: help setup setup_hook setup_snapshot setup_fastlane update update_fastlane update_swiftformat format screenshots
 
 # Цвета и шрифт
 YELLOW=\033[1;33m
@@ -13,124 +13,85 @@ RUBY_VERSION=3.2.2
 # Версия Swift в проекте
 SWIFT_VERSION=6.0
 
+## help: Показать это справочное сообщение
 help:
-	@echo ""
-	@echo "Доступные команды Makefile:"
-	@echo ""
-	@printf "$(BOLD)make help$(RESET)                - Показать это справочное сообщение\n"
-	@printf "$(BOLD)make setup$(RESET)               - Проверить и установить все необходимые инструменты и зависимости для проекта:\n"
-	@echo   "Homebrew, rbenv, Ruby, Bundler, Ruby-гемы, fastlane snapshot, swiftformat"
-	@printf "$(BOLD)make setup_hook$(RESET)          - Установить pre-push git-хук для проверки форматирования Swift-кода\n"
-	@printf "$(BOLD)make setup_fastlane$(RESET)      - Проверить инициализацию fastlane/fastlane snapshot, при необходимости предложить варианты установки\n"
-	@printf "$(BOLD)make update$(RESET)              - Обновить fastlane и swiftformat (вызывает update_bundle и update_swiftformat)\n"
-	@printf "$(BOLD)make update_bundle$(RESET)       - Обновить только fastlane и его зависимости.\n"
-	@printf "$(BOLD)make update_swiftformat$(RESET)  - Обновить только swiftformat через Homebrew\n"
-	@printf "$(BOLD)make format$(RESET)              - Запустить автоматическое форматирование Swift-кода с помощью swiftformat\n"
-	@printf "$(BOLD)make screenshots$(RESET)         - Запустить fastlane snapshot для генерации скриншотов приложения\n"
-	@echo ""
-	@echo "Рекомендуется сначала выполнить команду '$(BOLD)make setup$(RESET)'"
-	@echo ""
-
+	@echo "Доступные команды Makefile: \n"
+	@sed -n 's/^##//p' ${MAKEFILE_LIST} | \
+	awk -F ':' '{printf " $(BOLD)%s$(RESET):%s\n", $$1, $$2}' BOLD="$(BOLD)" RESET="$(RESET)" | column -t -s ':'
+	@echo "\nРекомендуется сначала выполнить команду '$(BOLD)make setup$(RESET)'"
+	
+## setup: Проверить и установить все необходимые инструменты и зависимости для проекта (Homebrew, rbenv, Ruby, Bundler, fastlane, swiftformat)
 setup:
-	@printf "$(YELLOW)Проверка наличия Homebrew...$(RESET)\n"
-	@if ! command -v brew >/dev/null 2>&1; then \
-		printf "$(YELLOW)Homebrew не установлен$(RESET)\n"; \
-		read -p "Установить Homebrew? (да/нет) " answer; \
-		if echo "$${answer}" | grep -iq "^да$$"; then \
-			/bin/bash -c "$$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"; \
-			printf "$(GREEN)Homebrew успешно установлен$(RESET)\n"; \
-		else \
-			printf "$(RED)Невозможно продолжить без Homebrew$(RESET)\n"; \
-			exit 1; \
-		fi \
+	@bash -c '\
+	set -e; \
+	printf "$(YELLOW)Проверка наличия Homebrew...$(RESET)\n"; \
+	if ! command -v brew >/dev/null 2>&1; then \
+		printf "$(YELLOW)Homebrew не установлен. Устанавливаю...$(RESET)\n"; \
+		/bin/bash -c "$$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"; \
+	fi; \
+	printf "$(GREEN)Homebrew установлен$(RESET)\n"; \
+	\
+	printf "$(YELLOW)Проверка наличия rbenv...$(RESET)\n"; \
+	if ! command -v rbenv >/dev/null 2>&1; then \
+		printf "$(YELLOW)rbenv не установлен. Устанавливаю...$(RESET)\n"; \
+		brew install rbenv ruby-build; \
+	fi; \
+	printf "$(GREEN)rbenv установлен$(RESET)\n"; \
+	\
+	printf "$(YELLOW)Проверка наличия Ruby версии $(RUBY_VERSION)...$(RESET)\n"; \
+	if ! rbenv versions | grep -q $(RUBY_VERSION); then \
+		printf "$(YELLOW)Ruby $(RUBY_VERSION) не установлен. Устанавливаю...$(RESET)\n"; \
+		rbenv install $(RUBY_VERSION); \
+	fi; \
+	printf "$(GREEN)Ruby $$(rbenv versions | grep $(RUBY_VERSION))$(RESET)\n"; \
+	\
+	printf "$(YELLOW)Проверка содержимого файла .ruby-version...$(RESET)\n"; \
+	if [ ! -f .ruby-version ] || [ "$$(cat .ruby-version)" != "$(RUBY_VERSION)" ]; then \
+		printf "$(YELLOW)Файл .ruby-version не найден или содержит неверную версию. Обновляю...$(RESET)\n"; \
+		echo "$(RUBY_VERSION)" > .ruby-version; \
 	else \
-		printf "$(GREEN)Homebrew уже установлен$(RESET)\n"; \
-	fi
-
-	@printf "$(YELLOW)Проверка наличия rbenv...$(RESET)\n"
-	@if ! command -v rbenv >/dev/null 2>&1; then \
-		printf "$(YELLOW)rbenv не установлен$(RESET)\n"; \
-		read -p "Установить rbenv? (да/нет) " answer; \
-		if echo "$${answer}" | grep -iq "^да$$"; then \
-			brew install rbenv ruby-build; \
-			printf 'eval "$$(rbenv init -)"\n' >> ~/.bash_profile; \
-			printf "$(GREEN)rbenv успешно установлен$(RESET)\n"; \
-		else \
-			printf "$(RED)Невозможно продолжить без rbenv$(RESET)\n"; \
-			exit 1; \
-		fi \
-	else \
-		printf "$(GREEN)rbenv уже установлен$(RESET)\n"; \
-	fi
-
-	@printf "$(YELLOW)Проверка наличия Ruby версии $(RUBY_VERSION)...$(RESET)\n"
-	@if ! rbenv versions | grep -q $(RUBY_VERSION); then \
-		printf "$(YELLOW)Ruby $(RUBY_VERSION) не установлен$(RESET)\n"; \
-		read -p "Установить Ruby $(RUBY_VERSION)? (да/нет) " answer; \
-		if echo "$${answer}" | grep -iq "^да$$"; then \
-			rbenv install $(RUBY_VERSION); \
-			printf "$(GREEN)Ruby $(RUBY_VERSION) успешно установлен$(RESET)\n"; \
-		else \
-			printf "$(RED)Невозможно продолжить без Ruby $(RUBY_VERSION)$(RESET)\n"; \
-			exit 1; \
-		fi \
-	else \
-		printf "$(GREEN)Ruby $(RUBY_VERSION) уже установлен$(RESET)\n"; \
-	fi
-
-	@printf "$(YELLOW)Проверка файла .ruby-version...$(RESET)\n"
-	@if [ ! -f .ruby-version ] || [ "$$(cat .ruby-version)" != "$(RUBY_VERSION)" ]; then \
-		printf "$(YELLOW)Файл .ruby-version не найден или содержит неверную версию$(RESET)\n"; \
-		read -p "Создать/обновить файл .ruby-version с версией $(RUBY_VERSION)? (да/нет) " answer; \
-		if echo "$${answer}" | grep -iq "^да$$"; then \
-			echo "$(RUBY_VERSION)" > .ruby-version; \
-			printf "$(GREEN)Файл .ruby-version обновлён$(RESET)\n"; \
-		else \
-			printf "$(YELLOW)Создание файла .ruby-version пропущено$(RESET)\n"; \
-		fi \
-	else \
-		printf "$(GREEN)Файл .ruby-version уже корректно настроен$(RESET)\n"; \
-	fi
-
-	@printf "$(YELLOW)Инициализация rbenv и активация Ruby $(RUBY_VERSION) локально...$(RESET)\n"
-	@export PATH="$$HOME/.rbenv/bin:$$PATH"; \
+		printf "$(GREEN)Файл .ruby-version корректно настроен$(RESET)\n"; \
+	fi; \
+	\
 	eval "$$(rbenv init -)"; \
 	rbenv local $(RUBY_VERSION); \
-	rbenv shell $(RUBY_VERSION); \
-	printf "$(GREEN)Ruby $(RUBY_VERSION) активирован локально для проекта$(RESET)\n"
-
-	@printf "$(YELLOW)Проверка наличия Bundler нужной версии...$(RESET)\n"
-	@if [ -f Gemfile.lock ]; then \
+	printf "$(GREEN)Ruby активирован локально для проекта$(RESET)\n"; \
+	\
+	printf "$(YELLOW)Проверка наличия Bundler нужной версии...$(RESET)\n"; \
+	BUNDLER_VERSION=""; \
+	if [ -f Gemfile.lock ]; then \
 		BUNDLER_VERSION=$$(grep -A 1 "BUNDLED WITH" Gemfile.lock | tail -n 1 | xargs); \
+		if [ -z "$$BUNDLER_VERSION" ]; then \
+			printf "$(RED)Не удалось определить версию Bundler из Gemfile.lock$(RESET)\n"; \
+			exit 1; \
+		fi; \
 		if ! gem list -i bundler -v "$$BUNDLER_VERSION" >/dev/null 2>&1; then \
-			printf "$(YELLOW)Bundler версии $$BUNDLER_VERSION не установлен$(RESET)\n"; \
-			read -p "Установить Bundler $$BUNDLER_VERSION? (да/нет) " answer; \
-			if echo "$${answer}" | grep -iq "^да$$"; then \
-				gem install bundler -v "$$BUNDLER_VERSION"; \
-				printf "$(GREEN)Bundler версии $$BUNDLER_VERSION успешно установлен$(RESET)\n"; \
-			else \
-				printf "$(RED)Невозможно продолжить без Bundler $$BUNDLER_VERSION$(RESET)\n"; \
+			printf "$(YELLOW)Bundler версии $$BUNDLER_VERSION не установлен. Устанавливаю...$(RESET)\n"; \
+			gem install bundler -v "$$BUNDLER_VERSION"; \
+			if [ $$? -ne 0 ]; then \
+				printf "$(RED)Ошибка установки Bundler версии $$BUNDLER_VERSION$(RESET)\n"; \
 				exit 1; \
-			fi \
+			fi; \
 		else \
 			printf "$(GREEN)Bundler версии $$BUNDLER_VERSION уже установлен$(RESET)\n"; \
-		fi \
+		fi; \
 	else \
-		printf "$(YELLOW)Файл Gemfile.lock не найден, пропуск проверки версии Bundler$(RESET)\n"; \
-	fi
-	
-	@printf "$(YELLOW)Проверка наличия Gemfile...$(RESET)\n"
-	@if [ ! -f Gemfile ]; then \
+		printf "$(YELLOW)Файл Gemfile.lock не найден, устанавливаю последнюю версию bundler...$(RESET)\n"; \
+		gem install bundler; \
+	fi; \
+	\
+	printf "$(YELLOW)Проверка наличия Gemfile...$(RESET)\n"; \
+	if [ ! -f Gemfile ]; then \
 		printf "$(YELLOW)Gemfile не найден. Создаю новый Gemfile...$(RESET)\n"; \
 		bundle init; \
-		printf "gem 'fastlane'\n" >> Gemfile; \
+		printf "gem '\''fastlane'\''\n" >> Gemfile; \
 		printf "$(GREEN)Gemfile создан и fastlane добавлен в зависимости$(RESET)\n"; \
 	else \
 		printf "$(GREEN)Gemfile уже существует$(RESET)\n"; \
-	fi
-
-	@printf "$(YELLOW)Проверка Ruby-зависимостей из Gemfile...$(RESET)\n"
-	@if [ -f Gemfile ]; then \
+	fi; \
+	\
+	printf "$(YELLOW)Проверка Ruby-зависимостей из Gemfile...$(RESET)\n"; \
+	if [ -f Gemfile ]; then \
 		if ! bundle check >/dev/null 2>&1; then \
 			printf "$(YELLOW)Зависимости не установлены. Выполняется bundle install...$(RESET)\n"; \
 			bundle install; \
@@ -141,30 +102,25 @@ setup:
 			printf "$(GREEN)Все Ruby-зависимости успешно установлены$(RESET)\n"; \
 		else \
 			printf "$(GREEN)Все Ruby-зависимости уже установлены$(RESET)\n"; \
-		fi \
+		fi; \
 	else \
 		printf "$(YELLOW)Файл Gemfile не найден, пропуск установки Ruby-зависимостей$(RESET)\n"; \
-	fi
-
-	@printf "$(YELLOW)Проверка наличия swiftformat...$(RESET)\n"
-	@if ! command -v swiftformat >/dev/null 2>&1; then \
-		printf "$(YELLOW)swiftformat не установлен$(RESET)\n"; \
-		read -p "Установить swiftformat? (да/нет) " answer; \
-		if echo "$${answer}" | grep -iq "^да$$"; then \
-			brew install swiftformat; \
-			printf "$(GREEN)swiftformat успешно установлен$(RESET)\n"; \
-		else \
-			printf "$(RED)Невозможно продолжить без swiftformat$(RESET)\n"; \
-			exit 1; \
-		fi \
+	fi; \
+	\
+	printf "$(YELLOW)Проверка наличия swiftformat...$(RESET)\n"; \
+	if ! command -v swiftformat >/dev/null 2>&1; then \
+		printf "$(YELLOW)swiftformat не установлен. Устанавливаю...$(RESET)\n"; \
+		brew install swiftformat; \
+		printf "$(GREEN)swiftformat успешно установлен$(RESET)\n"; \
 	else \
 		printf "$(GREEN)swiftformat уже установлен$(RESET)\n"; \
-	fi
+	fi; \
+	'
 	
 	@$(MAKE) setup_hook
+	@$(MAKE) setup_snapshot
 	
-	@$(MAKE) setup_fastlane
-	
+## setup_hook: Установить pre-push git-хук для проверки форматирования Swift-кода
 setup_hook:
 	@HOOK_PATH=".git/hooks/pre-push"; \
 	if [ -f "$$HOOK_PATH" ] && grep -q "swiftformat" "$$HOOK_PATH"; then \
@@ -187,7 +143,8 @@ setup_hook:
 		printf "$(GREEN)pre-push git-хук для swiftformat успешно установлен в .git/hooks$(RESET)\n"; \
 	fi
 
-setup_fastlane:
+## setup_snapshot: Проверить инициализацию fastlane/fastlane snapshot, при необходимости предложить варианты установки
+setup_snapshot:
 	@printf "$(YELLOW)Проверка установки fastlane...$(RESET)\n"
 	@if [ -d fastlane ] && [ -f fastlane/Fastfile ]; then \
 		printf "$(GREEN)fastlane уже инициализирован в проекте$(RESET)\n"; \
@@ -214,23 +171,49 @@ setup_fastlane:
 			fi \
 		else \
 			printf "$(YELLOW)Вы можете установить fastlane вручную командой:$(RESET)\n"; \
-			printf "  bundle exec fastlane init\n"; \
+			printf "  make setup_fastlane\n"; \
 			printf "$(YELLOW)После этого можно запустить генерацию скриншотов командой 'make screenshots'$(RESET)\n"; \
 		fi \
 	fi
+	
+## setup_fastlane: Инициализировать fastlane в проекте (пошаговый процесс)
+setup_fastlane:
+	@bash -c '\
+	set -e; \
+	if ! command -v bundler >/dev/null 2>&1 && ! command -v bundle >/dev/null 2>&1; then \
+		printf "$(YELLOW)Не найден bundler. Запустите команду: make setup$(RESET)\n"; \
+		exit 1; \
+	fi; \
+	if [ ! -d fastlane ] || [ ! -f fastlane/Fastfile ]; then \
+		printf "$(YELLOW)Инициализация fastlane...$(RESET)\n"; \
+		eval "$$(rbenv init -)"; \
+		rbenv shell $(RUBY_VERSION); \
+		bundle exec fastlane init; \
+	else \
+		printf "$(GREEN)fastlane уже инициализирован$(RESET)\n"; \
+	fi; \
+	'
 
-update: update_bundle update_swiftformat
+## update: Обновить fastlane и swiftformat (вызывает update_bundle и update_swiftformat)
+update: update_fastlane update_swiftformat
 
-update_bundle:
-	@printf "$(YELLOW)Проверка наличия обновлений fastlane и его зависимостей...$(RESET)\n"
-	@if bundle outdated fastlane --parseable | grep .; then \
+## update_fastlane: Обновить только fastlane и его зависимости
+update_fastlane:
+	@bash -c '\
+	set -e; \
+	printf "$(YELLOW)Проверка наличия обновлений fastlane и его зависимостей...$(RESET)\n"; \
+	eval "$$(rbenv init -)"; \
+	rbenv shell $(RUBY_VERSION); \
+	if bundle outdated fastlane --parseable | grep .; then \
 		printf "$(YELLOW)Есть обновления для fastlane или его зависимостей, выполняется обновление...$(RESET)\n"; \
 		bundle update fastlane; \
 		printf "$(GREEN)fastlane и его зависимости обновлены. Не забудьте закоммитить новый Gemfile.lock!$(RESET)\n"; \
 	else \
 		printf "$(GREEN)fastlane и его зависимости уже самые свежие$(RESET)\n"; \
-	fi
+	fi; \
+	'
 
+## update_swiftformat: Обновить только swiftformat через Homebrew
 update_swiftformat:
 	@printf "$(YELLOW)Проверка наличия обновлений swiftformat...$(RESET)\n"
 	@INSTALLED_VER=$$(brew list --versions swiftformat | awk '{print $$2}'); \
@@ -243,6 +226,7 @@ update_swiftformat:
 		printf "$(GREEN)swiftformat уже самой свежей версии ($$INSTALLED_VER)$(RESET)\n"; \
 	fi
 
+## format: Запустить автоматическое форматирование Swift-кода с помощью swiftformat
 format:
 	@if ! command -v brew >/dev/null 2>&1 || ! command -v swiftformat >/dev/null 2>&1; then \
 		$(MAKE) setup; \
@@ -261,17 +245,23 @@ format:
 	@printf "$(YELLOW)Запуск swiftformat...$(RESET)\n"
 	@swiftformat .
 
+## screenshots: Запустить fastlane snapshot для генерации скриншотов приложения
 screenshots:
-	@if [ ! -d fastlane ] || [ ! -f fastlane/Fastfile ]; then \
+	@bash -c '\
+	set -e; \
+	if [ ! -d fastlane ] || [ ! -f fastlane/Fastfile ]; then \
 		printf "$(YELLOW)fastlane не инициализирован в проекте$(RESET)\n"; \
-		$(MAKE) setup_fastlane; \
+		$(MAKE) setup_snapshot; \
 		if [ ! -d fastlane ] || [ ! -f fastlane/Fastfile ]; then \
 			printf "$(RED)Нужно инициализировать fastlane перед использованием$(RESET)\n"; \
 			exit 1; \
-		fi \
-	fi
-	@printf "$(YELLOW)Запуск fastlane snapshot...$(RESET)\n"
-	@bundle exec fastlane snapshot
+		fi; \
+	fi; \
+	printf "$(YELLOW)Запуск fastlane snapshot...$(RESET)\n"; \
+	eval "$$(rbenv init -)"; \
+	rbenv shell $(RUBY_VERSION); \
+	bundle exec fastlane snapshot; \
+	'
 
 .DEFAULT:
 	@printf "$(RED)Неизвестная команда: 'make $@'\n$(RESET)"
