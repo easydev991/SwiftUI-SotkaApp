@@ -5,3 +5,14 @@
 *.xcworkspace/xcuserdata/
 .DS_Store
 /SwiftUI-SotkaApp.xcodeproj/xcuserdata
+
+# Старое приложение на Objective-C
+OldApp/
+
+# Backend
+Backend/
+
+# Build
+buildServer.json
+build/
+/.continue
