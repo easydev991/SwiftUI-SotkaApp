@@ -34,6 +34,7 @@ struct ProfileScreen: View {
                         VStack(spacing: 12) {
                             makeJournalButton(for: user)
                             makeProgressButton(for: user)
+                            makeCustomExercisesButton(for: user)
                         }
                         logoutButton
                     }
@@ -84,6 +85,16 @@ private extension ProfileScreen {
             FormRowView(
                 title: localizedString,
                 trailingContent: .textWithChevron("")
+            )
+        }
+    }
+
+    func makeCustomExercisesButton(for user: User) -> some View {
+        NavigationLink(destination: CustomExercisesScreen()) {
+            let localizedString = NSLocalizedString("Custom exercises", comment: "")
+            FormRowView(
+                title: localizedString,
+                trailingContent: .textWithChevron(user.customExerciseCountText)
             )
         }
     }

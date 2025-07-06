@@ -340,6 +340,16 @@
         }
       }
     },
+    "Custom exercises" : {
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Пользовательские упражнения"
+          }
+        }
+      }
+    },
     "Cycles" : {
       "localizations" : {
         "ru" : {

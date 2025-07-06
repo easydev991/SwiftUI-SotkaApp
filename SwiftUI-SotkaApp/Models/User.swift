@@ -14,6 +14,9 @@ final class User {
     var genderCode: Int?
     var birthDateIsoString: String?
 
+    /// Пользовательские упражнения
+    @Relationship(deleteRule: .cascade) var customExercises: [CustomExercise] = []
+
     init(
         id: Int,
         userName: String? = nil,
@@ -68,6 +71,11 @@ extension User {
 
     var birthDate: Date {
         DateFormatterService.dateFromString(birthDateIsoString, format: .isoShortDate)
+    }
+
+    var customExerciseCountText: String {
+        let count = customExercises.count
+        return count > 0 ? "\(count)" : ""
     }
 }
 

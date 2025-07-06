@@ -16,22 +16,27 @@ final class CustomExercise {
     /// Дата последнего изменения упражнения
     var modifyDate: Date
 
+    /// Пользователь, которому принадлежит упражнение
+    @Relationship(inverse: \User.customExercises) var user: User?
+
     init(
         id: String,
         name: String,
         imageId: Int,
         createDate: Date,
-        modifyDate: Date
+        modifyDate: Date,
+        user: User? = nil
     ) {
         self.id = id
         self.name = name
         self.imageId = imageId
         self.createDate = createDate
         self.modifyDate = modifyDate
+        self.user = user
     }
 
     /// Инициализатор из ответа сервера
-    convenience init(from response: CustomExerciseResponse) {
+    convenience init(from response: CustomExerciseResponse, user: User? = nil) {
         let createDate = DateFormatterService.dateFromString(response.createDate, format: .serverDateTimeSec)
         let modifyDate = DateFormatterService.dateFromString(response.modifyDate, format: .serverDateTimeSec)
         self.init(
@@ -39,7 +44,8 @@ final class CustomExercise {
             name: response.name,
             imageId: response.imageId,
             createDate: createDate,
-            modifyDate: modifyDate
+            modifyDate: modifyDate,
+            user: user
         )
     }
 }
