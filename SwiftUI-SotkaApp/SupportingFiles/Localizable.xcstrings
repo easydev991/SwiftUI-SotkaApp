@@ -7,6 +7,9 @@
     "%@" : {
       "shouldTranslate" : false
     },
+    "%lld" : {
+
+    },
     "About app" : {
       "localizations" : {
         "ru" : {

@@ -49,3 +49,14 @@ final class CustomExercise {
         )
     }
 }
+
+import SwiftUI
+
+extension CustomExercise {
+    var image: Image {
+        guard let customType = ExerciseType.CustomType(rawValue: imageId) else {
+            return Image(systemName: "questionmark.square")
+        }
+        return customType.image
+    }
+}
