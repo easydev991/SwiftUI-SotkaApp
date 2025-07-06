@@ -3,7 +3,7 @@ import SwiftData
 enum PreviewModelContainer {
     @MainActor
     static func make(with user: User) -> ModelContainer {
-        let schema = Schema([User.self, Country.self])
+        let schema = Schema([User.self, Country.self, CustomExercise.self])
         let config = ModelConfiguration(schema: schema, isStoredInMemoryOnly: true)
         let container = try! ModelContainer(for: schema, configurations: config)
         container.mainContext.insert(user)

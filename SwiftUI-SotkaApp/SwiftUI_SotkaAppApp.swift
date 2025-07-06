@@ -8,13 +8,14 @@ struct SwiftUI_SotkaAppApp: App {
     @Environment(\.scenePhase) private var scenePhase
     @State private var countriesService = CountriesUpdateService()
     @State private var statusManager = StatusManager()
+    @State private var customExercisesService = CustomExercisesService()
     @State private var appSettings = AppSettings()
     @State private var authHelper = AuthHelperImp()
     @State private var networkStatus = NetworkStatus()
     private var client: SWClient { SWClient(with: authHelper) }
 
     private var modelContainer: ModelContainer = {
-        let schema = Schema([User.self, Country.self])
+        let schema = Schema([User.self, Country.self, CustomExercise.self])
         let modelConfiguration = ModelConfiguration(schema: schema, isStoredInMemoryOnly: false)
         do {
             return try ModelContainer(for: schema, configurations: [modelConfiguration])
@@ -38,6 +39,7 @@ struct SwiftUI_SotkaAppApp: App {
             .environment(appSettings)
             .environment(authHelper)
             .environment(statusManager)
+            .environment(customExercisesService)
             .environment(\.isNetworkConnected, networkStatus.isConnected)
             .preferredColorScheme(appSettings.appTheme.colorScheme)
             .task(id: scenePhase) {
@@ -48,6 +50,10 @@ struct SwiftUI_SotkaAppApp: App {
                 )
                 guard authHelper.isAuthorized else { return }
                 await statusManager.getStatus(client: client)
+                await customExercisesService.syncCustomExercises(
+                    context: modelContainer.mainContext,
+                    client: client
+                )
             }
         }
         .modelContainer(modelContainer)
@@ -58,8 +64,9 @@ struct SwiftUI_SotkaAppApp: App {
                 statusManager.didLogout()
                 do {
                     try modelContainer.mainContext.delete(model: User.self)
+                    try modelContainer.mainContext.delete(model: CustomExercise.self)
                 } catch {
-                    fatalError("Не удалось удалить пользователя: \(error.localizedDescription)")
+                    fatalError("Не удалось удалить данные пользователя: \(error.localizedDescription)")
                 }
             }
         }
