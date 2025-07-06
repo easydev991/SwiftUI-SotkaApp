@@ -67,6 +67,13 @@ extension SWClient: StatusClient {
     }
 }
 
+extension SWClient: ExerciseClient {
+    func getCustomExercises() async throws -> [CustomExerciseResponse] {
+        let endpoint = Endpoint.getCustomExercises
+        return try await makeResult(for: endpoint)
+    }
+}
+
 enum ClientError: Error, LocalizedError {
     case forceLogout
     case noConnection
@@ -113,6 +120,10 @@ enum Endpoint {
     /// **GET** ${API}/100/current_run
     case current
 
+    // MARK: Получить список пользовательских упражнений
+    /// **GET** ${API}/100/custom_exercises
+    case getCustomExercises
+
     var urlPath: String {
         switch self {
         case .getCountries: "/countries"
@@ -123,32 +134,33 @@ enum Endpoint {
         case .changePassword: "/auth/changepass"
         case .start: "/100/start"
         case .current: "/100/current_run"
+        case .getCustomExercises: "/100/custom_exercises"
         }
     }
 
     var method: HTTPMethod {
         switch self {
         case .login, .resetPassword, .editUser, .changePassword, .start: .post
-        case .getUser, .getCountries, .current: .get
+        case .getUser, .getCountries, .current, .getCustomExercises: .get
         }
     }
 
     var hasMultipartFormData: Bool {
         switch self {
         case .editUser: true
-        case .login, .getUser, .resetPassword, .getCountries, .changePassword, .start, .current: false
+        case .login, .getUser, .resetPassword, .getCountries, .changePassword, .start, .current, .getCustomExercises: false
         }
     }
 
     var queryItems: [URLQueryItem] {
         switch self {
-        case .login, .getUser, .resetPassword, .getCountries, .editUser, .changePassword, .start, .current: []
+        case .login, .getUser, .resetPassword, .getCountries, .editUser, .changePassword, .start, .current, .getCustomExercises: []
         }
     }
 
     var bodyParts: BodyMaker.Parts? {
         switch self {
-        case .login, .getUser, .getCountries, .current:
+        case .login, .getUser, .getCountries, .current, .getCustomExercises:
             return nil
         case let .editUser(_, form):
             let parameters: [String: String] = [
