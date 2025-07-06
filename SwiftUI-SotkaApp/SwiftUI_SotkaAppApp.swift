@@ -44,10 +44,7 @@ struct SwiftUI_SotkaAppApp: App {
             .preferredColorScheme(appSettings.appTheme.colorScheme)
             .task(id: scenePhase) {
                 guard scenePhase == .active else { return }
-                await countriesService.update(
-                    modelContainer.mainContext,
-                    client: client
-                )
+                await countriesService.update(modelContainer.mainContext, client: client)
                 guard authHelper.isAuthorized else { return }
                 await statusManager.getStatus(client: client)
                 await customExercisesService.syncCustomExercises(
