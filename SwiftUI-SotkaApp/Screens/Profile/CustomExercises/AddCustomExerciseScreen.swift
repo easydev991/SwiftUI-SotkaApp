@@ -14,27 +14,12 @@ struct AddCustomExerciseScreen: View {
     @Environment(\.modelContext) private var modelContext
     @Environment(\.dismiss) private var dismiss
 
-    @State private var exerciseName = ""
-    @State private var selectedImageId = -1
-
-    private var isDuplicate: Bool {
-        guard !exerciseName.isEmpty,
-              let exercises = try? modelContext.fetch(FetchDescriptor<CustomExercise>()),
-              !exercises.isEmpty
-        else {
-            return false
-        }
-        return exercises.contains { $0.name == exerciseName && $0.imageId == selectedImageId }
-    }
-
-    private var canSaveExercise: Bool {
-        !exerciseName.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty && !isDuplicate
-    }
+    @State private var model = Model()
 
     var body: some View {
         ScrollView {
             VStack(spacing: 24) {
-                TextField("Enter exercise name", text: $exerciseName)
+                TextField("Enter exercise name", text: $model.exerciseName)
                     .textFieldStyle(.roundedBorder)
 
                 VStack(alignment: .leading, spacing: 16) {
@@ -67,19 +52,20 @@ struct AddCustomExerciseScreen: View {
         .toolbar {
             ToolbarItem(placement: .topBarTrailing) {
                 Button("Save", action: saveExercise)
-                    .disabled(!canSaveExercise)
+                    .disabled(!model.canSaveExercise)
+                    .animation(.default, value: model.canSaveExercise)
             }
         }
+        .onAppear(perform: fetchExercises)
+    }
+
+    private func fetchExercises() {
+        let descriptor = FetchDescriptor<CustomExercise>()
+        model.allExercises = (try? modelContext.fetch(descriptor)) ?? []
     }
 
     private func saveExercise() {
-        let newExercise = CustomExercise(
-            id: UUID().uuidString,
-            name: exerciseName,
-            imageId: selectedImageId,
-            createDate: .now,
-            modifyDate: .now
-        )
+        let newExercise = model.newExercise
         modelContext.insert(newExercise)
         do {
             try modelContext.save()
@@ -91,12 +77,43 @@ struct AddCustomExerciseScreen: View {
     }
 }
 
+extension AddCustomExerciseScreen {
+    struct Model {
+        var exerciseName = ""
+        var selectedImageId: Int = -1
+        var allExercises = [CustomExercise]()
+
+        /// Проверка на дубликат среди всех упражнений
+        var isDuplicate: Bool {
+            guard !exerciseName.isEmpty, !allExercises.isEmpty else { return false }
+            return allExercises.contains { $0.name == exerciseName && $0.imageId == selectedImageId }
+        }
+
+        /// Можно ли сохранить упражнение
+        var canSaveExercise: Bool {
+            !exerciseName.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+                && !isDuplicate
+                && selectedImageId != -1
+        }
+
+        var newExercise: CustomExercise {
+            .init(
+                id: UUID().uuidString,
+                name: exerciseName,
+                imageId: selectedImageId,
+                createDate: .now,
+                modifyDate: .now
+            )
+        }
+    }
+}
+
 private extension AddCustomExerciseScreen {
     func makeIconButton(for customType: ExerciseType.CustomType) -> some View {
-        let isSelected = selectedImageId == customType.rawValue
+        let isSelected = model.selectedImageId == customType.rawValue
         return Button {
             withAnimation {
-                selectedImageId = customType.rawValue
+                model.selectedImageId = customType.rawValue
             }
         } label: {
             customType.image
