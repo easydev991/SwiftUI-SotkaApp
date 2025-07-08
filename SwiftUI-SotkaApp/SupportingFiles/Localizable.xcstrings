@@ -269,6 +269,16 @@
         }
       }
     },
+    "Choose icon" : {
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Выберите иконку"
+          }
+        }
+      }
+    },
     "Congratulations.Body" : {
       "localizations" : {
         "en" : {
@@ -619,6 +629,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Английский"
+          }
+        }
+      }
+    },
+    "Enter exercise name" : {
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Введите название упражнения"
           }
         }
       }
@@ -980,6 +1000,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Ещё"
+          }
+        }
+      }
+    },
+    "New exercise" : {
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Новое упражнение"
           }
         }
       }
@@ -1366,6 +1396,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Русский"
+          }
+        }
+      }
+    },
+    "Save" : {
+      "localizations" : {
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Сохранить"
           }
         }
       }

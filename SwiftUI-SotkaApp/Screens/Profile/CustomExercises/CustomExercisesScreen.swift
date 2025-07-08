@@ -2,6 +2,7 @@ import SWDesignSystem
 import SwiftData
 import SwiftUI
 
+/// Экран списка пользовательских упражнений
 struct CustomExercisesScreen: View {
     @Query private var customExercises: [CustomExercise]
 
@@ -17,6 +18,13 @@ struct CustomExercisesScreen: View {
             }
         }
         .listStyle(.plain)
+        .toolbar {
+            ToolbarItem(placement: .topBarTrailing) {
+                NavigationLink(destination: AddCustomExerciseScreen()) {
+                    Image(systemName: "plus")
+                }
+            }
+        }
         .background(Color.swBackground)
         .navigationTitle("Custom exercises")
         .navigationBarTitleDisplayMode(.inline)

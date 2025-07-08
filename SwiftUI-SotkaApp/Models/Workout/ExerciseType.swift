@@ -137,7 +137,7 @@ enum ExerciseType: Int {
 
 extension ExerciseType {
     /// Пользовательские упражнения
-    enum CustomType: Int {
+    enum CustomType: Int, CaseIterable {
         case pushups = 0
         case pullups
         case lunges
