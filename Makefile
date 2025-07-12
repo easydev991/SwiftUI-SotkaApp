@@ -1,4 +1,4 @@
-.PHONY: help setup setup_hook setup_snapshot setup_fastlane update update_fastlane update_swiftformat format screenshots
+.PHONY: help setup setup_hook setup_snapshot setup_fastlane update update_fastlane update_swiftformat format screenshots build test
 
 # Цвета и шрифт
 YELLOW=\033[1;33m
@@ -261,7 +261,14 @@ screenshots:
 	eval "$$(rbenv init -)"; \
 	rbenv shell $(RUBY_VERSION); \
 	bundle exec fastlane snapshot; \
-	'
+
+## build: Сборка проекта в терминале
+build:
+	xcodebuild -project SwiftUI-SotkaApp.xcodeproj -scheme SwiftUI-SotkaApp -sdk iphonesimulator -destination 'platform=iOS Simulator,name=iPhone 16 Pro' build
+
+## test: Запускает unit-тесты в терминале
+test:
+	xcodebuild -project SwiftUI-SotkaApp.xcodeproj -scheme SwiftUI-SotkaApp -sdk iphonesimulator -destination 'platform=iOS Simulator,name=iPhone 16 Pro' test -testPlan SwiftUI-SotkaApp
 
 .DEFAULT:
 	@printf "$(RED)Неизвестная команда: 'make $@'\n$(RESET)"
