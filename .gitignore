@@ -20,3 +20,6 @@ build/
 
 # Fastlane
 fastlane/report.xml
+
+# Cursor AI локальные правила и команды
+.cursor/
