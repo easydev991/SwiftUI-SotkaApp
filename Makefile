@@ -1,4 +1,4 @@
-.PHONY: help setup setup_hook setup_snapshot setup_fastlane update update_fastlane update_swiftformat format screenshots build test
+.PHONY: help setup setup_hook setup_snapshot setup_fastlane setup_cursor setup_ssh update update_fastlane update_swiftformat format screenshots upload_screenshots testflight fastlane increment_build build test
 
 # Цвета и шрифт
 YELLOW=\033[1;33m
@@ -11,7 +11,12 @@ RESET=\033[0m
 RUBY_VERSION=3.2.2
 
 # Версия Swift в проекте
-SWIFT_VERSION=6.2
+SWIFT_VERSION=6.2.0
+
+# Глобальные настройки шелла
+SHELL := /bin/bash
+.ONESHELL:
+BUNDLE_EXEC := RBENV_VERSION=$(RUBY_VERSION) bundle exec
 
 ## help: Показать это справочное сообщение
 help:
@@ -118,7 +123,10 @@ setup:
 	'
 	
 	@$(MAKE) setup_hook
+	@$(MAKE) setup_fastlane
 	@$(MAKE) setup_snapshot
+	@$(MAKE) setup_cursor
+	@$(MAKE) setup_ssh
 	
 ## setup_hook: Установить pre-push git-хук для проверки форматирования Swift-кода
 setup_hook:
@@ -258,9 +266,7 @@ screenshots:
 		fi; \
 	fi; \
 	printf "$(YELLOW)Запуск fastlane snapshot...$(RESET)\n"; \
-	eval "$$(rbenv init -)"; \
-	rbenv shell $(RUBY_VERSION); \
-	bundle exec fastlane snapshot; \
+	$(BUNDLE_EXEC) fastlane screenshots; \
 
 ## build: Сборка проекта в терминале
 build:
@@ -269,6 +275,161 @@ build:
 ## test: Запускает unit-тесты в терминале
 test:
 	xcodebuild -project SwiftUI-SotkaApp.xcodeproj -scheme SwiftUI-SotkaApp -sdk iphonesimulator -destination 'platform=iOS Simulator,name=iPhone 17' test -testPlan SwiftUI-SotkaApp
+
+## setup_cursor: Настроить языковой сервер Swift для работы в Cursor
+setup_cursor:
+	@printf "$(YELLOW)🔧 Настройка языкового сервера Swift для Cursor...$(RESET)\n"
+	
+	@printf "$(YELLOW)Проверка наличия Xcode Command Line Tools...$(RESET)\n"
+	@if ! xcode-select -p >/dev/null 2>&1; then \
+		printf "$(RED)❌ Xcode Command Line Tools не установлены$(RESET)\n"; \
+		printf "$(YELLOW)Установите их командой:$(RESET)\n"; \
+		printf "  xcode-select --install\n"; \
+		exit 1; \
+	else \
+		printf "$(GREEN)Xcode Command Line Tools установлены$(RESET)\n"; \
+	fi
+	
+	@printf "$(YELLOW)Проверка наличия xcode-build-server...$(RESET)\n"
+	@if ! command -v xcode-build-server >/dev/null 2>&1; then \
+		printf "$(YELLOW)xcode-build-server не установлен. Устанавливаю через Homebrew...$(RESET)\n"; \
+		brew install xcode-build-server; \
+		printf "$(GREEN)xcode-build-server успешно установлен$(RESET)\n"; \
+	else \
+		printf "$(GREEN)xcode-build-server уже установлен$(RESET)\n"; \
+	fi
+	
+	@printf "$(YELLOW)Проверка наличия sourcekit-lsp...$(RESET)\n"
+	@if ! command -v sourcekit-lsp >/dev/null 2>&1; then \
+		printf "$(RED)❌ sourcekit-lsp не найден$(RESET)\n"; \
+		printf "$(YELLOW)Обычно он устанавливается с Xcode Command Line Tools$(RESET)\n"; \
+		exit 1; \
+	else \
+		printf "$(GREEN)sourcekit-lsp найден$(RESET)\n"; \
+	fi
+	
+	@if [ -f buildServer.json ]; then \
+		printf "$(GREEN)buildServer.json уже существует — пропуск генерации$(RESET)\n"; \
+	else \
+		printf "$(YELLOW)📝 Генерация buildServer.json...$(RESET)\n"; \
+		xcode-build-server config -project SwiftUI-SotkaApp.xcodeproj -scheme SwiftUI-SotkaApp; \
+		printf "$(GREEN)buildServer.json создан$(RESET)\n"; \
+	fi
+	
+	@printf "$(YELLOW)🔨 Выполнение легкой сборки для инициализации индекса...$(RESET)\n"
+	@xcodebuild -project SwiftUI-SotkaApp.xcodeproj -scheme SwiftUI-SotkaApp -destination "platform=iOS Simulator,name=iPhone 17" -quiet clean build CODE_SIGNING_ALLOWED=NO || printf "$(YELLOW)Сборка завершилась с предупреждениями, но это нормально$(RESET)\n"
+	
+	@printf "$(GREEN)✅ Готово!$(RESET)\n"
+	@printf "$(YELLOW)💡 Перезапустите Cursor для активации подсказок Swift$(RESET)\n"
+	@printf "$(YELLOW)   Больше никаких действий не требуется!$(RESET)\n"
+
+## setup_ssh: Настраивает SSH-доступ к GitHub (интерактивно: создаст ключ при необходимости, добавит в агент, опционально добавит ключ в аккаунт GitHub)
+setup_ssh:
+	@printf "$(YELLOW)Проверка SSH-доступа к GitHub...$(RESET)\n"
+	@if ssh -T git@github.com 2>&1 | grep -q "successfully authenticated"; then \
+		printf "$(GREEN)SSH-доступ к GitHub уже настроен$(RESET)\n"; \
+		exit 0; \
+	fi
+	@# Проверка наличия jq
+	@if ! command -v jq >/dev/null 2>&1; then \
+		printf "$(YELLOW)Утилита jq не найдена. Устанавливаю через Homebrew...$(RESET)\n"; \
+		if command -v brew >/dev/null 2>&1; then brew install jq; else printf "$(RED)Homebrew не найден. Установите jq вручную и повторите.$(RESET)\n"; exit 1; fi; \
+	fi
+	@# Создание каталога ~/.ssh при необходимости
+	@if [ ! -d $$HOME/.ssh ]; then \
+		mkdir -p $$HOME/.ssh; \
+		printf "$(GREEN)Создана папка ~/.ssh$(RESET)\n"; \
+	fi
+	@# Создание ключа, если отсутствует (email запрашивается явно)
+	@if [ ! -f $$HOME/.ssh/id_ed25519 ]; then \
+		read -p "Введите email для комментария ключа: " KEY_EMAIL; \
+		while [ -z "$$KEY_EMAIL" ]; do read -p "Email не может быть пустым. Введите email: " KEY_EMAIL; done; \
+		printf "$(YELLOW)Создаю новый SSH-ключ id_ed25519...$(RESET)\n"; \
+		ssh-keygen -t ed25519 -N "" -C "$$KEY_EMAIL" -f $$HOME/.ssh/id_ed25519; \
+	else \
+		printf "$(GREEN)SSH-ключ $$HOME/.ssh/id_ed25519 уже существует$(RESET)\n"; \
+	fi
+	@# Запуск ssh-agent и добавление ключа
+	@eval "$$((ssh-agent -s) 2>/dev/null)" >/dev/null || true
+	@ssh-add -K $$HOME/.ssh/id_ed25519 >/dev/null 2>&1 || ssh-add $$HOME/.ssh/id_ed25519 >/dev/null 2>&1 || true
+	@# Настройка ~/.ssh/config для github.com
+	@CONFIG_FILE="$$HOME/.ssh/config"; \
+	HOST_ENTRY="Host github.com\n  HostName github.com\n  User git\n  AddKeysToAgent yes\n  UseKeychain yes\n  IdentityFile $$HOME/.ssh/id_ed25519\n"; \
+	if [ -f "$$CONFIG_FILE" ]; then \
+		if ! grep -q "Host github.com" "$$CONFIG_FILE"; then \
+			echo "$$HOST_ENTRY" >> "$$CONFIG_FILE"; \
+			printf "$(GREEN)Добавлена секция для github.com в ~/.ssh/config$(RESET)\n"; \
+		else \
+			printf "$(GREEN)Секция для github.com уже есть в ~/.ssh/config$(RESET)\n"; \
+		fi; \
+	else \
+		echo "$$HOST_ENTRY" > "$$CONFIG_FILE"; \
+		chmod 600 "$$CONFIG_FILE"; \
+		printf "$(GREEN)Создан ~/.ssh/config с секцией для github.com$(RESET)\n"; \
+	fi
+	@# Предложение добавить публичный ключ в аккаунт GitHub через API
+	@printf "$(YELLOW)Добавление публичного ключа в ваш аккаунт GitHub через API...$(RESET)\n"; \
+	printf "Требуется персональный токен GitHub с правом 'admin:public_key'.\n"; \
+	read -p "Добавить ключ в GitHub через API? [y/N]: " ADD_GH; \
+	if [[ "$$ADD_GH" =~ ^[Yy]$$ ]]; then \
+		read -p "Введите ваш GitHub Personal Access Token: " TOKEN; \
+		read -p "Введите название для SSH-ключа (например, 'work-macbook'): " TITLE; \
+		if [ -z "$$TITLE" ]; then TITLE="SwiftUI-SotkaApp key"; fi; \
+		PUB_KEY=$$(cat $$HOME/.ssh/id_ed25519.pub); \
+		DATA=$$(jq -n --arg title "$$TITLE" --arg key "$$PUB_KEY" '{title:$$title, key:$$key}'); \
+		RESPONSE=$$(curl -s -w "\n%{http_code}" -X POST "https://api.github.com/user/keys" -H "Accept: application/vnd.github+json" -H "Authorization: token $$TOKEN" -d "$$DATA"); \
+		BODY=$$(echo "$$RESPONSE" | sed '$$d'); \
+		STATUS=$$(echo "$$RESPONSE" | tail -n 1); \
+		if [ "$$STATUS" = "201" ]; then \
+			printf "$(GREEN)SSH-ключ успешно добавлен в GitHub$(RESET)\n"; \
+		elif [ "$$STATUS" = "422" ]; then \
+			printf "$(YELLOW)Ключ уже добавлен или недопустим. Сообщение GitHub:$(RESET)\n"; \
+			echo "$$BODY"; \
+		else \
+			printf "$(RED)Ошибка при добавлении ключа в GitHub (HTTP $$STATUS)$(RESET)\n"; \
+			echo "$$BODY"; \
+		fi; \
+	else \
+		printf "$(YELLOW)Пропускаю авто-добавление ключа. Добавьте его вручную: $(RESET)https://github.com/settings/keys\n"; \
+	fi
+	@printf "$(YELLOW)Проверка соединения с github.com...$(RESET)\n"; \
+	ssh -T git@github.com || true
+
+## upload_screenshots: Загрузить существующие скриншоты в App Store Connect
+upload_screenshots:
+	@if [ ! -d fastlane ] || [ ! -f fastlane/Fastfile ]; then \
+		printf "$(RED)fastlane не инициализирован в проекте$(RESET)\n"; \
+		$(MAKE) setup_fastlane; \
+		if [ ! -d fastlane ] || [ ! -f fastlane/Fastfile ]; then \
+			printf "$(RED)Нужно инициализировать fastlane перед использованием$(RESET)\n"; \
+			exit 1; \
+		fi; \
+	fi
+	@printf "$(YELLOW)Загрузка скриншотов в App Store Connect...$(RESET)\n"
+	@$(BUNDLE_EXEC) fastlane upload_screenshots
+
+## increment_build: Получить следующий номер сборки для TestFlight
+increment_build:
+	@printf "$(YELLOW)Информация о номерах сборки...$(RESET)\n"
+	@$(BUNDLE_EXEC) fastlane get_next_build_number
+
+## testflight: Собрать и отправить сборку в TestFlight через fastlane
+testflight:
+	@printf "$(YELLOW)Сборка и публикация в TestFlight...$(RESET)\n"
+	@$(BUNDLE_EXEC) fastlane build_and_upload
+
+## fastlane: Запустить меню команд fastlane
+fastlane:
+	@if [ ! -d fastlane ] || [ ! -f fastlane/Fastfile ]; then \
+		printf "$(RED)fastlane не инициализирован в проекте$(RESET)\n"; \
+		$(MAKE) setup_fastlane; \
+		if [ ! -d fastlane ] || [ ! -f fastlane/Fastfile ]; then \
+			printf "$(RED)Нужно инициализировать fastlane перед использованием$(RESET)\n"; \
+			exit 1; \
+		fi; \
+	fi
+	@printf "$(YELLOW)Запуск меню команд fastlane...$(RESET)\n"
+	@$(BUNDLE_EXEC) fastlane
 
 .DEFAULT:
 	@printf "$(RED)Неизвестная команда: 'make $@'\n$(RESET)"

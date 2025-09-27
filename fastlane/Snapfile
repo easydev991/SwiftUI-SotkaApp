@@ -1,35 +1,39 @@
-# Список устройств, на которых будут делаться скриншоты
-devices(["iPhone 16 Pro Max", "iPhone 16 Pro", "iPhone SE (3rd generation)"])
+# A list of devices you want to take the screenshots from
+devices(["iPhone 15 Pro Max", "iPad Pro (12.9-inch) (6th generation)"])
 
-# Список языков, которые будут использоваться. Смотри https://docs.fastlane.tools/actions/snapshot/#available-language-codes
+# A list of languages which should be used. See https://docs.fastlane.tools/actions/snapshot/#available-language-codes
 languages(["en-US", "ru"])
 
-# Имя схемы, в которой находятся UI-тесты
-scheme("SwiftUI-SotkaAppUITests")
+# By default, the latest version should be used automatically. If you want to change it, do it here. 
+#ios_version("18.1")
 
-# Удалить все старые скриншоты перед созданием новых
-clear_previous_screenshots(true)
-
-# Не устанавливать зависимости пакетов перед запуском
-skip_package_dependencies_resolution(true)
-
-# Не обновлять пакеты автоматически
-disable_package_automatic_updates(true)
-
-# Не открывать html-файл с результатами после завершения
+# Пропускаем открытие html-файла с результатами
 skip_open_summary(true)
 
-# Переустанавливать приложение перед запуском
+# Переустановить приложение перед стартом
 reinstall_app(true)
 
-# Включение этой опции настроит язык системы симулятора
+# Enabling this option will configure the Simulator's system language
 localize_simulator(true)
 
-# Остановить выполнение сразу, если тесты полностью провалились на одном из устройств
+# Should snapshot stop immediately after the tests completely failed on one device?
 stop_after_first_error(true)
 
-# Сколько раз пробовать снова в случае ошибок
+# Количество попыток в случае ошибок
 number_of_retries(0)
 
-# Для получения дополнительной информации обо всех доступных опциях запусти команду:
+# Prevents packages from automatically being resolved to versions other than those recorded in the Package.resolved file
+disable_package_automatic_updates(true)
+
+# The name of the scheme which contains the UI Tests
+scheme("SwiftUI-SotkaAppUITests")
+
+# remove the '#' to clear all previously generated screenshots before creating new ones
+clear_previous_screenshots(true)
+
+skip_package_dependencies_resolution(true)
+disable_package_automatic_updates(true)
+output_simulator_logs(true)
+
+# For more information about all available options run
 # fastlane action snapshot
