@@ -11,7 +11,7 @@ RESET=\033[0m
 RUBY_VERSION=3.2.2
 
 # Версия Swift в проекте
-SWIFT_VERSION=6.0
+SWIFT_VERSION=6.2
 
 ## help: Показать это справочное сообщение
 help:
@@ -264,11 +264,11 @@ screenshots:
 
 ## build: Сборка проекта в терминале
 build:
-	xcodebuild -project SwiftUI-SotkaApp.xcodeproj -scheme SwiftUI-SotkaApp -sdk iphonesimulator -destination 'platform=iOS Simulator,name=iPhone 16 Pro' build
+	xcodebuild -project SwiftUI-SotkaApp.xcodeproj -scheme SwiftUI-SotkaApp -sdk iphonesimulator -destination 'platform=iOS Simulator,name=iPhone 17' build
 
 ## test: Запускает unit-тесты в терминале
 test:
-	xcodebuild -project SwiftUI-SotkaApp.xcodeproj -scheme SwiftUI-SotkaApp -sdk iphonesimulator -destination 'platform=iOS Simulator,name=iPhone 16 Pro' test -testPlan SwiftUI-SotkaApp
+	xcodebuild -project SwiftUI-SotkaApp.xcodeproj -scheme SwiftUI-SotkaApp -sdk iphonesimulator -destination 'platform=iOS Simulator,name=iPhone 17' test -testPlan SwiftUI-SotkaApp
 
 .DEFAULT:
 	@printf "$(RED)Неизвестная команда: 'make $@'\n$(RESET)"

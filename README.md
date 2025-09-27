@@ -1,5 +1,7 @@
 # SOTKA
-<img alt="Static Badge" src="https://img.shields.io/badge/Swift_Version-6.0-orange"> <img alt="Static Badge" src="https://img.shields.io/badge/iOS_Version-17-blue">
+[<img alt="Xcode Version" src="https://img.shields.io/badge/Xcode_Version-26.0-blue">](https://developer.apple.com/xcode/)
+[<img alt="Swift Version" src="https://img.shields.io/badge/Swift_Version-6.2-orange">](https://swift.org)
+[<img alt="iOS Version" src="https://img.shields.io/badge/iOS_Version-17-4F9153">](https://www.apple.com/ios/)
 
 ## Начало работы
 Для подготовки проекта к работе необходимо:
