@@ -27,14 +27,4 @@ struct AddCustomExerciseModelTests {
         model.selectedImageId = 2
         #expect(model.canSaveExercise)
     }
-
-    @Test
-    func newExercisePreservesOriginalName() throws {
-        var model = SUT()
-        model.exerciseName = "  Отжимания  "
-        model.selectedImageId = 5
-        let newExercise = model.newExercise
-        try #require(newExercise.name == "  Отжимания  ")
-        #expect(newExercise.imageId == 5)
-    }
 }

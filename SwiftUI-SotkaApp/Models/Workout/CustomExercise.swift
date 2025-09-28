@@ -16,6 +16,13 @@ final class CustomExercise {
     /// Дата последнего изменения упражнения
     var modifyDate: Date
 
+    /// Флаг синхронизации с сервером
+    var isSynced = false
+    /// Флаг для удаления с сервера
+    var shouldDelete = false
+    /// Количество использований упражнения (для сортировки по частоте)
+    var usageCount = 0
+
     /// Пользователь, которому принадлежит упражнение
     @Relationship(inverse: \User.customExercises) var user: User?
 
@@ -33,6 +40,10 @@ final class CustomExercise {
         self.createDate = createDate
         self.modifyDate = modifyDate
         self.user = user
+        // Флаги синхронизации устанавливаются по умолчанию
+        self.isSynced = false
+        self.shouldDelete = false
+        self.usageCount = 0
     }
 
     /// Инициализатор из ответа сервера
@@ -47,6 +58,9 @@ final class CustomExercise {
             modifyDate: modifyDate,
             user: user
         )
+        // Данные с сервера считаются синхронизированными
+        self.isSynced = true
+        self.shouldDelete = false
     }
 }
 

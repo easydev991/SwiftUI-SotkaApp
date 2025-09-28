@@ -22,63 +22,60 @@
 - [x] Редактирование упражнения: экран на базе `AddCustomExerciseScreen` с предзаполнением модели и сохранением изменений (без дублирования кода формы).
 - [x] Удаление упражнения через `swipeActions` с подтверждением, переход к редактированию.
 
-#### Итерация 2 — Модель и данные
+#### Итерация 2 — Модель, данные и офлайн-приоритет
 - [x] Пересмотреть модель `CustomExercise` (обязательные поля, индексы/уникальность на уровне бизнес-логики). В SwiftData нет встроенных уникальных ограничений — оставить проверку дубликатов в коде сохранения.
-- [ ] Добавить поле `usageCount` (на перспективу сортировки по частоте использования).
-- [ ] Обеспечить мягкую миграцию данных при добавлении полей (описание шага миграции в README проекта).
-- [ ] **Интегрировать с "Итерацией 2.5"**: добавить флаги синхронизации (`isSynced`, `shouldDelete`) и использовать существующее поле `modifyDate` как `lastModified`.
-
-#### Итерация 2.5 — Офлайн-приоритет и серверная синхронизация
-- [ ] **Обновить модель `CustomExercise`** с флагами синхронизации:
+- [x] Добавить поле `usageCount` (на перспективу сортировки по частоте использования).
+- [x] Обеспечить мягкую миграцию данных при добавлении полей (описание шага миграции в README проекта).
+- [x] **Обновить модель `CustomExercise`** с флагами синхронизации:
   - Добавить `isSynced: Bool = false` — флаг синхронизации с сервером
   - Добавить `shouldDelete: Bool = false` — флаг для удаления с сервера
   - Использовать существующее поле `modifyDate` как `lastModified` для отслеживания изменений
-- [ ] **Приоритет офлайн-работы**:
+- [x] **Приоритет офлайн-работы**:
   - Все операции (создание, редактирование, удаление) **сначала** сохраняются локально в SwiftData
   - Синхронизация с сервером происходит **асинхронно** и **неблокирующе**
   - Приложение работает **полностью офлайн** без интернета
   - Показывать статус синхронизации отдельно от основного UI
-- [ ] **Расширить `ExerciseClient` протокол** (в `Services/Protocols/ExerciseClient.swift`):
+- [x] **Расширить `ExerciseClient` протокол** (в `Services/Protocols/ExerciseClient.swift`):
   - `getCustomExercises() async throws -> [CustomExerciseResponse]` — получение списка упражнений
   - `saveCustomExercise(id: String, exercise: CustomExerciseRequest) async throws -> CustomExerciseResponse` — создание/обновление (универсальный метод)
   - `deleteCustomExercise(id: String) async throws` — удаление упражнения
-- [ ] **Добавить новые endpoints в `SWClient`** (на основе SOTKA-OBJc):
+- [x] **Добавить новые endpoints в `SWClient`** (на основе SOTKA-OBJc):
   - `GET v3/100/custom_exercises` — получение списка упражнений
   - `POST v3/100/custom_exercises/<id>` — создание/обновление упражнения (универсальный endpoint)
   - `DELETE v3/100/custom_exercises/<id>` — удаление упражнения
-- [ ] **Создать модель запроса** `CustomExerciseRequest` (в `Models/Workout/` на основе SOTKA-OBJc):
+- [x] **Создать модель запроса** `CustomExerciseRequest` (в `Models/Workout/` на основе SOTKA-OBJc):
   - `id: String` — идентификатор упражнения
   - `name: String` — название упражнения
   - `image_id: Int` — ID иконки
   - `create_date: String` — дата создания (ISO формат)
   - `modify_date: String?` — дата изменения (ISO формат, опционально)
   - `is_hidden: Bool` — скрыто ли упражнение
-- [ ] **Доработать `CustomExercisesService`** с офлайн-приоритетом (на основе SOTKA-OBJc):
+- [x] **Доработать `CustomExercisesService`** с офлайн-приоритетом (на основе SOTKA-OBJc):
   - **Локальное сохранение** — всегда и немедленно
   - **Синхронизация** — только при наличии интернета и авторизации
-  - `saveLocally(exercise: CustomExercise, context: ModelContext)` — локальное сохранение
-  - `syncUnsyncedData(context: ModelContext, client: ExerciseClient) async` — рекурсивная синхронизация по одному элементу
-  - `getCustomExercises(context: ModelContext, client: ExerciseClient) async throws` — получение с сервера
-  - `saveCustomExercise(exercise: CustomExercise, context: ModelContext, client: ExerciseClient) async throws` — универсальное сохранение
-  - `deleteCustomExercise(id: String, context: ModelContext, client: ExerciseClient) async throws` — удаление
-  - **Обработка ошибок**: при ошибке 404/500 при удалении — удаление локально
+  - `createCustomExercise()` — создание с локальным сохранением
+  - `updateCustomExercise()` — обновление с локальным сохранением
+  - `deleteCustomExercise()` — удаление с локальным сохранением
+  - `syncUnsyncedExercises()` — синхронизация всех несинхронизированных данных
+  - `syncSingleExercise()` — синхронизация одного упражнения
+  - **Обработка ошибок**: при ошибке синхронизации — продолжать работу локально
   - Обработка ошибок сети с логированием через `OSLog`
-- [ ] **Интеграция в экраны** с офлайн-приоритетом:
+- [x] **Интеграция в экраны** с офлайн-приоритетом:
   - При сохранении в `AddCustomExerciseScreen` — **сначала** сохранять локально, **потом** синхронизировать
   - При редактировании — **сначала** обновлять локально, **потом** синхронизировать
   - При удалении — **сначала** помечать для удаления локально, **потом** удалять с сервера
   - Показывать индикатор синхронизации отдельно от основного UI
   - **Никогда не блокировать** UI ожиданием синхронизации
-- [ ] **Обработка конфликтов**:
-  - При синхронизации учитывать `lastModified` для определения последней версии
-  - Локальные изменения имеют приоритет при конфликтах
-  - Логирование конфликтов через `OSLog`
-  - При ошибке синхронизации — продолжать работу локально
+- [x] **Обработка конфликтов** (адаптировано под существующий паттерн StatusManager):
+  - **Двунаправленная синхронизация**: Сначала отправляем локальные изменения на сервер, потом загружаем серверные
+  - **Стратегия "Last Write Wins"**: При конфликте используется версия с более поздним `modifyDate`
+  - **Логирование конфликтов**: Все конфликты логируются через `OSLog` с деталями (ID, даты, источник)
+  - **Автоматическое разрешение**: Конфликты разрешаются автоматически без участия пользователя
+  - **Fallback стратегия**: При ошибке синхронизации — продолжать работу локально, повторять попытки синхронизации
+  - **Доработка syncCustomExercises**: Добавить отправку локальных изменений перед загрузкой серверных
 
 #### Итерация 3 — UI/Design
 - [ ] Улучшить грид выбора иконок: явное состояние выбора, ховер/фокус состояния, доступность (VoiceOver labels).
-- [ ] Категоризация/поиск иконок (если иконок станет много), возможность быстрого выбора последних использованных.
-- [ ] Локализовать строки: «Custom exercises», «New exercise», «Save», «Enter exercise name», «Choose icon», тексты ошибок.
 - [ ] Добавить `Accessibility` (labels/hints/traits) для кнопок и элементов списка.
 
 #### Итерация 4 — Тесты и качество
@@ -129,5 +126,149 @@
 - Паттерны экранов со списками: `SwiftUI-Days` (`MainScreen`, навигация, `List`, `swipeActions`).
 - Архитектурные и код-правила: `.cursor/rules/sotka-development.mdc`.
 - **Офлайн-приоритет**: `.cursor/rules/offline-priority.mdc` — правила офлайн-работы и синхронизации.
+
+## Стратегии обработки конфликтов синхронизации
+
+### Анализ существующего функционала в новом приложении
+
+**Найденные паттерны в StatusManager (аналогично SOTKA-OBJc):**
+1. **Пользовательский выбор при конфликтах**: При конфликте дат старта показывается `SyncStartDateView` с выбором между данными приложения и сервера
+2. **Модель конфликта**: `ConflictingStartDate` с двумя `DayCalculator` (app/site)
+3. **UI паттерн**: Sheet с двумя опциями выбора, анимации, кнопка "Done"
+4. **Автоматическое обновление**: После выбора вызывается соответствующий метод синхронизации
+
+**Текущее состояние CustomExercisesService:**
+1. **Односторонняя синхронизация**: Только загрузка с сервера, локальные изменения не отправляются
+2. **Серверный приоритет**: Локальные данные обновляются только если серверная версия новее
+3. **Проблема**: Локальные изменения могут быть потеряны при конфликтах
+
+### Предлагаемые стратегии для нового приложения
+
+#### 1. Двунаправленная синхронизация (Рекомендуемая)
+```swift
+// Обновленный syncCustomExercises
+func syncCustomExercises(context: ModelContext) async {
+    // 1. Сначала отправляем локальные изменения на сервер
+    await syncUnsyncedExercises(context: context)
+    
+    // 2. Потом загружаем серверные изменения
+    await downloadServerExercises(context: context)
+}
+```
+
+#### 2. Стратегия "Last Write Wins" для конфликтов
+```swift
+// При конфликте в downloadServerExercises
+if serverModifyDate > localModifyDate {
+    // Серверная версия новее - обновляем локальную
+    updateLocalFromServer(local, server)
+} else {
+    // Локальная версия новее - уже отправлена на сервер
+    logger.info("Локальная версия новее серверной, пропускаем обновление")
+}
+```
+
+#### 3. Детальное логирование конфликтов
+```swift
+private func logConflict(exerciseId: String, localDate: Date, serverDate: Date, resolution: String) {
+    logger.info("Конфликт разрешен для упражнения \(exerciseId): локальная \(localDate) vs серверная \(serverDate) -> \(resolution)")
+}
+```
+
+#### 4. Автоматическое разрешение без UI
+- **Принцип**: Пользователь не участвует в разрешении конфликтов (в отличие от StatusManager)
+- **Логика**: Всегда выбирается более новая версия по `modifyDate`
+- **Логирование**: Все конфликты детально логируются для отладки
+
+#### 5. Fallback стратегия при ошибках
+- **Повторные попытки**: При ошибке синхронизации повторять через экспоненциальные интервалы
+- **Локальная работа**: Приложение продолжает работать локально даже при ошибках синхронизации
+- **Фоновые попытки**: Синхронизация происходит в фоне при следующем запуске приложения
+
+#### 6. Специальные случаи
+- **Удаленные элементы**: Если элемент удален на сервере, но изменен локально - локальная версия восстанавливается
+- **Созданные локально**: Новые элементы всегда создаются на сервере с локальным ID
+- **Конфликты имен**: При одинаковых именах упражнений - используется ID для различения
+
+### Реализация в CustomExercisesService
+
+#### Обновленный syncCustomExercises
+```swift
+func syncCustomExercises(context: ModelContext) async {
+    guard !isLoading else { return }
+    isLoading = true
+
+    // 1. Сначала отправляем локальные изменения на сервер
+    await syncUnsyncedExercises(context: context)
+    
+    // 2. Потом загружаем серверные изменения
+    await downloadServerExercises(context: context)
+    
+    isLoading = false
+}
+
+private func downloadServerExercises(context: ModelContext) async {
+    // Получаем пользователя
+    guard let user = try? context.fetch(FetchDescriptor<User>()).first else { return }
+    
+    do {
+        let exercises = try await client.getCustomExercises()
+        let existingExercises = try context.fetch(FetchDescriptor<CustomExercise>())
+            .filter { $0.user?.id == user.id }
+        let existingDict = Dictionary(uniqueKeysWithValues: existingExercises.map { ($0.id, $0) })
+
+        for exerciseResponse in exercises {
+            if let existingExercise = existingDict[exerciseResponse.id] {
+                let serverModifyDate = DateFormatterService.dateFromString(
+                    exerciseResponse.modifyDate, format: .serverDateTimeSec
+                )
+                
+                if serverModifyDate > existingExercise.modifyDate {
+                    // Серверная версия новее - обновляем локальную
+                    updateLocalFromServer(existingExercise, exerciseResponse)
+                    logConflict(
+                        exerciseId: existingExercise.id,
+                        localDate: existingExercise.modifyDate,
+                        serverDate: serverModifyDate,
+                        resolution: "Серверная версия новее"
+                    )
+                } else {
+                    // Локальная версия новее - уже отправлена на сервер
+                    logger.info("Локальная версия новее серверной для \(existingExercise.name)")
+                }
+            } else {
+                // Создаем новое упражнение с сервера
+                let newExercise = CustomExercise(from: exerciseResponse, user: user)
+                context.insert(newExercise)
+            }
+        }
+        
+        try context.save()
+        logger.info("Серверные упражнения загружены")
+    } catch {
+        logger.error("Ошибка загрузки серверных упражнений: \(error.localizedDescription)")
+    }
+}
+```
+
+### Преимущества предлагаемого подхода
+
+1. **Консистентность**: Использует тот же паттерн, что и StatusManager, но без UI
+2. **Двунаправленная синхронизация**: Локальные изменения не теряются
+3. **Автоматическое разрешение**: Пользователь не участвует в разрешении конфликтов
+4. **Надежность**: Всегда есть "истина" - более новая версия по `modifyDate`
+5. **Производительность**: Нет блокировки UI ожиданием пользовательского выбора
+6. **Логирование**: Полная трассировка всех конфликтов для отладки
+7. **Офлайн-приоритет**: Приложение работает локально, синхронизация в фоне
+
+### Ключевые отличия от StatusManager
+
+| Аспект | StatusManager | CustomExercisesService |
+|--------|---------------|------------------------|
+| **UI для конфликтов** | ✅ Sheet с выбором | ❌ Автоматическое разрешение |
+| **Тип данных** | Одна дата старта | Множество упражнений |
+| **Частота конфликтов** | Редко (при первом запуске) | Часто (при каждом редактировании) |
+| **Пользовательский опыт** | Выбор между вариантами | Прозрачная синхронизация |
+| **Сложность реализации** | Высокая (UI + логика) | Средняя (только логика) |
 
 

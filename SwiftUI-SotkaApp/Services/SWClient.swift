@@ -72,6 +72,16 @@ extension SWClient: ExerciseClient {
         let endpoint = Endpoint.getCustomExercises
         return try await makeResult(for: endpoint)
     }
+
+    func saveCustomExercise(id: String, exercise: CustomExerciseRequest) async throws -> CustomExerciseResponse {
+        let endpoint = Endpoint.saveCustomExercise(id: id, exercise: exercise)
+        return try await makeResult(for: endpoint)
+    }
+
+    func deleteCustomExercise(id: String) async throws {
+        let endpoint = Endpoint.deleteCustomExercise(id: id)
+        try await makeStatus(for: endpoint)
+    }
 }
 
 enum ClientError: Error, LocalizedError {
@@ -124,6 +134,14 @@ enum Endpoint {
     /// **GET** ${API}/100/custom_exercises
     case getCustomExercises
 
+    // MARK: Сохранить пользовательское упражнение
+    /// **POST** ${API}/100/custom_exercises
+    case saveCustomExercise(id: String, exercise: CustomExerciseRequest)
+
+    // MARK: Удалить пользовательское упражнение
+    /// **DELETE** ${API}/100/custom_exercises/<id>
+    case deleteCustomExercise(id: String)
+
     var urlPath: String {
         switch self {
         case .getCountries: "/countries"
@@ -135,32 +153,37 @@ enum Endpoint {
         case .start: "/100/start"
         case .current: "/100/current_run"
         case .getCustomExercises: "/100/custom_exercises"
+        case let .saveCustomExercise(id, _): "/100/custom_exercises/\(id)"
+        case let .deleteCustomExercise(id): "/100/custom_exercises/\(id)"
         }
     }
 
     var method: HTTPMethod {
         switch self {
-        case .login, .resetPassword, .editUser, .changePassword, .start: .post
+        case .login, .resetPassword, .editUser, .changePassword, .start, .saveCustomExercise: .post
         case .getUser, .getCountries, .current, .getCustomExercises: .get
+        case .deleteCustomExercise: .delete
         }
     }
 
     var hasMultipartFormData: Bool {
         switch self {
         case .editUser: true
-        case .login, .getUser, .resetPassword, .getCountries, .changePassword, .start, .current, .getCustomExercises: false
+        case .login, .getUser, .resetPassword, .getCountries, .changePassword, .start, .current, .getCustomExercises, .saveCustomExercise,
+             .deleteCustomExercise: false
         }
     }
 
     var queryItems: [URLQueryItem] {
         switch self {
-        case .login, .getUser, .resetPassword, .getCountries, .editUser, .changePassword, .start, .current, .getCustomExercises: []
+        case .login, .getUser, .resetPassword, .getCountries, .editUser, .changePassword, .start, .current, .getCustomExercises,
+             .saveCustomExercise, .deleteCustomExercise: []
         }
     }
 
     var bodyParts: BodyMaker.Parts? {
         switch self {
-        case .login, .getUser, .getCountries, .current, .getCustomExercises:
+        case .login, .getUser, .getCountries, .current, .getCustomExercises, .deleteCustomExercise:
             return nil
         case let .editUser(_, form):
             let parameters: [String: String] = [
@@ -191,6 +214,20 @@ enum Endpoint {
             return .init(["username_or_email": login], nil)
         case let .start(date):
             return .init(["date": date], nil)
+        case let .saveCustomExercise(_, exercise):
+            let parameters: [String: String] = [
+                "id": exercise.id,
+                "name": exercise.name,
+                "image_id": String(exercise.imageId),
+                "create_date": exercise.createDate,
+                "is_hidden": String(exercise.isHidden)
+            ]
+            if let modifyDate = exercise.modifyDate {
+                var mutableParameters = parameters
+                mutableParameters["modify_date"] = modifyDate
+                return .init(mutableParameters, nil)
+            }
+            return .init(parameters, nil)
         }
     }
 }

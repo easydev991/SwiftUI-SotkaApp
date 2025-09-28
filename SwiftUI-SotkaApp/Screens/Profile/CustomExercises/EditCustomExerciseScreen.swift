@@ -5,16 +5,19 @@ import SwiftUI
 import SWUtils
 
 /// Универсальный экран для создания и редактирования пользовательского упражнения
+@MainActor
 struct EditCustomExerciseScreen: View {
     private let logger = Logger(
         subsystem: Bundle.main.bundleIdentifier!,
         category: String(describing: EditCustomExerciseScreen.self)
     )
     @Environment(\.modelContext) private var modelContext
+    @Environment(CustomExercisesService.self) private var customExercisesService
     @Query private var allExercises: [CustomExercise]
     @State private var exerciseName = ""
     @State private var selectedImageId: Int = -1
     @FocusState private var isFirstFieldFocused
+    @State private var isSaving = false
     private let oldItem: CustomExercise?
     private let closeAction: () -> Void
 
@@ -33,7 +36,6 @@ struct EditCustomExerciseScreen: View {
             Spacer()
         }
         .padding()
-        .background(Color.swBackground)
         .navigationTitle("Exercise")
         .navigationBarBackButtonHidden(oldItem != nil)
         .navigationBarTitleDisplayMode(.inline)
@@ -54,12 +56,12 @@ struct EditCustomExerciseScreen: View {
             ToolbarItem(placement: .topBarTrailing) {
                 Button("Save") {
                     save()
-                    closeAction()
                 }
                 .disabled(!canSave)
                 .accessibilityIdentifier("saveExerciseNavButton")
             }
         }
+        .loadingOverlay(if: isSaving)
     }
 
     private var exerciseNameSection: some View {
@@ -135,24 +137,31 @@ struct EditCustomExerciseScreen: View {
     }
 
     private func save() {
-        guard let oldItem else {
-            let newExercise = newExercise
-            modelContext.insert(newExercise)
-            return
+        isSaving = true
+        if let oldItem {
+            updateExercise(oldItem)
+        } else {
+            customExercisesService.createCustomExercise(
+                name: exerciseName,
+                imageId: selectedImageId,
+                context: modelContext
+            )
         }
-        oldItem.name = exerciseName
-        oldItem.imageId = selectedImageId
-        oldItem.modifyDate = .now
+        isSaving = false
+        closeAction()
     }
 
-    private var newExercise: CustomExercise {
-        CustomExercise(
-            id: UUID().uuidString,
-            name: exerciseName,
-            imageId: selectedImageId,
-            createDate: .now,
-            modifyDate: .now
-        )
+    private func updateExercise(_ exercise: CustomExercise) {
+        exercise.name = exerciseName
+        exercise.imageId = selectedImageId
+        do {
+            try customExercisesService.markCustomExerciseAsModified(
+                exercise,
+                context: modelContext
+            )
+        } catch {
+            logger.error("Ошибка синхронизации обновления упражнения: \(error)")
+        }
     }
 }
 
@@ -163,16 +172,6 @@ extension EditCustomExerciseScreen {
 
         var canSaveExercise: Bool {
             !exerciseName.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty && selectedImageId != -1
-        }
-
-        var newExercise: CustomExercise {
-            CustomExercise(
-                id: UUID().uuidString,
-                name: exerciseName,
-                imageId: selectedImageId,
-                createDate: .now,
-                modifyDate: .now
-            )
         }
     }
 }

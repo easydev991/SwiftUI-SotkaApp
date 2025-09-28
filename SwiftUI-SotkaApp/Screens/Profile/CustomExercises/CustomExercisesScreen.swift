@@ -1,11 +1,17 @@
+import OSLog
 import SWDesignSystem
 import SwiftData
 import SwiftUI
 
 /// Экран списка пользовательских упражнений
 struct CustomExercisesScreen: View {
+    private let logger = Logger(
+        subsystem: Bundle.main.bundleIdentifier!,
+        category: String(describing: CustomExercisesScreen.self)
+    )
     @Query private var customExercises: [CustomExercise]
     @Environment(\.modelContext) private var modelContext
+    @Environment(CustomExercisesService.self) private var customExercisesService
     @State private var searchQuery = ""
     @State private var sortOrder = SortOrder.modifyDate
     @State private var exerciseToDelete: CustomExercise?
@@ -87,9 +93,8 @@ private extension CustomExercisesScreen {
             titleVisibility: .visible
         ) {
             Button("Delete", role: .destructive) {
-                if let exercise = exerciseToDelete {
-                    modelContext.delete(exercise)
-                    exerciseToDelete = nil
+                if let exerciseToDelete {
+                    deleteExercise(exerciseToDelete)
                 }
             }
             Button("Cancel", role: .cancel) {
@@ -98,6 +103,7 @@ private extension CustomExercisesScreen {
         } message: {
             Text("Are you sure you want to delete \"\(exerciseToDelete?.name ?? "")\"? This action cannot be undone.")
         }
+        .loadingOverlay(if: customExercisesService.isLoading)
     }
 
     var filteredExercises: [CustomExercise] {
@@ -156,6 +162,18 @@ private extension CustomExercisesScreen {
             }
         }
         .animation(.bouncy, value: filteredExercises.isEmpty && !searchQuery.isEmpty)
+    }
+
+    func deleteExercise(_ exercise: CustomExercise) {
+        do {
+            try customExercisesService.deleteCustomExercise(
+                exercise,
+                context: modelContext
+            )
+        } catch {
+            logger.error("Ошибка удаления упражнения: \(error)")
+        }
+        exerciseToDelete = nil
     }
 }
 
