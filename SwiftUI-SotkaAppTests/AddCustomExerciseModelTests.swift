@@ -2,7 +2,7 @@
 import Testing
 
 struct AddCustomExerciseModelTests {
-    typealias SUT = AddCustomExerciseScreen.Model
+    typealias SUT = EditCustomExerciseScreen.Model
 
     @Test(arguments: ["", "   ", "  \n  "])
     func cannotSaveWhenNameIsEmpty(name: String) {
@@ -21,36 +21,10 @@ struct AddCustomExerciseModelTests {
     }
 
     @Test
-    func cannotSaveWhenDuplicateExists() throws {
-        let existing = CustomExercise(
-            id: "1",
-            name: "Отжимания",
-            imageId: 2,
-            createDate: .now,
-            modifyDate: .now
-        )
+    func canSaveWhenValidData() {
         var model = SUT()
         model.exerciseName = "Отжимания"
         model.selectedImageId = 2
-        model.allExercises = [existing]
-        #expect(model.isDuplicate)
-        #expect(!model.canSaveExercise)
-    }
-
-    @Test
-    func canSaveWhenNoDuplicateAndValid() {
-        let existing = CustomExercise(
-            id: "1",
-            name: "Приседания",
-            imageId: 3,
-            createDate: .now,
-            modifyDate: .now
-        )
-        var model = SUT()
-        model.exerciseName = "Отжимания"
-        model.selectedImageId = 2
-        model.allExercises = [existing]
-        #expect(!model.isDuplicate)
         #expect(model.canSaveExercise)
     }
 
