@@ -124,7 +124,7 @@ private extension LoginScreen {
                 authHelper.didAuthorize()
                 let user = User(from: userInfo)
                 modelContext.insert(user)
-                await statusManager.getStatus(client: client)
+                await statusManager.getStatus(client: client, context: modelContext)
             } catch ClientError.noConnection {
                 SWAlert.shared.presentNoConnection(true)
             } catch {

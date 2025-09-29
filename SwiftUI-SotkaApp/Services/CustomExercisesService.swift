@@ -32,6 +32,27 @@ final class CustomExercisesService {
         self.client = client
     }
 
+    // MARK: - Snapshot & Sync Events (для конкурентной синхронизации без ModelContext)
+
+    /// Снимок локального упражнения для безопасной передачи в конкурентные задачи без доступа к ModelContext
+    private struct ExerciseSnapshot: Sendable, Hashable {
+        let id: String
+        let name: String
+        let imageId: Int
+        let createDate: Date
+        let modifyDate: Date
+        let isSynced: Bool
+        let shouldDelete: Bool
+        let userId: Int?
+    }
+
+    /// Результат конкурентной операции синхронизации одного упражнения
+    private enum SyncEvent: Sendable, Hashable {
+        case createdOrUpdated(id: String, server: CustomExerciseResponse)
+        case deleted(id: String)
+        case failed(id: String, errorDescription: String)
+    }
+
     /// Создает новое пользовательское упражнение (офлайн-приоритет)
     /// - Parameters:
     ///   - name: Название упражнения
@@ -64,8 +85,8 @@ final class CustomExercisesService {
             id: exerciseId,
             name: finalName,
             imageId: imageId,
-            createDate: Date(),
-            modifyDate: Date(),
+            createDate: .now,
+            modifyDate: .now,
             user: user
         )
         context.insert(exercise)
@@ -78,33 +99,6 @@ final class CustomExercisesService {
         }
     }
 
-    /// Обновляет пользовательское упражнение (офлайн-приоритет)
-    /// - Parameters:
-    ///   - exercise: Упражнение для обновления
-    ///   - name: Новое название
-    ///   - imageId: Новый ID иконки
-    ///   - context: Контекст Swift Data
-    func updateCustomExercise(
-        _ exercise: CustomExercise,
-        name: String,
-        imageId: Int,
-        context: ModelContext
-    ) async -> Bool {
-        exercise.name = name
-        exercise.imageId = imageId
-        exercise.modifyDate = Date()
-        exercise.isSynced = false
-        do {
-            try context.save()
-            logger.info("Упражнение '\(name)' обновлено локально")
-            logger.info("Синхронизация будет выполнена отдельно через syncCustomExercises")
-            return true
-        } catch {
-            logger.error("Ошибка обновления упражнения: \(error.localizedDescription)")
-            return false
-        }
-    }
-
     /// Отмечает пользовательское упражнение как измененное (офлайн-приоритет)
     /// - Parameters:
     ///   - exercise: Упражнение для отметки как измененное
@@ -113,7 +107,7 @@ final class CustomExercisesService {
         _ exercise: CustomExercise,
         context: ModelContext
     ) throws {
-        exercise.modifyDate = Date()
+        exercise.modifyDate = .now
         exercise.isSynced = false
         try context.save()
         logger.info("Упражнение '\(exercise.name)' отмечено как измененное")
@@ -128,44 +122,13 @@ final class CustomExercisesService {
         _ exercise: CustomExercise,
         context: ModelContext
     ) throws {
-        // Сохраняем ID для синхронизации удаления с сервером
-        if exercise.isSynced {
-            var deletedIds = UserDefaults.standard.stringArray(forKey: "deletedExerciseIds") ?? []
-            deletedIds.append(exercise.id)
-            UserDefaults.standard.set(deletedIds, forKey: "deletedExerciseIds")
-        }
-
-        // Всегда удаляем локально сразу для лучшего UX
-        context.delete(exercise)
+        // Мягкое удаление: скрываем в UI и синхронизируем удаление с сервером
+        exercise.shouldDelete = true
+        exercise.isSynced = false
+        exercise.modifyDate = .now
         try context.save()
-        logger.info("Упражнение '\(exercise.name)' удалено локально")
-        logger.info("Синхронизация удаления будет выполнена отдельно через syncCustomExercises")
-    }
-
-    /// Синхронизирует одно упражнение с сервером с повторными попытками
-    /// - Parameters:
-    ///   - exercise: Упражнение для синхронизации
-    ///   - context: Контекст Swift Data
-    private func syncSingleExercise(
-        _ exercise: CustomExercise,
-        context: ModelContext
-    ) async {
-        await syncSingleExerciseWithRetry(exercise, context: context, attempt: 1)
-    }
-
-    /// Конвертирует UUID в числовой ID для совместимости с сервером
-    /// - Parameter uuid: UUID строка
-    /// - Returns: Числовой ID как строка
-    private func convertUUIDToNumericID(_ uuid: String) -> String {
-        // Если это уже числовой ID, возвращаем как есть
-        if uuid.allSatisfy(\.isNumber) {
-            return uuid
-        }
-
-        // Конвертируем UUID в числовой ID
-        // Используем хеш от UUID для получения числового значения
-        let hash = abs(uuid.hashValue)
-        return String(hash)
+        logger.info("Упражнение '\(exercise.name)' помечено для удаления локально")
+        logger.info("Синхронизация удаления будет выполнена через syncCustomExercises")
     }
 
     /// Синхронизирует одно упражнение с повторными попытками
@@ -181,20 +144,18 @@ final class CustomExercisesService {
         do {
             if exercise.shouldDelete {
                 // Удаляем на сервере
-                let numericId = convertUUIDToNumericID(exercise.id)
-                try await client.deleteCustomExercise(id: numericId)
+                try await client.deleteCustomExercise(id: exercise.id)
                 context.delete(exercise)
                 try context.save()
                 logger.info("Упражнение '\(exercise.name)' удалено с сервера")
             } else {
                 // Создаем или обновляем на сервере
-                let numericId = convertUUIDToNumericID(exercise.id)
                 let request: CustomExerciseRequest
 
                 // Всегда отправляем как обновление, если упражнение существует на сервере
                 // (определяем по наличию числового ID, который был получен с сервера)
                 request = CustomExerciseRequest(
-                    id: numericId,
+                    id: exercise.id,
                     name: exercise.name,
                     imageId: exercise.imageId,
                     createDate: DateFormatterService.stringFromFullDate(exercise.createDate, format: .isoDateTimeSec),
@@ -202,7 +163,7 @@ final class CustomExercisesService {
                     isHidden: false
                 )
 
-                let response = try await client.saveCustomExercise(id: numericId, exercise: request)
+                let response = try await client.saveCustomExercise(id: exercise.id, exercise: request)
 
                 // Обновляем локальные данные из ответа сервера
                 exercise.name = response.name
@@ -246,25 +207,15 @@ final class CustomExercisesService {
         isSyncing = true
 
         do {
-            // Получаем все несинхронизированные упражнения
-            let unsyncedExercises = try context.fetch(
-                FetchDescriptor<CustomExercise>(
-                    predicate: #Predicate { !$0.isSynced }
-                )
-            )
+            // 1) Готовим снимки данных (без доступа к контексту в задачах)
+            let snapshots = try makeExerciseSnapshotsForSync(context: context)
+            logger.info("Начинаем синхронизацию \(snapshots.count) упражнений")
 
-            logger.info("Начинаем синхронизацию \(unsyncedExercises.count) упражнений")
+            // 2) Параллельные сетевые операции (без ModelContext)
+            let eventsById = await runSyncTasks(snapshots: snapshots, client: client)
 
-            // Синхронизируем каждое упражнение
-            for exercise in unsyncedExercises {
-                logger.info("Отправляем упражнение на сервер: \(exercise.name), ID: \(exercise.id)")
-                logger
-                    .info(
-                        "Параметры запроса: id=\(exercise.id), name=\(exercise.name), image_id=\(exercise.imageId), create_date=\(DateFormatterService.stringFromFullDate(exercise.createDate, format: .isoDateTimeSec)), is_hidden=false"
-                    )
-                logger.info("modify_date=\(DateFormatterService.stringFromFullDate(exercise.modifyDate, format: .isoDateTimeSec))")
-                await syncSingleExercise(exercise, context: context)
-            }
+            // 3) Применяем результаты к ModelContext единым этапом
+            applySyncEvents(eventsById, context: context)
 
             logger.info("Синхронизация упражнений завершена")
         } catch {
@@ -283,37 +234,10 @@ final class CustomExercisesService {
         // 1. Сначала отправляем локальные изменения на сервер
         await syncUnsyncedExercises(context: context)
 
-        // 2. Синхронизируем удаления с сервером
-        await syncDeletions(context: context)
-
-        // 3. Потом загружаем серверные изменения
+        // 2. Потом загружаем серверные изменения
         await downloadServerExercises(context: context)
 
         isLoading = false
-    }
-
-    /// Синхронизирует удаления с сервером
-    /// - Parameter context: Контекст Swift Data
-    private func syncDeletions(context _: ModelContext) async {
-        // Получаем список удаленных упражнений из UserDefaults
-        let deletedIds = UserDefaults.standard.stringArray(forKey: "deletedExerciseIds") ?? []
-
-        if !deletedIds.isEmpty {
-            logger.info("Синхронизируем удаления \(deletedIds.count) упражнений")
-
-            for exerciseId in deletedIds {
-                do {
-                    let numericId = convertUUIDToNumericID(exerciseId)
-                    try await client.deleteCustomExercise(id: numericId)
-                    logger.info("Упражнение с ID \(exerciseId) удалено с сервера")
-                } catch {
-                    logger.error("Ошибка удаления упражнения с ID \(exerciseId): \(error.localizedDescription)")
-                }
-            }
-
-            // Очищаем список удаленных упражнений
-            UserDefaults.standard.removeObject(forKey: "deletedExerciseIds")
-        }
     }
 
     /// Загружает упражнения с сервера и обрабатывает конфликты
@@ -394,5 +318,130 @@ final class CustomExercisesService {
         local.modifyDate = DateFormatterService.dateFromString(server.modifyDate, format: .serverDateTimeSec)
         local.isSynced = true
         local.shouldDelete = false
+    }
+
+    // MARK: - Snapshot → Group → Apply (реализация)
+
+    /// Формирует список снимков локальных упражнений, требующих синхронизации
+    private func makeExerciseSnapshotsForSync(context: ModelContext) throws -> [ExerciseSnapshot] {
+        // Берем все несинхронизированные, а также те, что помечены на удаление
+        let toSync = try context.fetch(
+            FetchDescriptor<CustomExercise>(
+                predicate: #Predicate { !$0.isSynced || $0.shouldDelete }
+            )
+        )
+        let snapshots: [ExerciseSnapshot] = toSync.map { exercise in
+            ExerciseSnapshot(
+                id: exercise.id,
+                name: exercise.name,
+                imageId: exercise.imageId,
+                createDate: exercise.createDate,
+                modifyDate: exercise.modifyDate,
+                isSynced: exercise.isSynced,
+                shouldDelete: exercise.shouldDelete,
+                userId: exercise.user?.id
+            )
+        }
+        return snapshots
+    }
+
+    /// Выполняет конкурентные сетевые операции синхронизации и собирает результаты без доступа к ModelContext
+    private func runSyncTasks(
+        snapshots: [ExerciseSnapshot],
+        client: ExerciseClient
+    ) async -> [String: SyncEvent] {
+        await withTaskGroup(of: (String, SyncEvent).self) { group in
+            for snapshot in snapshots {
+                // Локальные отладочные логи перед выполнением задач
+                let createDateStr = DateFormatterService.stringFromFullDate(snapshot.createDate, format: .isoDateTimeSec)
+                let modifyDateStr = DateFormatterService.stringFromFullDate(snapshot.modifyDate, format: .isoDateTimeSec)
+                logger.info("Отправляем упражнение на сервер: \(snapshot.name), ID: \(snapshot.id)")
+                logger
+                    .info(
+                        "Параметры запроса: id=\(snapshot.id), name=\(snapshot.name), image_id=\(snapshot.imageId), create_date=\(createDateStr), is_hidden=false"
+                    )
+                logger.info("modify_date=\(modifyDateStr)")
+
+                group.addTask { [snapshot] in
+                    let event = await self.performNetworkSync(for: snapshot, client: client)
+                    return (snapshot.id, event)
+                }
+            }
+
+            var eventsById: [String: SyncEvent] = [:]
+            for await (id, event) in group {
+                eventsById[id] = event
+            }
+            return eventsById
+        }
+    }
+
+    /// Выполняет сетевую синхронизацию одного снимка без доступа к ModelContext
+    private func performNetworkSync(
+        for snapshot: ExerciseSnapshot,
+        client: ExerciseClient
+    ) async -> SyncEvent {
+        do {
+            if snapshot.shouldDelete {
+                try await client.deleteCustomExercise(id: snapshot.id)
+                return .deleted(id: snapshot.id)
+            } else {
+                let request = CustomExerciseRequest(
+                    id: snapshot.id,
+                    name: snapshot.name,
+                    imageId: snapshot.imageId,
+                    createDate: DateFormatterService.stringFromFullDate(snapshot.createDate, format: .isoDateTimeSec),
+                    modifyDate: DateFormatterService.stringFromFullDate(snapshot.modifyDate, format: .isoDateTimeSec),
+                    isHidden: false
+                )
+                let response = try await client.saveCustomExercise(id: snapshot.id, exercise: request)
+                return .createdOrUpdated(id: snapshot.id, server: response)
+            }
+        } catch {
+            return .failed(id: snapshot.id, errorDescription: error.localizedDescription)
+        }
+    }
+
+    /// Применяет результаты синхронизации к локальному хранилищу в одном месте
+    private func applySyncEvents(_ events: [String: SyncEvent], context: ModelContext) {
+        do {
+            // Загружаем текущего пользователя и все упражнения заранее
+            guard let user = try context.fetch(FetchDescriptor<User>()).first else {
+                logger.error("Пользователь не найден при применении результатов синхронизации")
+                return
+            }
+            let existing = try context.fetch(FetchDescriptor<CustomExercise>()).filter { $0.user?.id == user.id }
+            let dict = Dictionary(uniqueKeysWithValues: existing.map { ($0.id, $0) })
+
+            for (id, event) in events {
+                switch event {
+                case let .createdOrUpdated(_, server):
+                    if let local = dict[id] {
+                        // LWW — берем серверную модификацию, так как она возвращается с актуальной датой
+                        updateLocalFromServer(local, server)
+                        logger.info("Обновлено локально упражнение '\(local.name)' по данным сервера")
+                    } else {
+                        // Создаем новое локально по ответу сервера
+                        let newExercise = CustomExercise(from: server, user: user)
+                        context.insert(newExercise)
+                        logger.info("Создано локально упражнение '\(newExercise.name)' из ответа сервера")
+                    }
+                case .deleted:
+                    if let local = dict[id] {
+                        context.delete(local)
+                        logger.info("Удалено локально упражнение с ID \(id)")
+                    } else {
+                        // Если локально уже отсутствует — ничего не делаем
+                        logger.debug("Удаление: локальное упражнение с ID \(id) не найдено")
+                    }
+                case let .failed(_, errorDescription):
+                    logger.error("Ошибка синхронизации упражнения с ID \(id): \(errorDescription)")
+                }
+            }
+
+            try context.save()
+        } catch {
+            logger.error("Ошибка применения результатов синхронизации: \(error.localizedDescription)")
+        }
     }
 }

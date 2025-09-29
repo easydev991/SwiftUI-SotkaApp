@@ -1,6 +1,7 @@
 import Foundation
 import Observation
 import OSLog
+import SwiftData
 import SWUtils
 
 @MainActor
@@ -11,6 +12,8 @@ final class StatusManager {
         category: String(describing: StatusManager.self)
     )
     private let defaults = UserDefaults.standard
+    private let customExercisesService: CustomExercisesService
+    private var isJournalSyncInProgress = false
 
     /// Дата старта сотки
     private var startDate: Date? {
@@ -46,10 +49,14 @@ final class StatusManager {
 
     private(set) var isLoading = false
 
+    init(customExercisesService: CustomExercisesService) {
+        self.customExercisesService = customExercisesService
+    }
+
     /// Получает статус прохождения пользователя
     /// - Parameters:
     ///   - client: Сервис для загрузки статуса
-    func getStatus(client: StatusClient) async {
+    func getStatus(client: StatusClient, context: ModelContext) async {
         guard !isLoading else { return }
         isLoading = true
         do {
@@ -58,19 +65,19 @@ final class StatusManager {
             switch (startDate, siteStartDate) {
             case (.none, .none):
                 logger.info("Сотку еще не стартовали")
-                await start(client: client, appDate: nil)
+                await start(client: client, appDate: nil, context: context)
             case let (.some(date), .none):
                 // Приложение - источник истины
                 logger.info("Дата старта есть только в приложении: \(date.description)")
-                await start(client: client, appDate: date)
+                await start(client: client, appDate: date, context: context)
             case let (.none, .some(date)):
                 // Сайт - источник истины
                 logger.info("Дата старта есть только на сайте: \(date.description)")
-                await syncWithSiteDate(client: client, siteDate: date)
+                await syncWithSiteDate(client: client, siteDate: date, context: context)
             case let (.some(appDate), .some(siteDate)):
                 logger.info("Дата старта в приложении: \(appDate.description), и на сайте: \(siteDate.description)")
                 if appDate.isTheSameDayIgnoringTime(siteDate) {
-                    await syncJournalAndProgress()
+                    await syncJournalAndProgress(context: context)
                 } else {
                     conflictingSyncModel = .init(appDate, siteDate)
                 }
@@ -82,7 +89,7 @@ final class StatusManager {
         isLoading = false
     }
 
-    func start(client: StatusClient, appDate: Date?) async {
+    func start(client: StatusClient, appDate: Date?, context: ModelContext) async {
         isLoading = true
         let newStartDate = appDate ?? .now
         let isoDateString = DateFormatterService.stringFromFullDate(newStartDate, iso: true)
@@ -92,12 +99,12 @@ final class StatusManager {
         } else {
             newStartDate
         }
-        await syncJournalAndProgress()
+        await syncJournalAndProgress(context: context)
     }
 
-    func syncWithSiteDate(client _: StatusClient, siteDate: Date) async {
+    func syncWithSiteDate(client _: StatusClient, siteDate: Date, context: ModelContext) async {
         startDate = siteDate
-        await syncJournalAndProgress()
+        await syncJournalAndProgress(context: context)
     }
 
     func didLogout() {
@@ -116,10 +123,16 @@ private extension StatusManager {
 }
 
 private extension StatusManager {
-    func syncJournalAndProgress() async {
+    func syncJournalAndProgress(context: ModelContext) async {
+        guard !isJournalSyncInProgress else { return }
+        isJournalSyncInProgress = true
+        defer { isJournalSyncInProgress = false }
+
         currentDayCalculator = .init(startDate, .now)
         isLoading = true
-        logger.error("Реализовать синхронизацию дневника и прогресса")
+        logger.debug("Запускаем синхронизацию упражнений после авторизации")
+        await customExercisesService.syncCustomExercises(context: context)
+        logger.info("Синхронизация упражнений завершена")
         conflictingSyncModel = nil
         isLoading = false
     }

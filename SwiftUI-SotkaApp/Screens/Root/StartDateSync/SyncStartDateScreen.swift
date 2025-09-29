@@ -4,6 +4,7 @@ import SwiftUI
 struct SyncStartDateView: View {
     @Environment(StatusManager.self) private var statusManager
     @Environment(AuthHelperImp.self) private var authHelper
+    @Environment(\.modelContext) private var modelContext
     @State private var selectedOption = Selection.none
     @State private var syncTask: Task<Void, Never>?
     let model: ConflictingStartDate
@@ -71,14 +72,16 @@ struct SyncStartDateView: View {
             syncTask = Task {
                 await statusManager.start(
                     client: client,
-                    appDate: model.startDate
+                    appDate: model.startDate,
+                    context: modelContext
                 )
             }
         case let .site(model):
             syncTask = Task {
                 await statusManager.syncWithSiteDate(
                     client: client,
-                    siteDate: model.startDate
+                    siteDate: model.startDate,
+                    context: modelContext
                 )
             }
         }
@@ -105,5 +108,11 @@ extension SyncStartDateView {
     let appStartDate = Calendar.current.date(byAdding: .day, value: -12, to: .now)!
     SyncStartDateView(model: .init(appStartDate, siteStartDate))
         .environment(AuthHelperImp())
-        .environment(StatusManager())
+        .environment(
+            StatusManager(
+                customExercisesService: CustomExercisesService(
+                    client: MockExerciseClient(result: .success)
+                )
+            )
+        )
 }

@@ -270,6 +270,34 @@ struct CustomExercisesServiceTests {
         #expect(updatedExercise.imageId == 1) // Локальные изменения должны сохраниться
         #expect(!updatedExercise.isSynced) // Должно остаться несинхронизированным
     }
+
+    @Test
+    func localSoftDeleteMarksFlags() async throws {
+        // Arrange
+        let mockClient = MockSWClient()
+        let service = CustomExercisesService(client: mockClient)
+        let container = try ModelContainer(
+            for: CustomExercise.self,
+            User.self,
+            configurations: ModelConfiguration(isStoredInMemoryOnly: true)
+        )
+        let context = container.mainContext
+
+        let user = User(id: 1)
+        context.insert(user)
+        try context.save()
+
+        let exercise = CustomExercise(id: "e1", name: "To delete", imageId: 1, createDate: .now, modifyDate: .now, user: user)
+        context.insert(exercise)
+        try context.save()
+
+        // Act
+        try service.deleteCustomExercise(exercise, context: context)
+
+        // Assert
+        #expect(exercise.shouldDelete)
+        #expect(!exercise.isSynced)
+    }
 }
 
 // MARK: - Mock клиенты

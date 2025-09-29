@@ -7,8 +7,8 @@ import SWUtils
 struct SwiftUI_SotkaAppApp: App {
     @Environment(\.scenePhase) private var scenePhase
     @State private var countriesService = CountriesUpdateService()
-    @State private var statusManager = StatusManager()
-    @State private var customExercisesService: CustomExercisesService
+    private let statusManager: StatusManager
+    private let customExercisesService: CustomExercisesService
     @State private var appSettings = AppSettings()
     @State private var authHelper: AuthHelperImp
     @State private var networkStatus = NetworkStatus()
@@ -17,9 +17,10 @@ struct SwiftUI_SotkaAppApp: App {
     init() {
         let authHelper = AuthHelperImp()
         let client = SWClient(with: authHelper)
+        self.customExercisesService = CustomExercisesService(client: client)
+        self.statusManager = StatusManager(customExercisesService: customExercisesService)
         self.authHelper = authHelper
         self.client = client
-        self.customExercisesService = CustomExercisesService(client: client)
     }
 
     private var modelContainer: ModelContainer = {
@@ -54,10 +55,7 @@ struct SwiftUI_SotkaAppApp: App {
                 guard scenePhase == .active else { return }
                 await countriesService.update(modelContainer.mainContext, client: client)
                 guard authHelper.isAuthorized else { return }
-                await statusManager.getStatus(client: client)
-                await customExercisesService.syncCustomExercises(
-                    context: modelContainer.mainContext
-                )
+                await statusManager.getStatus(client: client, context: modelContainer.mainContext)
             }
         }
         .modelContainer(modelContainer)

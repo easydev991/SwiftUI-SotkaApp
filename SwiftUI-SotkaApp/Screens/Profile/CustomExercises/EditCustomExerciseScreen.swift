@@ -222,6 +222,7 @@ private extension EditCustomExerciseScreen {
             closeAction: {}
         )
         .modelContainer(PreviewModelContainer.make(with: User(id: 1)))
+        .environment(CustomExercisesService(client: MockExerciseClient(result: .success)))
     }
 }
 #endif

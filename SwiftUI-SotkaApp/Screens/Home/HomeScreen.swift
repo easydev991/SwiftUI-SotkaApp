@@ -31,5 +31,11 @@ struct HomeScreen: View {
 
 #Preview {
     HomeScreen()
-        .environment(StatusManager())
+        .environment(
+            StatusManager(
+                customExercisesService: CustomExercisesService(
+                    client: MockExerciseClient(result: .success)
+                )
+            )
+        )
 }

@@ -9,13 +9,12 @@ struct CustomExercisesScreen: View {
         subsystem: Bundle.main.bundleIdentifier!,
         category: String(describing: CustomExercisesScreen.self)
     )
-    @Query private var customExercises: [CustomExercise]
+    @Query(FetchDescriptor<CustomExercise>(predicate: #Predicate { !$0.shouldDelete }))
+    private var customExercises: [CustomExercise]
     @Environment(\.modelContext) private var modelContext
     @Environment(CustomExercisesService.self) private var customExercisesService
     @State private var searchQuery = ""
-    @State private var sortOrder = SortOrder.modifyDate
     @State private var exerciseToDelete: CustomExercise?
-    @State private var editExercise: CustomExercise?
     @State private var showAddExerciseSheet = false
 
     var body: some View {
@@ -25,17 +24,12 @@ struct CustomExercisesScreen: View {
                     .transition(.scale.combined(with: .opacity))
             } else {
                 exercisesListView
+                    .searchable(text: $searchQuery, placement: .navigationBarDrawer(displayMode: .automatic))
                     .overlay { emptySearchViewIfNeeded }
             }
         }
         .animation(.bouncy, value: customExercises.isEmpty)
-        .searchable(text: $searchQuery, placement: .navigationBarDrawer(displayMode: .automatic))
         .toolbar {
-            if !customExercises.isEmpty {
-                ToolbarItem(placement: .topBarLeading) {
-                    sortButton
-                }
-            }
             ToolbarItem(placement: .topBarTrailing) {
                 Button { showAddExerciseSheet.toggle() } label: {
                     Image(systemName: "plus")
@@ -45,14 +39,6 @@ struct CustomExercisesScreen: View {
         .background(Color.swBackground)
         .navigationTitle("Custom exercises")
         .navigationBarTitleDisplayMode(.inline)
-        .navigationDestination(item: $editExercise) { exercise in
-            ScrollView {
-                EditCustomExerciseScreen(oldItem: exercise) {
-                    editExercise = nil
-                }
-            }
-            .scrollBounceBehavior(.basedOnSize)
-        }
         .sheet(isPresented: $showAddExerciseSheet) {
             NavigationStack {
                 ScrollView {
@@ -81,9 +67,6 @@ private extension CustomExercisesScreen {
                 Button("Delete", role: .destructive) {
                     exerciseToDelete = exercise
                 }
-                Button("Edit") {
-                    editExercise = exercise
-                }
             }
         }
         .listStyle(.plain)
@@ -107,20 +90,11 @@ private extension CustomExercisesScreen {
     }
 
     var filteredExercises: [CustomExercise] {
-        let exercises = if searchQuery.isEmpty {
+        if searchQuery.isEmpty {
             customExercises
         } else {
             customExercises.filter { exercise in
                 exercise.name.localizedCaseInsensitiveContains(searchQuery)
-            }
-        }
-
-        return exercises.sorted { exercise1, exercise2 in
-            switch sortOrder {
-            case .modifyDate:
-                exercise1.modifyDate > exercise2.modifyDate
-            case .name:
-                exercise1.name.localizedCaseInsensitiveCompare(exercise2.name) == .orderedAscending
             }
         }
     }
@@ -138,20 +112,6 @@ private extension CustomExercisesScreen {
         )
         .accessibilityElement(children: .contain)
         .accessibilityIdentifier("emptyStateView")
-    }
-
-    var sortButton: some View {
-        Menu {
-            Picker("Sort Order", selection: $sortOrder) {
-                ForEach(SortOrder.allCases, id: \.self) { order in
-                    Text(order.title)
-                        .tag(order)
-                }
-            }
-        } label: {
-            Label("Sort", systemImage: "arrow.up.arrow.down")
-        }
-        .accessibilityIdentifier("sortButton")
     }
 
     var emptySearchViewIfNeeded: some View {
@@ -177,26 +137,12 @@ private extension CustomExercisesScreen {
     }
 }
 
-private extension CustomExercisesScreen {
-    /// Порядок сортировки упражнений
-    enum SortOrder: CaseIterable {
-        case modifyDate
-        case name
-
-        var title: LocalizedStringKey {
-            switch self {
-            case .modifyDate: "Date modified"
-            case .name: "Name"
-            }
-        }
-    }
-}
-
 #if DEBUG
 #Preview {
     NavigationStack {
         CustomExercisesScreen()
             .modelContainer(PreviewModelContainer.make(with: User(id: 1)))
+            .environment(CustomExercisesService(client: MockExerciseClient(result: .success)))
     }
 }
 #endif
