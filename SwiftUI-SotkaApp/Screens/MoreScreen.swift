@@ -147,7 +147,7 @@ struct MoreScreen: View {
 
     @ViewBuilder
     private var swParksButton: some View {
-        if let githubLink = URL(string: "https://apps.apple.com/app/id1035159361") {
+        if let githubLink = URL(string: "https://apps.apple.com/app/id6749501617") {
             Link("Street Workout: Parks", destination: githubLink)
                 .accessibilityIdentifier("swParksButton")
         }
