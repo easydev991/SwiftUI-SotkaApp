@@ -86,7 +86,6 @@ private extension CustomExercisesScreen {
         } message: {
             Text("Are you sure you want to delete \"\(exerciseToDelete?.name ?? "")\"? This action cannot be undone.")
         }
-        .loadingOverlay(if: customExercisesService.isLoading)
     }
 
     var filteredExercises: [CustomExercise] {
