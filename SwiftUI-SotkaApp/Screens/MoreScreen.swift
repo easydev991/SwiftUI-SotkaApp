@@ -4,7 +4,7 @@ import SWUtils
 struct MoreScreen: View {
     @Environment(\.locale) private var locale
     @Environment(AppSettings.self) private var appSettings
-    private let appId = "id1148574738"
+    private let appId = "id6753644091"
 
     var body: some View {
         NavigationStack {
