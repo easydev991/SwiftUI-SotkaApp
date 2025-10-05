@@ -68,7 +68,7 @@ private extension DayCountView {
             let digits = Array(formattedDay)
 
             ForEach(digits.indices, id: \.self) { index in
-                Image(String(digits[index]))
+                Image("n\(digits[index])")
                     .resizable()
                     .scaledToFit()
             }

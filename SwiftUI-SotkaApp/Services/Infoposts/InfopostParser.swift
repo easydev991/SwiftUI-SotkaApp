@@ -265,9 +265,35 @@ enum InfopostParser {
     static func fixImagePaths(_ html: String) -> String {
         var modifiedHTML = html
 
+        // Добавляем отладочную информацию
+        logger.debug("🔍 Исходный HTML содержит пути к изображениям:")
+        let originalImagePaths = modifiedHTML.components(separatedBy: .newlines)
+            .compactMap { line in
+                if line.contains("src="), line.contains("img") {
+                    return line.trimmingCharacters(in: .whitespaces)
+                }
+                return nil
+            }
+        for path in originalImagePaths {
+            logger.debug("📋 Исходный путь: \(path)")
+        }
+
         // Исправляем пути к изображениям: ..\img\ -> img/ и ../img/ -> img/
         modifiedHTML = modifiedHTML.replacingOccurrences(of: "..\\img\\", with: "img/")
         modifiedHTML = modifiedHTML.replacingOccurrences(of: "../img/", with: "img/")
+
+        // Проверяем результат
+        logger.debug("🔍 HTML после исправления путей:")
+        let modifiedImagePaths = modifiedHTML.components(separatedBy: .newlines)
+            .compactMap { line in
+                if line.contains("src="), line.contains("img") {
+                    return line.trimmingCharacters(in: .whitespaces)
+                }
+                return nil
+            }
+        for path in modifiedImagePaths {
+            logger.debug("📋 Исправленный путь: \(path)")
+        }
 
         logger.debug("Исправлены пути к изображениям в HTML")
 

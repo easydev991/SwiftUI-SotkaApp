@@ -57,14 +57,53 @@ struct HTMLContentView: UIViewRepresentable {
             // Подготавливаем HTML для отображения через парсер
             let modifiedHTML = InfopostParser.prepareHTMLForDisplay(htmlContent, fontSize: fontSize)
 
+            // Добавляем отладочную информацию о HTML после обработки
+            logger.debug("🔍 HTML после обработки содержит пути к изображениям:")
+            let processedImagePaths = modifiedHTML.components(separatedBy: .newlines)
+                .compactMap { line in
+                    if line.contains("src="), line.contains("img") {
+                        return line.trimmingCharacters(in: .whitespaces)
+                    }
+                    return nil
+                }
+            for path in processedImagePaths {
+                logger.debug("📋 Обработанный путь: \(path)")
+            }
+
             // Создаем временный HTML файл
             let tempHTMLFile = tempDirectory.appendingPathComponent("preview.html")
-            try modifiedHTML.write(to: tempHTMLFile, atomically: true, encoding: .utf8)
 
-            // Копируем ресурсы (CSS, JS, изображения)
-            copyResources(to: tempDirectory)
+            // Копируем ресурсы (CSS, JS, изображения) и получаем обновленный HTML
+            let finalHTML = copyResources(to: tempDirectory, htmlContent: modifiedHTML)
+
+            // Создаем финальный HTML файл с обновленными путями к изображениям
+            try finalHTML.write(to: tempHTMLFile, atomically: true, encoding: .utf8)
+
+            // Добавляем отладочную информацию о созданном HTML файле
+            logger.debug("📄 Создан временный HTML файл: \(tempHTMLFile.path)")
+            logger.debug("📄 Содержимое HTML файла:")
+            let htmlLines = finalHTML.components(separatedBy: .newlines)
+            for (index, line) in htmlLines.enumerated() {
+                if line.contains("img") || line.contains("src=") {
+                    logger.debug("📄 Строка \(index + 1): \(line.trimmingCharacters(in: .whitespaces))")
+                }
+            }
 
             // Загружаем файл с доступом ко всей временной директории
+            logger.debug("🌐 Загружаем HTML в WKWebView:")
+            logger.debug("🌐 HTML файл: \(tempHTMLFile.path)")
+            logger.debug("🌐 Временная директория: \(tempDirectory.path)")
+            logger.debug("🌐 Папка img: \(tempDirectory.appendingPathComponent("img").path)")
+
+            // Проверяем, что изображения действительно существуют
+            let imgDirectory = tempDirectory.appendingPathComponent("img")
+            do {
+                let imgFiles = try FileManager.default.contentsOfDirectory(at: imgDirectory, includingPropertiesForKeys: nil)
+                logger.debug("🌐 Файлы в папке img: \(imgFiles.map(\.lastPathComponent))")
+            } catch {
+                logger.error("🌐 Ошибка чтения папки img: \(error.localizedDescription)")
+            }
+
             webView.loadFileURL(tempHTMLFile, allowingReadAccessTo: tempDirectory)
 
             logger.debug("Загружен инфопост: \(filename).html с размером шрифта: \(fontSize.rawValue)")
@@ -91,7 +130,7 @@ struct HTMLContentView: UIViewRepresentable {
         }
     }
 
-    private func copyResources(to tempDirectory: URL) {
+    private func copyResources(to tempDirectory: URL, htmlContent: String) -> String {
         let fileManager = FileManager.default
 
         // Копируем CSS файлы из Assets
@@ -100,8 +139,10 @@ struct HTMLContentView: UIViewRepresentable {
         // Копируем JS файлы из Assets
         copyDirectory(from: "js", to: tempDirectory.appendingPathComponent("js"), fileManager: fileManager)
 
-        // Копируем изображения из Assets
-        copyDirectory(from: "img", to: tempDirectory.appendingPathComponent("img"), fileManager: fileManager)
+        // Копируем изображения из Assets.xcassets и получаем обновленный HTML
+        let updatedHTML = copyImagesFromAssets(to: tempDirectory.appendingPathComponent("img"), from: htmlContent)
+
+        return updatedHTML
     }
 
     private func copyDirectory(from sourceName: String, to destination: URL, fileManager: FileManager) {
@@ -145,11 +186,249 @@ struct HTMLContentView: UIViewRepresentable {
         }
     }
 
+    private func copyImagesFromAssets(to imgDirectory: URL, from htmlContent: String) -> String {
+        let fileManager = FileManager.default
+
+        // Создаем папку для изображений
+        do {
+            try fileManager.createDirectory(at: imgDirectory, withIntermediateDirectories: true)
+        } catch {
+            logger.error("Ошибка создания папки img: \(error.localizedDescription)")
+            return htmlContent
+        }
+
+        // Получаем список всех изображений из обработанного HTML
+        let imageNames = extractImageNamesFromProcessedHTML(htmlContent)
+
+        logger.debug("Начинаем копирование изображений из Assets. Найдено изображений: \(imageNames.count)")
+
+        var copiedCount = 0
+        var updatedHTML = htmlContent
+        var imageExtensionsMap: [String: String] = [:]
+
+        for imageName in imageNames {
+            logger.debug("Пытаемся скопировать изображение: \(imageName)")
+
+            // Пробуем разные расширения
+            let extensions = ["jpg", "png", "jpeg", "gif"]
+            var copied = false
+
+            for ext in extensions {
+                let destinationURL = imgDirectory.appendingPathComponent("\(imageName).\(ext)")
+
+                if ImageAssetManager.copyImageToTemp(imageName: imageName, destinationURL: destinationURL) {
+                    logger.debug("✅ Успешно скопировано изображение: \(imageName).\(ext)")
+                    copiedCount += 1
+                    copied = true
+                    // Сохраняем информацию о том, какое расширение было использовано
+                    imageExtensionsMap[imageName] = ext
+                    break
+                } else {
+                    logger.debug("❌ Не удалось скопировать изображение: \(imageName).\(ext)")
+                }
+            }
+
+            if !copied {
+                logger.warning("⚠️ Не удалось найти изображение в Assets: \(imageName)")
+            }
+        }
+
+        // Обновляем HTML с правильными расширениями файлов
+        updatedHTML = updateImageExtensionsInHTML(updatedHTML, imageExtensionsMap: imageExtensionsMap)
+
+        logger.debug("Скопировано \(copiedCount) из \(imageNames.count) изображений из Assets")
+        return updatedHTML
+    }
+
+    /// Обновляет расширения файлов изображений в HTML контенте
+    /// - Parameters:
+    ///   - htmlContent: Исходный HTML контент
+    ///   - imageExtensionsMap: Карта соответствия имен изображений и их расширений
+    /// - Returns: HTML с обновленными расширениями файлов
+    private func updateImageExtensionsInHTML(_ htmlContent: String, imageExtensionsMap: [String: String]) -> String {
+        var updatedHTML = htmlContent
+
+        logger.debug("🔄 Обновляем расширения файлов в HTML...")
+        logger.debug("🔄 Карта расширений: \(imageExtensionsMap)")
+
+        for (imageName, actualExtension) in imageExtensionsMap {
+            logger.debug("🔄 Обрабатываем изображение: \(imageName) -> \(actualExtension)")
+
+            // Ищем все возможные варианты путей к изображению
+            let possibleExtensions = ["jpg", "png", "jpeg", "gif"]
+
+            for oldExtension in possibleExtensions {
+                if oldExtension != actualExtension {
+                    // Используем регулярное выражение для более гибкого поиска
+                    // Ищем src="img/filename.oldExtension" с любыми дополнительными атрибутами
+                    let oldPattern = "src=\"img/\(imageName)\\.\(oldExtension)\""
+                    let newPattern = "src=\"img/\(imageName)\\.\(actualExtension)\""
+
+                    logger.debug("🔄 Ищем паттерн: \(oldPattern)")
+
+                    if updatedHTML.contains(oldPattern) {
+                        updatedHTML = updatedHTML.replacingOccurrences(of: oldPattern, with: newPattern)
+                        logger.debug("🔄 ✅ Обновлен путь: \(imageName).\(oldExtension) -> \(imageName).\(actualExtension)")
+                    } else {
+                        logger.debug("🔄 ❌ Паттерн не найден: \(oldPattern)")
+
+                        // Попробуем найти с помощью регулярного выражения
+                        do {
+                            let regexPattern = "src=\"img/\(imageName)\\.\(oldExtension)\""
+                            let regex = try NSRegularExpression(pattern: regexPattern)
+                            let matches = regex.matches(in: updatedHTML, range: NSRange(updatedHTML.startIndex..., in: updatedHTML))
+
+                            if !matches.isEmpty {
+                                logger.debug("🔄 Найдено \(matches.count) совпадений через regex")
+                                updatedHTML = regex.stringByReplacingMatches(
+                                    in: updatedHTML,
+                                    options: [],
+                                    range: NSRange(updatedHTML.startIndex..., in: updatedHTML),
+                                    withTemplate: newPattern
+                                )
+                                logger
+                                    .debug("🔄 ✅ Обновлен путь через regex: \(imageName).\(oldExtension) -> \(imageName).\(actualExtension)")
+                            }
+                        } catch {
+                            logger.error("🔄 ❌ Ошибка regex: \(error.localizedDescription)")
+                        }
+                    }
+                }
+            }
+        }
+
+        logger.debug("✅ Обновление расширений файлов завершено")
+        return updatedHTML
+    }
+
+    private func extractImageNamesFromProcessedHTML(_ htmlContent: String) -> Set<String> {
+        // Добавляем отладочную информацию
+        logger.debug("🔍 Анализируем HTML контент для поиска изображений...")
+
+        // Ищем все возможные варианты путей к изображениям
+        let patterns = [
+            #"src="img/([^"]+)\.""#, // src="img/filename.jpg"
+            #"src="\.\./img/([^"]+)\.""#, // src="../img/filename.jpg"
+            #"src="\.\.\\img\\([^"]+)\.""#, // src="..\img\filename.jpg"
+            #"src="img/([^"]*\.(jpg|png|jpeg|gif))""# // src="img/filename.jpg" - исправленный паттерн
+        ]
+
+        var imageNames = Set<String>()
+
+        for (index, pattern) in patterns.enumerated() {
+            do {
+                let regex = try NSRegularExpression(pattern: pattern)
+                let matches = regex.matches(in: htmlContent, range: NSRange(htmlContent.startIndex..., in: htmlContent))
+
+                logger.debug("📋 Паттерн \(index + 1) (\(pattern)): найдено \(matches.count) совпадений")
+
+                for match in matches {
+                    if let range = Range(match.range(at: 1), in: htmlContent) {
+                        let imageName = String(htmlContent[range])
+                        let cleanName = imageName.replacingOccurrences(of: ".jpg", with: "")
+                            .replacingOccurrences(of: ".png", with: "")
+                            .replacingOccurrences(of: ".jpeg", with: "")
+                            .replacingOccurrences(of: ".gif", with: "")
+                        imageNames.insert(cleanName)
+                        logger.debug("🖼️ Найдено изображение: \(imageName) -> \(cleanName)")
+                    }
+                }
+            } catch {
+                logger.error("❌ Ошибка в паттерне \(index + 1): \(error.localizedDescription)")
+            }
+        }
+
+        // Если ничего не найдено, попробуем найти все img теги
+        if imageNames.isEmpty {
+            logger.debug("🔍 Изображения не найдены, ищем все img теги...")
+            do {
+                let imgPattern = #"<img[^>]+src="([^"]+)""#
+                let regex = try NSRegularExpression(pattern: imgPattern)
+                let matches = regex.matches(in: htmlContent, range: NSRange(htmlContent.startIndex..., in: htmlContent))
+
+                logger.debug("📋 Найдено \(matches.count) img тегов")
+
+                for match in matches {
+                    if let range = Range(match.range(at: 1), in: htmlContent) {
+                        let src = String(htmlContent[range])
+                        logger.debug("🖼️ Найден img src: \(src)")
+
+                        // Пытаемся извлечь имя изображения из src
+                        if src.contains("img/") {
+                            let components = src.components(separatedBy: "img/")
+                            if components.count > 1 {
+                                let filename = components[1]
+                                let cleanName = filename.replacingOccurrences(of: ".jpg", with: "")
+                                    .replacingOccurrences(of: ".png", with: "")
+                                    .replacingOccurrences(of: ".jpeg", with: "")
+                                    .replacingOccurrences(of: ".gif", with: "")
+                                imageNames.insert(cleanName)
+                                logger.debug("🖼️ Извлечено имя изображения: \(filename) -> \(cleanName)")
+                            }
+                        }
+                    }
+                }
+            } catch {
+                logger.error("❌ Ошибка поиска img тегов: \(error.localizedDescription)")
+            }
+        }
+
+        logger.debug("✅ Итого найдено \(imageNames.count) уникальных изображений: \(Array(imageNames).sorted())")
+        return imageNames
+    }
+
+    private func extractImageNamesFromHTML() -> Set<String> {
+        // Загружаем HTML файл и извлекаем имена изображений
+        guard let htmlFileURL = Bundle.main.url(forResource: filename, withExtension: "html") else {
+            logger.warning("Не удалось найти HTML файл для извлечения имен изображений: \(filename).html")
+            return []
+        }
+
+        do {
+            let htmlContent = try String(contentsOf: htmlFileURL, encoding: .utf8)
+
+            // Регулярное выражение для поиска src="..\img\filename.jpg" или src="../img/filename.jpg"
+            let pattern = #"src="\.\.(?:\\|/)img(?:\\|/)([^"]+)\.""#
+            let regex = try NSRegularExpression(pattern: pattern)
+            let matches = regex.matches(in: htmlContent, range: NSRange(htmlContent.startIndex..., in: htmlContent))
+
+            var imageNames = Set<String>()
+            for match in matches {
+                if let range = Range(match.range(at: 1), in: htmlContent) {
+                    let imageName = String(htmlContent[range])
+                    let cleanName = imageName.replacingOccurrences(of: ".jpg", with: "")
+                        .replacingOccurrences(of: ".png", with: "")
+                        .replacingOccurrences(of: ".jpeg", with: "")
+                        .replacingOccurrences(of: ".gif", with: "")
+                    imageNames.insert(cleanName)
+                }
+            }
+
+            logger.debug("Найдено \(imageNames.count) уникальных изображений в HTML: \(Array(imageNames).sorted())")
+            return imageNames
+        } catch {
+            logger.error("Ошибка извлечения имен изображений: \(error.localizedDescription)")
+            return []
+        }
+    }
+
     func makeCoordinator() -> Coordinator {
         Coordinator()
     }
 
     final class Coordinator: NSObject, WKNavigationDelegate {
-        // Обработка навигации при необходимости
+        private let logger = Logger(subsystem: "SotkaApp", category: "HTMLContentView.Coordinator")
+
+        func webView(_: WKWebView, didFinish _: WKNavigation!) {
+            logger.debug("🌐 WKWebView загрузка завершена")
+        }
+
+        func webView(_: WKWebView, didFail _: WKNavigation!, withError error: Error) {
+            logger.error("🌐 WKWebView ошибка загрузки: \(error.localizedDescription)")
+        }
+
+        func webView(_: WKWebView, didFailProvisionalNavigation _: WKNavigation!, withError error: Error) {
+            logger.error("🌐 WKWebView ошибка предварительной загрузки: \(error.localizedDescription)")
+        }
     }
 }
