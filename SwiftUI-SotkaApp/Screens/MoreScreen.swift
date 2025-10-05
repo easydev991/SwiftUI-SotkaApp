@@ -62,6 +62,7 @@ struct MoreScreen: View {
             }
         }
         .overlay { Rectangle().opacity(0.0001) }
+        .contentShape(.rect)
         .onTapGesture {
             settings.showLanguageAlert.toggle()
         }
