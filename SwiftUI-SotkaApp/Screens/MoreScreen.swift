@@ -23,6 +23,9 @@ struct MoreScreen: View {
                     makeVibrateToggle($settings.vibrate)
                 }
                 Section("About app") {
+                    NavigationLink(destination: InfopostsListScreen()) {
+                        Text("Infoposts")
+                    }
                     rateAppButton
                     feedbackButton
                     officialSiteButton

@@ -17,6 +17,9 @@ final class User {
     /// Пользовательские упражнения
     @Relationship(deleteRule: .cascade) var customExercises: [CustomExercise] = []
 
+    /// ID избранных инфопостов
+    var favoriteInfopostIds: [String] = []
+
     init(
         id: Int,
         userName: String? = nil,

@@ -11,8 +11,11 @@ struct HomeScreen: View {
                 Color.swBackground.ignoresSafeArea()
                 if let calculator = statusManager.currentDayCalculator {
                     ScrollView {
-                        DayCountView(calculator: calculator)
-                            .padding()
+                        VStack(spacing: 16) {
+                            DayCountView(calculator: calculator)
+                            NavigationLink("Infoposts", destination: InfopostsListScreen())
+                        }
+                        .padding()
                     }
                     .frame(maxWidth: .infinity)
                 } else {

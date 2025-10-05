@@ -9,6 +9,7 @@ struct SwiftUI_SotkaAppApp: App {
     @State private var countriesService = CountriesUpdateService()
     private let statusManager: StatusManager
     private let customExercisesService: CustomExercisesService
+    private let infopostsService: InfopostsService
     @State private var appSettings = AppSettings()
     @State private var authHelper: AuthHelperImp
     @State private var networkStatus = NetworkStatus()
@@ -18,6 +19,7 @@ struct SwiftUI_SotkaAppApp: App {
         let authHelper = AuthHelperImp()
         let client = SWClient(with: authHelper)
         self.customExercisesService = CustomExercisesService(client: client)
+        self.infopostsService = InfopostsService(language: Locale.current.language.languageCode?.identifier ?? "ru")
         self.statusManager = StatusManager(customExercisesService: customExercisesService)
         self.authHelper = authHelper
         self.client = client
@@ -49,6 +51,7 @@ struct SwiftUI_SotkaAppApp: App {
             .environment(authHelper)
             .environment(statusManager)
             .environment(customExercisesService)
+            .environment(infopostsService)
             .environment(\.isNetworkConnected, networkStatus.isConnected)
             .preferredColorScheme(appSettings.appTheme.colorScheme)
             .task(id: scenePhase) {
