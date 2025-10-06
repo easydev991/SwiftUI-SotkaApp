@@ -19,9 +19,10 @@ struct InfopostsServiceTests {
 
         // Проверяем, что есть основные инфопосты
         let infopostIds = infoposts.map(\.id)
-        #expect(infopostIds.contains("about"))
+        #expect(!infopostIds.contains("about"))
         #expect(infopostIds.contains("organiz"))
         #expect(infopostIds.contains("aims"))
+        #expect(infopostIds.contains("d0-women"))
         #expect(infopostIds.contains("d1"))
         #expect(infopostIds.contains("d100"))
     }
@@ -66,7 +67,7 @@ struct InfopostsServiceTests {
     func loadInfopostWithValidId() throws {
         // Arrange
         let service = InfopostsService(language: "ru")
-        let infopostId = "about"
+        let infopostId = "organiz"
 
         // Act
         let infopost = try service.loadInfopost(id: infopostId)
@@ -346,5 +347,64 @@ struct InfopostsServiceTests {
             // Ошибка также допустима для несуществующего языка
             #expect(error is InfopostsServiceError)
         }
+    }
+
+    // MARK: - Тесты фильтрации по полу
+
+    @Test
+    func infopostFromFilenameWithWomenSuffix() throws {
+        // Arrange
+        let filename = "d0-women"
+        let title = "Test Title"
+        let content = "Test Content"
+        let language = "ru"
+
+        // Act
+        let infopost = Infopost.from(filename: filename, title: title, content: content, language: language)
+
+        // Assert
+        #expect(infopost.id == filename)
+        #expect(infopost.gender == .female)
+        #expect(infopost.title == title)
+        #expect(infopost.content == content)
+        #expect(infopost.language == language)
+    }
+
+    @Test
+    func infopostFromFilenameWithoutGenderSuffix() throws {
+        // Arrange
+        let filename = "d1"
+        let title = "Test Title"
+        let content = "Test Content"
+        let language = "ru"
+
+        // Act
+        let infopost = Infopost.from(filename: filename, title: title, content: content, language: language)
+
+        // Assert
+        #expect(infopost.id == filename)
+        #expect(infopost.gender == nil)
+        #expect(infopost.title == title)
+        #expect(infopost.content == content)
+        #expect(infopost.language == language)
+    }
+
+    @Test
+    func infopostFromFilenameWithSpecialId() throws {
+        // Arrange
+        let filename = "about"
+        let title = "Test Title"
+        let content = "Test Content"
+        let language = "ru"
+
+        // Act
+        let infopost = Infopost.from(filename: filename, title: title, content: content, language: language)
+
+        // Assert
+        #expect(infopost.id == filename)
+        #expect(infopost.gender == nil)
+        #expect(infopost.title == title)
+        #expect(infopost.content == content)
+        #expect(infopost.language == language)
     }
 }

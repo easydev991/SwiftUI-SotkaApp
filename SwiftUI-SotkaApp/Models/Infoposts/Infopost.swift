@@ -2,7 +2,7 @@ import Foundation
 
 /// Модель данных инфопоста
 struct Infopost: Identifiable, Equatable {
-    /// Уникальный идентификатор инфопоста (например, "d1", "d50", "about", "aims", "organiz")
+    /// Уникальный идентификатор инфопоста (например, "d1", "d50", "aims", "organiz")
     let id: String
 
     /// Заголовок инфопоста
@@ -23,9 +23,30 @@ struct Infopost: Identifiable, Equatable {
     /// Дата последнего изменения файла
     let lastModified: Date
 
+    /// Пол, для которого предназначен инфопост (nil для универсальных постов)
+    let gender: Gender?
+
+    /// Доступность функции добавления в избранное (`false` для поста "about")
+    let isFavoriteAvailable: Bool
+
     /// Имя файла с суффиксом языка для загрузки из бандла (например, "d1_ru")
     var filenameWithLanguage: String {
         "\(id)_\(language)"
+    }
+
+    /// Получает YouTube видео для этого инфопоста
+    /// - Parameter youtubeService: Сервис для работы с YouTube видео
+    /// - Returns: YouTube видео или nil, если не найдено
+    func youtubeVideo(using youtubeService: YouTubeVideoService) -> YouTubeVideo? {
+        guard let dayNumber, dayNumber > 0 else { return nil }
+        return try? youtubeService.getVideo(for: dayNumber)
+    }
+
+    /// Проверяет, есть ли YouTube видео для этого инфопоста
+    /// - Parameter youtubeService: Сервис для работы с YouTube видео
+    /// - Returns: true, если видео существует
+    func hasYouTubeVideo(using youtubeService: YouTubeVideoService) -> Bool {
+        youtubeVideo(using: youtubeService) != nil
     }
 
     init(
@@ -35,7 +56,9 @@ struct Infopost: Identifiable, Equatable {
         section: InfopostSection,
         dayNumber: Int? = nil,
         language: String,
-        lastModified: Date = Date()
+        lastModified: Date = Date(),
+        gender: Gender? = nil,
+        isFavoriteAvailable: Bool = true
     ) {
         self.id = id
         self.title = title
@@ -44,11 +67,20 @@ struct Infopost: Identifiable, Equatable {
         self.dayNumber = dayNumber
         self.language = language
         self.lastModified = lastModified
+        self.gender = gender
+        self.isFavoriteAvailable = isFavoriteAvailable
     }
 
     /// Создает инфопост из имени файла
-    static func from(filename: String, title: String, content: String, language: String, lastModified: Date = Date()) -> Infopost {
+    static func from(
+        filename: String,
+        title: String,
+        content: String,
+        language: String,
+        lastModified: Date = Date()
+    ) -> Infopost {
         let section = InfopostSection.section(for: filename)
+
         // Определяем номер дня для файлов вида "d1", "d2", etc.
         let dayNumber: Int?
         if filename.hasPrefix("d") {
@@ -57,6 +89,11 @@ struct Infopost: Identifiable, Equatable {
         } else {
             dayNumber = nil
         }
+
+        // Определяем пол для специальных файлов (например, "d0-women")
+        let gender: Gender? = filename.contains("-women") ? .female : nil
+        let isFavoriteAvailable = !filename.contains("about")
+
         return Infopost(
             id: filename,
             title: title,
@@ -64,7 +101,9 @@ struct Infopost: Identifiable, Equatable {
             section: section,
             dayNumber: dayNumber,
             language: language,
-            lastModified: lastModified
+            lastModified: lastModified,
+            gender: gender,
+            isFavoriteAvailable: isFavoriteAvailable
         )
     }
 }

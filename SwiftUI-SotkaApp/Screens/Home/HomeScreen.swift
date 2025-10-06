@@ -13,7 +13,6 @@ struct HomeScreen: View {
                     ScrollView {
                         VStack(spacing: 16) {
                             DayCountView(calculator: calculator)
-                            NavigationLink("Infoposts", destination: InfopostsListScreen())
                         }
                         .padding()
                     }
@@ -28,6 +27,13 @@ struct HomeScreen: View {
             }
             .navigationTitle("SOTKA")
             .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .topBarTrailing) {
+                    NavigationLink(destination: InfopostsListScreen()) {
+                        Text("Infoposts")
+                    }
+                }
+            }
         }
     }
 }

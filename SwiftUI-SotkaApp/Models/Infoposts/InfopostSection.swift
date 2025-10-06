@@ -53,7 +53,7 @@ enum InfopostSection: String, Codable, CaseIterable, Identifiable {
 
         // Специальные файлы относятся к подготовке
         switch filename {
-        case "about", "aims", "organiz", "d0-women":
+        case "aims", "organiz", "d0-women":
             return .preparation
         default:
             return .preparation

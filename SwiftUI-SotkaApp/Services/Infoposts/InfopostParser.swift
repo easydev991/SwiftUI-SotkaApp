@@ -77,7 +77,7 @@ enum InfopostParser {
     /// Парсит HTML содержимое и создает модель Infopost
     /// - Parameters:
     ///   - html: HTML содержимое файла
-    ///   - filename: Имя файла (например, "d1", "about", "aims")
+    ///   - filename: Имя файла (например, "d1", "aims")
     ///   - language: Язык файла ("ru" или "en")
     /// - Returns: Модель Infopost или nil при ошибке парсинга
     static func parse(html: String, filename: String, language: String) -> Infopost? {
@@ -106,7 +106,7 @@ enum InfopostParser {
 
     /// Загружает содержимое HTML файла инфопоста
     /// - Parameters:
-    ///   - filename: Имя файла без расширения (например, "d1", "about")
+    ///   - filename: Имя файла без расширения (например, "d1")
     ///   - language: Язык файла ("ru" или "en")
     /// - Returns: Содержимое HTML файла или nil при ошибке загрузки
     static func loadInfopostFile(filename: String, language: String) -> String? {
@@ -182,11 +182,20 @@ enum InfopostParser {
         // Специальная обработка для файлов organiz, aims и about
         switch filename {
         case "organiz":
-            return NSLocalizedString("infopost.organizational", comment: "Title for the 'organiz' infopost with organizational information")
+            return NSLocalizedString(
+                "infopost.organizational",
+                comment: "Заголовок для инфопоста 'organiz' с организационной информацией"
+            )
         case "aims":
-            return NSLocalizedString("infopost.aims", comment: "Title for the 'aims' infopost describing program goals")
+            return NSLocalizedString(
+                "infopost.aims",
+                comment: "Заголовок для инфопоста 'aims' с описанием целей программы"
+            )
         case "about":
-            return NSLocalizedString("infopost.about", comment: "Title for the 'about' infopost describing the SOTKA program")
+            return NSLocalizedString(
+                "infopost.about",
+                comment: "Заголовок для инфопоста 'about' с информацией о SOTKA"
+            )
         default:
             break
         }
@@ -371,21 +380,143 @@ enum InfopostParser {
     /// - Parameters:
     ///   - html: Исходное HTML содержимое
     ///   - fontSize: Размер шрифта для применения
+    ///   - infopost: Инфопост для проверки наличия YouTube видео
+    ///   - youtubeService: Сервис для работы с YouTube видео
     /// - Returns: Подготовленный HTML контент
-    static func prepareHTMLForDisplay(_ html: String, fontSize: FontSize) -> String {
-        logger.debug("Начинаем подготовку HTML для отображения с размером шрифта: \(fontSize.rawValue)")
+    static func prepareHTMLForDisplay(
+        _ html: String,
+        fontSize: FontSize,
+        infopost: Infopost,
+        youtubeService: YouTubeVideoService
+    ) -> String {
+        logger.info("🚀 Начинаем подготовку HTML для отображения инфопоста: \(infopost.id)")
+        logger
+            .debug(
+                "📊 Параметры: fontSize=\(fontSize.rawValue), title=\(infopost.title), dayNumber=\(infopost.dayNumber?.description ?? "nil")"
+            )
+        logger.debug("📏 Исходный размер HTML: \(html.count) символов")
 
         // 1. Очищаем HTML от лишних элементов
+        logger.debug("🧹 Этап 1: Очистка HTML от лишних элементов")
         let cleanedHTML = cleanHTMLContent(html)
+        logger.debug("📏 Размер после очистки: \(cleanedHTML.count) символов")
 
         // 2. Исправляем пути к изображениям
+        logger.debug("🖼️ Этап 2: Исправление путей к изображениям")
         let htmlWithFixedImages = fixImagePaths(cleanedHTML)
+        logger.debug("📏 Размер после исправления путей: \(htmlWithFixedImages.count) символов")
 
         // 3. Применяем размер шрифта
-        let finalHTML = applyFontSize(htmlWithFixedImages, fontSize: fontSize)
+        logger.debug("🔤 Этап 3: Применение размера шрифта")
+        let htmlWithFontSize = applyFontSize(htmlWithFixedImages, fontSize: fontSize)
+        logger.debug("📏 Размер после применения шрифта: \(htmlWithFontSize.count) символов")
 
-        logger.debug("Подготовка HTML завершена")
+        // 4. Добавляем YouTube видео для постов с номерами дней
+        logger.debug("🎬 Этап 4: Добавление YouTube видео")
+        let htmlWithYouTube = addYouTubeVideo(to: htmlWithFontSize, infopost: infopost, youtubeService: youtubeService)
+        logger.debug("📏 Размер после добавления YouTube: \(htmlWithYouTube.count) символов")
+
+        // 5. Добавляем универсальный обработчик видео
+        logger.debug("🎥 Этап 5: Добавление универсального обработчика видео")
+        let finalHTML = addUniversalVideoHandler(to: htmlWithYouTube)
+        logger.debug("📏 Финальный размер HTML: \(finalHTML.count) символов")
+
+        logger.info("✅ Подготовка HTML завершена для инфопоста: \(infopost.id)")
 
         return finalHTML
+    }
+
+    /// Добавляет YouTube видео блок в HTML контент
+    /// - Parameters:
+    ///   - html: HTML контент
+    ///   - infopost: Инфопост для проверки наличия видео
+    ///   - youtubeService: Сервис для работы с YouTube видео
+    /// - Returns: HTML с добавленным YouTube блоком
+    private static func addYouTubeVideo(to html: String, infopost: Infopost, youtubeService: YouTubeVideoService) -> String {
+        logger.info("🎬 Начинаем добавление YouTube видео для инфопоста: \(infopost.id)")
+        logger
+            .debug(
+                "📋 Инфопост: title=\(infopost.title), dayNumber=\(infopost.dayNumber?.description ?? "nil"), section=\(infopost.section.rawValue)"
+            )
+
+        // Проверяем, есть ли у инфопоста номер дня
+        guard let dayNumber = infopost.dayNumber else {
+            logger.debug("❌ У инфопоста \(infopost.id) нет номера дня, пропускаем добавление видео")
+            return html
+        }
+
+        logger.debug("✅ Инфопост имеет номер дня: \(dayNumber)")
+
+        // Получаем видео для инфопоста
+        do {
+            guard let video = try youtubeService.getVideo(for: dayNumber) else {
+                logger.warning("⚠️ YouTube видео для дня \(dayNumber) не найдено в сервисе")
+                return html
+            }
+
+            logger.info("🎥 Найдено YouTube видео для дня \(dayNumber): \(video.url)")
+            logger.debug("📺 Заголовок видео: \(video.title)")
+
+            // Создаем простой HTML блок с правильным контейнером для обработки ошибок
+            let videoBlock = """
+            <br><h2>&nbsp;&nbsp;&nbsp;&nbsp;\(video.title)</h2>
+            <div class="video-container" style="text-align: center;">
+                <iframe src="\(video.url)" 
+                        frameborder="0" 
+                        allowfullscreen
+                        style="max-width:100%; height:auto;">
+                </iframe>
+            </div>
+            <br><br><footer>
+            """
+
+            // Проверяем, есть ли тег <footer> в HTML
+            if html.contains("<footer>") {
+                logger.debug("✅ Найден тег <footer> в HTML, вставляем видео блок")
+                let modifiedHTML = html.replacingOccurrences(of: "<footer>", with: videoBlock)
+                logger.info("🎬 YouTube видео успешно добавлено в HTML для дня \(dayNumber)")
+                return modifiedHTML
+            } else {
+                logger.warning("⚠️ Тег <footer> не найден в HTML, добавляем видео блок в конец")
+                let modifiedHTML = html + videoBlock
+                logger.info("🎬 YouTube видео добавлено в конец HTML для дня \(dayNumber)")
+                return modifiedHTML
+            }
+
+        } catch {
+            logger.error("❌ Ошибка при получении YouTube видео для дня \(dayNumber): \(error.localizedDescription)")
+            return html
+        }
+    }
+
+    /// Добавляет универсальный обработчик видео в HTML контент
+    /// - Parameter html: HTML контент
+    /// - Returns: HTML с добавленным универсальным обработчиком видео
+    private static func addUniversalVideoHandler(to html: String) -> String {
+        logger.debug("🎥 Добавляем универсальный обработчик видео")
+
+        // Создаем скрипт для подключения перехватчика консоли
+        let consoleInterceptorScript = """
+        <script type="text/javascript" src="js/console_interceptor.js"></script>
+        """
+
+        // Создаем скрипт для подключения универсального обработчика видео
+        let videoHandlerScript = """
+        <script type="text/javascript" src="js/video_handler.js"></script>
+        """
+
+        // Добавляем скрипты в head, если он есть
+        if html.contains("</head>") {
+            let scripts = consoleInterceptorScript + "\n" + videoHandlerScript
+            let modifiedHTML = html.replacingOccurrences(of: "</head>", with: "\(scripts)\n</head>")
+            logger.debug("✅ Универсальный обработчик видео и перехватчик консоли добавлены в head")
+            return modifiedHTML
+        } else {
+            // Если нет head, добавляем перед закрывающим тегом body
+            let scripts = consoleInterceptorScript + "\n" + videoHandlerScript
+            let modifiedHTML = html.replacingOccurrences(of: "</body>", with: "\(scripts)\n</body>")
+            logger.debug("✅ Универсальный обработчик видео и перехватчик консоли добавлены перед </body>")
+            return modifiedHTML
+        }
     }
 }

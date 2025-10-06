@@ -7,10 +7,22 @@ struct HTMLContentView: UIViewRepresentable {
     private let logger = Logger(subsystem: "SotkaApp", category: "HTMLContentView")
     let filename: String
     let fontSize: FontSize
+    let infopost: Infopost
+    let youtubeService: YouTubeVideoService
 
     func makeUIView(context: Context) -> WKWebView {
         let configuration = WKWebViewConfiguration()
         configuration.defaultWebpagePreferences.allowsContentJavaScript = true
+
+        // Настройки для предотвращения ошибок навигации
+//        configuration.allowsInlineMediaPlayback = true
+//        configuration.mediaTypesRequiringUserActionForPlayback = []
+//        configuration.suppressesIncrementalRendering = false
+
+        // Добавляем обработчик для логов из JavaScript
+        configuration.userContentController.add(context.coordinator, name: "consoleLog")
+        configuration.userContentController.add(context.coordinator, name: "consoleError")
+        configuration.userContentController.add(context.coordinator, name: "consoleWarn")
 
         let webView = WKWebView(frame: .zero, configuration: configuration)
         webView.navigationDelegate = context.coordinator
@@ -26,14 +38,22 @@ struct HTMLContentView: UIViewRepresentable {
     }
 
     private func loadContent(in webView: WKWebView) {
+        logger.info("🌐 Начинаем загрузку контента в HTMLContentView")
+        logger.debug("📋 Параметры: filename=\(filename), fontSize=\(fontSize.rawValue), infopost.id=\(infopost.id)")
+        logger
+            .debug(
+                "📋 Инфопост: title=\(infopost.title), dayNumber=\(infopost.dayNumber?.description ?? "nil"), section=\(infopost.section.rawValue)"
+            )
+
         // Создаем временную директорию для ресурсов
         guard let tempDirectory = createTempDirectory() else {
-            logger.error("Не удалось создать временную директорию")
+            logger.error("❌ Не удалось создать временную директорию")
             return
         }
+        logger.debug("✅ Создана временная директория: \(tempDirectory.path)")
 
         // Загружаем HTML файл из бандла
-        logger.debug("Пытаемся найти файл: \(filename).html")
+        logger.debug("🔍 Пытаемся найти файл: \(filename).html")
         guard let htmlFileURL = Bundle.main.url(forResource: filename, withExtension: "html") else {
             logger.error("Файл не найден: \(filename).html в бандле")
             logger.error("Проверяем доступные файлы в бандле:")
@@ -54,8 +74,13 @@ struct HTMLContentView: UIViewRepresentable {
             // Загружаем HTML контент
             let htmlContent = try String(contentsOf: htmlFileURL, encoding: .utf8)
 
-            // Подготавливаем HTML для отображения через парсер
-            let modifiedHTML = InfopostParser.prepareHTMLForDisplay(htmlContent, fontSize: fontSize)
+            // Подготавливаем HTML для отображения через парсер с YouTube видео
+            let modifiedHTML = InfopostParser.prepareHTMLForDisplay(
+                htmlContent,
+                fontSize: fontSize,
+                infopost: infopost,
+                youtubeService: youtubeService
+            )
 
             // Добавляем отладочную информацию о HTML после обработки
             logger.debug("🔍 HTML после обработки содержит пути к изображениям:")
@@ -104,11 +129,49 @@ struct HTMLContentView: UIViewRepresentable {
                 logger.error("🌐 Ошибка чтения папки img: \(error.localizedDescription)")
             }
 
-            webView.loadFileURL(tempHTMLFile, allowingReadAccessTo: tempDirectory)
+            // Загружаем файл с дополнительной обработкой ошибок
+            DispatchQueue.main.async {
+                webView.loadFileURL(tempHTMLFile, allowingReadAccessTo: tempDirectory)
+            }
 
             logger.debug("Загружен инфопост: \(filename).html с размером шрифта: \(fontSize.rawValue)")
         } catch {
             logger.error("Ошибка подготовки контента: \(error.localizedDescription)")
+
+            // Показываем пользователю ошибку загрузки
+            DispatchQueue.main.async {
+                let errorHTML = """
+                <!DOCTYPE html>
+                <html>
+                <head>
+                    <meta charset="UTF-8">
+                    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+                    <title>Ошибка загрузки</title>
+                    <style>
+                        body { 
+                            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+                            padding: 20px;
+                            text-align: center;
+                            color: #666;
+                        }
+                        .error { 
+                            background: #f8f8f8;
+                            padding: 20px;
+                            border-radius: 8px;
+                            margin: 20px 0;
+                        }
+                    </style>
+                </head>
+                <body>
+                    <div class="error">
+                        <h2>Ошибка загрузки контента</h2>
+                        <p>Не удалось загрузить инфопост. Попробуйте позже.</p>
+                    </div>
+                </body>
+                </html>
+                """
+                webView.loadHTMLString(errorHTML, baseURL: nil)
+            }
         }
     }
 
@@ -210,7 +273,7 @@ struct HTMLContentView: UIViewRepresentable {
             logger.debug("Пытаемся скопировать изображение: \(imageName)")
 
             // Пробуем разные расширения
-            let extensions = ["jpg", "png", "jpeg", "gif"]
+            let extensions = ["png", "jpg", "jpeg", "gif"]
             var copied = false
 
             for ext in extensions {
@@ -374,6 +437,7 @@ struct HTMLContentView: UIViewRepresentable {
         }
 
         logger.debug("✅ Итого найдено \(imageNames.count) уникальных изображений: \(Array(imageNames).sorted())")
+
         return imageNames
     }
 
@@ -416,7 +480,7 @@ struct HTMLContentView: UIViewRepresentable {
         Coordinator()
     }
 
-    final class Coordinator: NSObject, WKNavigationDelegate {
+    final class Coordinator: NSObject, WKNavigationDelegate, WKScriptMessageHandler {
         private let logger = Logger(subsystem: "SotkaApp", category: "HTMLContentView.Coordinator")
 
         func webView(_: WKWebView, didFinish _: WKNavigation!) {
@@ -429,6 +493,58 @@ struct HTMLContentView: UIViewRepresentable {
 
         func webView(_: WKWebView, didFailProvisionalNavigation _: WKNavigation!, withError error: Error) {
             logger.error("🌐 WKWebView ошибка предварительной загрузки: \(error.localizedDescription)")
+        }
+
+        // MARK: - Navigation Policy
+
+        func webView(
+            _: WKWebView,
+            decidePolicyFor navigationAction: WKNavigationAction
+        ) async -> WKNavigationActionPolicy {
+            logger.debug("🌐 Решение о навигации: \(navigationAction.request.url?.absoluteString ?? "nil")")
+
+            // Разрешаем все навигационные действия для локальных файлов
+            if let url = navigationAction.request.url {
+                if url.isFileURL {
+                    logger.debug("🌐 Разрешаем навигацию к локальному файлу: \(url.path)")
+                    return .allow
+                }
+
+                // Для внешних ссылок можем добавить дополнительную логику
+                logger.debug("🌐 Внешняя ссылка: \(url.absoluteString)")
+            }
+
+            // По умолчанию разрешаем навигацию
+            return .allow
+        }
+
+        func webView(
+            _: WKWebView,
+            decidePolicyFor navigationResponse: WKNavigationResponse
+        ) async -> WKNavigationResponsePolicy {
+            logger.debug("🌐 Решение о навигационном ответе: \(navigationResponse.response.url?.absoluteString ?? "nil")")
+            // Разрешаем все навигационные ответы
+            return .allow
+        }
+
+        // MARK: - WKScriptMessageHandler
+
+        func userContentController(_: WKUserContentController, didReceive message: WKScriptMessage) {
+            guard let messageBody = message.body as? [String: Any],
+                  let logMessage = messageBody["message"] as? String else {
+                return
+            }
+
+            switch message.name {
+            case "consoleLog":
+                logger.info("🟢 JS: \(logMessage)")
+            case "consoleWarn":
+                logger.warning("🟡 JS: \(logMessage)")
+            case "consoleError":
+                logger.error("🔴 JS: \(logMessage)")
+            default:
+                logger.debug("🔵 JS: \(logMessage)")
+            }
         }
     }
 }

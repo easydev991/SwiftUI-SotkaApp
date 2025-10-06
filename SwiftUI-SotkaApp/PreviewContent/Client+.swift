@@ -46,7 +46,7 @@ extension MockLoginClient: StatusClient {
         switch result {
         case .success:
             print("Успешно cтартовали сотку")
-            return .init(date: .now)
+            return .init(date: .now, maxForAllRunsDay: 0)
         case let .failure(error):
             throw error
         }
@@ -58,7 +58,7 @@ extension MockLoginClient: StatusClient {
         switch result {
         case .success:
             print("Успешно получили статус прохождения сотки")
-            return .init(date: .now)
+            return .init(date: .now, maxForAllRunsDay: 0)
         case let .failure(error):
             throw error
         }

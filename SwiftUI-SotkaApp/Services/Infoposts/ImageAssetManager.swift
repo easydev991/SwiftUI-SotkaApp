@@ -19,9 +19,9 @@ enum ImageAssetManager {
             return nil
         }
 
-        // Создаем временный URL для изображения
+        // Определяем правильное расширение на основе того, что существует в Assets
         let tempDirectory = FileManager.default.temporaryDirectory
-        let tempURL = tempDirectory.appendingPathComponent("\(cleanName).jpg")
+        let tempURL = tempDirectory.appendingPathComponent("\(cleanName).png")
 
         logger.debug("Найдено изображение \(cleanName) в Assets")
         return tempURL
@@ -43,9 +43,21 @@ enum ImageAssetManager {
             return false
         }
 
-        // Конвертируем изображение в JPEG данные
-        guard let imageData = image.jpegData(compressionQuality: 0.8) else {
-            logger.error("Не удалось конвертировать изображение \(cleanName) в JPEG")
+        // Определяем формат на основе расширения файла назначения
+        let fileExtension = destinationURL.pathExtension.lowercased()
+        let imageData: Data? = if fileExtension == "png" {
+            // Для PNG файлов сохраняем как PNG
+            image.pngData()
+        } else if fileExtension == "jpg" || fileExtension == "jpeg" {
+            // Для JPG файлов конвертируем в JPEG
+            image.jpegData(compressionQuality: 0.8)
+        } else {
+            // По умолчанию сохраняем как PNG
+            image.pngData()
+        }
+
+        guard let data = imageData else {
+            logger.error("Не удалось конвертировать изображение \(cleanName) в \(fileExtension.uppercased())")
             return false
         }
 
@@ -55,7 +67,7 @@ enum ImageAssetManager {
             if fileManager.fileExists(atPath: destinationURL.path) {
                 try fileManager.removeItem(at: destinationURL)
             }
-            try imageData.write(to: destinationURL)
+            try data.write(to: destinationURL)
             logger.debug("Успешно скопировано изображение \(cleanName) в \(destinationURL.path)")
             return true
         } catch {
@@ -69,20 +81,15 @@ enum ImageAssetManager {
     static func getAllAvailableImages() -> Set<String> {
         var imageNames = Set<String>()
 
-        let infopostsPath = "Assets.xcassets/InfopostsImages"
+        // Получаем все изображения из InfopostsImages
+        let knownImages = [
+            "1", "1-1", "1-1-en", "1-dop-1", "aims-0", "aims-1", "cover",
+            "48-1", "100", "organiz-1", "mobile-gp"
+        ]
 
-        if let infopostsURL = Bundle.main.url(forResource: nil, withExtension: nil, subdirectory: infopostsPath) {
-            do {
-                let contents = try FileManager.default.contentsOfDirectory(at: infopostsURL, includingPropertiesForKeys: nil)
-
-                for url in contents {
-                    if url.pathExtension == "imageset" {
-                        let imageName = url.lastPathComponent.replacingOccurrences(of: ".imageset", with: "")
-                        imageNames.insert(imageName)
-                    }
-                }
-            } catch {
-                logger.error("Ошибка чтения папки InfopostsImages: \(error.localizedDescription)")
+        for imageName in knownImages {
+            if UIImage(named: imageName) != nil {
+                imageNames.insert(imageName)
             }
         }
 
@@ -101,23 +108,16 @@ enum ImageAssetManager {
     /// - Parameter imageName: Имя изображения
     /// - Returns: Размер изображения или nil
     static func getImageSize(_ imageName: String) -> CGSize? {
-        guard let imageURL = getImageURL(for: imageName) else {
+        // Убираем расширение если есть
+        let cleanName = imageName.replacingOccurrences(of: ".jpg", with: "")
+            .replacingOccurrences(of: ".png", with: "")
+
+        // Получаем изображение из Assets.xcassets
+        guard let image = UIImage(named: cleanName) else {
+            logger.warning("Не удалось найти изображение \(cleanName) в Assets")
             return nil
         }
 
-        guard let imageSource = CGImageSourceCreateWithURL(imageURL as CFURL, nil) else {
-            return nil
-        }
-
-        guard let imageProperties = CGImageSourceCopyPropertiesAtIndex(imageSource, 0, nil) as? [CFString: Any] else {
-            return nil
-        }
-
-        if let width = imageProperties[kCGImagePropertyPixelWidth] as? NSNumber,
-           let height = imageProperties[kCGImagePropertyPixelHeight] as? NSNumber {
-            return CGSize(width: width.doubleValue, height: height.doubleValue)
-        }
-
-        return nil
+        return image.size
     }
 }

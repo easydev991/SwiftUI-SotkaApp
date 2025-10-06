@@ -32,7 +32,16 @@ final class InfopostsService {
     /// - Returns: Инфопост или nil, если не найден
     /// - Throws: Ошибка при загрузке инфопостов
     func loadInfopost(id: String) throws -> Infopost? {
-        let infoposts = try loadInfoposts()
+        // Используем кэшированные данные, если они есть, иначе загружаем
+        let infoposts: [Infopost]
+        if let cached = cachedInfoposts {
+            logger.debug("Используем кэшированные инфопосты для поиска: \(id)")
+            infoposts = cached
+        } else {
+            logger.debug("Кэш пуст, загружаем инфопосты для поиска: \(id)")
+            infoposts = try loadInfoposts()
+        }
+
         let infopost = infoposts.first { $0.id == id }
 
         if infopost != nil {
@@ -42,6 +51,22 @@ final class InfopostsService {
         }
 
         return infopost
+    }
+
+    /// Загружает инфопост "about" напрямую из файла, минуя `filenameManager`
+    /// - Returns: Инфопост "about" или nil, если не найден
+    func loadAboutInfopost() -> Infopost? {
+        let filename = "about"
+        logger.debug("Загружаем инфопост 'about' напрямую из файла")
+
+        if let htmlContent = InfopostParser.loadInfopostFile(filename: filename, language: currentLanguage),
+           let infopost = InfopostParser.parse(html: htmlContent, filename: filename, language: currentLanguage) {
+            logger.info("Успешно загружен инфопост 'about' напрямую")
+            return infopost
+        } else {
+            logger.error("Не удалось загрузить инфопост 'about' напрямую")
+            return nil
+        }
     }
 
     /// Проверяет, является ли инфопост избранным
@@ -96,6 +121,34 @@ final class InfopostsService {
         logger.debug("Изменения сохранены в базе данных")
     }
 
+    /// Возвращает только доступные инфопосты в зависимости от текущего дня
+    /// - Parameters:
+    ///   - currentDay: Текущий день программы
+    ///   - maxReadInfoPostDay: Максимальный день, до которого доступны инфопосты с сервера
+    /// - Returns: Массив доступных инфопостов
+    /// - Throws: Ошибка при загрузке инфопостов
+    func getAvailableInfoposts(currentDay: Int?, maxReadInfoPostDay: Int = 0) throws -> [Infopost] {
+        // Используем кэшированные данные, если они есть, иначе загружаем
+        let allInfoposts: [Infopost]
+        if let cached = cachedInfoposts {
+            logger.debug("Используем кэшированные инфопосты (\(cached.count) штук)")
+            allInfoposts = cached
+        } else {
+            logger.debug("Кэш пуст, загружаем инфопосты")
+            allInfoposts = try loadInfoposts()
+        }
+
+        let availabilityManager = InfopostAvailabilityManager(
+            currentDay: currentDay ?? 0,
+            maxReadInfoPostDay: maxReadInfoPostDay
+        )
+
+        let availablePosts = availabilityManager.filterAvailablePosts(allInfoposts)
+        logger.debug("Отфильтровано \(availablePosts.count) доступных инфопостов из \(allInfoposts.count)")
+
+        return availablePosts
+    }
+
     // MARK: - Private Methods
 
     /// Получает текущего пользователя из базы данных
@@ -114,36 +167,19 @@ final class InfopostsService {
     private func parseAllInfoposts(for language: String) throws -> [Infopost] {
         var infoposts: [Infopost] = []
 
-        // Список файлов инфопостов для парсинга в правильном порядке
-        let filenames = [
-            "about", // Дополнительная информация о программе (первая в списке)
-            "organiz", "aims", // Подготовка (BLOCK_PREPARE)
-            "d1", "d2", "d3", "d4", "d5", "d6", "d7", "d8", "d9", "d10",
-            "d11", "d12", "d13", "d14", "d15", "d16", "d17", "d18", "d19", "d20",
-            "d21", "d22", "d23", "d24", "d25", "d26", "d27", "d28", "d29", "d30",
-            "d31", "d32", "d33", "d34", "d35", "d36", "d37", "d38", "d39", "d40",
-            "d41", "d42", "d43", "d44", "d45", "d46", "d47", "d48", "d49", "d50",
-            "d51", "d52", "d53", "d54", "d55", "d56", "d57", "d58", "d59", "d60",
-            "d61", "d62", "d63", "d64", "d65", "d66", "d67", "d68", "d69", "d70",
-            "d71", "d72", "d73", "d74", "d75", "d76", "d77", "d78", "d79", "d80",
-            "d81", "d82", "d83", "d84", "d85", "d86", "d87", "d88", "d89", "d90",
-            "d91", "d92", "d93", "d94", "d95", "d96", "d97", "d98", "d99", "d100"
-        ]
-
-        // Добавляем специальный файл для женщин, если он есть (только для русского языка)
-        var allFilenames = filenames
-        if language == "ru" {
-            let womenFilename = "d0-women"
-            if InfopostParser.loadInfopostFile(filename: womenFilename, language: language) != nil {
-                allFilenames = [womenFilename] + filenames
-            }
-        }
+        // Создаем менеджер файлов для указанного языка
+        let filenameManager = FilenameManager(language: language)
+        let filenames = filenameManager.getOrderedFilenames()
+        logger.debug("Получен список из \(filenames.count) файлов для парсинга")
 
         // Парсим все файлы
-        for filename in allFilenames {
+        for filename in filenames {
             if let htmlContent = InfopostParser.loadInfopostFile(filename: filename, language: language),
                let infopost = InfopostParser.parse(html: htmlContent, filename: filename, language: language) {
                 infoposts.append(infopost)
+                logger.debug("Успешно распарсен файл: \(filename)")
+            } else {
+                logger.warning("Не удалось распарсить файл: \(filename)")
             }
         }
 

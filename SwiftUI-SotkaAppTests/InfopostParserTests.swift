@@ -3,6 +3,9 @@ import Foundation
 import Testing
 
 struct InfopostParserTests {
+    private let testInfopost = Infopost(id: "test", title: "Test", content: "Test", section: .base, dayNumber: nil, language: "ru")
+    private let youtubeService = YouTubeVideoService()
+
     // MARK: - Тесты для fixImagePaths
 
     @Test
@@ -215,7 +218,7 @@ struct InfopostParserTests {
         """
 
         // Act
-        let result = InfopostParser.prepareHTMLForDisplay(html, fontSize: .large)
+        let result = InfopostParser.prepareHTMLForDisplay(html, fontSize: .large, infopost: testInfopost, youtubeService: youtubeService)
 
         // Assert
         // Проверяем, что header удален
@@ -254,7 +257,7 @@ struct InfopostParserTests {
         """
 
         // Act
-        let result = InfopostParser.prepareHTMLForDisplay(html, fontSize: .small)
+        let result = InfopostParser.prepareHTMLForDisplay(html, fontSize: .small, infopost: testInfopost, youtubeService: youtubeService)
 
         // Assert
         #expect(!result.contains("Вернуться к оглавлению"))
@@ -279,7 +282,7 @@ struct InfopostParserTests {
         """
 
         // Act
-        let result = InfopostParser.prepareHTMLForDisplay(html, fontSize: .medium)
+        let result = InfopostParser.prepareHTMLForDisplay(html, fontSize: .medium, infopost: testInfopost, youtubeService: youtubeService)
 
         // Assert
         #expect(!result.contains("<div class=\"full\">"))
@@ -302,7 +305,7 @@ struct InfopostParserTests {
         """
 
         // Act
-        let result = InfopostParser.prepareHTMLForDisplay(html, fontSize: .large)
+        let result = InfopostParser.prepareHTMLForDisplay(html, fontSize: .large, infopost: testInfopost, youtubeService: youtubeService)
 
         // Assert
         #expect(!result.contains("<div class=\"full\"></div>"))
@@ -346,7 +349,7 @@ struct InfopostParserTests {
         """
 
         // Act
-        let result = InfopostParser.prepareHTMLForDisplay(html, fontSize: .medium)
+        let result = InfopostParser.prepareHTMLForDisplay(html, fontSize: .medium, infopost: testInfopost, youtubeService: youtubeService)
 
         // Assert
         // Проверяем очистку от лишних элементов
@@ -384,15 +387,30 @@ struct InfopostParserTests {
         """
 
         // Act & Assert для всех размеров шрифта
-        let smallResult = InfopostParser.prepareHTMLForDisplay(html, fontSize: .small)
+        let smallResult = InfopostParser.prepareHTMLForDisplay(
+            html,
+            fontSize: .small,
+            infopost: testInfopost,
+            youtubeService: youtubeService
+        )
         #expect(smallResult.contains("script_small.js"))
         #expect(smallResult.contains("style_small.css"))
 
-        let mediumResult = InfopostParser.prepareHTMLForDisplay(html, fontSize: .medium)
+        let mediumResult = InfopostParser.prepareHTMLForDisplay(
+            html,
+            fontSize: .medium,
+            infopost: testInfopost,
+            youtubeService: youtubeService
+        )
         #expect(mediumResult.contains("script_medium.js"))
         #expect(mediumResult.contains("style_medium.css"))
 
-        let largeResult = InfopostParser.prepareHTMLForDisplay(html, fontSize: .large)
+        let largeResult = InfopostParser.prepareHTMLForDisplay(
+            html,
+            fontSize: .large,
+            infopost: testInfopost,
+            youtubeService: youtubeService
+        )
         #expect(largeResult.contains("script_big.js"))
         #expect(largeResult.contains("style_big.css"))
     }

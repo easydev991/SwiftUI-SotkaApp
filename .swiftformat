@@ -85,5 +85,7 @@ wrapMultilineStatementBraces
 
 # Exclude
 --exclude \
-# someFolder, \
+build/, \
+*.xcworkspace, \
+*.xcodeproj, \
 SnapshotHelper.swift

@@ -1,10 +1,14 @@
+import OSLog
 import SwiftUI
 import SWUtils
 
 struct MoreScreen: View {
     @Environment(\.locale) private var locale
     @Environment(AppSettings.self) private var appSettings
+    @Environment(InfopostsService.self) private var infopostsService
+    @State private var aboutInfopost: Infopost?
     private let appId = "id6753644091"
+    private let logger = Logger(subsystem: "SotkaApp", category: "MoreScreen")
 
     var body: some View {
         NavigationStack {
@@ -23,13 +27,11 @@ struct MoreScreen: View {
                     makeVibrateToggle($settings.vibrate)
                 }
                 Section("About app") {
-                    NavigationLink(destination: InfopostsListScreen()) {
-                        Text("Infoposts")
-                    }
                     rateAppButton
                     feedbackButton
                     officialSiteButton
                     shareAppButton
+                    aboutProgramButton
                     appVersionText
                 }
                 Section("Other apps") {
@@ -42,6 +44,11 @@ struct MoreScreen: View {
             }
             .animation(.default, value: appSettings.workoutNotificationsEnabled)
             .navigationTitle("More")
+            .onAppear {
+                if aboutInfopost == nil {
+                    aboutInfopost = infopostsService.loadAboutInfopost()
+                }
+            }
         }
     }
 
@@ -172,11 +179,22 @@ struct MoreScreen: View {
                 .accessibilityIdentifier("githubButton")
         }
     }
+
+    @ViewBuilder
+    private var aboutProgramButton: some View {
+        if let aboutInfopost {
+            NavigationLink(destination: InfopostDetailScreen(infopost: aboutInfopost)) {
+                Text("infopost.about")
+            }
+            .accessibilityIdentifier("aboutProgramButton")
+        }
+    }
 }
 
 #if DEBUG
 #Preview {
     MoreScreen()
         .environment(AppSettings())
+        .environment(InfopostsService(language: "ru"))
 }
 #endif

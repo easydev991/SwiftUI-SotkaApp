@@ -6,17 +6,29 @@ import SwiftUI
 struct InfopostsListScreen: View {
     private let logger = Logger(subsystem: "SotkaApp", category: "InfopostsListScreen")
     @Environment(InfopostsService.self) private var infopostsService
+    @Environment(StatusManager.self) private var statusManager
     @Environment(\.modelContext) private var modelContext
-    @State private var infoposts: [Infopost] = []
+    @Query private var users: [User]
+    @State private var availableInfoposts: [Infopost] = []
     @State private var favoriteIds: Set<String> = []
     @State private var displayMode: InfopostsDisplayMode = .all
+    private var userGender: Gender? {
+        guard let genderCode = users.first?.genderCode else { return nil }
+        return Gender(genderCode)
+    }
 
-    /// Фильтрованные инфопосты в зависимости от режима отображения
+    /// Фильтрованные инфопосты с учетом режима отображения и пола пользователя
+    /// (доступность уже учтена при загрузке availableInfoposts)
     private var filteredInfoposts: [Infopost] {
-        if displayMode.showsOnlyFavorites {
-            return infoposts.filter { favoriteIds.contains($0.id) }
+        availableInfoposts.filter { infopost in
+            // Проверяем соответствие полу пользователя
+            let genderMatches = userGender == nil || infopost.gender == nil || infopost.gender == userGender
+
+            // Проверяем режим отображения (все/избранные)
+            let favoriteMatches = !displayMode.showsOnlyFavorites || favoriteIds.contains(infopost.id)
+
+            return genderMatches && favoriteMatches
         }
-        return infoposts
     }
 
     /// Секции, которые содержат хотя бы один инфопост для отображения
@@ -46,14 +58,12 @@ struct InfopostsListScreen: View {
             }
         }
         .onAppear {
-            do {
-                if infoposts.isEmpty {
-                    infoposts = try infopostsService.loadInfoposts()
-                }
-                favoriteIds = try Set(infopostsService.getFavoriteInfopostIds(modelContext: modelContext))
-            } catch {
-                logger.error("Ошибка загрузки: \(error.localizedDescription)")
-            }
+            loadAvailableInfoposts()
+            loadFavoriteIds()
+        }
+        .onChange(of: statusManager.currentDayCalculator) { _, _ in
+            // Перезагружаем доступные инфопосты при изменении дня программы
+            loadAvailableInfoposts()
         }
     }
 }
@@ -69,6 +79,29 @@ private extension InfopostsListScreen {
             }
             .pickerStyle(.segmented)
             .padding([.top, .horizontal])
+        }
+    }
+
+    /// Загружает только доступные инфопосты в зависимости от текущего дня
+    private func loadAvailableInfoposts() {
+        do {
+            availableInfoposts = try infopostsService.getAvailableInfoposts(
+                currentDay: statusManager.currentDayCalculator?.currentDay,
+                maxReadInfoPostDay: statusManager.maxReadInfoPostDay
+            )
+        } catch {
+            logger.error("Ошибка загрузки доступных инфопостов: \(error.localizedDescription)")
+            availableInfoposts = []
+        }
+    }
+
+    /// Загружает список избранных инфопостов
+    private func loadFavoriteIds() {
+        do {
+            favoriteIds = try Set(infopostsService.getFavoriteInfopostIds(modelContext: modelContext))
+        } catch {
+            logger.error("Ошибка загрузки избранных инфопостов: \(error.localizedDescription)")
+            favoriteIds = []
         }
     }
 }

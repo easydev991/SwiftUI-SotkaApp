@@ -49,6 +49,19 @@ final class StatusManager {
 
     private(set) var isLoading = false
 
+    /// Максимальный день, до которого доступны инфопосты
+    private(set) var maxReadInfoPostDay: Int {
+        get {
+            access(keyPath: \.maxReadInfoPostDay)
+            return defaults.integer(forKey: Key.maxReadInfoPostDay.rawValue)
+        }
+        set {
+            withMutation(keyPath: \.maxReadInfoPostDay) {
+                defaults.set(newValue, forKey: Key.maxReadInfoPostDay.rawValue)
+            }
+        }
+    }
+
     init(customExercisesService: CustomExercisesService) {
         self.customExercisesService = customExercisesService
     }
@@ -62,6 +75,10 @@ final class StatusManager {
         do {
             let currentRun = try await client.current()
             let siteStartDate = currentRun.date
+
+            // Обновляем maxReadInfoPostDay из ответа сервера
+            maxReadInfoPostDay = currentRun.maxForAllRunsDay ?? 0
+
             switch (startDate, siteStartDate) {
             case (.none, .none):
                 logger.info("Сотку еще не стартовали")
@@ -110,6 +127,7 @@ final class StatusManager {
     func didLogout() {
         startDate = nil
         currentDayCalculator = nil
+        maxReadInfoPostDay = 0
     }
 }
 
@@ -119,6 +137,10 @@ private extension StatusManager {
         ///
         /// Значение взял из старого приложения
         case startDate = "WorkoutStartDate"
+        /// Максимальный день, до которого доступны инфопосты
+        ///
+        /// Значение взял из старого приложения
+        case maxReadInfoPostDay = "WorkoutMaxReadInfoPostDay"
     }
 }
 

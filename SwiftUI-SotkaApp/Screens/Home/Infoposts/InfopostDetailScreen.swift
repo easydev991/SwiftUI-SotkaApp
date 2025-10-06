@@ -8,30 +8,42 @@ struct InfopostDetailScreen: View {
     private let logger = Logger(subsystem: "SotkaApp", category: "InfopostDetailScreen")
     @AppStorage(FontSize.appStorageKey) private var fontSize = FontSize.medium
     @Environment(InfopostsService.self) private var infopostsService
+    @Environment(YouTubeVideoService.self) private var youtubeService
     @Environment(\.modelContext) private var modelContext
     @State private var isFavorite = false
     let infopost: Infopost
 
     var body: some View {
-        HTMLContentView(filename: infopost.filenameWithLanguage, fontSize: fontSize)
-            .frame(maxWidth: .infinity, maxHeight: .infinity)
-            .navigationBarTitleDisplayMode(.inline)
-            .toolbar {
-                ToolbarItem(placement: .principal) {
-                    fontSizeButton
-                }
+        HTMLContentView(
+            filename: infopost.filenameWithLanguage,
+            fontSize: fontSize,
+            infopost: infopost,
+            youtubeService: youtubeService
+        )
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
+        .navigationBarTitleDisplayMode(.inline)
+        .toolbar {
+            ToolbarItem(placement: .principal) {
+                fontSizeButton
+            }
+            if infopost.isFavoriteAvailable {
                 ToolbarItem(placement: .topBarTrailing) {
                     favoriteButton
                 }
             }
-            .onAppear {
+        }
+        .onAppear {
+            if infopost.isFavoriteAvailable {
                 do {
                     isFavorite = try infopostsService.isInfopostFavorite(infopost.id, modelContext: modelContext)
                     logger.debug("Загружен статус избранного для инфопоста: \(infopost.id) - \(isFavorite)")
                 } catch {
                     logger.error("Ошибка загрузки статуса избранного: \(error.localizedDescription)")
                 }
+            } else {
+                logger.debug("Функция избранного недоступна для инфопоста: \(infopost.id)")
             }
+        }
     }
 }
 

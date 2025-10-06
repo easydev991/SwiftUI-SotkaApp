@@ -10,6 +10,7 @@ struct SwiftUI_SotkaAppApp: App {
     private let statusManager: StatusManager
     private let customExercisesService: CustomExercisesService
     private let infopostsService: InfopostsService
+    private let youtubeVideoService = YouTubeVideoService()
     @State private var appSettings = AppSettings()
     @State private var authHelper: AuthHelperImp
     @State private var networkStatus = NetworkStatus()
@@ -52,6 +53,7 @@ struct SwiftUI_SotkaAppApp: App {
             .environment(statusManager)
             .environment(customExercisesService)
             .environment(infopostsService)
+            .environment(youtubeVideoService)
             .environment(\.isNetworkConnected, networkStatus.isConnected)
             .preferredColorScheme(appSettings.appTheme.colorScheme)
             .task(id: scenePhase) {
