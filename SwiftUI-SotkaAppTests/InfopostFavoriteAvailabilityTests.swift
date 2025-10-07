@@ -47,7 +47,7 @@ struct InfopostFavoriteAvailabilityTests {
         let language = "ru"
 
         // Act
-        let infopost = Infopost.from(
+        let infopost = Infopost(
             filename: filename,
             title: title,
             content: content,
@@ -70,7 +70,7 @@ struct InfopostFavoriteAvailabilityTests {
         let language = "ru"
 
         // Act
-        let infopost = Infopost.from(
+        let infopost = Infopost(
             filename: filename,
             title: title,
             content: content,
@@ -93,7 +93,7 @@ struct InfopostFavoriteAvailabilityTests {
         let language = "ru"
 
         // Act
-        let infopost = Infopost.from(
+        let infopost = Infopost(
             filename: filename,
             title: title,
             content: content,
@@ -116,7 +116,7 @@ struct InfopostFavoriteAvailabilityTests {
         let language = "ru"
 
         // Act
-        let infopost = Infopost.from(
+        let infopost = Infopost(
             filename: filename,
             title: title,
             content: content,
@@ -139,7 +139,7 @@ struct InfopostFavoriteAvailabilityTests {
         let language = "ru"
 
         // Act
-        let infopost = Infopost.from(
+        let infopost = Infopost(
             filename: filename,
             title: title,
             content: content,
@@ -165,7 +165,7 @@ struct InfopostFavoriteAvailabilityTests {
         let language = "ru"
 
         // Act
-        let infopost = Infopost.from(
+        let infopost = Infopost(
             filename: filename,
             title: title,
             content: content,
@@ -188,7 +188,7 @@ struct InfopostFavoriteAvailabilityTests {
         let language = "ru"
 
         // Act
-        let infopost = Infopost.from(
+        let infopost = Infopost(
             filename: filename,
             title: title,
             content: content,
@@ -211,7 +211,7 @@ struct InfopostFavoriteAvailabilityTests {
         let language = "ru"
 
         // Act
-        let infopost = Infopost.from(
+        let infopost = Infopost(
             filename: filename,
             title: title,
             content: content,
@@ -236,7 +236,7 @@ struct InfopostFavoriteAvailabilityTests {
         let language = "ru"
 
         // Act
-        let infopost = Infopost.from(
+        let infopost = Infopost(
             filename: filename,
             title: title,
             content: content,
@@ -258,7 +258,7 @@ struct InfopostFavoriteAvailabilityTests {
         let language = "ru"
 
         // Act
-        let infopost = Infopost.from(
+        let infopost = Infopost(
             filename: filename,
             title: title,
             content: content,

@@ -20,9 +20,6 @@ struct Infopost: Identifiable, Equatable {
     /// Язык инфопоста
     let language: String
 
-    /// Дата последнего изменения файла
-    let lastModified: Date
-
     /// Пол, для которого предназначен инфопост (nil для универсальных постов)
     let gender: Gender?
 
@@ -56,7 +53,6 @@ struct Infopost: Identifiable, Equatable {
         section: InfopostSection,
         dayNumber: Int? = nil,
         language: String,
-        lastModified: Date = Date(),
         gender: Gender? = nil,
         isFavoriteAvailable: Bool = true
     ) {
@@ -66,19 +62,17 @@ struct Infopost: Identifiable, Equatable {
         self.section = section
         self.dayNumber = dayNumber
         self.language = language
-        self.lastModified = lastModified
         self.gender = gender
         self.isFavoriteAvailable = isFavoriteAvailable
     }
 
     /// Создает инфопост из имени файла
-    static func from(
+    init(
         filename: String,
         title: String,
         content: String,
-        language: String,
-        lastModified: Date = Date()
-    ) -> Infopost {
+        language: String
+    ) {
         let section = InfopostSection.section(for: filename)
 
         // Определяем номер дня для файлов вида "d1", "d2", etc.
@@ -94,16 +88,29 @@ struct Infopost: Identifiable, Equatable {
         let gender: Gender? = filename.contains("-women") ? .female : nil
         let isFavoriteAvailable = !filename.contains("about")
 
-        return Infopost(
+        self.init(
             id: filename,
             title: title,
             content: content,
             section: section,
             dayNumber: dayNumber,
             language: language,
-            lastModified: lastModified,
             gender: gender,
             isFavoriteAvailable: isFavoriteAvailable
         )
+    }
+
+    /// Создает инфопост из имени файла и языка (с автоматическим парсингом)
+    /// - Parameters:
+    ///   - filename: Имя файла без расширения (например, "d1")
+    ///   - language: Язык файла ("ru" или "en")
+    /// - Returns: Инфопост или nil при ошибке парсинга
+    init?(filename: String, language: String) {
+        let parser = InfopostParser(filename: filename, language: language)
+        guard let htmlContent = parser.loadHTMLContent(),
+              let parsedInfopost = parser.parse(html: htmlContent) else {
+            return nil
+        }
+        self = parsedInfopost
     }
 }

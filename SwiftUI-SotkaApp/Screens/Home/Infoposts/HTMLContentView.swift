@@ -75,7 +75,8 @@ struct HTMLContentView: UIViewRepresentable {
             let htmlContent = try String(contentsOf: htmlFileURL, encoding: .utf8)
 
             // Подготавливаем HTML для отображения через парсер с YouTube видео
-            let modifiedHTML = InfopostParser.prepareHTMLForDisplay(
+            let parser = InfopostParser(filename: filename, language: infopost.language)
+            let modifiedHTML = parser.prepareHTMLForDisplay(
                 htmlContent,
                 fontSize: fontSize,
                 infopost: infopost,

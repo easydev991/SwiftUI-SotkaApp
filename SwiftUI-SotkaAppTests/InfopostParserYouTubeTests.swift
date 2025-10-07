@@ -29,7 +29,8 @@ struct InfopostParserYouTubeTests {
         )
 
         // When
-        let modifiedHTML = InfopostParser.prepareHTMLForDisplay(
+        let parser = InfopostParser(filename: "d1", language: "ru")
+        let modifiedHTML = parser.prepareHTMLForDisplay(
             htmlContent,
             fontSize: .medium,
             infopost: infopost,
@@ -68,7 +69,8 @@ struct InfopostParserYouTubeTests {
         )
 
         // When
-        let modifiedHTML = InfopostParser.prepareHTMLForDisplay(
+        let parser = InfopostParser(filename: "about", language: "ru")
+        let modifiedHTML = parser.prepareHTMLForDisplay(
             htmlContent,
             fontSize: .medium,
             infopost: infopost,
@@ -105,7 +107,8 @@ struct InfopostParserYouTubeTests {
         )
 
         // When
-        let modifiedHTML = InfopostParser.prepareHTMLForDisplay(
+        let parser = InfopostParser(filename: "d0", language: "ru")
+        let modifiedHTML = parser.prepareHTMLForDisplay(
             htmlContent,
             fontSize: .medium,
             infopost: infopost,
@@ -140,7 +143,8 @@ struct InfopostParserYouTubeTests {
         )
 
         // When
-        let modifiedHTML = InfopostParser.prepareHTMLForDisplay(
+        let parser = InfopostParser(filename: "d1", language: "ru")
+        let modifiedHTML = parser.prepareHTMLForDisplay(
             htmlContent,
             fontSize: .medium,
             infopost: infopost,
@@ -180,7 +184,8 @@ struct InfopostParserYouTubeTests {
         )
 
         // When
-        let modifiedHTML = InfopostParser.prepareHTMLForDisplay(
+        let parser = InfopostParser(filename: "d1", language: "ru")
+        let modifiedHTML = parser.prepareHTMLForDisplay(
             htmlContent,
             fontSize: .medium,
             infopost: infopost,
@@ -218,7 +223,8 @@ struct InfopostParserYouTubeTests {
         )
 
         // When
-        let modifiedHTML = InfopostParser.prepareHTMLForDisplay(
+        let parser = InfopostParser(filename: "d5", language: "ru")
+        let modifiedHTML = parser.prepareHTMLForDisplay(
             htmlContent,
             fontSize: .medium,
             infopost: infopost,

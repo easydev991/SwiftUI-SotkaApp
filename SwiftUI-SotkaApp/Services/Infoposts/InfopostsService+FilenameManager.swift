@@ -59,7 +59,7 @@ extension InfopostsService {
             let womenFilename = "d0-women"
 
             // Проверяем, существует ли файл женской статьи
-            if InfopostParser.loadInfopostFile(filename: womenFilename, language: language) != nil {
+            if Infopost(filename: womenFilename, language: language) != nil {
                 logger.debug("Добавляем женскую статью \(womenFilename) для русского языка")
                 // Вставляем женскую статью после "aims" (индекс 1)
                 var updatedFilenames = filenames

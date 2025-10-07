@@ -142,10 +142,10 @@ struct InfopostsServiceTests {
         try modelContext.save()
 
         // Создаем тестовые инфопосты
-        let infopost1 = Infopost.from(filename: "d1", title: "Test 1", content: "Content 1", language: "ru")
-        let infopost2 = Infopost.from(filename: "d2", title: "Test 2", content: "Content 2", language: "ru")
-        let infopost3 = Infopost.from(filename: "d4", title: "Test 4", content: "Content 4", language: "ru")
-        let infopost4 = Infopost.from(filename: "d3", title: "Test 3", content: "Content 3", language: "ru")
+        let infopost1 = Infopost(filename: "d1", title: "Test 1", content: "Content 1", language: "ru")
+        let infopost2 = Infopost(filename: "d2", title: "Test 2", content: "Content 2", language: "ru")
+        let infopost3 = Infopost(filename: "d4", title: "Test 4", content: "Content 4", language: "ru")
+        let infopost4 = Infopost(filename: "d3", title: "Test 3", content: "Content 3", language: "ru")
 
         // Act & Assert
         let isFavorite1 = try service.isInfopostFavorite(infopost1, modelContext: modelContext)
@@ -169,7 +169,7 @@ struct InfopostsServiceTests {
         let modelContainer = try ModelContainer(for: User.self, configurations: ModelConfiguration(isStoredInMemoryOnly: true))
         let modelContext = modelContainer.mainContext
 
-        let infopost = Infopost.from(filename: "d1", title: "Test", content: "Content", language: "ru")
+        let infopost = Infopost(filename: "d1", title: "Test", content: "Content", language: "ru")
 
         // Act
         let isFavorite = try service.isInfopostFavorite(infopost, modelContext: modelContext)
@@ -415,7 +415,7 @@ struct InfopostsServiceTests {
         let language = "ru"
 
         // Act
-        let infopost = Infopost.from(filename: filename, title: title, content: content, language: language)
+        let infopost = Infopost(filename: filename, title: title, content: content, language: language)
 
         // Assert
         #expect(infopost.id == filename)
@@ -435,7 +435,7 @@ struct InfopostsServiceTests {
         let language = "ru"
 
         // Act
-        let infopost = Infopost.from(filename: filename, title: title, content: content, language: language)
+        let infopost = Infopost(filename: filename, title: title, content: content, language: language)
 
         // Assert
         #expect(infopost.id == filename)
@@ -455,7 +455,7 @@ struct InfopostsServiceTests {
         let language = "ru"
 
         // Act
-        let infopost = Infopost.from(filename: filename, title: title, content: content, language: language)
+        let infopost = Infopost(filename: filename, title: title, content: content, language: language)
 
         // Assert
         #expect(infopost.id == filename)

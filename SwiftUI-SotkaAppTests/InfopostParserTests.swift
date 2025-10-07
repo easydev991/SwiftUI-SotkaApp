@@ -6,194 +6,6 @@ struct InfopostParserTests {
     private let testInfopost = Infopost(id: "test", title: "Test", content: "Test", section: .base, dayNumber: nil, language: "ru")
     private let youtubeService = YouTubeVideoService()
 
-    // MARK: - Тесты для fixImagePaths
-
-    @Test
-    func fixImagePathsWithBackslashes() {
-        // Arrange
-        let html = """
-        <html>
-        <body>
-        <img src="..\\img\\1.jpg" class="bbcode_img" />
-        <img src="..\\img\\2.jpg" class="bbcode_img" />
-        <p>Some text</p>
-        </body>
-        </html>
-        """
-
-        // Act
-        let result = InfopostParser.fixImagePaths(html)
-
-        // Assert
-        #expect(result.contains("src=\"img/1.jpg\""))
-        #expect(result.contains("src=\"img/2.jpg\""))
-        #expect(!result.contains("..\\img\\"))
-    }
-
-    @Test
-    func fixImagePathsWithForwardSlashes() {
-        // Arrange
-        let html = """
-        <html>
-        <body>
-        <img src="../img/1.jpg" class="bbcode_img" />
-        <img src="../img/2.jpg" class="bbcode_img" />
-        <p>Some text</p>
-        </body>
-        </html>
-        """
-
-        // Act
-        let result = InfopostParser.fixImagePaths(html)
-
-        // Assert
-        #expect(result.contains("src=\"img/1.jpg\""))
-        #expect(result.contains("src=\"img/2.jpg\""))
-        #expect(!result.contains("../img/"))
-    }
-
-    @Test
-    func fixImagePathsMixedPaths() {
-        // Arrange
-        let html = """
-        <html>
-        <body>
-        <img src="..\\img\\1.jpg" class="bbcode_img" />
-        <img src="../img/2.jpg" class="bbcode_img" />
-        <img src="..\\img\\3.jpg" class="bbcode_img" />
-        <p>Some text</p>
-        </body>
-        </html>
-        """
-
-        // Act
-        let result = InfopostParser.fixImagePaths(html)
-
-        // Assert
-        #expect(result.contains("src=\"img/1.jpg\""))
-        #expect(result.contains("src=\"img/2.jpg\""))
-        #expect(result.contains("src=\"img/3.jpg\""))
-        #expect(!result.contains("..\\img\\"))
-        #expect(!result.contains("../img/"))
-    }
-
-    @Test
-    func fixImagePathsNoImages() {
-        // Arrange
-        let html = """
-        <html>
-        <body>
-        <p>Some text without images</p>
-        <div>Another div</div>
-        </body>
-        </html>
-        """
-
-        // Act
-        let result = InfopostParser.fixImagePaths(html)
-
-        // Assert
-        #expect(result == html) // HTML должен остаться неизменным
-    }
-
-    // MARK: - Тесты для applyFontSize
-
-    @Test
-    func applyFontSizeSmall() {
-        // Arrange
-        let html = """
-        <html>
-        <head>
-        <script type="text/javascript" src="../js/jquery.js"></script>
-        <script type="text/javascript" src="../js/script.js"></script>
-        </head>
-        <body>
-        <p>Content</p>
-        </body>
-        </html>
-        """
-
-        // Act
-        let result = InfopostParser.applyFontSize(html, fontSize: .small)
-
-        // Assert
-        #expect(result.contains("src=\"js/jquery.js\""))
-        #expect(result.contains("src=\"js/script_small.js\""))
-        #expect(!result.contains("src=\"../js/script.js\""))
-        #expect(result.contains("css/style_small.css"))
-        #expect(result.contains("</body>"))
-    }
-
-    @Test
-    func applyFontSizeMedium() {
-        // Arrange
-        let html = """
-        <html>
-        <head>
-        <script type="text/javascript" src="../js/jquery.js"></script>
-        <script type="text/javascript" src="../js/script.js"></script>
-        </head>
-        <body>
-        <p>Content</p>
-        </body>
-        </html>
-        """
-
-        // Act
-        let result = InfopostParser.applyFontSize(html, fontSize: .medium)
-
-        // Assert
-        #expect(result.contains("src=\"js/jquery.js\""))
-        #expect(result.contains("src=\"js/script_medium.js\""))
-        #expect(!result.contains("src=\"../js/script.js\""))
-        #expect(result.contains("css/style_medium.css"))
-    }
-
-    @Test
-    func applyFontSizeLarge() {
-        // Arrange
-        let html = """
-        <html>
-        <head>
-        <script type="text/javascript" src="../js/jquery.js"></script>
-        <script type="text/javascript" src="../js/script.js"></script>
-        </head>
-        <body>
-        <p>Content</p>
-        </body>
-        </html>
-        """
-
-        // Act
-        let result = InfopostParser.applyFontSize(html, fontSize: .large)
-
-        // Assert
-        #expect(result.contains("src=\"js/jquery.js\""))
-        #expect(result.contains("src=\"js/script_big.js\""))
-        #expect(!result.contains("src=\"../js/script.js\""))
-        #expect(result.contains("css/style_big.css"))
-    }
-
-    @Test
-    func applyFontSizeWithoutScriptTags() {
-        // Arrange
-        let html = """
-        <html>
-        <body>
-        <p>Content without script tags</p>
-        </body>
-        </html>
-        """
-
-        // Act
-        let result = InfopostParser.applyFontSize(html, fontSize: .medium)
-
-        // Assert
-        #expect(result.contains("src=\"js/script_medium.js\""))
-        #expect(result.contains("css/style_medium.css"))
-        #expect(result.contains("</body>"))
-    }
-
     // MARK: - Тесты для prepareHTMLForDisplay
 
     @Test
@@ -218,7 +30,8 @@ struct InfopostParserTests {
         """
 
         // Act
-        let result = InfopostParser.prepareHTMLForDisplay(html, fontSize: .large, infopost: testInfopost, youtubeService: youtubeService)
+        let parser = InfopostParser(filename: "test", language: "ru")
+        let result = parser.prepareHTMLForDisplay(html, fontSize: .large, infopost: testInfopost, youtubeService: youtubeService)
 
         // Assert
         // Проверяем, что header удален
@@ -257,7 +70,8 @@ struct InfopostParserTests {
         """
 
         // Act
-        let result = InfopostParser.prepareHTMLForDisplay(html, fontSize: .small, infopost: testInfopost, youtubeService: youtubeService)
+        let parser = InfopostParser(filename: "test", language: "ru")
+        let result = parser.prepareHTMLForDisplay(html, fontSize: .small, infopost: testInfopost, youtubeService: youtubeService)
 
         // Assert
         #expect(!result.contains("Вернуться к оглавлению"))
@@ -282,7 +96,8 @@ struct InfopostParserTests {
         """
 
         // Act
-        let result = InfopostParser.prepareHTMLForDisplay(html, fontSize: .medium, infopost: testInfopost, youtubeService: youtubeService)
+        let parser = InfopostParser(filename: "test", language: "ru")
+        let result = parser.prepareHTMLForDisplay(html, fontSize: .medium, infopost: testInfopost, youtubeService: youtubeService)
 
         // Assert
         #expect(!result.contains("<div class=\"full\">"))
@@ -305,7 +120,8 @@ struct InfopostParserTests {
         """
 
         // Act
-        let result = InfopostParser.prepareHTMLForDisplay(html, fontSize: .large, infopost: testInfopost, youtubeService: youtubeService)
+        let parser = InfopostParser(filename: "test", language: "ru")
+        let result = parser.prepareHTMLForDisplay(html, fontSize: .large, infopost: testInfopost, youtubeService: youtubeService)
 
         // Assert
         #expect(!result.contains("<div class=\"full\"></div>"))
@@ -349,7 +165,8 @@ struct InfopostParserTests {
         """
 
         // Act
-        let result = InfopostParser.prepareHTMLForDisplay(html, fontSize: .medium, infopost: testInfopost, youtubeService: youtubeService)
+        let parser = InfopostParser(filename: "test", language: "ru")
+        let result = parser.prepareHTMLForDisplay(html, fontSize: .medium, infopost: testInfopost, youtubeService: youtubeService)
 
         // Assert
         // Проверяем очистку от лишних элементов
@@ -387,7 +204,9 @@ struct InfopostParserTests {
         """
 
         // Act & Assert для всех размеров шрифта
-        let smallResult = InfopostParser.prepareHTMLForDisplay(
+        let parser = InfopostParser(filename: "test", language: "ru")
+
+        let smallResult = parser.prepareHTMLForDisplay(
             html,
             fontSize: .small,
             infopost: testInfopost,
@@ -396,7 +215,7 @@ struct InfopostParserTests {
         #expect(smallResult.contains("script_small.js"))
         #expect(smallResult.contains("style_small.css"))
 
-        let mediumResult = InfopostParser.prepareHTMLForDisplay(
+        let mediumResult = parser.prepareHTMLForDisplay(
             html,
             fontSize: .medium,
             infopost: testInfopost,
@@ -405,7 +224,7 @@ struct InfopostParserTests {
         #expect(mediumResult.contains("script_medium.js"))
         #expect(mediumResult.contains("style_medium.css"))
 
-        let largeResult = InfopostParser.prepareHTMLForDisplay(
+        let largeResult = parser.prepareHTMLForDisplay(
             html,
             fontSize: .large,
             infopost: testInfopost,

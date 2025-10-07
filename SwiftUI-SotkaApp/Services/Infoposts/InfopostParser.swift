@@ -2,13 +2,127 @@ import Foundation
 import OSLog
 
 /// Парсер HTML файлов инфопостов
-enum InfopostParser {
-    private static let logger = Logger(subsystem: "SotkaApp", category: "InfopostParser")
+struct InfopostParser {
+    private let logger = Logger(subsystem: "SotkaApp", category: "InfopostParser")
 
+    let filename: String
+    let language: String
+
+    init(filename: String, language: String) {
+        self.filename = filename
+        self.language = language
+    }
+
+    /// Парсит HTML содержимое и создает модель Infopost
+    /// - Parameter html: HTML содержимое файла
+    /// - Returns: Модель Infopost или nil при ошибке парсинга
+    func parse(html: String) -> Infopost? {
+        guard !html.isEmpty else {
+            logger.error("Пустое HTML содержимое для файла: \(filename)")
+            return nil
+        }
+
+        let title = extractTitle(from: html, filename: filename)
+        let content = extractContent(from: html)
+
+        guard !title.isEmpty, !content.isEmpty else {
+            logger.error("Не удалось извлечь заголовок или содержимое для файла: \(filename)")
+            return nil
+        }
+
+        logger.info("Успешно распарсен инфопост: \(filename) - \(title)")
+
+        return Infopost(
+            filename: filename,
+            title: title,
+            content: content,
+            language: language
+        )
+    }
+
+    /// Загружает содержимое HTML файла инфопоста
+    /// - Returns: Содержимое HTML файла или nil при ошибке загрузки
+    func loadHTMLContent() -> String? {
+        // Формируем имя файла с суффиксом языка (например, "d1_ru", "about_ru")
+        let filenameWithLanguage = "\(filename)_\(language)"
+
+        // Ищем файл с суффиксом языка в корне бандла
+        guard let bundlePath = Bundle.main.path(forResource: filenameWithLanguage, ofType: "html") else {
+            logger.error("Файл не найден: \(filenameWithLanguage).html для языка \(language)")
+            return nil
+        }
+
+        do {
+            let content = try String(contentsOfFile: bundlePath, encoding: .utf8)
+            logger.debug("Загружен файл: \(filenameWithLanguage).html (\(content.count) символов)")
+
+            // Очищаем HTML от лишнего контента (как в старом приложении SOTKA-ObjC)
+            let cleanedContent = cleanHTMLContent(content)
+            logger.debug("HTML очищен от лишнего контента (исходно: \(content.count), очищено: \(cleanedContent.count) символов)")
+
+            return cleanedContent
+        } catch {
+            logger.error("Ошибка загрузки файла \(filenameWithLanguage).html: \(error.localizedDescription)")
+            return nil
+        }
+    }
+
+    /// Подготавливает HTML контент для отображения в WKWebView
+    /// - Parameters:
+    ///   - html: Исходное HTML содержимое
+    ///   - fontSize: Размер шрифта для применения
+    ///   - infopost: Инфопост для проверки наличия YouTube видео
+    ///   - youtubeService: Сервис для работы с YouTube видео
+    /// - Returns: Подготовленный HTML контент
+    func prepareHTMLForDisplay(
+        _ html: String,
+        fontSize: FontSize,
+        infopost: Infopost,
+        youtubeService: YouTubeVideoService
+    ) -> String {
+        logger.info("🚀 Начинаем подготовку HTML для отображения инфопоста: \(infopost.id)")
+        logger
+            .debug(
+                "📊 Параметры: fontSize=\(fontSize.rawValue), title=\(infopost.title), dayNumber=\(infopost.dayNumber?.description ?? "nil")"
+            )
+        logger.debug("📏 Исходный размер HTML: \(html.count) символов")
+
+        // 1. Очищаем HTML от лишних элементов
+        logger.debug("🧹 Этап 1: Очистка HTML от лишних элементов")
+        let cleanedHTML = cleanHTMLContent(html)
+        logger.debug("📏 Размер после очистки: \(cleanedHTML.count) символов")
+
+        // 2. Исправляем пути к изображениям
+        logger.debug("🖼️ Этап 2: Исправление путей к изображениям")
+        let htmlWithFixedImages = fixImagePaths(cleanedHTML)
+        logger.debug("📏 Размер после исправления путей: \(htmlWithFixedImages.count) символов")
+
+        // 3. Применяем размер шрифта
+        logger.debug("🔤 Этап 3: Применение размера шрифта")
+        let htmlWithFontSize = applyFontSize(htmlWithFixedImages, fontSize: fontSize)
+        logger.debug("📏 Размер после применения шрифта: \(htmlWithFontSize.count) символов")
+
+        // 4. Добавляем YouTube видео для постов с номерами дней
+        logger.debug("🎬 Этап 4: Добавление YouTube видео")
+        let htmlWithYouTube = addYouTubeVideo(to: htmlWithFontSize, infopost: infopost, youtubeService: youtubeService)
+        logger.debug("📏 Размер после добавления YouTube: \(htmlWithYouTube.count) символов")
+
+        // 5. Добавляем универсальный обработчик видео
+        logger.debug("🎥 Этап 5: Добавление универсального обработчика видео")
+        let finalHTML = addUniversalVideoHandler(to: htmlWithYouTube)
+        logger.debug("📏 Финальный размер HTML: \(finalHTML.count) символов")
+
+        logger.info("✅ Подготовка HTML завершена для инфопоста: \(infopost.id)")
+
+        return finalHTML
+    }
+}
+
+private extension InfopostParser {
     /// Очищает HTML контент от лишних элементов (как в старом приложении SOTKA-ObjC)
     /// - Parameter html: Исходное HTML содержимое
     /// - Returns: Очищенное HTML содержимое
-    static func cleanHTMLContent(_ html: String) -> String {
+    func cleanHTMLContent(_ html: String) -> String {
         var cleanedHTML = html
 
         logger.debug("Начинаем очистку HTML контента")
@@ -74,72 +188,12 @@ enum InfopostParser {
         return cleanedHTML
     }
 
-    /// Парсит HTML содержимое и создает модель Infopost
-    /// - Parameters:
-    ///   - html: HTML содержимое файла
-    ///   - filename: Имя файла (например, "d1", "aims")
-    ///   - language: Язык файла ("ru" или "en")
-    /// - Returns: Модель Infopost или nil при ошибке парсинга
-    static func parse(html: String, filename: String, language: String) -> Infopost? {
-        guard !html.isEmpty else {
-            logger.error("Пустое HTML содержимое для файла: \(filename)")
-            return nil
-        }
-
-        let title = extractTitle(from: html, filename: filename)
-        let content = extractContent(from: html)
-
-        guard !title.isEmpty, !content.isEmpty else {
-            logger.error("Не удалось извлечь заголовок или содержимое для файла: \(filename)")
-            return nil
-        }
-
-        logger.info("Успешно распарсен инфопост: \(filename) - \(title)")
-
-        return Infopost.from(
-            filename: filename,
-            title: title,
-            content: content,
-            language: language
-        )
-    }
-
-    /// Загружает содержимое HTML файла инфопоста
-    /// - Parameters:
-    ///   - filename: Имя файла без расширения (например, "d1")
-    ///   - language: Язык файла ("ru" или "en")
-    /// - Returns: Содержимое HTML файла или nil при ошибке загрузки
-    static func loadInfopostFile(filename: String, language: String) -> String? {
-        // Формируем имя файла с суффиксом языка (например, "d1_ru", "about_ru")
-        let filenameWithLanguage = "\(filename)_\(language)"
-
-        // Ищем файл с суффиксом языка в корне бандла
-        guard let bundlePath = Bundle.main.path(forResource: filenameWithLanguage, ofType: "html") else {
-            logger.error("Файл не найден: \(filenameWithLanguage).html для языка \(language)")
-            return nil
-        }
-
-        do {
-            let content = try String(contentsOfFile: bundlePath, encoding: .utf8)
-            logger.debug("Загружен файл: \(filenameWithLanguage).html (\(content.count) символов)")
-
-            // Очищаем HTML от лишнего контента (как в старом приложении SOTKA-ObjC)
-            let cleanedContent = cleanHTMLContent(content)
-            logger.debug("HTML очищен от лишнего контента (исходно: \(content.count), очищено: \(cleanedContent.count) символов)")
-
-            return cleanedContent
-        } catch {
-            logger.error("Ошибка загрузки файла \(filenameWithLanguage).html: \(error.localizedDescription)")
-            return nil
-        }
-    }
-
     /// Извлекает заголовок из HTML содержимого
     /// - Parameters:
     ///   - html: HTML содержимое
     ///   - filename: Имя файла для специальной обработки
     /// - Returns: Заголовок инфопоста
-    private static func extractTitle(from html: String, filename: String) -> String {
+    func extractTitle(from html: String, filename: String) -> String {
         // Ищем заголовок в теге <h2 class="dayname">
         if let range = html.range(of: #"<h2 class="dayname">(.*?)</h2>"#, options: .regularExpression) {
             let titleWithTags = String(html[range])
@@ -220,7 +274,7 @@ enum InfopostParser {
     /// Извлекает основное содержимое из HTML
     /// - Parameter html: HTML содержимое
     /// - Returns: Основное содержимое инфопоста
-    private static func extractContent(from html: String) -> String {
+    func extractContent(from html: String) -> String {
         // Ищем содержимое в теге <div class="text post-body-text">
         if let startRange = html.range(of: #"<div class="text post-body-text">"#, options: .regularExpression) {
             let startIndex = startRange.upperBound
@@ -268,171 +322,17 @@ enum InfopostParser {
         return ""
     }
 
-    /// Исправляет пути к изображениям в HTML контенте
-    /// - Parameter html: Исходное HTML содержимое
-    /// - Returns: HTML с исправленными путями к изображениям
-    static func fixImagePaths(_ html: String) -> String {
-        var modifiedHTML = html
-
-        // Добавляем отладочную информацию
-        logger.debug("🔍 Исходный HTML содержит пути к изображениям:")
-        let originalImagePaths = modifiedHTML.components(separatedBy: .newlines)
-            .compactMap { line in
-                if line.contains("src="), line.contains("img") {
-                    return line.trimmingCharacters(in: .whitespaces)
-                }
-                return nil
-            }
-        for path in originalImagePaths {
-            logger.debug("📋 Исходный путь: \(path)")
-        }
-
-        // Исправляем пути к изображениям: ..\img\ -> img/ и ../img/ -> img/
-        modifiedHTML = modifiedHTML.replacingOccurrences(of: "..\\img\\", with: "img/")
-        modifiedHTML = modifiedHTML.replacingOccurrences(of: "../img/", with: "img/")
-
-        // Проверяем результат
-        logger.debug("🔍 HTML после исправления путей:")
-        let modifiedImagePaths = modifiedHTML.components(separatedBy: .newlines)
-            .compactMap { line in
-                if line.contains("src="), line.contains("img") {
-                    return line.trimmingCharacters(in: .whitespaces)
-                }
-                return nil
-            }
-        for path in modifiedImagePaths {
-            logger.debug("📋 Исправленный путь: \(path)")
-        }
-
-        logger.debug("Исправлены пути к изображениям в HTML")
-
-        return modifiedHTML
-    }
-
-    /// Модифицирует HTML для применения размера шрифта
-    /// - Parameters:
-    ///   - html: Исходное HTML содержимое
-    ///   - fontSize: Размер шрифта для применения
-    /// - Returns: HTML с примененным размером шрифта
-    static func applyFontSize(_ html: String, fontSize: FontSize) -> String {
-        var modifiedHTML = html
-
-        // Определяем скрипт в зависимости от размера шрифта (как в старом проекте)
-        let scriptName = switch fontSize {
-        case .small:
-            "script_small.js"
-        case .medium:
-            "script_medium.js"
-        case .large:
-            "script_big.js"
-        }
-
-        // Исправляем путь к jQuery для временной директории
-        modifiedHTML = modifiedHTML.replacingOccurrences(of: "src=\"../js/jquery.js\"", with: "src=\"js/jquery.js\"")
-
-        // Заменяем весь тег script с script.js на нужный скрипт
-        let originalScriptTag = "<script type=\"text/javascript\" src=\"../js/script.js\"></script>"
-        let newScriptTag = "<script type=\"text/javascript\" src=\"js/\(scriptName)\"></script>"
-        modifiedHTML = modifiedHTML.replacingOccurrences(of: originalScriptTag, with: newScriptTag)
-
-        // Если тег script.js не найден, добавляем нужный скрипт в head
-        if !modifiedHTML.contains("src=\"js/\(scriptName)\"") {
-            let scriptTagToAdd = "<script type=\"text/javascript\" src=\"js/\(scriptName)\"></script>"
-            if modifiedHTML.contains("</head>") {
-                modifiedHTML = modifiedHTML.replacingOccurrences(of: "</head>", with: "\(scriptTagToAdd)\n</head>")
-            } else {
-                // Если нет </head>, добавляем в начало body
-                modifiedHTML = modifiedHTML.replacingOccurrences(of: "<body>", with: "<body>\n\(scriptTagToAdd)")
-            }
-        }
-
-        // Добавляем инлайн скрипт для исправления путей к CSS в зависимости от размера шрифта
-        let cssPath = switch fontSize {
-        case .small:
-            "css/style_small.css"
-        case .medium:
-            "css/style_medium.css"
-        case .large:
-            "css/style_big.css"
-        }
-
-        let inlineScript = """
-        <script>
-        $(document).ready(function() {
-            // Удаляем старые CSS файлы размеров шрифта
-            $('link[href*="style_small.css"], link[href*="style_medium.css"], link[href*="style_big.css"]').remove();
-
-            // Добавляем новый CSS файл для размера шрифта
-            $('head').append('<link rel="stylesheet" href="\(cssPath)" type="text/css" media="screen" />');
-        });
-        </script>
-        """
-
-        // Добавляем инлайн скрипт перед закрывающим тегом body
-        modifiedHTML = modifiedHTML.replacingOccurrences(of: "</body>", with: "\(inlineScript)</body>")
-
-        logger.debug("Заменен скрипт на: \(scriptName) для размера шрифта: \(fontSize.rawValue)")
-
-        return modifiedHTML
-    }
-
-    /// Подготавливает HTML контент для отображения в WKWebView
-    /// - Parameters:
-    ///   - html: Исходное HTML содержимое
-    ///   - fontSize: Размер шрифта для применения
-    ///   - infopost: Инфопост для проверки наличия YouTube видео
-    ///   - youtubeService: Сервис для работы с YouTube видео
-    /// - Returns: Подготовленный HTML контент
-    static func prepareHTMLForDisplay(
-        _ html: String,
-        fontSize: FontSize,
-        infopost: Infopost,
-        youtubeService: YouTubeVideoService
-    ) -> String {
-        logger.info("🚀 Начинаем подготовку HTML для отображения инфопоста: \(infopost.id)")
-        logger
-            .debug(
-                "📊 Параметры: fontSize=\(fontSize.rawValue), title=\(infopost.title), dayNumber=\(infopost.dayNumber?.description ?? "nil")"
-            )
-        logger.debug("📏 Исходный размер HTML: \(html.count) символов")
-
-        // 1. Очищаем HTML от лишних элементов
-        logger.debug("🧹 Этап 1: Очистка HTML от лишних элементов")
-        let cleanedHTML = cleanHTMLContent(html)
-        logger.debug("📏 Размер после очистки: \(cleanedHTML.count) символов")
-
-        // 2. Исправляем пути к изображениям
-        logger.debug("🖼️ Этап 2: Исправление путей к изображениям")
-        let htmlWithFixedImages = fixImagePaths(cleanedHTML)
-        logger.debug("📏 Размер после исправления путей: \(htmlWithFixedImages.count) символов")
-
-        // 3. Применяем размер шрифта
-        logger.debug("🔤 Этап 3: Применение размера шрифта")
-        let htmlWithFontSize = applyFontSize(htmlWithFixedImages, fontSize: fontSize)
-        logger.debug("📏 Размер после применения шрифта: \(htmlWithFontSize.count) символов")
-
-        // 4. Добавляем YouTube видео для постов с номерами дней
-        logger.debug("🎬 Этап 4: Добавление YouTube видео")
-        let htmlWithYouTube = addYouTubeVideo(to: htmlWithFontSize, infopost: infopost, youtubeService: youtubeService)
-        logger.debug("📏 Размер после добавления YouTube: \(htmlWithYouTube.count) символов")
-
-        // 5. Добавляем универсальный обработчик видео
-        logger.debug("🎥 Этап 5: Добавление универсального обработчика видео")
-        let finalHTML = addUniversalVideoHandler(to: htmlWithYouTube)
-        logger.debug("📏 Финальный размер HTML: \(finalHTML.count) символов")
-
-        logger.info("✅ Подготовка HTML завершена для инфопоста: \(infopost.id)")
-
-        return finalHTML
-    }
-
     /// Добавляет YouTube видео блок в HTML контент
     /// - Parameters:
     ///   - html: HTML контент
     ///   - infopost: Инфопост для проверки наличия видео
     ///   - youtubeService: Сервис для работы с YouTube видео
     /// - Returns: HTML с добавленным YouTube блоком
-    private static func addYouTubeVideo(to html: String, infopost: Infopost, youtubeService: YouTubeVideoService) -> String {
+    func addYouTubeVideo(
+        to html: String,
+        infopost: Infopost,
+        youtubeService: YouTubeVideoService
+    ) -> String {
         logger.info("🎬 Начинаем добавление YouTube видео для инфопоста: \(infopost.id)")
         logger
             .debug(
@@ -492,7 +392,7 @@ enum InfopostParser {
     /// Добавляет универсальный обработчик видео в HTML контент
     /// - Parameter html: HTML контент
     /// - Returns: HTML с добавленным универсальным обработчиком видео
-    private static func addUniversalVideoHandler(to html: String) -> String {
+    func addUniversalVideoHandler(to html: String) -> String {
         logger.debug("🎥 Добавляем универсальный обработчик видео")
 
         // Создаем скрипт для подключения перехватчика консоли
@@ -518,5 +418,83 @@ enum InfopostParser {
             logger.debug("✅ Универсальный обработчик видео и перехватчик консоли добавлены перед </body>")
             return modifiedHTML
         }
+    }
+
+    /// Исправляет пути к изображениям в HTML контенте (встроенная версия)
+    /// - Parameter html: Исходное HTML содержимое
+    /// - Returns: HTML с исправленными путями к изображениям
+    func fixImagePaths(_ html: String) -> String {
+        var modifiedHTML = html
+
+        // Исправляем пути к изображениям: ..\img\ -> img/ и ../img/ -> img/
+        modifiedHTML = modifiedHTML.replacingOccurrences(of: "..\\img\\", with: "img/")
+        modifiedHTML = modifiedHTML.replacingOccurrences(of: "../img/", with: "img/")
+
+        return modifiedHTML
+    }
+
+    /// Модифицирует HTML для применения размера шрифта (встроенная версия)
+    /// - Parameters:
+    ///   - html: Исходное HTML содержимое
+    ///   - fontSize: Размер шрифта для применения
+    /// - Returns: HTML с примененным размером шрифта
+    func applyFontSize(_ html: String, fontSize: FontSize) -> String {
+        var modifiedHTML = html
+
+        // Определяем скрипт в зависимости от размера шрифта (как в старом проекте)
+        let scriptName = switch fontSize {
+        case .small:
+            "script_small.js"
+        case .medium:
+            "script_medium.js"
+        case .large:
+            "script_big.js"
+        }
+
+        // Исправляем путь к jQuery для временной директории
+        modifiedHTML = modifiedHTML.replacingOccurrences(of: "src=\"../js/jquery.js\"", with: "src=\"js/jquery.js\"")
+
+        // Заменяем весь тег script с script.js на нужный скрипт
+        let originalScriptTag = "<script type=\"text/javascript\" src=\"../js/script.js\"></script>"
+        let newScriptTag = "<script type=\"text/javascript\" src=\"js/\(scriptName)\"></script>"
+        modifiedHTML = modifiedHTML.replacingOccurrences(of: originalScriptTag, with: newScriptTag)
+
+        // Если тег script.js не найден, добавляем нужный скрипт в head
+        if !modifiedHTML.contains("src=\"js/\(scriptName)\"") {
+            let scriptTagToAdd = "<script type=\"text/javascript\" src=\"js/\(scriptName)\"></script>"
+            if modifiedHTML.contains("</head>") {
+                modifiedHTML = modifiedHTML.replacingOccurrences(of: "</head>", with: "\(scriptTagToAdd)\n</head>")
+            } else {
+                // Если нет </head>, добавляем в начало body
+                modifiedHTML = modifiedHTML.replacingOccurrences(of: "<body>", with: "<body>\n\(scriptTagToAdd)")
+            }
+        }
+
+        // Добавляем инлайн скрипт для исправления путей к CSS в зависимости от размера шрифта
+        let cssPath = switch fontSize {
+        case .small:
+            "css/style_small.css"
+        case .medium:
+            "css/style_medium.css"
+        case .large:
+            "css/style_big.css"
+        }
+
+        let inlineScript = """
+        <script>
+        $(document).ready(function() {
+            // Удаляем старые CSS файлы размеров шрифта
+            $('link[href*="style_small.css"], link[href*="style_medium.css"], link[href*="style_big.css"]').remove();
+
+            // Добавляем новый CSS файл для размера шрифта
+            $('head').append('<link rel="stylesheet" href="\(cssPath)" type="text/css" media="screen" />');
+        });
+        </script>
+        """
+
+        // Добавляем инлайн скрипт перед закрывающим тегом body
+        modifiedHTML = modifiedHTML.replacingOccurrences(of: "</body>", with: "\(inlineScript)</body>")
+
+        return modifiedHTML
     }
 }

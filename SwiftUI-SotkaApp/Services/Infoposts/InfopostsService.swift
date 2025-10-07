@@ -62,8 +62,7 @@ final class InfopostsService {
         let filename = "about"
         logger.debug("Загружаем инфопост 'about' напрямую из файла")
 
-        if let htmlContent = InfopostParser.loadInfopostFile(filename: filename, language: currentLanguage),
-           let infopost = InfopostParser.parse(html: htmlContent, filename: filename, language: currentLanguage) {
+        if let infopost = Infopost(filename: filename, language: currentLanguage) {
             logger.info("Успешно загружен инфопост 'about' напрямую")
             return infopost
         } else {
@@ -285,8 +284,7 @@ final class InfopostsService {
 
         // Парсим все файлы
         for filename in filenames {
-            if let htmlContent = InfopostParser.loadInfopostFile(filename: filename, language: language),
-               let infopost = InfopostParser.parse(html: htmlContent, filename: filename, language: language) {
+            if let infopost = Infopost(filename: filename, language: language) {
                 infoposts.append(infopost)
                 logger.debug("Успешно распарсен файл: \(filename)")
             } else {
