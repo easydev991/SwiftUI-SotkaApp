@@ -4,12 +4,24 @@ import SwiftData
 import Testing
 
 struct InfopostsServiceTests {
+    // MARK: - Private Methods
+
+    /// Создает InfopostsService с MockInfopostsClient для тестирования
+    /// - Parameter language: Язык для сервиса
+    /// - Returns: Настроенный сервис для тестов
+    @MainActor
+    private func createService(language: String) -> InfopostsService {
+        let mockClient = MockInfopostsClient(result: .success)
+        return InfopostsService(language: language, infopostsClient: mockClient)
+    }
+
     // MARK: - Тесты загрузки инфопостов
 
     @Test
+    @MainActor
     func loadInfopostsSuccess() throws {
         // Arrange
-        let service = InfopostsService(language: "ru")
+        let service = createService(language: "ru")
 
         // Act
         let infoposts = try service.loadInfoposts()
@@ -28,9 +40,10 @@ struct InfopostsServiceTests {
     }
 
     @Test
+    @MainActor
     func loadInfopostsWithEnglishLanguage() throws {
         // Arrange
-        let service = InfopostsService(language: "en")
+        let service = createService(language: "en")
 
         // Act
         let infoposts = try service.loadInfoposts()
@@ -45,9 +58,10 @@ struct InfopostsServiceTests {
     }
 
     @Test
+    @MainActor
     func loadInfopostsWithRussianLanguage() throws {
         // Arrange
-        let service = InfopostsService(language: "ru")
+        let service = createService(language: "ru")
 
         // Act
         let infoposts = try service.loadInfoposts()
@@ -64,9 +78,10 @@ struct InfopostsServiceTests {
     // MARK: - Тесты загрузки конкретного инфопоста
 
     @Test
+    @MainActor
     func loadInfopostWithValidId() throws {
         // Arrange
-        let service = InfopostsService(language: "ru")
+        let service = createService(language: "ru")
         let infopostId = "organiz"
 
         // Act
@@ -81,9 +96,10 @@ struct InfopostsServiceTests {
     }
 
     @Test
+    @MainActor
     func loadInfopostWithDayId() throws {
         // Arrange
-        let service = InfopostsService(language: "ru")
+        let service = createService(language: "ru")
         let infopostId = "d1"
 
         // Act
@@ -97,9 +113,10 @@ struct InfopostsServiceTests {
     }
 
     @Test
+    @MainActor
     func loadInfopostWithInvalidId() throws {
         // Arrange
-        let service = InfopostsService(language: "ru")
+        let service = createService(language: "ru")
         let invalidId = "nonexistent"
 
         // Act
@@ -115,26 +132,32 @@ struct InfopostsServiceTests {
     @MainActor
     func isInfopostFavoriteWhenUserExists() throws {
         // Arrange
-        let service = InfopostsService(language: "ru")
+        let service = createService(language: "ru")
         let modelContainer = try ModelContainer(for: User.self, configurations: ModelConfiguration(isStoredInMemoryOnly: true))
         let modelContext = modelContainer.mainContext
 
         let user = User(id: 1)
-        user.favoriteInfopostIds = ["d1", "d2", "about"]
+        user.favoriteInfopostIds = ["d1", "d2", "d4"]
         modelContext.insert(user)
         try modelContext.save()
 
+        // Создаем тестовые инфопосты
+        let infopost1 = Infopost.from(filename: "d1", title: "Test 1", content: "Content 1", language: "ru")
+        let infopost2 = Infopost.from(filename: "d2", title: "Test 2", content: "Content 2", language: "ru")
+        let infopost3 = Infopost.from(filename: "d4", title: "Test 4", content: "Content 4", language: "ru")
+        let infopost4 = Infopost.from(filename: "d3", title: "Test 3", content: "Content 3", language: "ru")
+
         // Act & Assert
-        let isFavorite1 = try service.isInfopostFavorite("d1", modelContext: modelContext)
+        let isFavorite1 = try service.isInfopostFavorite(infopost1, modelContext: modelContext)
         #expect(isFavorite1)
 
-        let isFavorite2 = try service.isInfopostFavorite("d2", modelContext: modelContext)
+        let isFavorite2 = try service.isInfopostFavorite(infopost2, modelContext: modelContext)
         #expect(isFavorite2)
 
-        let isFavorite3 = try service.isInfopostFavorite("about", modelContext: modelContext)
+        let isFavorite3 = try service.isInfopostFavorite(infopost3, modelContext: modelContext)
         #expect(isFavorite3)
 
-        let isNotFavorite = try service.isInfopostFavorite("d3", modelContext: modelContext)
+        let isNotFavorite = try service.isInfopostFavorite(infopost4, modelContext: modelContext)
         #expect(!isNotFavorite)
     }
 
@@ -142,12 +165,44 @@ struct InfopostsServiceTests {
     @MainActor
     func isInfopostFavoriteWhenUserNotExists() throws {
         // Arrange
-        let service = InfopostsService(language: "ru")
+        let service = createService(language: "ru")
         let modelContainer = try ModelContainer(for: User.self, configurations: ModelConfiguration(isStoredInMemoryOnly: true))
         let modelContext = modelContainer.mainContext
 
+        let infopost = Infopost.from(filename: "d1", title: "Test", content: "Content", language: "ru")
+
         // Act
-        let isFavorite = try service.isInfopostFavorite("d1", modelContext: modelContext)
+        let isFavorite = try service.isInfopostFavorite(infopost, modelContext: modelContext)
+
+        // Assert
+        #expect(!isFavorite)
+    }
+
+    @Test
+    @MainActor
+    func isInfopostFavoriteWhenFavoriteNotAvailable() throws {
+        // Arrange
+        let service = createService(language: "ru")
+        let modelContainer = try ModelContainer(for: User.self, configurations: ModelConfiguration(isStoredInMemoryOnly: true))
+        let modelContext = modelContainer.mainContext
+
+        let user = User(id: 1)
+        user.favoriteInfopostIds = ["d1"]
+        modelContext.insert(user)
+        try modelContext.save()
+
+        // Создаем инфопост с отключенной функцией избранного
+        let infopost = Infopost(
+            id: "d1",
+            title: "Test",
+            content: "Content",
+            section: .base,
+            language: "ru",
+            isFavoriteAvailable: false
+        )
+
+        // Act
+        let isFavorite = try service.isInfopostFavorite(infopost, modelContext: modelContext)
 
         // Assert
         #expect(!isFavorite)
@@ -157,7 +212,7 @@ struct InfopostsServiceTests {
     @MainActor
     func getFavoriteInfopostIdsWhenUserExists() throws {
         // Arrange
-        let service = InfopostsService(language: "ru")
+        let service = createService(language: "ru")
         let modelContainer = try ModelContainer(for: User.self, configurations: ModelConfiguration(isStoredInMemoryOnly: true))
         let modelContext = modelContainer.mainContext
 
@@ -181,7 +236,7 @@ struct InfopostsServiceTests {
     @MainActor
     func getFavoriteInfopostIdsWhenUserNotExists() throws {
         // Arrange
-        let service = InfopostsService(language: "ru")
+        let service = createService(language: "ru")
         let modelContainer = try ModelContainer(for: User.self, configurations: ModelConfiguration(isStoredInMemoryOnly: true))
         let modelContext = modelContainer.mainContext
 
@@ -196,7 +251,7 @@ struct InfopostsServiceTests {
     @MainActor
     func changeFavoriteAddToFavorites() throws {
         // Arrange
-        let service = InfopostsService(language: "ru")
+        let service = createService(language: "ru")
         let modelContainer = try ModelContainer(for: User.self, configurations: ModelConfiguration(isStoredInMemoryOnly: true))
         let modelContext = modelContainer.mainContext
 
@@ -217,7 +272,7 @@ struct InfopostsServiceTests {
     @MainActor
     func changeFavoriteRemoveFromFavorites() throws {
         // Arrange
-        let service = InfopostsService(language: "ru")
+        let service = createService(language: "ru")
         let modelContainer = try ModelContainer(for: User.self, configurations: ModelConfiguration(isStoredInMemoryOnly: true))
         let modelContext = modelContainer.mainContext
 
@@ -240,7 +295,7 @@ struct InfopostsServiceTests {
     @MainActor
     func changeFavoriteWhenUserNotExists() throws {
         // Arrange
-        let service = InfopostsService(language: "ru")
+        let service = createService(language: "ru")
         let modelContainer = try ModelContainer(for: User.self, configurations: ModelConfiguration(isStoredInMemoryOnly: true))
         let modelContext = modelContainer.mainContext
 
@@ -253,9 +308,10 @@ struct InfopostsServiceTests {
     // MARK: - Тесты структуры инфопостов
 
     @Test
+    @MainActor
     func infopostsHaveCorrectStructure() throws {
         // Arrange
-        let service = InfopostsService(language: "ru")
+        let service = createService(language: "ru")
 
         // Act
         let infoposts = try service.loadInfoposts()
@@ -278,9 +334,10 @@ struct InfopostsServiceTests {
     }
 
     @Test
+    @MainActor
     func infopostsHaveCorrectSections() throws {
         // Arrange
-        let service = InfopostsService(language: "ru")
+        let service = createService(language: "ru")
 
         // Act
         let infoposts = try service.loadInfoposts()
@@ -309,9 +366,10 @@ struct InfopostsServiceTests {
     // MARK: - Тесты кэширования
 
     @Test
+    @MainActor
     func loadInfopostsClearsCache() throws {
         // Arrange
-        let service = InfopostsService(language: "ru")
+        let service = createService(language: "ru")
 
         // Act - первая загрузка
         let firstLoad = try service.loadInfoposts()
@@ -332,26 +390,23 @@ struct InfopostsServiceTests {
     // MARK: - Тесты обработки ошибок
 
     @Test
+    @MainActor
     func loadInfopostsWithInvalidLanguage() throws {
         // Arrange
-        let service = InfopostsService(language: "invalid")
+        let service = createService(language: "invalid")
 
         // Act & Assert
         // Для несуществующего языка должны вернуться пустые результаты
         // или ошибка парсинга, в зависимости от реализации
-        do {
-            let infoposts = try service.loadInfoposts()
-            // Если не выброшена ошибка, то должен быть пустой массив
-            #expect(infoposts.isEmpty)
-        } catch {
-            // Ошибка также допустима для несуществующего языка
-            #expect(error is InfopostsServiceError)
-        }
+        let infoposts = try service.loadInfoposts()
+        // Если не выброшена ошибка, то должен быть пустой массив
+        #expect(infoposts.isEmpty)
     }
 
     // MARK: - Тесты фильтрации по полу
 
     @Test
+    @MainActor
     func infopostFromFilenameWithWomenSuffix() throws {
         // Arrange
         let filename = "d0-women"
@@ -371,6 +426,7 @@ struct InfopostsServiceTests {
     }
 
     @Test
+    @MainActor
     func infopostFromFilenameWithoutGenderSuffix() throws {
         // Arrange
         let filename = "d1"
@@ -390,6 +446,7 @@ struct InfopostsServiceTests {
     }
 
     @Test
+    @MainActor
     func infopostFromFilenameWithSpecialId() throws {
         // Arrange
         let filename = "about"

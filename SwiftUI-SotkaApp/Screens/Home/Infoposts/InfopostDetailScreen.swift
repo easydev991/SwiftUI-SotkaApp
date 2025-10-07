@@ -32,16 +32,19 @@ struct InfopostDetailScreen: View {
                 }
             }
         }
+        .task {
+            do {
+                try await infopostsService.markPostAsRead(day: infopost.dayNumber, modelContext: modelContext)
+            } catch {
+                logger.error("Ошибка маркировки поста как прочитанного: \(error.localizedDescription)")
+            }
+        }
         .onAppear {
-            if infopost.isFavoriteAvailable {
-                do {
-                    isFavorite = try infopostsService.isInfopostFavorite(infopost.id, modelContext: modelContext)
-                    logger.debug("Загружен статус избранного для инфопоста: \(infopost.id) - \(isFavorite)")
-                } catch {
-                    logger.error("Ошибка загрузки статуса избранного: \(error.localizedDescription)")
-                }
-            } else {
-                logger.debug("Функция избранного недоступна для инфопоста: \(infopost.id)")
+            do {
+                isFavorite = try infopostsService.isInfopostFavorite(infopost, modelContext: modelContext)
+                logger.debug("Загружен статус избранного для инфопоста: \(infopost.id) - \(isFavorite)")
+            } catch {
+                logger.error("Ошибка загрузки статуса избранного: \(error.localizedDescription)")
             }
         }
     }

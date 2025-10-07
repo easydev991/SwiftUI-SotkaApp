@@ -195,6 +195,11 @@ struct MoreScreen: View {
 #Preview {
     MoreScreen()
         .environment(AppSettings())
-        .environment(InfopostsService(language: "ru"))
+        .environment(
+            InfopostsService(
+                language: "ru",
+                infopostsClient: MockInfopostsClient(result: .success)
+            )
+        )
 }
 #endif

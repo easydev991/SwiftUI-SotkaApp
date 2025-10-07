@@ -57,6 +57,13 @@ struct InfopostsListScreen: View {
                 displayMode = .all
             }
         }
+        .task {
+            do {
+                try await infopostsService.syncReadPosts(modelContext: modelContext)
+            } catch {
+                logger.error("Ошибка синхронизации прочитанных постов: \(error.localizedDescription)")
+            }
+        }
         .onAppear {
             loadAvailableInfoposts()
             loadFavoriteIds()

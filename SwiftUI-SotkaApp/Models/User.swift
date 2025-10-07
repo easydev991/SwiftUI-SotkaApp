@@ -20,6 +20,12 @@ final class User {
     /// ID избранных инфопостов
     var favoriteInfopostIds: [String] = []
 
+    /// Синхронизированные прочитанные дни инфопостов
+    var readInfopostDays: [Int] = []
+
+    /// Несинхронизированные прочитанные дни инфопостов
+    var unsyncedReadInfopostDays: [Int] = []
+
     init(
         id: Int,
         userName: String? = nil,

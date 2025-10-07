@@ -127,3 +127,41 @@ struct MockExerciseClient: ExerciseClient {
         }
     }
 }
+
+struct MockInfopostsClient: InfopostsClient {
+    let result: MockResult
+
+    func getReadPosts() async throws -> [Int] {
+        print("Имитируем запрос getReadPosts")
+        try await Task.sleep(for: .seconds(1))
+        switch result {
+        case .success:
+            print("Успешно получили список прочитанных инфопостов")
+            return [1, 3, 5, 7, 10]
+        case let .failure(error):
+            throw error
+        }
+    }
+
+    func setPostRead(day: Int) async throws {
+        print("Имитируем запрос setPostRead (day=\(day))")
+        try await Task.sleep(for: .seconds(1))
+        switch result {
+        case .success:
+            print("Успешно отметили инфопост \(day) как прочитанный")
+        case let .failure(error):
+            throw error
+        }
+    }
+
+    func deleteAllReadPosts() async throws {
+        print("Имитируем запрос deleteAllReadPosts")
+        try await Task.sleep(for: .seconds(1))
+        switch result {
+        case .success:
+            print("Успешно удалили все прочитанные инфопосты")
+        case let .failure(error):
+            throw error
+        }
+    }
+}

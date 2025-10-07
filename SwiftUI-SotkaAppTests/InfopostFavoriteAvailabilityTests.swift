@@ -271,10 +271,14 @@ struct InfopostFavoriteAvailabilityTests {
         #expect(infopost.section == .preparation)
     }
 
+    @MainActor
     @Test(arguments: ["ru", "en"])
     func loadAboutInfopostMethod(language: String) throws {
         // Arrange
-        let service = InfopostsService(language: language)
+        let service = InfopostsService(
+            language: language,
+            infopostsClient: MockInfopostsClient(result: .success)
+        )
 
         // Act
         let infopost = service.loadAboutInfopost()

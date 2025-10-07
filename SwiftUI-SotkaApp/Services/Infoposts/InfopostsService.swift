@@ -4,14 +4,17 @@ import OSLog
 import SwiftData
 
 /// Сервис для работы с инфопостами
+@MainActor
 @Observable
 final class InfopostsService {
     private let logger = Logger(subsystem: "SotkaApp", category: "InfopostsService")
     private let currentLanguage: String
+    private let infopostsClient: InfopostsClient
     @ObservationIgnored private var cachedInfoposts: [Infopost]?
 
-    init(language: String) {
+    init(language: String, infopostsClient: InfopostsClient) {
         self.currentLanguage = language
+        self.infopostsClient = infopostsClient
         logger.info("Инициализирован InfopostsService для языка: \(language)")
     }
 
@@ -71,14 +74,19 @@ final class InfopostsService {
 
     /// Проверяет, является ли инфопост избранным
     /// - Parameters:
-    ///   - id: ID инфопоста
+    ///   - infopost: Инфопост для проверки
     ///   - modelContext: Контекст модели данных
     /// - Returns: true, если инфопост в избранном
     /// - Throws: Ошибка при работе с базой данных
-    func isInfopostFavorite(_ id: String, modelContext: ModelContext) throws -> Bool {
+    func isInfopostFavorite(_ infopost: Infopost, modelContext: ModelContext) throws -> Bool {
+        guard infopost.isFavoriteAvailable else {
+            logger.debug("Функция избранного недоступна для инфопоста: \(infopost.id)")
+            return false
+        }
+
         if let user = try getCurrentUser(modelContext: modelContext) {
-            let isFavorite = user.favoriteInfopostIds.contains(id)
-            logger.debug("Инфопост \(id) в избранном: \(isFavorite)")
+            let isFavorite = user.favoriteInfopostIds.contains(infopost.id)
+            logger.debug("Инфопост \(infopost.id) в избранном: \(isFavorite)")
             return isFavorite
         }
         logger.warning("Пользователь не найден для проверки избранного")
@@ -147,6 +155,109 @@ final class InfopostsService {
         logger.debug("Отфильтровано \(availablePosts.count) доступных инфопостов из \(allInfoposts.count)")
 
         return availablePosts
+    }
+
+    // MARK: - Синхронизация с сервером
+
+    /// Синхронизирует прочитанные инфопосты с сервером
+    /// - Parameter modelContext: Контекст модели данных
+    /// - Throws: Ошибка при синхронизации или работе с базой данных
+    func syncReadPosts(modelContext: ModelContext) async throws {
+        guard let user = try getCurrentUser(modelContext: modelContext) else {
+            logger.error("Пользователь не найден для синхронизации")
+            throw InfopostsServiceError.userNotFound
+        }
+
+        logger.info("Начинаем синхронизацию прочитанных инфопостов")
+
+        do {
+            // Получаем прочитанные дни с сервера
+            let serverReadDays = try await infopostsClient.getReadPosts()
+            logger.info("Получено \(serverReadDays.count) прочитанных дней с сервера")
+
+            // Обновляем синхронизированные дни
+            user.readInfopostDays = serverReadDays
+
+            // Отправляем несинхронизированные дни на сервер
+            for day in user.unsyncedReadInfopostDays {
+                do {
+                    try await infopostsClient.setPostRead(day: day)
+                    logger.debug("Успешно синхронизирован день: \(day)")
+                } catch {
+                    logger.error("Ошибка синхронизации дня \(day): \(error.localizedDescription)")
+                    // Продолжаем синхронизацию других дней
+                }
+            }
+
+            // Очищаем несинхронизированные дни после успешной отправки
+            user.unsyncedReadInfopostDays = []
+
+            // Сохраняем изменения
+            try modelContext.save()
+            logger.info("Синхронизация завершена успешно")
+
+        } catch {
+            logger.error("Ошибка синхронизации: \(error.localizedDescription)")
+            throw error
+        }
+    }
+
+    /// Отмечает инфопост как прочитанный
+    /// - Parameters:
+    ///   - day: День инфопоста (может быть nil)
+    ///   - modelContext: Контекст модели данных
+    /// - Throws: Ошибка при работе с базой данных
+    func markPostAsRead(day: Int?, modelContext: ModelContext) async throws {
+        guard let day else {
+            logger.warning("Попытка отметить nil день как прочитанный")
+            return
+        }
+
+        guard let user = try getCurrentUser(modelContext: modelContext) else {
+            logger.error("Пользователь не найден для отметки прочитанного")
+            throw InfopostsServiceError.userNotFound
+        }
+
+        logger.info("Отмечаем инфопост дня \(day) как прочитанный")
+
+        // Добавляем в несинхронизированные дни
+        if !user.unsyncedReadInfopostDays.contains(day) {
+            user.unsyncedReadInfopostDays.append(day)
+        }
+
+        // Сохраняем изменения
+        try modelContext.save()
+        logger.debug("Инфопост дня \(day) отмечен как прочитанный локально")
+
+        // Пытаемся синхронизировать с сервером
+        do {
+            try await infopostsClient.setPostRead(day: day)
+            // Если успешно, перемещаем из несинхронизированных в синхронизированные
+            user.unsyncedReadInfopostDays.removeAll { $0 == day }
+            if !user.readInfopostDays.contains(day) {
+                user.readInfopostDays.append(day)
+            }
+            try modelContext.save()
+            logger.info("Инфопост дня \(day) успешно синхронизирован с сервером")
+        } catch {
+            logger.error("Не удалось синхронизировать день \(day) с сервером: \(error.localizedDescription)")
+        }
+    }
+
+    /// Проверяет, прочитан ли инфопост
+    /// - Parameters:
+    ///   - day: День инфопоста
+    ///   - modelContext: Контекст модели данных
+    /// - Returns: true, если инфопост прочитан
+    /// - Throws: Ошибка при работе с базой данных
+    func isPostRead(day: Int, modelContext: ModelContext) throws -> Bool {
+        guard let user = try getCurrentUser(modelContext: modelContext) else {
+            logger.error("Пользователь не найден для проверки статуса прочитанного")
+            return false
+        }
+        let isRead = user.readInfopostDays.contains(day) || user.unsyncedReadInfopostDays.contains(day)
+        logger.debug("Инфопост дня \(day) прочитан: \(isRead)")
+        return isRead
     }
 
     // MARK: - Private Methods

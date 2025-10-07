@@ -20,7 +20,10 @@ struct SwiftUI_SotkaAppApp: App {
         let authHelper = AuthHelperImp()
         let client = SWClient(with: authHelper)
         self.customExercisesService = CustomExercisesService(client: client)
-        self.infopostsService = InfopostsService(language: Locale.current.language.languageCode?.identifier ?? "ru")
+        self.infopostsService = InfopostsService(
+            language: Locale.current.language.languageCode?.identifier ?? "ru",
+            infopostsClient: client
+        )
         self.statusManager = StatusManager(customExercisesService: customExercisesService)
         self.authHelper = authHelper
         self.client = client

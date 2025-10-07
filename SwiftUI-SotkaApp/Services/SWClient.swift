@@ -84,6 +84,23 @@ extension SWClient: ExerciseClient {
     }
 }
 
+extension SWClient: InfopostsClient {
+    func getReadPosts() async throws -> [Int] {
+        let endpoint = Endpoint.getReadPosts
+        return try await makeResult(for: endpoint)
+    }
+
+    func setPostRead(day: Int) async throws {
+        let endpoint = Endpoint.setPostRead(day: day)
+        try await makeStatus(for: endpoint)
+    }
+
+    func deleteAllReadPosts() async throws {
+        let endpoint = Endpoint.deleteAllReadPosts
+        try await makeStatus(for: endpoint)
+    }
+}
+
 enum ClientError: Error, LocalizedError {
     case forceLogout
     case noConnection
@@ -142,6 +159,18 @@ enum Endpoint {
     /// **DELETE** ${API}/100/custom_exercises/<id>
     case deleteCustomExercise(id: String)
 
+    // MARK: Получить прочитанные инфопосты
+    /// **GET** ${API}/100/posts/read
+    case getReadPosts
+
+    // MARK: Отметить инфопост как прочитанный
+    /// **POST** ${API}/100/posts/read/<day>
+    case setPostRead(day: Int)
+
+    // MARK: Удалить все прочитанные инфопосты
+    /// **DELETE** ${API}/100/posts/read
+    case deleteAllReadPosts
+
     var urlPath: String {
         switch self {
         case .getCountries: "/countries"
@@ -155,14 +184,17 @@ enum Endpoint {
         case .getCustomExercises: "/100/custom_exercises"
         case let .saveCustomExercise(id, _): "/100/custom_exercises/\(id)"
         case let .deleteCustomExercise(id): "/100/custom_exercises/\(id)"
+        case .getReadPosts: "/100/posts/read"
+        case let .setPostRead(day): "/100/posts/read/\(day)"
+        case .deleteAllReadPosts: "/100/posts/read"
         }
     }
 
     var method: HTTPMethod {
         switch self {
-        case .login, .resetPassword, .editUser, .changePassword, .start, .saveCustomExercise: .post
-        case .getUser, .getCountries, .current, .getCustomExercises: .get
-        case .deleteCustomExercise: .delete
+        case .login, .resetPassword, .editUser, .changePassword, .start, .saveCustomExercise, .setPostRead: .post
+        case .getUser, .getCountries, .current, .getCustomExercises, .getReadPosts: .get
+        case .deleteCustomExercise, .deleteAllReadPosts: .delete
         }
     }
 
@@ -170,20 +202,21 @@ enum Endpoint {
         switch self {
         case .editUser: true
         case .login, .getUser, .resetPassword, .getCountries, .changePassword, .start, .current, .getCustomExercises, .saveCustomExercise,
-             .deleteCustomExercise: false
+             .deleteCustomExercise, .getReadPosts, .setPostRead, .deleteAllReadPosts: false
         }
     }
 
     var queryItems: [URLQueryItem] {
         switch self {
         case .login, .getUser, .resetPassword, .getCountries, .editUser, .changePassword, .start, .current, .getCustomExercises,
-             .saveCustomExercise, .deleteCustomExercise: []
+             .saveCustomExercise, .deleteCustomExercise, .getReadPosts, .setPostRead, .deleteAllReadPosts: []
         }
     }
 
     var bodyParts: BodyMaker.Parts? {
         switch self {
-        case .login, .getUser, .getCountries, .current, .getCustomExercises, .deleteCustomExercise:
+        case .login, .getUser, .getCountries, .current, .getCustomExercises, .deleteCustomExercise, .getReadPosts, .setPostRead,
+             .deleteAllReadPosts:
             return nil
         case let .editUser(_, form):
             let parameters: [String: String] = [
