@@ -254,7 +254,7 @@ Services/Infoposts/
 - ✅ Созданы comprehensive unit-тесты (29 тестов) для полного покрытия логики синхронизации
 - ✅ Реализована обработка ошибок сети с graceful degradation и офлайн-работой
 
-## Итерация 15: Отслеживание достижения конца HTML-вьюхи для вызова markPostAsRead
+## Итерация 15: Отслеживание достижения конца HTML-вьюхи для вызова markPostAsRead ✅ ЗАВЕРШЕНО
 
 ### Анализ задачи
 
@@ -393,10 +393,32 @@ Services/Infoposts/
 2. Использовать Intersection Observer для отслеживания его видимости
 3. Отправлять сообщение при появлении элемента в viewport
 
-### Рекомендуемый план реализации (Вариант 1)
+### Результаты реализации ✅
 
-#### Этап 1: Создание JavaScript скрипта
-1. Создать файл `SupportingFiles/book/js/scroll_tracker.js`
+**Выполненные задачи:**
+- ✅ Создан JavaScript скрипт `scroll_tracker.js` с отслеживанием достижения места добавления YouTube видео
+- ✅ Добавлена защита от повторной отправки сообщения (переменная `messageSent`)
+- ✅ Обновлен `HTMLContentView.swift`: добавлен message handler `scrollReachedEnd` и callback для `markPostAsRead`
+- ✅ Обновлен `InfopostParser.swift`: добавлено подключение `scroll_tracker.js` в `addUniversalVideoHandler`
+- ✅ Обновлен `InfopostDetailScreen.swift`: убран `markPostAsRead` из `.task` и добавлен callback в `HTMLContentView`
+
+**Логика работы:**
+1. JavaScript скрипт отслеживает скролл и проверяет видимость элементов `.video-container` или `footer`
+2. При достижении места добавления YouTube видео отправляется сообщение в iOS приложение
+3. iOS приложение получает сообщение через message handler `scrollReachedEnd`
+4. Вызывается callback `onReachedEnd`, который выполняет `markPostAsRead`
+5. Защита от повторной отправки обеспечивает вызов `markPostAsRead` только один раз
+
+**Файлы реализации:**
+- `SupportingFiles/book/js/scroll_tracker.js` - JavaScript скрипт отслеживания скролла
+- `Screens/Home/Infoposts/HTMLContentView.swift` - message handler и callback
+- `Services/Infoposts/InfopostParser.swift` - подключение скрипта
+- `Screens/Home/Infoposts/InfopostDetailScreen.swift` - интеграция callback
+
+### Рекомендуемый план реализации (Вариант 1) ✅ ВЫПОЛНЕНО
+
+#### Этап 1: Создание JavaScript скрипта ✅
+1. Создать файл `SupportingFiles/book/js/scroll_tracker.js` ✅
 2. Реализовать логику отслеживания скролла
 3. Добавить отправку сообщений в iOS через message handlers
 

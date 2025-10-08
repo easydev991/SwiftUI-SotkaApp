@@ -9,20 +9,18 @@ struct HTMLContentView: UIViewRepresentable {
     let fontSize: FontSize
     let infopost: Infopost
     let youtubeService: YouTubeVideoService
+    let onReachedEnd: () -> Void
 
     func makeUIView(context: Context) -> WKWebView {
         let configuration = WKWebViewConfiguration()
         configuration.defaultWebpagePreferences.allowsContentJavaScript = true
 
-        // Настройки для предотвращения ошибок навигации
-//        configuration.allowsInlineMediaPlayback = true
-//        configuration.mediaTypesRequiringUserActionForPlayback = []
-//        configuration.suppressesIncrementalRendering = false
-
         // Добавляем обработчик для логов из JavaScript
         configuration.userContentController.add(context.coordinator, name: "consoleLog")
         configuration.userContentController.add(context.coordinator, name: "consoleError")
         configuration.userContentController.add(context.coordinator, name: "consoleWarn")
+        // Добавляем обработчик для отслеживания достижения конца контента
+        configuration.userContentController.add(context.coordinator, name: "scrollReachedEnd")
 
         let webView = WKWebView(frame: .zero, configuration: configuration)
         webView.navigationDelegate = context.coordinator
@@ -478,11 +476,16 @@ struct HTMLContentView: UIViewRepresentable {
     }
 
     func makeCoordinator() -> Coordinator {
-        Coordinator()
+        Coordinator(onReachedEnd: onReachedEnd)
     }
 
     final class Coordinator: NSObject, WKNavigationDelegate, WKScriptMessageHandler {
         private let logger = Logger(subsystem: "SotkaApp", category: "HTMLContentView.Coordinator")
+        private let onReachedEnd: () -> Void
+
+        init(onReachedEnd: () -> Void) {
+            self.onReachedEnd = onReachedEnd
+        }
 
         func webView(_: WKWebView, didFinish _: WKNavigation!) {
             logger.debug("🌐 WKWebView загрузка завершена")
@@ -531,20 +534,30 @@ struct HTMLContentView: UIViewRepresentable {
         // MARK: - WKScriptMessageHandler
 
         func userContentController(_: WKUserContentController, didReceive message: WKScriptMessage) {
-            guard let messageBody = message.body as? [String: Any],
-                  let logMessage = messageBody["message"] as? String else {
-                return
-            }
-
             switch message.name {
-            case "consoleLog":
-                logger.info("🟢 JS: \(logMessage)")
-            case "consoleWarn":
-                logger.warning("🟡 JS: \(logMessage)")
-            case "consoleError":
-                logger.error("🔴 JS: \(logMessage)")
+            case "consoleLog", "consoleWarn", "consoleError":
+                guard let messageBody = message.body as? [String: Any],
+                      let logMessage = messageBody["message"] as? String else {
+                    return
+                }
+
+                switch message.name {
+                case "consoleLog":
+                    logger.info("🟢 JS: \(logMessage)")
+                case "consoleWarn":
+                    logger.warning("🟡 JS: \(logMessage)")
+                case "consoleError":
+                    logger.error("🔴 JS: \(logMessage)")
+                default:
+                    logger.debug("🔵 JS: \(logMessage)")
+                }
+
+            case "scrollReachedEnd":
+                logger.info("📜 JavaScript сообщает: достигнут конец контента")
+                onReachedEnd()
+
             default:
-                logger.debug("🔵 JS: \(logMessage)")
+                logger.debug("🔵 JS: неизвестное сообщение от \(message.name)")
             }
         }
     }

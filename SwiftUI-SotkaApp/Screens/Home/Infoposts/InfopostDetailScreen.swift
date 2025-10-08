@@ -18,7 +18,8 @@ struct InfopostDetailScreen: View {
             filename: infopost.filenameWithLanguage,
             fontSize: fontSize,
             infopost: infopost,
-            youtubeService: youtubeService
+            youtubeService: youtubeService,
+            onReachedEnd: didReadPost
         )
         .frame(maxWidth: .infinity, maxHeight: .infinity)
         .navigationBarTitleDisplayMode(.inline)
@@ -30,13 +31,6 @@ struct InfopostDetailScreen: View {
                 ToolbarItem(placement: .topBarTrailing) {
                     favoriteButton
                 }
-            }
-        }
-        .task {
-            do {
-                try await infopostsService.markPostAsRead(day: infopost.dayNumber, modelContext: modelContext)
-            } catch {
-                logger.error("Ошибка маркировки поста как прочитанного: \(error.localizedDescription)")
             }
         }
         .onAppear {
@@ -79,6 +73,17 @@ private extension InfopostDetailScreen {
             }
         } label: {
             Image(systemName: isFavorite ? "star.fill" : "star")
+        }
+    }
+
+    func didReadPost() {
+        Task {
+            do {
+                try await infopostsService.markPostAsRead(day: infopost.dayNumber, modelContext: modelContext)
+                logger.info("📜 Инфопост помечен как прочитанный после достижения конца контента: \(infopost.id)")
+            } catch {
+                logger.error("Ошибка маркировки поста как прочитанного: \(error.localizedDescription)")
+            }
         }
     }
 }

@@ -405,17 +405,22 @@ private extension InfopostParser {
         <script type="text/javascript" src="js/video_handler.js"></script>
         """
 
+        // Создаем скрипт для подключения отслеживания скролла
+        let scrollTrackerScript = """
+        <script type="text/javascript" src="js/scroll_tracker.js"></script>
+        """
+
         // Добавляем скрипты в head, если он есть
         if html.contains("</head>") {
-            let scripts = consoleInterceptorScript + "\n" + videoHandlerScript
+            let scripts = consoleInterceptorScript + "\n" + videoHandlerScript + "\n" + scrollTrackerScript
             let modifiedHTML = html.replacingOccurrences(of: "</head>", with: "\(scripts)\n</head>")
-            logger.debug("✅ Универсальный обработчик видео и перехватчик консоли добавлены в head")
+            logger.debug("✅ Универсальный обработчик видео, перехватчик консоли и отслеживание скролла добавлены в head")
             return modifiedHTML
         } else {
             // Если нет head, добавляем перед закрывающим тегом body
-            let scripts = consoleInterceptorScript + "\n" + videoHandlerScript
+            let scripts = consoleInterceptorScript + "\n" + videoHandlerScript + "\n" + scrollTrackerScript
             let modifiedHTML = html.replacingOccurrences(of: "</body>", with: "\(scripts)\n</body>")
-            logger.debug("✅ Универсальный обработчик видео и перехватчик консоли добавлены перед </body>")
+            logger.debug("✅ Универсальный обработчик видео, перехватчик консоли и отслеживание скролла добавлены перед </body>")
             return modifiedHTML
         }
     }
