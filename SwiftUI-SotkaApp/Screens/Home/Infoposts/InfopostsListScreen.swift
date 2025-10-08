@@ -118,6 +118,7 @@ private extension InfopostsListScreen {
 
     /// Загружает только доступные инфопосты в зависимости от текущего дня
     func loadAvailableInfoposts() {
+        guard availableInfoposts.isEmpty else { return }
         do {
             availableInfoposts = try infopostsService.getAvailableInfoposts(
                 currentDay: statusManager.currentDayCalculator?.currentDay,
