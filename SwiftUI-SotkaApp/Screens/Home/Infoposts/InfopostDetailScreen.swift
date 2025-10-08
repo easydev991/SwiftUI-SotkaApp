@@ -7,20 +7,31 @@ import WebKit
 struct InfopostDetailScreen: View {
     private let logger = Logger(subsystem: "SotkaApp", category: "InfopostDetailScreen")
     @AppStorage(FontSize.appStorageKey) private var fontSize = FontSize.medium
+    @Environment(\.dismiss) private var dismiss
+    @Environment(AppSettings.self) private var appSettings
     @Environment(InfopostsService.self) private var infopostsService
-    @Environment(YouTubeVideoService.self) private var youtubeService
     @Environment(\.modelContext) private var modelContext
     @State private var isFavorite = false
+    @State private var showError = false
+    @State private var currentError: HTMLContentView.InfopostError?
     let infopost: Infopost
 
     var body: some View {
         HTMLContentView(
-            filename: infopost.filenameWithLanguage,
-            fontSize: fontSize,
             infopost: infopost,
-            youtubeService: youtubeService,
+            fontSize: fontSize,
+            showError: $showError,
+            currentError: $currentError,
             onReachedEnd: didReadPost
         )
+        .alert(isPresented: $showError, error: currentError) {
+            Button("Close", role: .cancel) {
+                dismiss()
+            }
+            Button("Report") {
+                appSettings.sendFeedback(message: currentError?.localizedDescription)
+            }
+        }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
         .navigationBarTitleDisplayMode(.inline)
         .toolbar {
@@ -34,12 +45,7 @@ struct InfopostDetailScreen: View {
             }
         }
         .onAppear {
-            do {
-                isFavorite = try infopostsService.isInfopostFavorite(infopost, modelContext: modelContext)
-                logger.debug("Загружен статус избранного для инфопоста: \(infopost.id) - \(isFavorite)")
-            } catch {
-                logger.error("Ошибка загрузки статуса избранного: \(error.localizedDescription)")
-            }
+            isFavorite = infopostsService.isFavorite(infopost, modelContext: modelContext)
         }
     }
 }
@@ -78,12 +84,7 @@ private extension InfopostDetailScreen {
 
     func didReadPost() {
         Task {
-            do {
-                try await infopostsService.markPostAsRead(day: infopost.dayNumber, modelContext: modelContext)
-                logger.info("📜 Инфопост помечен как прочитанный после достижения конца контента: \(infopost.id)")
-            } catch {
-                logger.error("Ошибка маркировки поста как прочитанного: \(error.localizedDescription)")
-            }
+            try? await infopostsService.markPostAsRead(day: infopost.dayNumber, modelContext: modelContext)
         }
     }
 }

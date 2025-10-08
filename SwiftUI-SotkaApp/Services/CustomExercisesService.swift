@@ -34,25 +34,6 @@ final class CustomExercisesService {
 
     // MARK: - Snapshot & Sync Events (для конкурентной синхронизации без ModelContext)
 
-    /// Снимок локального упражнения для безопасной передачи в конкурентные задачи без доступа к ModelContext
-    private struct ExerciseSnapshot: Sendable, Hashable {
-        let id: String
-        let name: String
-        let imageId: Int
-        let createDate: Date
-        let modifyDate: Date
-        let isSynced: Bool
-        let shouldDelete: Bool
-        let userId: Int?
-    }
-
-    /// Результат конкурентной операции синхронизации одного упражнения
-    private enum SyncEvent: Sendable, Hashable {
-        case createdOrUpdated(id: String, server: CustomExerciseResponse)
-        case deleted(id: String)
-        case failed(id: String, errorDescription: String)
-    }
-
     /// Создает новое пользовательское упражнение (офлайн-приоритет)
     /// - Parameters:
     ///   - name: Название упражнения
@@ -118,17 +99,54 @@ final class CustomExercisesService {
     /// - Parameters:
     ///   - exercise: Упражнение для удаления
     ///   - context: Контекст Swift Data
-    func deleteCustomExercise(
-        _ exercise: CustomExercise,
-        context: ModelContext
-    ) throws {
+    func deleteCustomExercise(_ exercise: CustomExercise, context: ModelContext) {
         // Мягкое удаление: скрываем в UI и синхронизируем удаление с сервером
         exercise.shouldDelete = true
         exercise.isSynced = false
         exercise.modifyDate = .now
-        try context.save()
-        logger.info("Упражнение '\(exercise.name)' помечено для удаления локально")
-        logger.info("Синхронизация удаления будет выполнена через syncCustomExercises")
+        do {
+            try context.save()
+            logger.info("Упражнение '\(exercise.name)' помечено для удаления локально")
+            logger.info("Синхронизация удаления будет выполнена через syncCustomExercises")
+        } catch {
+            logger.error("Ошибка удаления упражнения: \(error.localizedDescription)")
+        }
+    }
+
+    /// Синхронизирует пользовательские упражнения с сервером (двунаправленная синхронизация)
+    /// - Parameter context: Контекст Swift Data
+    func syncCustomExercises(context: ModelContext) async {
+        guard !isLoading else { return }
+        isLoading = true
+
+        // 1. Сначала отправляем локальные изменения на сервер
+        await syncUnsyncedExercises(context: context)
+
+        // 2. Потом загружаем серверные изменения
+        await downloadServerExercises(context: context)
+
+        isLoading = false
+    }
+}
+
+private extension CustomExercisesService {
+    /// Снимок локального упражнения для безопасной передачи в конкурентные задачи без доступа к ModelContext
+    struct ExerciseSnapshot: Sendable, Hashable {
+        let id: String
+        let name: String
+        let imageId: Int
+        let createDate: Date
+        let modifyDate: Date
+        let isSynced: Bool
+        let shouldDelete: Bool
+        let userId: Int?
+    }
+
+    /// Результат конкурентной операции синхронизации одного упражнения
+    enum SyncEvent: Sendable, Hashable {
+        case createdOrUpdated(id: String, server: CustomExerciseResponse)
+        case deleted(id: String)
+        case failed(id: String, errorDescription: String)
     }
 
     /// Синхронизирует одно упражнение с повторными попытками
@@ -136,7 +154,7 @@ final class CustomExercisesService {
     ///   - exercise: Упражнение для синхронизации
     ///   - context: Контекст Swift Data
     ///   - attempt: Номер текущей попытки
-    private func syncSingleExerciseWithRetry(
+    func syncSingleExerciseWithRetry(
         _ exercise: CustomExercise,
         context: ModelContext,
         attempt: Int
@@ -200,53 +218,14 @@ final class CustomExercisesService {
         }
     }
 
-    /// Синхронизирует все несинхронизированные упражнения с сервером
-    /// - Parameter context: Контекст Swift Data
-    func syncUnsyncedExercises(context: ModelContext) async {
-        guard !isSyncing else { return }
-        isSyncing = true
-
-        do {
-            // 1) Готовим снимки данных (без доступа к контексту в задачах)
-            let snapshots = try makeExerciseSnapshotsForSync(context: context)
-            logger.info("Начинаем синхронизацию \(snapshots.count) упражнений")
-
-            // 2) Параллельные сетевые операции (без ModelContext)
-            let eventsById = await runSyncTasks(snapshots: snapshots, client: client)
-
-            // 3) Применяем результаты к ModelContext единым этапом
-            applySyncEvents(eventsById, context: context)
-
-            logger.info("Синхронизация упражнений завершена")
-        } catch {
-            logger.error("Ошибка получения несинхронизированных упражнений: \(error.localizedDescription)")
-        }
-
-        isSyncing = false
-    }
-
-    /// Синхронизирует пользовательские упражнения с сервером (двунаправленная синхронизация)
-    /// - Parameter context: Контекст Swift Data
-    func syncCustomExercises(context: ModelContext) async {
-        guard !isLoading else { return }
-        isLoading = true
-
-        // 1. Сначала отправляем локальные изменения на сервер
-        await syncUnsyncedExercises(context: context)
-
-        // 2. Потом загружаем серверные изменения
-        await downloadServerExercises(context: context)
-
-        isLoading = false
-    }
-
     /// Загружает упражнения с сервера и обрабатывает конфликты
     /// - Parameter context: Контекст Swift Data
     func downloadServerExercises(context: ModelContext) async {
-        // Получаем пользователя
-        guard let user = try? context.fetch(FetchDescriptor<User>()).first else { return }
-
         do {
+            guard let user = try context.fetch(FetchDescriptor<User>()).first else {
+                logger.error("Не удалось получить текущего пользователя для синхронизации упражнений")
+                return
+            }
             let exercises = try await client.getCustomExercises()
             let existingExercises = try context.fetch(FetchDescriptor<CustomExercise>())
                 .filter { $0.user?.id == user.id }
@@ -307,11 +286,36 @@ final class CustomExercisesService {
         }
     }
 
+    /// Синхронизирует все несинхронизированные упражнения с сервером
+    /// - Parameter context: Контекст Swift Data
+    func syncUnsyncedExercises(context: ModelContext) async {
+        guard !isSyncing else { return }
+        isSyncing = true
+
+        do {
+            // 1) Готовим снимки данных (без доступа к контексту в задачах)
+            let snapshots = try makeExerciseSnapshotsForSync(context: context)
+            logger.info("Начинаем синхронизацию \(snapshots.count) упражнений")
+
+            // 2) Параллельные сетевые операции (без ModelContext)
+            let eventsById = await runSyncTasks(snapshots: snapshots, client: client)
+
+            // 3) Применяем результаты к ModelContext единым этапом
+            applySyncEvents(eventsById, context: context)
+
+            logger.info("Синхронизация упражнений завершена")
+        } catch {
+            logger.error("Ошибка получения несинхронизированных упражнений: \(error.localizedDescription)")
+        }
+
+        isSyncing = false
+    }
+
     /// Обновляет локальное упражнение данными с сервера
     /// - Parameters:
     ///   - local: Локальное упражнение
     ///   - server: Данные с сервера
-    private func updateLocalFromServer(_ local: CustomExercise, _ server: CustomExerciseResponse) {
+    func updateLocalFromServer(_ local: CustomExercise, _ server: CustomExerciseResponse) {
         local.name = server.name
         local.imageId = server.imageId
         local.createDate = DateFormatterService.dateFromString(server.createDate, format: .serverDateTimeSec)
@@ -320,10 +324,8 @@ final class CustomExercisesService {
         local.shouldDelete = false
     }
 
-    // MARK: - Snapshot → Group → Apply (реализация)
-
     /// Формирует список снимков локальных упражнений, требующих синхронизации
-    private func makeExerciseSnapshotsForSync(context: ModelContext) throws -> [ExerciseSnapshot] {
+    func makeExerciseSnapshotsForSync(context: ModelContext) throws -> [ExerciseSnapshot] {
         // Берем все несинхронизированные, а также те, что помечены на удаление
         let toSync = try context.fetch(
             FetchDescriptor<CustomExercise>(
@@ -345,8 +347,8 @@ final class CustomExercisesService {
         return snapshots
     }
 
-    /// Выполняет конкурентные сетевые операции синхронизации и собирает результаты без доступа к ModelContext
-    private func runSyncTasks(
+    /// Выполняет конкурентные сетевые операции синхронизации и собирает результаты без доступа к `ModelContext`
+    func runSyncTasks(
         snapshots: [ExerciseSnapshot],
         client: ExerciseClient
     ) async -> [String: SyncEvent] {
@@ -376,8 +378,8 @@ final class CustomExercisesService {
         }
     }
 
-    /// Выполняет сетевую синхронизацию одного снимка без доступа к ModelContext
-    private func performNetworkSync(
+    /// Выполняет сетевую синхронизацию одного снимка без доступа к `ModelContext`
+    func performNetworkSync(
         for snapshot: ExerciseSnapshot,
         client: ExerciseClient
     ) async -> SyncEvent {
@@ -403,7 +405,7 @@ final class CustomExercisesService {
     }
 
     /// Применяет результаты синхронизации к локальному хранилищу в одном месте
-    private func applySyncEvents(_ events: [String: SyncEvent], context: ModelContext) {
+    func applySyncEvents(_ events: [String: SyncEvent], context: ModelContext) {
         do {
             // Загружаем текущего пользователя и все упражнения заранее
             guard let user = try context.fetch(FetchDescriptor<User>()).first else {

@@ -8,8 +8,6 @@ struct SwiftUI_SotkaAppApp: App {
     @Environment(\.scenePhase) private var scenePhase
     @State private var countriesService = CountriesUpdateService()
     private let statusManager: StatusManager
-    private let customExercisesService: CustomExercisesService
-    private let infopostsService: InfopostsService
     private let youtubeVideoService = YouTubeVideoService()
     @State private var appSettings = AppSettings()
     @State private var authHelper: AuthHelperImp
@@ -19,12 +17,13 @@ struct SwiftUI_SotkaAppApp: App {
     init() {
         let authHelper = AuthHelperImp()
         let client = SWClient(with: authHelper)
-        self.customExercisesService = CustomExercisesService(client: client)
-        self.infopostsService = InfopostsService(
-            language: Locale.current.language.languageCode?.identifier ?? "ru",
-            infopostsClient: client
+        self.statusManager = StatusManager(
+            customExercisesService: .init(client: client),
+            infopostsService: .init(
+                language: Locale.current.language.languageCode?.identifier ?? "ru",
+                infopostsClient: client
+            )
         )
-        self.statusManager = StatusManager(customExercisesService: customExercisesService)
         self.authHelper = authHelper
         self.client = client
     }
@@ -54,8 +53,8 @@ struct SwiftUI_SotkaAppApp: App {
             .environment(appSettings)
             .environment(authHelper)
             .environment(statusManager)
-            .environment(customExercisesService)
-            .environment(infopostsService)
+            .environment(statusManager.customExercisesService)
+            .environment(statusManager.infopostsService)
             .environment(youtubeVideoService)
             .environment(\.isNetworkConnected, networkStatus.isConnected)
             .preferredColorScheme(appSettings.appTheme.colorScheme)

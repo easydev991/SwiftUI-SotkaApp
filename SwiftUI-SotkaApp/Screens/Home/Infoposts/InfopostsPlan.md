@@ -560,3 +560,696 @@ window.addEventListener('resize', checkScrollPosition);
 - `Screens/Home/Infoposts/InfopostsListScreen.swift` - синхронизация при загрузке
 - `Screens/Home/Infoposts/InfopostDetailScreen.swift` - маркировка при открытии
 - `SwiftUI-SotkaAppTests/InfopostsServiceSyncTests.swift` - 29 unit-тестов
+
+## ✅ Итерация 16: Рефакторинг управления секциями в InfopostsListScreen (ВЫПОЛНЕНА)
+
+### Анализ текущей реализации
+
+**Текущее состояние:**
+- Логика сворачивания/разворачивания секций находится в `InfopostsListScreen`
+- Используется `@State private var collapsedSections: Set<InfopostSection> = []`
+- Фильтрация секций происходит в computed property `sectionsWithContent`
+- Обработка нажатий на заголовки секций в методе `makeHeader(for:)`
+
+**Проблемы текущей реализации:**
+1. **Нарушение принципа разделения ответственности**: UI-логика смешана с бизнес-логикой
+2. **Сложность тестирования**: состояние секций не вынесено в сервис
+3. **Дублирование логики**: фильтрация секций происходит в нескольких местах
+4. **Отсутствие централизованного управления**: нет единого места для управления состоянием секций
+
+### Цель рефакторинга
+
+Перенести всю логику управления секциями (сворачивание/разворачивание, фильтрация) в `InfopostsService`, оставив в `InfopostsListScreen` только отображение данных.
+
+### План реализации
+
+#### Этап 1: Создание модели для отображения секций
+
+**Создать новую структуру `InfopostSectionDisplay`:**
+
+```swift
+/// Модель для отображения секции с инфопостами
+struct InfopostSectionDisplay: Identifiable {
+    let id: InfopostSection
+    let section: InfopostSection
+    let infoposts: [Infopost]
+    let isCollapsed: Bool
+    
+    var hasContent: Bool {
+        !infoposts.isEmpty
+    }
+    
+    var title: LocalizedStringKey {
+        section.localizedTitle
+    }
+}
+```
+
+**Местоположение:** `Models/Infoposts/InfopostSectionDisplay.swift`
+
+#### Этап 2: Расширение InfopostsService
+
+**Добавить в `InfopostsService`:**
+
+1. **Новое свойство для состояния секций:**
+```swift
+/// Состояние сворачивания секций
+private var collapsedSections: Set<InfopostSection> = []
+```
+
+2. **Computed property для отображения секций:**
+```swift
+/// Секции с инфопостами для отображения
+var sectionsForDisplay: [InfopostSectionDisplay] {
+    InfopostSection.allCases.compactMap { section in
+        let sectionInfoposts = filteredInfoposts.filter { $0.section == section }
+        guard !sectionInfoposts.isEmpty else { return nil }
+        
+        return InfopostSectionDisplay(
+            id: section,
+            section: section,
+            infoposts: sectionInfoposts,
+            isCollapsed: collapsedSections.contains(section)
+        )
+    }
+}
+```
+
+3. **Метод для обработки нажатий на секции:**
+```swift
+/// Обрабатывает нажатие на заголовок секции
+/// - Parameter section: Секция, на которую нажали
+func didTapSection(_ section: InfopostSection) {
+    withAnimation {
+        if collapsedSections.contains(section) {
+            collapsedSections.remove(section)
+        } else {
+            collapsedSections.insert(section)
+        }
+    }
+    logger.debug("Секция \(section.rawValue) \(collapsedSections.contains(section) ? "свернута" : "развернута")")
+}
+```
+
+4. **Метод для сброса состояния секций:**
+```swift
+/// Сбрасывает состояние сворачивания всех секций
+func resetSectionsState() {
+    collapsedSections.removeAll()
+    logger.debug("Состояние секций сброшено")
+}
+```
+
+#### Этап 3: Рефакторинг InfopostsListScreen
+
+**Упростить `InfopostsListScreen`:**
+
+1. **Убрать `@State private var collapsedSections`**
+2. **Убрать computed property `sectionsWithContent`**
+3. **Упростить `body`:**
+```swift
+var body: some View {
+    VStack(spacing: 0) {
+        displayModePicker
+        List(infopostsService.sectionsForDisplay, id: \.id) { sectionDisplay in
+            Section(header: makeHeader(for: sectionDisplay)) {
+                if !sectionDisplay.isCollapsed {
+                    ForEach(sectionDisplay.infoposts) { infopost in
+                        NavigationLink(destination: InfopostDetailScreen(infopost: infopost)) {
+                            Text(infopost.title)
+                        }
+                    }
+                }
+            }
+        }
+    }
+    .listStyle(.plain)
+    .navigationTitle("Infoposts")
+    // ... остальные модификаторы
+}
+```
+
+4. **Упростить `makeHeader`:**
+```swift
+func makeHeader(for sectionDisplay: InfopostSectionDisplay) -> some View {
+    Button {
+        infopostsService.didTapSection(sectionDisplay.section)
+    } label: {
+        HStack(spacing: 12) {
+            Text(sectionDisplay.title)
+                .frame(maxWidth: .infinity, alignment: .leading)
+            ChevronView()
+                .rotationEffect(.degrees(sectionDisplay.isCollapsed ? 0 : 90))
+                .animation(.default, value: sectionDisplay.isCollapsed)
+        }
+    }
+    .buttonStyle(.plain)
+}
+```
+
+#### Этап 4: Обновление тестов
+
+**Создать unit-тесты для нового функционала:**
+
+1. **Тесты для `InfopostSectionDisplay`:**
+   - Проверка создания модели
+   - Проверка computed properties (`hasContent`, `title`)
+
+2. **Тесты для `InfopostsService` (новые методы):**
+   - Тест `sectionsForDisplay` - проверка правильной группировки
+   - Тест `didTapSection` - проверка сворачивания/разворачивания
+   - Тест `resetSectionsState` - проверка сброса состояния
+   - Тест интеграции с `filteredInfoposts`
+
+3. **Обновить существующие тесты:**
+   - Убрать тесты, связанные с UI-логикой из `InfopostsListScreen`
+   - Добавить тесты для сервиса
+
+#### Этап 5: Дополнительные улучшения
+
+**Опциональные улучшения:**
+
+1. **Сохранение состояния секций:**
+```swift
+/// Сохраняет состояние секций в UserDefaults
+private func saveSectionsState() {
+    let sectionNames = collapsedSections.map { $0.rawValue }
+    UserDefaults.standard.set(sectionNames, forKey: "collapsedInfopostSections")
+}
+
+/// Загружает состояние секций из UserDefaults
+private func loadSectionsState() {
+    if let sectionNames = UserDefaults.standard.array(forKey: "collapsedInfopostSections") as? [String] {
+        collapsedSections = Set(sectionNames.compactMap { InfopostSection(rawValue: $0) })
+    }
+}
+```
+
+2. **Метод для программного управления секциями:**
+```swift
+/// Программно сворачивает/разворачивает секцию
+/// - Parameters:
+///   - section: Секция для управления
+///   - collapsed: true для сворачивания, false для разворачивания
+func setSectionCollapsed(_ section: InfopostSection, collapsed: Bool) {
+    withAnimation {
+        if collapsed {
+            collapsedSections.insert(section)
+        } else {
+            collapsedSections.remove(section)
+        }
+    }
+}
+```
+
+3. **Метод для сворачивания всех секций:**
+```swift
+/// Сворачивает все секции
+func collapseAllSections() {
+    withAnimation {
+        collapsedSections = Set(InfopostSection.allCases)
+    }
+}
+```
+
+### Файлы для изменения
+
+**Новые файлы:**
+- `Models/Infoposts/InfopostSectionDisplay.swift` - модель для отображения секций
+
+**Изменяемые файлы:**
+- `Services/Infoposts/InfopostsService.swift` - добавление логики управления секциями
+- `Screens/Home/Infoposts/InfopostsListScreen.swift` - упрощение UI-логики
+- `SwiftUI-SotkaAppTests/InfopostsServiceTests.swift` - обновление тестов
+
+### Преимущества рефакторинга
+
+1. **Разделение ответственности**: UI отвечает только за отображение, сервис - за бизнес-логику
+2. **Улучшенная тестируемость**: логику секций можно тестировать независимо от UI
+3. **Централизованное управление**: все состояние секций в одном месте
+4. **Переиспользование**: логику секций можно использовать в других экранах
+5. **Консистентность**: следует архитектурным принципам проекта (MVVM + @Observable)
+
+### Обратная совместимость
+
+- Сохранить все существующие API методы сервиса
+- Не изменять публичный интерфейс `InfopostsService`
+- Сохранить все существующие computed properties
+- Обеспечить плавную миграцию без breaking changes
+
+### Результаты реализации ✅
+
+**Выполненные задачи:**
+- ✅ Создана модель `InfopostSectionDisplay` для отображения секций с инфопостами
+- ✅ Расширен `InfopostsService` логикой управления секциями:
+  - Добавлено свойство `collapsedSections` для хранения состояния сворачивания
+  - Добавлен computed property `sectionsForDisplay` для получения секций для отображения
+  - Добавлен метод `didTapSection(_:)` для обработки нажатий на секции
+  - Обновлен метод `didLogout()` для сброса состояния секций
+- ✅ Рефакторен `InfopostsListScreen`:
+  - Убрана UI-логика управления секциями
+  - Упрощен код - теперь экран только отображает данные из сервиса
+  - Анимация перенесена в модификатор `.animation(.default, value:)`
+- ✅ Созданы comprehensive unit-тесты:
+  - 6 тестов для `InfopostsService` (новые методы управления секциями)
+  - 8 тестов для `InfopostSectionDisplay` (модель отображения секций)
+- ✅ Код отформатирован и протестирован
+
+**Файлы реализации:**
+- `Models/Infoposts/InfopostSectionDisplay.swift` - модель для отображения секций
+- `Services/Infoposts/InfopostsService.swift` - расширен логикой управления секциями
+- `Screens/Home/Infoposts/InfopostsListScreen.swift` - упрощен, убрана UI-логика
+- `SwiftUI-SotkaAppTests/InfopostsServiceTests.swift` - добавлены тесты для секций
+- `SwiftUI-SotkaAppTests/InfopostSectionDisplayTests.swift` - тесты для модели
+
+**Преимущества достигнуты:**
+1. **Разделение ответственности**: UI отвечает только за отображение, сервис - за бизнес-логику
+2. **Улучшенная тестируемость**: логику секций можно тестировать независимо от UI
+3. **Централизованное управление**: все состояние секций в одном месте
+4. **Переиспользование**: логику секций можно использовать в других экранах
+5. **Консистентность**: следует архитектурным принципам проекта (MVVM + @Observable)
+
+**Обратная совместимость сохранена:**
+- Все существующие API методы сервиса работают без изменений
+- Публичный интерфейс `InfopostsService` не нарушен
+- Плавная миграция без breaking changes
+
+## Итерация 17: Замена кастомного HTML ошибки на стандартный алерт
+
+### Анализ текущей реализации
+
+**Текущее состояние:**
+- Метод `showError(in webView: WKWebView)` в `HTMLContentView` загружает кастомный HTML файл ошибки
+- Используются файлы `error_ru.html` и `error_en.html` в `SupportingFiles/book/`
+- Метод `createErrorHTML(language:)` в `InfopostHTMLProcessor` создает HTML для отображения ошибки
+- Ошибка отображается внутри WKWebView как HTML контент
+
+**Проблемы текущей реализации:**
+1. **Нестандартный UX**: HTML ошибка внутри WebView не соответствует нативному поведению iOS
+2. **Дублирование ресурсов**: отдельные HTML файлы для ошибок увеличивают размер приложения
+3. **Сложность локализации**: нужно поддерживать HTML файлы ошибок на разных языках
+4. **Отсутствие действий**: пользователь не может предпринять никаких действий при ошибке
+5. **Неинформативность**: ошибка не содержит конкретной информации о проблеме
+
+### Цель доработки
+
+Заменить кастомный HTML ошибки на стандартный iOS алерт с возможностью:
+- Показать понятное сообщение об ошибке
+- Предоставить действия: "Закрыть" (закрыть алерт и экран) и "Отчет" (логирование)
+- Убрать неиспользуемые HTML файлы ошибок
+- Упростить код обработки ошибок
+
+### План реализации
+
+#### Этап 1: Обновление HTMLContentView
+
+**1.1. Добавить новое замыкание для обработки ошибок:**
+```swift
+struct HTMLContentView: UIViewRepresentable, @preconcurrency Equatable {
+    // ... существующие свойства ...
+    
+    // Новое замыкание для обработки ошибок
+    let onError: (Error) -> Void
+    
+    // Обновить инициализатор
+    init(
+        filename: String,
+        fontSize: FontSize,
+        infopost: Infopost,
+        onReachedEnd: @escaping () -> Void,
+        onError: @escaping (Error) -> Void
+    ) {
+        self.filename = filename
+        self.fontSize = fontSize
+        self.infopost = infopost
+        self.onReachedEnd = onReachedEnd
+        self.onError = onError
+    }
+}
+```
+
+**1.2. Обновить метод showError:**
+```swift
+/// Показывает ошибку загрузки через замыкание
+private func showError(_ error: Error) {
+    logger.error("❌ Ошибка загрузки инфопоста: \(error.localizedDescription)")
+    
+    // Вызываем замыкание вместо загрузки HTML ошибки
+    DispatchQueue.main.async {
+        self.onError(error)
+    }
+}
+```
+
+**1.3. Обновить вызовы showError:**
+- В `loadContent(in:)` передавать конкретную ошибку
+- Создать структуру `InfopostError` для типизированных ошибок
+
+#### Этап 2: Создание типизированных ошибок
+
+**2.1. Создать enum для ошибок инфопостов:**
+```swift
+/// Ошибки при загрузке инфопостов
+enum InfopostError: LocalizedError {
+    case fileNotFound(filename: String)
+    case htmlProcessingFailed(filename: String, underlyingError: Error)
+    case resourceCopyFailed(underlyingError: Error)
+    case unknownError(underlyingError: Error)
+    
+    var errorDescription: String? {
+        switch self {
+        case .fileNotFound(let filename):
+            return "Файл не найден: \(filename)"
+        case .htmlProcessingFailed(let filename, let error):
+            return "Ошибка обработки HTML \(filename): \(error.localizedDescription)"
+        case .resourceCopyFailed(let error):
+            return "Ошибка копирования ресурсов: \(error.localizedDescription)"
+        case .unknownError(let error):
+            return "Неизвестная ошибка: \(error.localizedDescription)"
+        }
+    }
+}
+```
+
+**2.2. Обновить обработку ошибок в loadContent:**
+```swift
+private func loadContent(in webView: WKWebView) {
+    logger.info("🌐 Начинаем загрузку контента: \(filename)")
+
+    // Создаем временную директорию для ресурсов
+    guard let tempDirectory = resourceManager.createTempDirectory() else {
+        let error = InfopostError.resourceCopyFailed(underlyingError: NSError(domain: "InfopostError", code: 1, userInfo: [NSLocalizedDescriptionKey: "Не удалось создать временную директорию"]))
+        showError(error)
+        return
+    }
+
+    // Загружаем и обрабатываем HTML контент
+    guard let processedHTML = htmlProcessor.loadAndProcessHTML(
+        filename: filename,
+        fontSize: fontSize,
+        infopost: infopost,
+        youtubeService: youtubeService
+    ) else {
+        let error = InfopostError.htmlProcessingFailed(filename: filename, underlyingError: NSError(domain: "InfopostError", code: 2, userInfo: [NSLocalizedDescriptionKey: "Не удалось обработать HTML контент"]))
+        showError(error)
+        return
+    }
+
+    // ... остальная логика с обработкой ошибок ...
+}
+```
+
+#### Этап 3: Обновление InfopostDetailScreen
+
+**3.1. Добавить состояние для алерта:**
+```swift
+struct InfopostDetailScreen: View {
+    // ... существующие свойства ...
+    
+    @State private var showingErrorAlert = false
+    @State private var errorMessage = ""
+    @State private var currentError: Error?
+}
+```
+
+**3.2. Создать алерт:**
+```swift
+var body: some View {
+    HTMLContentView(
+        filename: infopost.filenameWithLanguage,
+        fontSize: fontSize,
+        infopost: infopost,
+        onReachedEnd: didReadPost,
+        onError: handleError
+    )
+    .frame(maxWidth: .infinity, maxHeight: .infinity)
+    .navigationBarTitleDisplayMode(.inline)
+    .toolbar {
+        // ... существующий toolbar ...
+    }
+    .onAppear {
+        isFavorite = infopostsService.isFavorite(infopost, modelContext: modelContext)
+    }
+    .alert("Ошибка", isPresented: $showingErrorAlert) {
+        Button("Закрыть") {
+            // Закрываем алерт и экран
+            showingErrorAlert = false
+            // Возвращаемся назад
+            if let windowScene = UIApplication.shared.connectedScenes.first as? UIWindowScene,
+               let window = windowScene.windows.first,
+               let rootViewController = window.rootViewController {
+                rootViewController.dismiss(animated: true)
+            }
+        }
+        Button("Отчет") {
+            // Логируем ошибку
+            if let error = currentError {
+                logger.error("❌ Ошибка загрузки инфопоста \(infopost.id): \(error.localizedDescription)")
+            }
+            showingErrorAlert = false
+        }
+    } message: {
+        Text(errorMessage)
+    }
+}
+```
+
+**3.3. Добавить обработчик ошибок:**
+```swift
+private func handleError(_ error: Error) {
+    currentError = error
+    errorMessage = "Не удалось загрузить инфопост (\(infopost.id))"
+    showingErrorAlert = true
+}
+```
+
+#### Этап 4: Очистка неиспользуемого кода
+
+**4.1. Удалить файлы ошибок:**
+- `SupportingFiles/book/ru/error_ru.html`
+- `SupportingFiles/book/en/error_en.html`
+
+**4.2. Удалить метод createErrorHTML из InfopostHTMLProcessor:**
+```swift
+// Удалить весь метод createErrorHTML(language:) -> String
+```
+
+**4.3. Удалить неиспользуемые импорты и свойства:**
+- Убрать `htmlProcessor` из `HTMLContentView` если он больше не используется
+- Проверить другие места использования `createErrorHTML`
+
+#### Этап 5: Обновление тестов
+
+**5.1. Создать тесты для InfopostError:**
+```swift
+import Testing
+
+struct InfopostErrorTests {
+    @Test
+    func testFileNotFoundError() {
+        let error = InfopostError.fileNotFound(filename: "test.html")
+        let description = try #require(error.errorDescription)
+        #expect(description == "Файл не найден: test.html")
+    }
+    
+    @Test
+    func testHtmlProcessingFailedError() {
+        let underlyingError = NSError(domain: "Test", code: 1, userInfo: [NSLocalizedDescriptionKey: "Test error"])
+        let error = InfopostError.htmlProcessingFailed(filename: "test.html", underlyingError: underlyingError)
+        let description = try #require(error.errorDescription)
+        #expect(description.contains("test.html"))
+    }
+    
+    @Test
+    func testResourceCopyFailedError() {
+        let underlyingError = NSError(domain: "Test", code: 1, userInfo: [NSLocalizedDescriptionKey: "Resource error"])
+        let error = InfopostError.resourceCopyFailed(underlyingError: underlyingError)
+        let description = try #require(error.errorDescription)
+        #expect(description.contains("Resource error"))
+    }
+    
+    @Test
+    func testUnknownError() {
+        let underlyingError = NSError(domain: "Test", code: 1, userInfo: [NSLocalizedDescriptionKey: "Unknown error"])
+        let error = InfopostError.unknownError(underlyingError: underlyingError)
+        let description = try #require(error.errorDescription)
+        #expect(description.contains("Unknown error"))
+    }
+}
+```
+
+**5.2. Обновить существующие тесты:**
+- Убрать тесты для `createErrorHTML` из `InfopostHTMLProcessorTests`
+- Обновить тесты `HTMLContentView` с новым замыканием `onError` (если необходимо)
+
+
+#### Этап 6: Локализация
+
+**6.1. Проверить существующие локализованные строки:**
+✅ **"Error"** - уже есть в Localizable.xcstrings (строки 760-775)
+✅ **"Close"** - уже есть в Localizable.xcstrings (строки 308-319)
+❌ **"Report"** - отсутствует, нужно добавить
+❌ **"Failed to load infopost"** - отсутствует, нужно добавить
+
+**6.2. Добавить недостающие локализованные строки:**
+```json
+// В Localizable.xcstrings добавить:
+"Report" : {
+  "localizations" : {
+    "en" : {
+      "stringUnit" : {
+        "state" : "translated",
+        "value" : "Report"
+      }
+    },
+    "ru" : {
+      "stringUnit" : {
+        "state" : "translated",
+        "value" : "Отчет"
+      }
+    }
+  }
+},
+"Failed to load infopost" : {
+  "localizations" : {
+    "en" : {
+      "stringUnit" : {
+        "state" : "translated",
+        "value" : "Failed to load infopost"
+      }
+    },
+    "ru" : {
+      "stringUnit" : {
+        "state" : "translated",
+        "value" : "Не удалось загрузить инфопост"
+      }
+    }
+  }
+}
+```
+
+**6.3. Обновить алерт с локализованными строками:**
+```swift
+.alert("Error", isPresented: $showingErrorAlert) {
+    Button("Close") {
+        // ... логика закрытия ...
+    }
+    Button("Report") {
+        // ... логика отчета ...
+    }
+} message: {
+    Text("Failed to load infopost (\(infopost.id))")
+}
+```
+
+### Файлы для изменения
+
+**Новые файлы:**
+- `Models/Infoposts/InfopostError.swift` - enum для типизированных ошибок
+
+**Изменяемые файлы:**
+- `Screens/Home/Infoposts/HTMLContentView.swift` - замена showError на замыкание
+- `Screens/Home/Infoposts/InfopostDetailScreen.swift` - добавление алерта
+- `Services/Infoposts/InfopostHTMLProcessor.swift` - удаление createErrorHTML
+- `SwiftUI-SotkaAppTests/InfopostErrorTests.swift` - тесты для ошибок
+
+**Удаляемые файлы:**
+- `SupportingFiles/book/ru/error_ru.html`
+- `SupportingFiles/book/en/error_en.html`
+
+### Преимущества доработки
+
+1. **Стандартный UX**: нативный iOS алерт вместо HTML ошибки
+2. **Уменьшение размера**: удаление неиспользуемых HTML файлов
+3. **Улучшенная обработка ошибок**: типизированные ошибки с конкретной информацией
+4. **Возможность действий**: пользователь может закрыть экран или отправить отчет
+5. **Упрощение кода**: убираем сложную логику загрузки HTML ошибок
+6. **Лучшая локализация**: стандартные iOS строки вместо HTML файлов
+
+### Обратная совместимость
+
+- Сохранить все существующие API методы
+- Не изменять публичный интерфейс сервисов
+- Обеспечить graceful degradation при ошибках
+- Сохранить логирование ошибок для отладки
+
+### Результаты реализации
+
+**После выполнения:**
+- ✅ Стандартный iOS алерт вместо HTML ошибки
+- ✅ Удалены неиспользуемые HTML файлы ошибок
+- ✅ Упрощен код обработки ошибок
+- ✅ Добавлена возможность действий пользователя
+- ✅ Улучшена типизация ошибок
+- ✅ Обновлены тесты и локализация
+
+---
+
+## Итерация 18: Изучение возможности объединения сервисов синхронизации
+
+### Анализ текущей архитектуры
+
+**Текущее состояние:**
+- `StatusManager` - управляет общим состоянием приложения
+- `InfopostsService` - управляет инфопостами и их синхронизацией
+- `CustomExercisesService` - управляет упражнениями и их синхронизацией
+- Каждый сервис имеет свою логику синхронизации с сервером
+
+**Возможности объединения:**
+- Использовать `@Observable` для вложенных сервисов
+- Централизовать логику синхронизации в `StatusManager`
+- Упростить dependency injection через единую точку входа
+
+### Пример архитектуры с вложенными Observable сервисами
+
+```swift
+@Observable
+class StatusManager {
+    var isOnline: Bool = false
+    var lastSyncDate: Date?
+    
+    // Вложенные сервисы
+    let infopostsService: InfopostsService
+    let customExercisesService: CustomExercisesService
+    
+    init() {
+        self.infopostsService = InfopostsService(statusManager: self)
+        self.customExercisesService = CustomExercisesService(statusManager: self)
+    }
+    
+    // Централизованная синхронизация
+    func syncAll() async {
+        await withTaskGroup(of: Void.self) { group in
+            group.addTask { await self.infopostsService.sync() }
+            group.addTask { await self.customExercisesService.sync() }
+        }
+        lastSyncDate = Date()
+    }
+}
+```
+
+**Преимущества:**
+- Единая точка управления состоянием
+- Упрощенная синхронизация
+- Лучшая координация между сервисами
+- Упрощенный dependency injection
+
+**Недостатки:**
+- Увеличение сложности `StatusManager`
+- Потенциальные циклические зависимости
+- Нарушение принципа единственной ответственности
+
+### Рекомендация
+
+**НЕ РЕКОМЕНДУЕТСЯ** объединять сервисы в текущем состоянии проекта по следующим причинам:
+
+1. **Стабильность**: текущая архитектура работает стабильно
+2. **Разделение ответственности**: каждый сервис отвечает за свою область
+3. **Тестируемость**: отдельные сервисы легче тестировать
+4. **Масштабируемость**: проще добавлять новые сервисы
+5. **Сложность рефакторинга**: потребует значительных изменений во всем приложении
+
+**Альтернативное решение:**
+- Создать `SyncCoordinator` для координации синхронизации между сервисами
+- Оставить сервисы независимыми
+- Добавить общие методы синхронизации через протоколы

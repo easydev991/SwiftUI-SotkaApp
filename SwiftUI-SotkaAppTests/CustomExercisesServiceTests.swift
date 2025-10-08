@@ -292,7 +292,7 @@ struct CustomExercisesServiceTests {
         try context.save()
 
         // Act
-        try service.deleteCustomExercise(exercise, context: context)
+        service.deleteCustomExercise(exercise, context: context)
 
         // Assert
         #expect(exercise.shouldDelete)

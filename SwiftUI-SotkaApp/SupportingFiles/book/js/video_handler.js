@@ -12,6 +12,11 @@ console.log('- Все video на странице:', document.querySelectorAll('
 console.log('- WebKit messageHandlers доступны:', !!(window.webkit && window.webkit.messageHandlers));
 console.log('- consoleLog handler доступен:', !!(window.webkit && window.webkit.messageHandlers && window.webkit.messageHandlers.consoleLog));
 
+// Общие константы текста
+var VIDEO_LOAD_ERROR_TEXT = 'Видео не загрузилось';
+// Таймаут ожидания загрузки видео (мс)
+var FIVE_SECONDS_MS = 5000;
+
 // Проверяем, что jQuery загружен
 if (typeof $ === 'undefined') {
     console.error('jQuery не загружен! Универсальный обработчик видео не может работать.');
@@ -382,7 +387,7 @@ function initializeVideoHandlerNative(element, originalSrc, videoId) {
         });
     }
     
-    // Если видео не загрузилось за 10 секунд, показываем ошибку
+    // Если видео не загрузилось за 5 секунд, показываем ошибку
     errorTimeout = setTimeout(function() {
         if (!videoLoaded) {
             console.log('⏰ Таймаут загрузки для видео (без jQuery):', videoId);
@@ -395,18 +400,18 @@ function initializeVideoHandlerNative(element, originalSrc, videoId) {
                 elementSrc: element ? element.getAttribute('src') : 'N/A',
                 elementId: element ? element.getAttribute('id') : 'N/A'
             });
-            showVideoErrorNative(videoId, 'Видео не загрузилось', originalSrc, container);
+            showVideoErrorNative(videoId, VIDEO_LOAD_ERROR_TEXT, originalSrc, container);
         } else {
             console.log('✅ Видео уже загружено, таймаут отменен (без jQuery):', videoId);
         }
-    }, 10000);
+    }, FIVE_SECONDS_MS);
     
-    console.log('⏱️ Установлен таймаут 10 секунд для видео (без jQuery):', videoId);
+    console.log('⏱️ Установлен таймаут 5 секунд для видео (без jQuery):', videoId);
     
     // Дополнительная отладка - проверяем состояние через 5 секунд
     setTimeout(function() {
         console.log('🔍 Промежуточная проверка через 5 секунд (без jQuery):', videoId, 'загружено:', videoLoaded);
-    }, 5000);
+    }, FIVE_SECONDS_MS);
 }
 
 /**
@@ -453,15 +458,15 @@ function showVideoErrorNative(videoId, errorMessage, originalSrc, container) {
         videoElementFound: !!videoElement
     });
     
-    // Создаем HTML для ошибки
-    var errorHtml = '<div id="error-' + videoId + '" class="video-error-container" style="text-align:center; padding:40px; background-color:#f8f9fa; border:1px solid #dee2e6; border-radius:8px; margin:10px 0;">' +
-        '<div style="font-size:18px; color:#dc3545; margin-bottom:10px;">❌ ' + errorMessage + '</div>' +
+    // Создаем HTML для ошибки с поддержкой темной темы
+    var errorHtml = '<div id="error-' + videoId + '" class="video-error-container" style="text-align:center; padding:40px; background-color:#f8f9fa; border:1px solid #dee2e6; border-radius:8px; margin:10px 0; color-scheme: light dark;">' +
+        '<div style="font-size:18px; color:#dc3545; margin-bottom:10px;">' + errorMessage + '</div>' +
         '<div style="font-size:14px; color:#6c757d; margin-bottom:15px;">Проверьте подключение к интернету</div>' +
         '<button onclick="reloadAllVideos()" ' +
         'style="background-color:#007AFF; color:white; border:none; padding:10px 20px; border-radius:6px; font-size:16px; cursor:pointer; transition:background-color 0.2s;" ' +
         'onmouseover="this.style.backgroundColor=\'#0056CC\'" ' +
         'onmouseout="this.style.backgroundColor=\'#007AFF\'">' +
-        '🔄 Обновить все видео</button>' +
+        'Обновить</button>' +
         '</div>';
     
     // Заменяем только iframe/video элемент, а не весь контейнер
@@ -564,7 +569,7 @@ function retryVideoLoadNative(videoId, originalSrc, isIframe) {
                                 console.log('⏰ Принудительно скрываем кнопку "обновить" через 5 секунд (без jQuery):', videoId);
                                 hideErrorContainer(videoId);
                                 observer.disconnect();
-                            }, 5000);
+                            }, FIVE_SECONDS_MS);
                         }
                     } else {
                         console.log('⚠️ Обработчики уже добавлены для iframe (без jQuery):', videoId);
@@ -726,13 +731,13 @@ function initializeVideoHandler(element, originalSrc, videoId) {
                     });
                 }
                 
-                // Устанавливаем таймаут для показа ошибки
+                // Устанавливаем таймаут для показа ошибки (5 секунд)
                 errorTimeout = setTimeout(function() {
                     if (!videoLoaded) {
                         console.log('⏰ Таймаут загрузки для видео (нативные методы):', videoId);
-                        showVideoErrorNative(videoId, 'Таймаут загрузки видео', originalSrc, nativeContainer);
+                        showVideoErrorNative(videoId, VIDEO_LOAD_ERROR_TEXT, originalSrc, nativeContainer);
                     }
-                }, 10000);
+                }, FIVE_SECONDS_MS);
                 
                 return; // Выходим из функции, так как используем нативные методы
             } else {
@@ -777,7 +782,7 @@ function initializeVideoHandler(element, originalSrc, videoId) {
         });
     }
     
-    // Если видео не загрузилось за 10 секунд, показываем ошибку
+    // Если видео не загрузилось за 5 секунд, показываем ошибку
     errorTimeout = setTimeout(function() {
         if (!videoLoaded) {
             console.log('⏰ Таймаут загрузки для видео:', videoId);
@@ -790,18 +795,18 @@ function initializeVideoHandler(element, originalSrc, videoId) {
                 elementSrc: element.length > 0 ? element.attr('src') : 'N/A',
                 elementId: element.length > 0 ? element.attr('id') : 'N/A'
             });
-            showVideoError(videoId, 'Видео не загрузилось', originalSrc, container);
+            showVideoError(videoId, VIDEO_LOAD_ERROR_TEXT, originalSrc, container);
         } else {
             console.log('✅ Видео уже загружено, таймаут отменен:', videoId);
         }
-    }, 10000);
+    }, FIVE_SECONDS_MS);
     
-    console.log('⏱️ Установлен таймаут 10 секунд для видео:', videoId);
+    console.log('⏱️ Установлен таймаут 5 секунд для видео:', videoId);
     
     // Дополнительная отладка - проверяем состояние через 5 секунд
     setTimeout(function() {
         console.log('🔍 Промежуточная проверка через 5 секунд:', videoId, 'загружено:', videoLoaded);
-    }, 5000);
+    }, FIVE_SECONDS_MS);
     
     console.log('✅ Инициализация обработчика завершена для видео:', videoId);
 }
@@ -835,16 +840,16 @@ function showVideoError(videoId, errorMessage, originalSrc, container) {
         videoElementFound: videoElement.length > 0
     });
     
-    // Создаем HTML для ошибки
+    // Создаем HTML для ошибки с поддержкой темной темы
     var errorHtml = `
-        <div id="error-${videoId}" class="video-error-container" style="text-align:center; padding:40px; background-color:#f8f9fa; border:1px solid #dee2e6; border-radius:8px; margin:10px 0;">
-            <div style="font-size:18px; color:#dc3545; margin-bottom:10px;">❌ ${errorMessage}</div>
+        <div id="error-${videoId}" class="video-error-container" style="text-align:center; padding:40px; background-color:#f8f9fa; border:1px solid #dee2e6; border-radius:8px; margin:10px 0; color-scheme: light dark;">
+            <div style="font-size:18px; color:#dc3545; margin-bottom:10px;">${errorMessage}</div>
             <div style="font-size:14px; color:#6c757d; margin-bottom:15px;">Проверьте подключение к интернету</div>
             <button onclick="reloadAllVideos()" 
                     style="background-color:#007AFF; color:white; border:none; padding:10px 20px; border-radius:6px; font-size:16px; cursor:pointer; transition:background-color 0.2s;"
                     onmouseover="this.style.backgroundColor='#0056CC'"
                     onmouseout="this.style.backgroundColor='#007AFF'">
-                🔄 Обновить все видео
+                Обновить
             </button>
         </div>
     `;
@@ -945,7 +950,7 @@ function retryVideoLoad(videoId, originalSrc, isIframe) {
                                 console.log('⏰ Принудительно скрываем кнопку "обновить" через 5 секунд:', videoId);
                                 hideErrorContainerJQuery(videoId);
                                 observer.disconnect();
-                            }, 5000);
+                            }, FIVE_SECONDS_MS);
                         }
                     } else {
                         console.log('⚠️ Обработчики уже добавлены для iframe:', videoId);

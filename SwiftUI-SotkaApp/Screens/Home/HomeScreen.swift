@@ -42,8 +42,12 @@ struct HomeScreen: View {
     HomeScreen()
         .environment(
             StatusManager(
-                customExercisesService: CustomExercisesService(
+                customExercisesService: .init(
                     client: MockExerciseClient(result: .success)
+                ),
+                infopostsService: .init(
+                    language: "ru",
+                    infopostsClient: MockInfopostsClient(result: .success)
                 )
             )
         )

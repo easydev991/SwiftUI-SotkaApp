@@ -116,8 +116,10 @@ struct MoreScreen: View {
     }
 
     private var feedbackButton: some View {
-        Button("Send feedback", action: appSettings.sendFeedback)
-            .accessibilityIdentifier("sendFeedbackButton")
+        Button("Send feedback") {
+            appSettings.sendFeedback()
+        }
+        .accessibilityIdentifier("sendFeedbackButton")
     }
 
     @ViewBuilder

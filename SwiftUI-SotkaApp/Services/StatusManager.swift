@@ -12,7 +12,8 @@ final class StatusManager {
         category: String(describing: StatusManager.self)
     )
     private let defaults = UserDefaults.standard
-    private let customExercisesService: CustomExercisesService
+    @ObservationIgnored let customExercisesService: CustomExercisesService
+    @ObservationIgnored let infopostsService: InfopostsService
     private var isJournalSyncInProgress = false
 
     /// Дата старта сотки
@@ -44,6 +45,7 @@ final class StatusManager {
 
     /// Калькулятор текущего дня сотки
     private(set) var currentDayCalculator: DayCalculator?
+
     /// Конфликтующие даты начала программы
     var conflictingSyncModel: ConflictingStartDate?
 
@@ -62,8 +64,12 @@ final class StatusManager {
         }
     }
 
-    init(customExercisesService: CustomExercisesService) {
+    init(
+        customExercisesService: CustomExercisesService,
+        infopostsService: InfopostsService
+    ) {
         self.customExercisesService = customExercisesService
+        self.infopostsService = infopostsService
     }
 
     /// Получает статус прохождения пользователя
@@ -75,10 +81,7 @@ final class StatusManager {
         do {
             let currentRun = try await client.current()
             let siteStartDate = currentRun.date
-
-            // Обновляем maxReadInfoPostDay из ответа сервера
             maxReadInfoPostDay = currentRun.maxForAllRunsDay ?? 0
-
             switch (startDate, siteStartDate) {
             case (.none, .none):
                 logger.info("Сотку еще не стартовали")
@@ -103,6 +106,8 @@ final class StatusManager {
         } catch {
             logger.error("\(error.localizedDescription)")
         }
+        // Загружаем инфопосты с учетом пола пользователя
+        loadInfopostsWithUserGender(context: context)
         isLoading = false
     }
 
@@ -128,6 +133,7 @@ final class StatusManager {
         startDate = nil
         currentDayCalculator = nil
         maxReadInfoPostDay = 0
+        infopostsService.didLogout()
     }
 }
 
@@ -141,6 +147,20 @@ private extension StatusManager {
         ///
         /// Значение взял из старого приложения
         case maxReadInfoPostDay = "WorkoutMaxReadInfoPostDay"
+    }
+
+    func loadInfopostsWithUserGender(context: ModelContext) {
+        do {
+            let user = try context.fetch(FetchDescriptor<User>()).first
+            try infopostsService.loadAvailableInfoposts(
+                currentDay: currentDayCalculator?.currentDay,
+                maxReadInfoPostDay: maxReadInfoPostDay,
+                userGender: user?.gender,
+                force: true
+            )
+        } catch {
+            logger.error("Не удалось загрузить инфопосты: \(error.localizedDescription)")
+        }
     }
 }
 

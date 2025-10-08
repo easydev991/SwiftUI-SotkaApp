@@ -68,6 +68,11 @@ extension User {
         imageStringURL.queryAllowedURL
     }
 
+    var gender: Gender? {
+        guard let genderCode else { return nil }
+        return Gender(genderCode)
+    }
+
     var genderWithAge: String {
         let localizedAgeString = String.localizedStringWithFormat(
             NSLocalizedString("ageInYears", comment: ""),
@@ -90,7 +95,7 @@ extension User {
 
 private extension User {
     var genderString: String {
-        guard let genderCode, let gender = Gender(genderCode) else { return "" }
+        guard let gender else { return "" }
         return gender.description
     }
 

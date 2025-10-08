@@ -359,12 +359,11 @@ private extension InfopostParser {
 
             // Создаем простой HTML блок с правильным контейнером для обработки ошибок
             let videoBlock = """
-            <br><h2>&nbsp;&nbsp;&nbsp;&nbsp;\(video.title)</h2>
-            <div class="video-container" style="text-align: center;">
+            <br><h2 class="video-title">&nbsp;&nbsp;&nbsp;&nbsp;\(video.title)</h2>
+            <div class="video-container">
                 <iframe src="\(video.url)" 
                         frameborder="0" 
-                        allowfullscreen
-                        style="max-width:100%; height:auto;">
+                        allowfullscreen>
                 </iframe>
             </div>
             <br><br><footer>
@@ -410,17 +409,28 @@ private extension InfopostParser {
         <script type="text/javascript" src="js/scroll_tracker.js"></script>
         """
 
+        // Создаем скрипт для подключения обработчика размера шрифта
+        let fontSizeHandlerScript = """
+        <script type="text/javascript" src="js/font_size_handler.js"></script>
+        """
+
         // Добавляем скрипты в head, если он есть
         if html.contains("</head>") {
-            let scripts = consoleInterceptorScript + "\n" + videoHandlerScript + "\n" + scrollTrackerScript
+            let scripts = consoleInterceptorScript + "\n" + videoHandlerScript + "\n" + scrollTrackerScript + "\n" + fontSizeHandlerScript
             let modifiedHTML = html.replacingOccurrences(of: "</head>", with: "\(scripts)\n</head>")
-            logger.debug("✅ Универсальный обработчик видео, перехватчик консоли и отслеживание скролла добавлены в head")
+            logger
+                .debug(
+                    "✅ Универсальный обработчик видео, перехватчик консоли, отслеживание скролла и обработчик размера шрифта добавлены в head"
+                )
             return modifiedHTML
         } else {
             // Если нет head, добавляем перед закрывающим тегом body
-            let scripts = consoleInterceptorScript + "\n" + videoHandlerScript + "\n" + scrollTrackerScript
+            let scripts = consoleInterceptorScript + "\n" + videoHandlerScript + "\n" + scrollTrackerScript + "\n" + fontSizeHandlerScript
             let modifiedHTML = html.replacingOccurrences(of: "</body>", with: "\(scripts)\n</body>")
-            logger.debug("✅ Универсальный обработчик видео, перехватчик консоли и отслеживание скролла добавлены перед </body>")
+            logger
+                .debug(
+                    "✅ Универсальный обработчик видео, перехватчик консоли, отслеживание скролла и обработчик размера шрифта добавлены перед </body>"
+                )
             return modifiedHTML
         }
     }
@@ -446,60 +456,18 @@ private extension InfopostParser {
     func applyFontSize(_ html: String, fontSize: FontSize) -> String {
         var modifiedHTML = html
 
-        // Определяем скрипт в зависимости от размера шрифта (как в старом проекте)
-        let scriptName = switch fontSize {
-        case .small:
-            "script_small.js"
-        case .medium:
-            "script_medium.js"
-        case .large:
-            "script_big.js"
-        }
-
         // Исправляем путь к jQuery для временной директории
         modifiedHTML = modifiedHTML.replacingOccurrences(of: "src=\"../js/jquery.js\"", with: "src=\"js/jquery.js\"")
 
-        // Заменяем весь тег script с script.js на нужный скрипт
-        let originalScriptTag = "<script type=\"text/javascript\" src=\"../js/script.js\"></script>"
-        let newScriptTag = "<script type=\"text/javascript\" src=\"js/\(scriptName)\"></script>"
-        modifiedHTML = modifiedHTML.replacingOccurrences(of: originalScriptTag, with: newScriptTag)
+        // Добавляем data-атрибут размера шрифта в тег body
+        let bodyWithFontSize = modifiedHTML.replacingOccurrences(
+            of: "<body[^>]*>",
+            with: "<body class=\"pattern\" data-font-size=\"\(fontSize.rawValue)\">",
+            options: .regularExpression
+        )
 
-        // Если тег script.js не найден, добавляем нужный скрипт в head
-        if !modifiedHTML.contains("src=\"js/\(scriptName)\"") {
-            let scriptTagToAdd = "<script type=\"text/javascript\" src=\"js/\(scriptName)\"></script>"
-            if modifiedHTML.contains("</head>") {
-                modifiedHTML = modifiedHTML.replacingOccurrences(of: "</head>", with: "\(scriptTagToAdd)\n</head>")
-            } else {
-                // Если нет </head>, добавляем в начало body
-                modifiedHTML = modifiedHTML.replacingOccurrences(of: "<body>", with: "<body>\n\(scriptTagToAdd)")
-            }
-        }
+        logger.debug("✅ Добавлен data-атрибут размера шрифта: \(fontSize.rawValue)")
 
-        // Добавляем инлайн скрипт для исправления путей к CSS в зависимости от размера шрифта
-        let cssPath = switch fontSize {
-        case .small:
-            "css/style_small.css"
-        case .medium:
-            "css/style_medium.css"
-        case .large:
-            "css/style_big.css"
-        }
-
-        let inlineScript = """
-        <script>
-        $(document).ready(function() {
-            // Удаляем старые CSS файлы размеров шрифта
-            $('link[href*="style_small.css"], link[href*="style_medium.css"], link[href*="style_big.css"]').remove();
-
-            // Добавляем новый CSS файл для размера шрифта
-            $('head').append('<link rel="stylesheet" href="\(cssPath)" type="text/css" media="screen" />');
-        });
-        </script>
-        """
-
-        // Добавляем инлайн скрипт перед закрывающим тегом body
-        modifiedHTML = modifiedHTML.replacingOccurrences(of: "</body>", with: "\(inlineScript)</body>")
-
-        return modifiedHTML
+        return bodyWithFontSize
     }
 }

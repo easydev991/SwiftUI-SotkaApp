@@ -110,8 +110,12 @@ extension SyncStartDateView {
         .environment(AuthHelperImp())
         .environment(
             StatusManager(
-                customExercisesService: CustomExercisesService(
+                customExercisesService: .init(
                     client: MockExerciseClient(result: .success)
+                ),
+                infopostsService: .init(
+                    language: "ru",
+                    infopostsClient: MockInfopostsClient(result: .success)
                 )
             )
         )

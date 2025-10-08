@@ -153,7 +153,7 @@ struct InfopostParserYouTubeTests {
 
         // Then
         // Проверяем структуру YouTube блока
-        #expect(modifiedHTML.contains("<h2>&nbsp;&nbsp;&nbsp;&nbsp;#моястодневка от Антона Кучумова</h2>"))
+        #expect(modifiedHTML.contains("<h2 class=\"video-title\">&nbsp;&nbsp;&nbsp;&nbsp;#моястодневка от Антона Кучумова</h2>"))
         #expect(modifiedHTML.contains("video-container"))
         #expect(modifiedHTML.contains("frameborder=\"0\""))
         #expect(modifiedHTML.contains("allowfullscreen"))

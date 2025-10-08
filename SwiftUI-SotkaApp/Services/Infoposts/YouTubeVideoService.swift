@@ -8,7 +8,38 @@ final class YouTubeVideoService {
     private let logger = Logger(subsystem: "SotkaApp", category: "YouTubeVideoService")
     @ObservationIgnored private var cachedVideos: [YouTubeVideo]?
 
-    /// Загружает список YouTube видео из файла youtube_list.txt
+    /// Получает YouTube видео для конкретного дня
+    /// - Parameter dayNumber: Номер дня программы
+    /// - Returns: YouTube видео или nil, если не найдено
+    /// - Throws: Ошибка при загрузке видео
+    func getVideo(for dayNumber: Int) throws -> YouTubeVideo? {
+        logger.info("🎥 Запрашиваем YouTube видео для дня: \(dayNumber)")
+
+        let videos = try loadVideos()
+        logger.debug("📊 Загружено \(videos.count) видео из файла")
+
+        let video = videos.first { $0.dayNumber == dayNumber }
+
+        if let video {
+            logger.info("✅ Найдено видео для дня \(dayNumber): \(video.url)")
+            logger.debug("📺 Заголовок видео: \(video.title)")
+        } else {
+            logger.error("⚠️ Видео для дня \(dayNumber) не найдено в списке из \(videos.count) видео")
+            logger.debug("📋 Доступные дни: \(videos.map(\.dayNumber).sorted())")
+        }
+
+        return video
+    }
+
+    /// Проверяет, есть ли видео для указанного дня
+    /// - Parameter dayNumber: Номер дня программы
+    /// - Returns: true, если видео существует
+    /// - Throws: Ошибка при загрузке видео
+    func hasVideo(for dayNumber: Int) throws -> Bool {
+        try getVideo(for: dayNumber) != nil
+    }
+
+    /// Загружает список YouTube видео из файла `youtube_list.txt`
     /// - Returns: Массив YouTube видео
     /// - Throws: Ошибка при загрузке или парсинге файла
     func loadVideos() throws -> [YouTubeVideo] {
@@ -30,7 +61,7 @@ final class YouTubeVideoService {
             } catch {
                 logger.error("❌ Ошибка при поиске файлов: \(error.localizedDescription)")
             }
-            throw YouTubeVideoServiceError.fileNotFound
+            throw ServiceError.fileNotFound
         }
 
         logger.debug("✅ Файл youtube_list.txt найден: \(url.path)")
@@ -46,48 +77,17 @@ final class YouTubeVideoService {
             return videos
         } catch {
             logger.error("❌ Ошибка при чтении файла youtube_list.txt: \(error.localizedDescription)")
-            throw YouTubeVideoServiceError.fileReadError(error)
+            throw ServiceError.fileReadError(error)
         }
     }
+}
 
-    /// Получает YouTube видео для конкретного дня
-    /// - Parameter dayNumber: Номер дня программы
-    /// - Returns: YouTube видео или nil, если не найдено
-    /// - Throws: Ошибка при загрузке видео
-    func getVideo(for dayNumber: Int) throws -> YouTubeVideo? {
-        logger.info("🎥 Запрашиваем YouTube видео для дня: \(dayNumber)")
-
-        let videos = try loadVideos()
-        logger.debug("📊 Загружено \(videos.count) видео из файла")
-
-        let video = videos.first { $0.dayNumber == dayNumber }
-
-        if let video {
-            logger.info("✅ Найдено видео для дня \(dayNumber): \(video.url)")
-            logger.debug("📺 Заголовок видео: \(video.title)")
-        } else {
-            logger.warning("⚠️ Видео для дня \(dayNumber) не найдено в списке из \(videos.count) видео")
-            logger.debug("📋 Доступные дни: \(videos.map(\.dayNumber).sorted())")
-        }
-
-        return video
-    }
-
-    /// Проверяет, есть ли видео для указанного дня
-    /// - Parameter dayNumber: Номер дня программы
-    /// - Returns: true, если видео существует
-    /// - Throws: Ошибка при загрузке видео
-    func hasVideo(for dayNumber: Int) throws -> Bool {
-        try getVideo(for: dayNumber) != nil
-    }
-
-    // MARK: - Private Methods
-
+private extension YouTubeVideoService {
     /// Парсит видео из содержимого файла
     /// - Parameter content: Содержимое файла youtube_list.txt
     /// - Returns: Массив YouTube видео
     /// - Throws: Ошибка при парсинге
-    private func parseVideos(from content: String) throws -> [YouTubeVideo] {
+    func parseVideos(from content: String) throws -> [YouTubeVideo] {
         logger.debug("🔍 Начинаем парсинг видео из файла")
 
         let lines = content.components(separatedBy: .newlines)
@@ -132,27 +132,27 @@ final class YouTubeVideoService {
     /// Проверяет, является ли строка валидным YouTube URL
     /// - Parameter urlString: Строка для проверки
     /// - Returns: true, если URL валидный
-    private func isValidYouTubeURL(_ urlString: String) -> Bool {
+    func isValidYouTubeURL(_ urlString: String) -> Bool {
         // Проверяем, что строка содержит youtube.com или youtu.be
         urlString.contains("youtube.com") || urlString.contains("youtu.be")
     }
 }
 
-// MARK: - Errors
+extension YouTubeVideoService {
+    enum ServiceError: LocalizedError {
+        case fileNotFound
+        case fileReadError(Error)
+        case parsingError
 
-enum YouTubeVideoServiceError: LocalizedError {
-    case fileNotFound
-    case fileReadError(Error)
-    case parsingError
-
-    var errorDescription: String? {
-        switch self {
-        case .fileNotFound:
-            "Файл youtube_list.txt не найден"
-        case let .fileReadError(error):
-            "Ошибка чтения файла: \(error.localizedDescription)"
-        case .parsingError:
-            "Ошибка парсинга файла с видео"
+        var errorDescription: String? {
+            switch self {
+            case .fileNotFound:
+                "Файл youtube_list.txt не найден"
+            case let .fileReadError(error):
+                "Ошибка чтения файла: \(error.localizedDescription)"
+            case .parsingError:
+                "Ошибка парсинга файла с видео"
+            }
         }
     }
 }

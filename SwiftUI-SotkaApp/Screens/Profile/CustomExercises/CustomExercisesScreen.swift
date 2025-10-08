@@ -5,10 +5,6 @@ import SwiftUI
 
 /// Экран списка пользовательских упражнений
 struct CustomExercisesScreen: View {
-    private let logger = Logger(
-        subsystem: Bundle.main.bundleIdentifier!,
-        category: String(describing: CustomExercisesScreen.self)
-    )
     @Query(FetchDescriptor<CustomExercise>(predicate: #Predicate { !$0.shouldDelete }))
     private var customExercises: [CustomExercise]
     @Environment(\.modelContext) private var modelContext
@@ -124,14 +120,10 @@ private extension CustomExercisesScreen {
     }
 
     func deleteExercise(_ exercise: CustomExercise) {
-        do {
-            try customExercisesService.deleteCustomExercise(
-                exercise,
-                context: modelContext
-            )
-        } catch {
-            logger.error("Ошибка удаления упражнения: \(error)")
-        }
+        customExercisesService.deleteCustomExercise(
+            exercise,
+            context: modelContext
+        )
         exerciseToDelete = nil
     }
 }

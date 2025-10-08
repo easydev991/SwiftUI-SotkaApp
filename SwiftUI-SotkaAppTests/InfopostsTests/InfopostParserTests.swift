@@ -47,8 +47,8 @@ struct InfopostParserTests {
         #expect(result.contains("src=\"img/2.jpg\""))
 
         // Проверяем применение размера шрифта
-        #expect(result.contains("src=\"js/script_big.js\""))
-        #expect(result.contains("css/style_big.css"))
+        #expect(result.contains("data-font-size=\"large\""))
+        #expect(result.contains("font_size_handler.js"))
 
         // Проверяем, что основной контент остался
         #expect(result.contains("Main content"))
@@ -180,8 +180,8 @@ struct InfopostParserTests {
         #expect(result.contains("src=\"img/1-1.jpg\""))
 
         // Проверяем применение размера шрифта
-        #expect(result.contains("src=\"js/script_medium.js\""))
-        #expect(result.contains("css/style_medium.css"))
+        #expect(result.contains("data-font-size=\"medium\""))
+        #expect(result.contains("font_size_handler.js"))
 
         // Проверяем, что основной контент остался
         #expect(result.contains("День 1: Начало пути"))
@@ -212,8 +212,8 @@ struct InfopostParserTests {
             infopost: testInfopost,
             youtubeService: youtubeService
         )
-        #expect(smallResult.contains("script_small.js"))
-        #expect(smallResult.contains("style_small.css"))
+        #expect(smallResult.contains("data-font-size=\"small\""))
+        #expect(smallResult.contains("font_size_handler.js"))
 
         let mediumResult = parser.prepareHTMLForDisplay(
             html,
@@ -221,8 +221,8 @@ struct InfopostParserTests {
             infopost: testInfopost,
             youtubeService: youtubeService
         )
-        #expect(mediumResult.contains("script_medium.js"))
-        #expect(mediumResult.contains("style_medium.css"))
+        #expect(mediumResult.contains("data-font-size=\"medium\""))
+        #expect(mediumResult.contains("font_size_handler.js"))
 
         let largeResult = parser.prepareHTMLForDisplay(
             html,
@@ -230,7 +230,7 @@ struct InfopostParserTests {
             infopost: testInfopost,
             youtubeService: youtubeService
         )
-        #expect(largeResult.contains("script_big.js"))
-        #expect(largeResult.contains("style_big.css"))
+        #expect(largeResult.contains("data-font-size=\"large\""))
+        #expect(largeResult.contains("font_size_handler.js"))
     }
 }

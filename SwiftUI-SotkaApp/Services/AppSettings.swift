@@ -117,10 +117,10 @@ final class AppSettings {
     }
 
     @MainActor
-    func sendFeedback() {
+    func sendFeedback(message: String? = nil) {
         FeedbackSender.sendFeedback(
             subject: CommonFeedback.subject,
-            messageBody: CommonFeedback.body,
+            messageBody: CommonFeedback.makeBody(for: message),
             recipients: Constants.feedbackRecipients
         )
     }

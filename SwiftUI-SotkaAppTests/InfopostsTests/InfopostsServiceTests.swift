@@ -19,58 +19,62 @@ struct InfopostsServiceTests {
 
     @Test
     @MainActor
-    func loadInfopostsSuccess() throws {
+    func loadAvailableInfopostsSuccess() throws {
         // Arrange
         let service = createService(language: "ru")
 
         // Act
-        let infoposts = try service.loadInfoposts()
+        try service.loadAvailableInfoposts(currentDay: 100, maxReadInfoPostDay: 0)
 
         // Assert
-        #expect(!infoposts.isEmpty)
+        let sections = service.sectionsForDisplay
+        #expect(!sections.isEmpty)
 
-        // Проверяем, что есть основные инфопосты
-        let infopostIds = infoposts.map(\.id)
-        #expect(!infopostIds.contains("about"))
-        #expect(infopostIds.contains("organiz"))
-        #expect(infopostIds.contains("aims"))
-        #expect(infopostIds.contains("d0-women"))
-        #expect(infopostIds.contains("d1"))
-        #expect(infopostIds.contains("d100"))
+        // Проверяем, что есть основные инфопосты через секции
+        let allInfopostIds = sections.flatMap { $0.infoposts.map(\.id) }
+        #expect(allInfopostIds.contains("organiz"))
+        #expect(allInfopostIds.contains("aims"))
+        #expect(allInfopostIds.contains("d0-women"))
+        #expect(allInfopostIds.contains("d1"))
+        #expect(allInfopostIds.contains("d100"))
     }
 
     @Test
     @MainActor
-    func loadInfopostsWithEnglishLanguage() throws {
+    func loadAvailableInfopostsWithEnglishLanguage() throws {
         // Arrange
         let service = createService(language: "en")
 
         // Act
-        let infoposts = try service.loadInfoposts()
+        try service.loadAvailableInfoposts(currentDay: 100, maxReadInfoPostDay: 0)
 
         // Assert
-        #expect(!infoposts.isEmpty)
+        let sections = service.sectionsForDisplay
+        #expect(!sections.isEmpty)
 
         // Проверяем, что все инфопосты имеют английский язык
-        for infopost in infoposts {
+        let allInfoposts = sections.flatMap(\.infoposts)
+        for infopost in allInfoposts {
             #expect(infopost.language == "en")
         }
     }
 
     @Test
     @MainActor
-    func loadInfopostsWithRussianLanguage() throws {
+    func loadAvailableInfopostsWithRussianLanguage() throws {
         // Arrange
         let service = createService(language: "ru")
 
         // Act
-        let infoposts = try service.loadInfoposts()
+        try service.loadAvailableInfoposts(currentDay: 100, maxReadInfoPostDay: 0)
 
         // Assert
-        #expect(!infoposts.isEmpty)
+        let sections = service.sectionsForDisplay
+        #expect(!sections.isEmpty)
 
         // Проверяем, что все инфопосты имеют русский язык
-        for infopost in infoposts {
+        let allInfoposts = sections.flatMap(\.infoposts)
+        for infopost in allInfoposts {
             #expect(infopost.language == "ru")
         }
     }
@@ -79,51 +83,19 @@ struct InfopostsServiceTests {
 
     @Test
     @MainActor
-    func loadInfopostWithValidId() throws {
+    func loadAboutInfopostSuccess() throws {
         // Arrange
         let service = createService(language: "ru")
-        let infopostId = "organiz"
 
         // Act
-        let infopost = try service.loadInfopost(id: infopostId)
+        let infopost = service.loadAboutInfopost()
 
         // Assert
         let validInfopost = try #require(infopost)
-        #expect(validInfopost.id == infopostId)
+        #expect(validInfopost.id == "about")
         #expect(validInfopost.language == "ru")
         #expect(!validInfopost.title.isEmpty)
         #expect(!validInfopost.content.isEmpty)
-    }
-
-    @Test
-    @MainActor
-    func loadInfopostWithDayId() throws {
-        // Arrange
-        let service = createService(language: "ru")
-        let infopostId = "d1"
-
-        // Act
-        let infopost = try service.loadInfopost(id: infopostId)
-
-        // Assert
-        let validInfopost = try #require(infopost)
-        #expect(validInfopost.id == infopostId)
-        #expect(validInfopost.dayNumber == 1)
-        #expect(validInfopost.section == .base)
-    }
-
-    @Test
-    @MainActor
-    func loadInfopostWithInvalidId() throws {
-        // Arrange
-        let service = createService(language: "ru")
-        let invalidId = "nonexistent"
-
-        // Act
-        let infopost = try service.loadInfopost(id: invalidId)
-
-        // Assert
-        #expect(infopost == nil)
     }
 
     // MARK: - Тесты работы с избранным
@@ -148,16 +120,16 @@ struct InfopostsServiceTests {
         let infopost4 = Infopost(filename: "d3", title: "Test 3", content: "Content 3", language: "ru")
 
         // Act & Assert
-        let isFavorite1 = try service.isInfopostFavorite(infopost1, modelContext: modelContext)
+        let isFavorite1 = service.isFavorite(infopost1, modelContext: modelContext)
         #expect(isFavorite1)
 
-        let isFavorite2 = try service.isInfopostFavorite(infopost2, modelContext: modelContext)
+        let isFavorite2 = service.isFavorite(infopost2, modelContext: modelContext)
         #expect(isFavorite2)
 
-        let isFavorite3 = try service.isInfopostFavorite(infopost3, modelContext: modelContext)
+        let isFavorite3 = service.isFavorite(infopost3, modelContext: modelContext)
         #expect(isFavorite3)
 
-        let isNotFavorite = try service.isInfopostFavorite(infopost4, modelContext: modelContext)
+        let isNotFavorite = service.isFavorite(infopost4, modelContext: modelContext)
         #expect(!isNotFavorite)
     }
 
@@ -172,7 +144,7 @@ struct InfopostsServiceTests {
         let infopost = Infopost(filename: "d1", title: "Test", content: "Content", language: "ru")
 
         // Act
-        let isFavorite = try service.isInfopostFavorite(infopost, modelContext: modelContext)
+        let isFavorite = service.isFavorite(infopost, modelContext: modelContext)
 
         // Assert
         #expect(!isFavorite)
@@ -202,7 +174,7 @@ struct InfopostsServiceTests {
         )
 
         // Act
-        let isFavorite = try service.isInfopostFavorite(infopost, modelContext: modelContext)
+        let isFavorite = service.isFavorite(infopost, modelContext: modelContext)
 
         // Assert
         #expect(!isFavorite)
@@ -210,7 +182,7 @@ struct InfopostsServiceTests {
 
     @Test
     @MainActor
-    func getFavoriteInfopostIdsWhenUserExists() throws {
+    func loadFavoriteIdsWhenUserExists() throws {
         // Arrange
         let service = createService(language: "ru")
         let modelContainer = try ModelContainer(for: User.self, configurations: ModelConfiguration(isStoredInMemoryOnly: true))
@@ -223,28 +195,25 @@ struct InfopostsServiceTests {
         try modelContext.save()
 
         // Act
-        let result = try service.getFavoriteInfopostIds(modelContext: modelContext)
+        try service.loadFavoriteIds(modelContext: modelContext)
 
         // Assert
-        #expect(result.count == favoriteIds.count)
-        for id in favoriteIds {
-            #expect(result.contains(id))
-        }
+        #expect(service.showDisplayModePicker)
     }
 
     @Test
     @MainActor
-    func getFavoriteInfopostIdsWhenUserNotExists() throws {
+    func loadFavoriteIdsWhenUserNotExists() throws {
         // Arrange
         let service = createService(language: "ru")
         let modelContainer = try ModelContainer(for: User.self, configurations: ModelConfiguration(isStoredInMemoryOnly: true))
         let modelContext = modelContainer.mainContext
 
         // Act
-        let result = try service.getFavoriteInfopostIds(modelContext: modelContext)
+        try service.loadFavoriteIds(modelContext: modelContext)
 
         // Assert
-        #expect(result.isEmpty)
+        #expect(!service.showDisplayModePicker)
     }
 
     @Test
@@ -314,10 +283,13 @@ struct InfopostsServiceTests {
         let service = createService(language: "ru")
 
         // Act
-        let infoposts = try service.loadInfoposts()
+        try service.loadAvailableInfoposts(currentDay: 100, maxReadInfoPostDay: 0)
 
         // Assert
-        for infopost in infoposts {
+        let sections = service.sectionsForDisplay
+        let allInfoposts = sections.flatMap(\.infoposts)
+
+        for infopost in allInfoposts {
             #expect(!infopost.id.isEmpty)
             #expect(!infopost.title.isEmpty)
             #expect(!infopost.content.isEmpty)
@@ -340,10 +312,12 @@ struct InfopostsServiceTests {
         let service = createService(language: "ru")
 
         // Act
-        let infoposts = try service.loadInfoposts()
+        try service.loadAvailableInfoposts(currentDay: 100, maxReadInfoPostDay: 0)
 
         // Assert
-        let dayInfoposts = infoposts.filter { $0.dayNumber != nil }
+        let sections = service.sectionsForDisplay
+        let allInfoposts = sections.flatMap(\.infoposts)
+        let dayInfoposts = allInfoposts.filter { $0.dayNumber != nil }
 
         for infopost in dayInfoposts {
             let dayNumber = try #require(infopost.dayNumber)
@@ -352,12 +326,7 @@ struct InfopostsServiceTests {
         }
 
         // Проверяем специальные инфопосты
-        let aboutInfopost = infoposts.first { $0.id == "about" }
-        if let about = aboutInfopost {
-            #expect(about.section == .preparation)
-        }
-
-        let organizInfopost = infoposts.first { $0.id == "organiz" }
+        let organizInfopost = allInfoposts.first { $0.id == "organiz" }
         if let organiz = organizInfopost {
             #expect(organiz.section == .preparation)
         }
@@ -367,15 +336,17 @@ struct InfopostsServiceTests {
 
     @Test
     @MainActor
-    func loadInfopostsClearsCache() throws {
+    func loadAvailableInfopostsCaching() throws {
         // Arrange
         let service = createService(language: "ru")
 
         // Act - первая загрузка
-        let firstLoad = try service.loadInfoposts()
+        try service.loadAvailableInfoposts(currentDay: 100, maxReadInfoPostDay: 0)
+        let firstLoad = service.sectionsForDisplay.flatMap(\.infoposts)
 
-        // Act - вторая загрузка (должна очистить кэш)
-        let secondLoad = try service.loadInfoposts()
+        // Act - вторая загрузка (должна использовать кэш)
+        try service.loadAvailableInfoposts(currentDay: 100, maxReadInfoPostDay: 0)
+        let secondLoad = service.sectionsForDisplay.flatMap(\.infoposts)
 
         // Assert
         #expect(firstLoad.count == secondLoad.count)
@@ -391,16 +362,18 @@ struct InfopostsServiceTests {
 
     @Test
     @MainActor
-    func loadInfopostsWithInvalidLanguage() throws {
+    func loadAvailableInfopostsWithInvalidLanguage() throws {
         // Arrange
         let service = createService(language: "invalid")
 
         // Act & Assert
         // Для несуществующего языка должны вернуться пустые результаты
         // или ошибка парсинга, в зависимости от реализации
-        let infoposts = try service.loadInfoposts()
+        try service.loadAvailableInfoposts(currentDay: 100, maxReadInfoPostDay: 0)
         // Если не выброшена ошибка, то должен быть пустой массив
-        #expect(infoposts.isEmpty)
+        let sections = service.sectionsForDisplay
+        let allInfoposts = sections.flatMap(\.infoposts)
+        #expect(allInfoposts.isEmpty)
     }
 
     // MARK: - Тесты фильтрации по полу
@@ -463,5 +436,142 @@ struct InfopostsServiceTests {
         #expect(infopost.title == title)
         #expect(infopost.content == content)
         #expect(infopost.language == language)
+    }
+
+    // MARK: - Тесты управления секциями
+
+    @Test
+    @MainActor
+    func sectionsForDisplayReturnsCorrectSections() throws {
+        // Arrange
+        let service = createService(language: "ru")
+        try service.loadAvailableInfoposts(currentDay: 100, maxReadInfoPostDay: 0)
+
+        // Act
+        let sections = service.sectionsForDisplay
+
+        // Assert
+        #expect(!sections.isEmpty)
+
+        // Проверяем, что все секции имеют контент
+        for section in sections {
+            #expect(section.hasContent)
+            #expect(!section.infoposts.isEmpty)
+            #expect(section.id == section.section)
+        }
+    }
+
+    @Test
+    @MainActor
+    func sectionsForDisplayFiltersEmptySections() throws {
+        // Arrange
+        let service = createService(language: "ru")
+        try service.loadAvailableInfoposts(currentDay: 1, maxReadInfoPostDay: 0) // Только первый день
+
+        // Act
+        let sections = service.sectionsForDisplay
+
+        // Assert
+        // Должны быть только секции с контентом
+        for section in sections {
+            #expect(!section.infoposts.isEmpty)
+        }
+    }
+
+    @Test
+    @MainActor
+    func didTapSectionTogglesCollapsedState() throws {
+        // Arrange
+        let service = createService(language: "ru")
+        try service.loadAvailableInfoposts(currentDay: 100, maxReadInfoPostDay: 0)
+        let sections = service.sectionsForDisplay
+        let firstSection = try #require(sections.first)
+
+        // Act - сворачиваем секцию
+        service.didTapSection(firstSection.section)
+        let sectionsAfterCollapse = service.sectionsForDisplay
+        let collapsedSection = try #require(sectionsAfterCollapse.first { $0.section == firstSection.section })
+
+        // Assert
+        #expect(collapsedSection.isCollapsed)
+
+        // Act - разворачиваем секцию
+        service.didTapSection(firstSection.section)
+        let sectionsAfterExpand = service.sectionsForDisplay
+        let expandedSection = try #require(sectionsAfterExpand.first { $0.section == firstSection.section })
+
+        // Assert
+        #expect(!expandedSection.isCollapsed)
+    }
+
+    @Test
+    @MainActor
+    func didTapSectionMultipleTimes() throws {
+        // Arrange
+        let service = createService(language: "ru")
+        try service.loadAvailableInfoposts(currentDay: 100, maxReadInfoPostDay: 0)
+        let sections = service.sectionsForDisplay
+        let firstSection = try #require(sections.first)
+
+        // Act - несколько нажатий на одну секцию
+        service.didTapSection(firstSection.section) // Сворачиваем
+        service.didTapSection(firstSection.section) // Разворачиваем
+        service.didTapSection(firstSection.section) // Сворачиваем снова
+
+        let finalSections = service.sectionsForDisplay
+        let finalSection = try #require(finalSections.first { $0.section == firstSection.section })
+
+        // Assert
+        #expect(finalSection.isCollapsed)
+    }
+
+    @Test
+    @MainActor
+    func didTapSectionDifferentSections() throws {
+        // Arrange
+        let service = createService(language: "ru")
+        try service.loadAvailableInfoposts(currentDay: 100, maxReadInfoPostDay: 0)
+        let sections = service.sectionsForDisplay
+        let firstSection = try #require(sections.first)
+        let secondSection = try #require(sections.dropFirst().first)
+
+        // Act - сворачиваем разные секции
+        service.didTapSection(firstSection.section)
+        service.didTapSection(secondSection.section)
+
+        let finalSections = service.sectionsForDisplay
+        let finalFirstSection = try #require(finalSections.first { $0.section == firstSection.section })
+        let finalSecondSection = try #require(finalSections.first { $0.section == secondSection.section })
+
+        // Assert
+        #expect(finalFirstSection.isCollapsed)
+        #expect(finalSecondSection.isCollapsed)
+    }
+
+    @Test
+    @MainActor
+    func didLogoutResetsSectionsState() throws {
+        // Arrange
+        let service = createService(language: "ru")
+        try service.loadAvailableInfoposts(currentDay: 100, maxReadInfoPostDay: 0)
+        let sections = service.sectionsForDisplay
+        let firstSection = try #require(sections.first)
+
+        // Act - сворачиваем секцию
+        service.didTapSection(firstSection.section)
+        let sectionsAfterCollapse = service.sectionsForDisplay
+        let collapsedSection = try #require(sectionsAfterCollapse.first { $0.section == firstSection.section })
+        #expect(collapsedSection.isCollapsed)
+
+        // Act - выходим из аккаунта
+        service.didLogout()
+
+        // Act - загружаем инфопосты снова
+        try service.loadAvailableInfoposts(currentDay: 100, maxReadInfoPostDay: 0)
+        let sectionsAfterLogout = service.sectionsForDisplay
+        let sectionAfterLogout = try #require(sectionsAfterLogout.first { $0.section == firstSection.section })
+
+        // Assert
+        #expect(!sectionAfterLogout.isCollapsed)
     }
 }
