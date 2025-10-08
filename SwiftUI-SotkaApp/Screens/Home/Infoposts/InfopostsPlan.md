@@ -254,6 +254,201 @@ Services/Infoposts/
 - ✅ Созданы comprehensive unit-тесты (29 тестов) для полного покрытия логики синхронизации
 - ✅ Реализована обработка ошибок сети с graceful degradation и офлайн-работой
 
+## Итерация 15: Отслеживание достижения конца HTML-вьюхи для вызова markPostAsRead
+
+### Анализ задачи
+
+**Текущая реализация:**
+- Метод `markPostAsRead` вызывается в `.task` при появлении экрана `InfopostDetailScreen`
+- Это означает, что пост помечается как прочитанный сразу при открытии, а не при фактическом прочтении
+
+**Цель:**
+- Вызывать `markPostAsRead` только при достижении места добавления YouTube видео (не всего контента)
+- Обеспечить более точную статистику прочитанных постов
+- Отслеживать видимость элемента `.video-container` или тега `<footer>` (место где добавляется видео)
+
+### Варианты реализации
+
+#### Вариант 1: JavaScript скрипт с отслеживанием скролла (РЕКОМЕНДУЕМЫЙ)
+
+**Преимущества:**
+- Точное отслеживание достижения места добавления YouTube видео
+- Работает для всех случаев: с видео, без видео, с footer, без footer
+- Минимальные изменения в Swift коде
+- Использует существующую инфраструктуру message handlers
+- Логика соответствует реальной структуре HTML (видео добавляется перед footer или в конец)
+
+**Реализация:**
+1. **Создать новый JavaScript скрипт** `scroll_tracker.js`:
+   ```javascript
+   // Отслеживание достижения места добавления YouTube видео
+   (function() {
+       let hasReachedVideoSection = false;
+       
+       function checkScrollPosition() {
+           // Ищем элемент с классом video-container (YouTube видео)
+           const videoContainer = document.querySelector('.video-container');
+           
+           if (!videoContainer) {
+               // Если видео нет, проверяем footer (место где должно быть видео)
+               const footer = document.querySelector('footer');
+               if (!footer) {
+                   // Если нет ни видео, ни footer, считаем что достигли конца
+                   const scrollTop = window.pageYOffset || document.documentElement.scrollTop;
+                   const windowHeight = window.innerHeight;
+                   const documentHeight = document.documentElement.scrollHeight;
+                   const isAtEnd = scrollTop + windowHeight >= documentHeight - 50;
+                   
+                   if (isAtEnd && !hasReachedVideoSection) {
+                       hasReachedVideoSection = true;
+                       sendReachedEndMessage();
+                   }
+               } else {
+                   // Проверяем, виден ли footer
+                   checkElementVisibility(footer);
+               }
+           } else {
+               // Проверяем, видно ли видео
+               checkElementVisibility(videoContainer);
+           }
+       }
+       
+       function checkElementVisibility(element) {
+           const rect = element.getBoundingClientRect();
+           const windowHeight = window.innerHeight;
+           
+           // Элемент считается видимым, если его верхняя часть видна на экране
+           const isVisible = rect.top <= windowHeight && rect.bottom >= 0;
+           
+           if (isVisible && !hasReachedVideoSection) {
+               hasReachedVideoSection = true;
+               sendReachedEndMessage();
+           }
+       }
+       
+       function sendReachedEndMessage() {
+           // Отправляем сообщение в iOS приложение
+           if (window.webkit && window.webkit.messageHandlers && window.webkit.messageHandlers.scrollReachedEnd) {
+               window.webkit.messageHandlers.scrollReachedEnd.postMessage({
+                   message: "reached_video_section"
+               });
+           }
+       }
+       
+       // Отслеживаем скролл с debouncing
+       let scrollTimeout;
+       window.addEventListener('scroll', function() {
+           clearTimeout(scrollTimeout);
+           scrollTimeout = setTimeout(checkScrollPosition, 100);
+       });
+       
+       // Проверяем сразу при загрузке
+       document.addEventListener('DOMContentLoaded', checkScrollPosition);
+       
+       // Проверяем при изменении размера окна
+       window.addEventListener('resize', checkScrollPosition);
+   })();
+   ```
+
+2. **Обновить HTMLContentView.swift:**
+   - Добавить новый message handler `scrollReachedEnd`
+   - Добавить callback для вызова `markPostAsRead`
+   - Передать callback через Coordinator
+
+3. **Обновить InfopostParser.swift:**
+   - Добавить подключение `scroll_tracker.js` в `addUniversalVideoHandler`
+
+4. **Обновить InfopostDetailScreen.swift:**
+   - Убрать вызов `markPostAsRead` из `.task`
+   - Передать callback в `HTMLContentView`
+
+#### Вариант 2: WKWebView scrollView delegate
+
+**Преимущества:**
+- Нативная реализация в Swift
+- Прямой доступ к scrollView
+
+**Недостатки:**
+- Более сложная реализация
+- Нужно создавать custom WKWebView subclass
+- Может конфликтовать с существующей архитектурой
+
+**Реализация:**
+1. Создать custom `ScrollTrackingWebView` с `UIScrollViewDelegate`
+2. Отслеживать `scrollViewDidScroll` и `scrollViewDidEndDecelerating`
+3. Проверять достижение конца через `contentOffset` и `contentSize`
+
+#### Вариант 3: Intersection Observer API
+
+**Преимущества:**
+- Современный веб-стандарт
+- Эффективное отслеживание видимости элементов
+
+**Недостатки:**
+- Требует добавления специального элемента в конец HTML
+- Менее надежен для разных размеров контента
+
+**Реализация:**
+1. Добавить невидимый элемент в конец HTML
+2. Использовать Intersection Observer для отслеживания его видимости
+3. Отправлять сообщение при появлении элемента в viewport
+
+### Рекомендуемый план реализации (Вариант 1)
+
+#### Этап 1: Создание JavaScript скрипта
+1. Создать файл `SupportingFiles/book/js/scroll_tracker.js`
+2. Реализовать логику отслеживания скролла
+3. Добавить отправку сообщений в iOS через message handlers
+
+#### Этап 2: Обновление HTMLContentView
+1. Добавить новый message handler `scrollReachedEnd`
+2. Добавить callback closure для вызова `markPostAsRead`
+3. Обновить Coordinator для обработки нового сообщения
+
+#### Этап 3: Обновление InfopostParser
+1. Добавить подключение `scroll_tracker.js` в `addUniversalVideoHandler`
+2. Обеспечить загрузку скрипта во всех HTML файлах
+
+#### Этап 4: Обновление InfopostDetailScreen
+1. Убрать вызов `markPostAsRead` из `.task`
+2. Передать callback в `HTMLContentView`
+3. Добавить состояние для отслеживания уже прочитанных постов
+
+#### Этап 5: Тестирование
+1. Создать unit-тесты для нового функционала
+2. Протестировать на разных размерах контента
+3. Проверить работу на разных устройствах
+
+### Дополнительные улучшения
+
+#### Debouncing для оптимизации
+```javascript
+// Добавить debouncing для предотвращения частых вызовов
+let scrollTimeout;
+window.addEventListener('scroll', function() {
+    clearTimeout(scrollTimeout);
+    scrollTimeout = setTimeout(checkScrollPosition, 100);
+});
+```
+
+#### Настраиваемый threshold
+```javascript
+// Сделать threshold настраиваемым
+const SCROLL_THRESHOLD = 50; // пикселей от конца
+```
+
+#### Обработка изменения размера окна
+```javascript
+// Пересчитывать при изменении размера окна
+window.addEventListener('resize', checkScrollPosition);
+```
+
+### Обратная совместимость
+
+- Сохранить возможность принудительной отметки как прочитанного
+- Добавить настройку в AppSettings для выбора режима (автоматический/ручной)
+- Обеспечить fallback на текущее поведение при ошибках
+
 # ✅ ПЛАН ПОЛНОСТЬЮ ВЫПОЛНЕН
 
 **Все задачи завершены!** Функционал инфопостов полностью реализован и готов к использованию.
@@ -327,228 +522,19 @@ Services/Infoposts/
 4. **Ограничения доступности**: сервер контролирует, до какого дня доступны посты через `maxReadInfoPostDay`
 5. **Надежность**: даже при проблемах с сетью локальный прогресс сохраняется
 
-### План реализации в новом приложении
-
-#### 1. ✅ Создать протокол InfopostsClient
-**Файл**: `Services/Protocols/InfopostsClient.swift`
-```swift
-protocol InfopostsClient {
-    func getReadPosts() async throws -> [Int]
-    func setPostRead(day: Int) async throws
-    func deleteAllReadPosts() async throws
-}
-```
-
-#### 2. ✅ Расширить SWClient для инфопостов
-**Файл**: `Services/SWClient.swift`
-- ✅ Добавить extension `SWClient: InfopostsClient`
-- ✅ Добавить endpoints в enum `Endpoint`:
-  - `getReadPosts` → `GET /100/posts/read`
-  - `setPostRead(day: Int)` → `POST /100/posts/read/{day}`
-  - `deleteAllReadPosts` → `DELETE /100/posts/read`
-
-#### 3. ✅ Создать модель для ответов сервера
-**Файл**: `Models/Infoposts/InfopostReadResponse.swift` *(удален - не нужен)*
-```swift
-// Упрощено: сервер возвращает [Int] напрямую, без обертки
-// struct InfopostReadResponse: Decodable {
-//     let days: [Int]
-// }
-```
-
-#### 4. ✅ Расширить модель User для хранения статистики
-**Файл**: `Models/User.swift`
-- ✅ Добавить поля:
-  - `readInfopostDays: Set<Int>` - синхронизированные прочитанные дни
-  - `unsyncedReadInfopostDays: Set<Int>` - несинхронизированные прочитанные дни
-
-**Примечание**: `maxReadInfopostDay` уже реализован в `StatusManager` и обновляется с сервера через `CurrentRun.maxForAllRunsDay`
-
-#### 5. ✅ Расширить InfopostsService методами синхронизации
-**Файл**: `Services/Infoposts/InfopostsService.swift`
-- ✅ Добавить зависимость от `InfopostsClient`
-- ✅ Добавить методы:
-  - `syncReadPosts(modelContext: ModelContext) async throws` - синхронизация прочитанных постов с сервером
-  - `markPostAsRead(day: Int?, modelContext: ModelContext) async throws` - маркировка поста как прочитанного (принимает Int?, сам обрабатывает nil)
-  - `isPostRead(day: Int, modelContext: ModelContext) throws -> Bool` - проверка статуса прочитанного поста
-
 **Логика синхронизации (по образцу старого приложения):**
 
-**1. Маркировка поста как прочитанного:**
-```swift
-func markPostAsRead(day: Int?) async throws {
-    guard let day, day >= 1, day <= 100 else { return }
-    
-    // Проверяем, не прочитан ли уже пост
-    if isPostRead(day: day) { return }
-    
-    // Добавляем в несинхронизированные (локально)
-    user.unsyncedReadInfopostDays.insert(day)
-    try modelContext.save()
-    
-    // Пытаемся сразу синхронизировать с сервером
-    do {
-        try await client.setPostRead(day: day)
-        // При успехе перемещаем в синхронизированные
-        user.unsyncedReadInfopostDays.remove(day)
-        user.readInfopostDays.insert(day)
-        try modelContext.save()
-    } catch {
-        // При ошибке оставляем в несинхронизированных для повторной попытки
-        logger.warning("Не удалось синхронизировать прочитанный пост \(day): \(error)")
-    }
-}
-```
+✅ **Реализовано:**
+- Маркировка постов как прочитанных с офлайн-приоритетом
+- Синхронизация с сервером в фоне
+- Автоматическая очистка при выходе из аккаунта
+- Обработка ошибок сети с graceful degradation
 
-**2. Синхронизация с сервером:**
-```swift
-func syncReadPosts() async throws {
-    // 1. Отправляем несинхронизированные посты на сервер
-    for day in user.unsyncedReadInfopostDays {
-        do {
-            try await client.setPostRead(day: day)
-            // При успехе перемещаем в синхронизированные
-            user.unsyncedReadInfopostDays.remove(day)
-            user.readInfopostDays.insert(day)
-        } catch {
-            logger.warning("Не удалось синхронизировать пост \(day): \(error)")
-        }
-    }
-    // 2. Получаем актуальный список с сервера (массив) и конвертируем в Set
-    let serverReadDaysArray = try await client.getReadPosts()
-    user.readInfopostDays = Set(serverReadDaysArray)
-    // 3. Сохраняем обновленные свойства в SwiftData
-    try modelContext.save()
-}
-```
-
-**Ключевые особенности реализации:**
-- **Обновление свойств User**: При синхронизации обновляются `readInfopostDays` и `unsyncedReadInfopostDays` в модели `User`
-- **Офлайн-приоритет**: Посты помечаются локально сразу, синхронизация происходит асинхронно
-- **Graceful degradation**: При ошибках сети локальный прогресс сохраняется
-- **Автоматическая синхронизация**: При маркировке поста сразу пытаемся синхронизировать с сервером
-- **Автоматическая очистка**: При выходе из аккаунта все данные User (включая новые поля) автоматически удаляются через SwiftData
-
-**3. Проверка статуса прочитанного:**
-```swift
-func isPostRead(day: Int) -> Bool {
-    return user.readInfopostDays.contains(day) || 
-           user.unsyncedReadInfopostDays.contains(day)
-}
-```
-
-**Преимущества использования Set:**
-- **Быстрая проверка наличия**: `O(1)` вместо `O(n)` для `contains()`
-- **Автоматическое исключение дубликатов**: Невозможно добавить один день дважды
-- **Эффективные операции**: `insert()`, `remove()` работают быстрее чем с массивами
-- **Конвертация с сервера**: `Set(serverReadDaysArray)` автоматически убирает дубликаты
-
-#### 6. ✅ Добавить синхронизацию в InfopostsListScreen
-**Файл**: `Screens/Home/Infoposts/InfopostsListScreen.swift`
-- ✅ Добавить модификатор `.task` для вызова `syncReadPosts()` при появлении экрана
-- ✅ Добавить обработку ошибок синхронизации с логированием
-
-**Реализованный код:**
-```swift
-.task {
-    do {
-        try await infopostsService.syncReadPosts(modelContext: modelContext)
-    } catch {
-        logger.error("Ошибка синхронизации прочитанных постов: \(error.localizedDescription)")
-    }
-}
-```
-
-#### 7. ✅ Обновить InfopostDetailScreen для маркировки постов
-**Файл**: `Screens/Home/Infoposts/InfopostDetailScreen.swift`
-- ✅ Вызывать `markPostAsRead` при открытии поста, передавая `infopost.dayNumber`
-- ✅ Добавить обработку ошибок маркировки с логированием
-
-**Реализованный код:**
-```swift
-.task {
-    do {
-        try await infopostsService.markPostAsRead(day: infopost.dayNumber, modelContext: modelContext)
-    } catch {
-        logger.error("Ошибка маркировки поста как прочитанного: \(error.localizedDescription)")
-    }
-}
-```
-
-#### 8. ✅ Создать unit-тесты (ВЫПОЛНЕНО)
-**Файл**: `SwiftUI-SotkaAppTests/InfopostsServiceSyncTests.swift`
-- ✅ Тесты для методов синхронизации в `InfopostsService` (15 тестов)
-- ✅ Тесты для маркировки постов (8 тестов)
-- ✅ Тесты для обработки ошибок (3 теста)
-- ✅ Тесты для граничных случаев (3 теста)
-- ✅ Всего 29 тестов для полного покрытия логики синхронизации
-
-### Архитектурные принципы
-
-1. **Офлайн-приоритет**: Все данные сохраняются локально в SwiftData, синхронизация опциональна
-2. **Неблокирующая синхронизация**: Синхронизация происходит в фоне, не блокирует UI
-3. **Обработка ошибок**: Graceful degradation при отсутствии интернета
-4. **Консистентность**: Следование паттернам из SwiftUI-WorkoutApp
-5. **Логирование**: Использование OSLog для всех операций
-
-### Порядок реализации
-
-1. ✅ Создать протокол и расширить SWClient
-2. ✅ Создать модели ответов
-3. ✅ Расширить модель User
-4. ✅ Расширить InfopostsService методами синхронизации
-5. ✅ Добавить синхронизацию в InfopostsListScreen через `.task`
-6. ✅ Обновить InfopostDetailScreen для маркировки постов
-7. ✅ Создать тесты
-
-### Критерии готовности
-
-- ✅ Все API endpoints реализованы и протестированы
-- ✅ Локальное хранение работает офлайн
-- ✅ Синхронизация работает в фоне при открытии списка инфопостов
-- ✅ UI корректно отображает статус прочитанных постов
-- ✅ Обработка ошибок сети реализована
-- ✅ Unit-тесты покрывают основную функциональность
-- ⏳ Убрать логи для дебага после окончания всех доработок
-
-### ✅ Итерация 15: Рефакторинг InfopostParser в структуру с инициализатором (ВЫПОЛНЕНА)
-
-**Результаты:**
-- ✅ `InfopostParser` преобразован из enum в struct с инициализатором `init(filename: String, language: String)`
-- ✅ Добавлен удобный инициализатор `Infopost(filename: String, language: String)` для автоматического парсинга
-- ✅ Обновлено использование в `InfopostsService`, `InfopostsService+FilenameManager` и `HTMLContentView`
-
-### ✅ Итерация 16: Анализ возможности избавления от статических методов в InfopostParser (ВЫПОЛНЕНА)
-
-**Анализ текущих статических методов:**
-
-**✅ МОЖНО сделать нестатическими (приватными):**
-- `fixImagePaths(_:)` - используется только в `prepareHTMLForDisplay()`
-- `applyFontSize(_:fontSize:)` - используется только в `prepareHTMLForDisplay()`
-- `addYouTubeVideo(to:infopost:youtubeService:logger:)` - используется только в `prepareHTMLForDisplay()`
-- `addUniversalVideoHandler(to:logger:)` - используется только в `prepareHTMLForDisplay()`
-
-**⚠️ ЧАСТИЧНО МОЖНО сделать нестатическими:**
-- `cleanHTMLContent(_:logger:)` - используется в двух методах (`loadHTMLContent` и `prepareHTMLForDisplay`)
-- `extractTitle(from:filename:logger:)` - используется только в `parse(html:)`
-- `extractContent(from:logger:)` - используется только в `parse(html:)`
-
-**Рекомендации по рефакторингу:**
-
-1. **Все 7 статических методов можно сделать приватными нестатическими** - они не используют статические данные
-2. **Убрать параметр `logger`** из методов, которые станут нестатическими - использовать `self.logger`
-3. **Упростить вызовы** - убрать `Self.` префиксы и передачу logger параметра
-4. **Улучшить читаемость кода** - методы станут более естественными для структуры
-
-**Преимущества рефакторинга:**
-- **Упрощение API** - убираем лишние параметры logger
-- **Лучшая инкапсуляция** - все методы используют `self.logger`
-- **Более чистый код** - убираем `Self.` префиксы
-- **Естественная архитектура** - методы структуры работают с состоянием структуры
-
-**План реализации:**
-1. Сделать все статические методы приватными нестатическими
-2. Убрать параметр `logger` из сигнатур методов
-3. Заменить `logger` на `self.logger` внутри методов
-4. Убрать `Self.` префиксы при вызовах методов
-5. Обновить тесты под новую структуру
+**Файлы реализации:**
+- `Services/Protocols/InfopostsClient.swift` - протокол для API
+- `Services/SWClient.swift` - расширение с endpoints
+- `Models/User.swift` - поля `readInfopostDays` и `unsyncedReadInfopostDays`
+- `Services/Infoposts/InfopostsService.swift` - методы синхронизации
+- `Screens/Home/Infoposts/InfopostsListScreen.swift` - синхронизация при загрузке
+- `Screens/Home/Infoposts/InfopostDetailScreen.swift` - маркировка при открытии
+- `SwiftUI-SotkaAppTests/InfopostsServiceSyncTests.swift` - 29 unit-тестов

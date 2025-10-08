@@ -117,7 +117,7 @@ private extension InfopostsListScreen {
     }
 
     /// Загружает только доступные инфопосты в зависимости от текущего дня
-    private func loadAvailableInfoposts() {
+    func loadAvailableInfoposts() {
         do {
             availableInfoposts = try infopostsService.getAvailableInfoposts(
                 currentDay: statusManager.currentDayCalculator?.currentDay,
@@ -130,7 +130,7 @@ private extension InfopostsListScreen {
     }
 
     /// Загружает список избранных инфопостов
-    private func loadFavoriteIds() {
+    func loadFavoriteIds() {
         do {
             favoriteIds = try Set(infopostsService.getFavoriteInfopostIds(modelContext: modelContext))
         } catch {
