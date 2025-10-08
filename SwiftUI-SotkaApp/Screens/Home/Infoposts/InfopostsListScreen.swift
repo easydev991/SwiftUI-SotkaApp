@@ -1,4 +1,5 @@
 import OSLog
+import SWDesignSystem
 import SwiftData
 import SwiftUI
 
@@ -12,6 +13,7 @@ struct InfopostsListScreen: View {
     @State private var availableInfoposts: [Infopost] = []
     @State private var favoriteIds: Set<String> = []
     @State private var displayMode: InfopostsDisplayMode = .all
+    @State private var collapsedSections: Set<InfopostSection> = []
     private var userGender: Gender? {
         guard let genderCode = users.first?.genderCode else { return nil }
         return Gender(genderCode)
@@ -42,15 +44,18 @@ struct InfopostsListScreen: View {
         VStack(spacing: 12) {
             displayModePicker
             List(sectionsWithContent, id: \.self) { section in
-                Section(header: Text(section.localizedTitle)) {
-                    ForEach(filteredInfoposts.filter { $0.section == section }) { infopost in
-                        NavigationLink(destination: InfopostDetailScreen(infopost: infopost)) {
-                            Text(infopost.title)
+                Section(header: makeHeader(for: section)) {
+                    if !collapsedSections.contains(section) {
+                        ForEach(filteredInfoposts.filter { $0.section == section }) { infopost in
+                            NavigationLink(destination: InfopostDetailScreen(infopost: infopost)) {
+                                Text(infopost.title)
+                            }
                         }
                     }
                 }
             }
         }
+        .listStyle(.plain)
         .navigationTitle("Infoposts")
         .onChange(of: favoriteIds) { _, newValue in
             if newValue.isEmpty {
@@ -87,6 +92,28 @@ private extension InfopostsListScreen {
             .pickerStyle(.segmented)
             .padding([.top, .horizontal])
         }
+    }
+
+    func makeHeader(for section: InfopostSection) -> some View {
+        Button {
+            withAnimation {
+                if collapsedSections.contains(section) {
+                    collapsedSections.remove(section)
+                } else {
+                    collapsedSections.insert(section)
+                }
+            }
+        } label: {
+            HStack(spacing: 12) {
+                let isCollapsed = collapsedSections.contains(section)
+                Text(section.localizedTitle)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                ChevronView()
+                    .rotationEffect(.degrees(isCollapsed ? 0 : 90))
+                    .animation(.default, value: isCollapsed)
+            }
+        }
+        .buttonStyle(.plain)
     }
 
     /// Загружает только доступные инфопосты в зависимости от текущего дня
