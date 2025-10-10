@@ -196,6 +196,19 @@ final class InfopostsService {
         }
         logger.debug("Секция \(section.rawValue) \(isCollapsed ? "свернута" : "развернута")")
     }
+
+    /// Получает инфопост для указанного дня
+    /// - Parameter day: Номер дня
+    /// - Returns: Инфопост для указанного дня или nil, если не найден
+    func getInfopost(forDay day: Int) -> Infopost? {
+        let infopost = availableInfoposts.first { $0.dayNumber == day }
+        if infopost != nil {
+            logger.debug("Найден инфопост для дня \(day)")
+        } else {
+            logger.error("Инфопост для дня \(day) не найден")
+        }
+        return infopost
+    }
 }
 
 private extension InfopostsService {

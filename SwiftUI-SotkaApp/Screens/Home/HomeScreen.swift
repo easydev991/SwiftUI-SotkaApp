@@ -13,10 +13,10 @@ struct HomeScreen: View {
                     ScrollView {
                         VStack(spacing: 16) {
                             DayCountView(calculator: calculator)
+                            makeInfopostView(with: calculator)
                         }
                         .padding()
                     }
-                    .frame(maxWidth: .infinity)
                 } else {
                     Text("Loading")
                 }
@@ -38,6 +38,20 @@ struct HomeScreen: View {
     }
 }
 
+private extension HomeScreen {
+    @ViewBuilder
+    func makeInfopostView(with calculator: DayCalculator) -> some View {
+        let service = statusManager.infopostsService
+        if let infopost = service.getInfopost(forDay: calculator.currentDay) {
+            ThemeOfTheDayView(
+                currentDay: calculator.currentDay,
+                infopost: infopost
+            )
+        }
+    }
+}
+
+#if DEBUG
 #Preview {
     HomeScreen()
         .environment(
@@ -51,4 +65,6 @@ struct HomeScreen: View {
                 )
             )
         )
+        .modelContainer(PreviewModelContainer.make(with: User(id: 1)))
 }
+#endif

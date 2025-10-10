@@ -46,6 +46,27 @@ struct Infopost: Identifiable, Equatable {
         youtubeVideo(using: youtubeService) != nil
     }
 
+    /// Короткий заголовок для отображения на главном экране
+    ///
+    /// Удаляет префикс "День X. " из полного заголовка, как в старом приложении
+    /// Например: "День 100. Вот и все" → "Вот и все"
+    var shortTitle: String {
+        // Ищем точку в заголовке
+        guard let dotIndex = title.firstIndex(of: ".") else {
+            return title
+        }
+
+        // Получаем текст после точки
+        let afterDot = String(title[title.index(after: dotIndex)...])
+
+        // Удаляем первый символ (пробел), если он есть
+        if afterDot.hasPrefix(" ") {
+            return String(afterDot.dropFirst())
+        }
+
+        return afterDot
+    }
+
     init(
         id: String,
         title: String,

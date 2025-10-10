@@ -2412,6 +2412,22 @@
         }
       }
     },
+    "Home.Theme" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Theme of the Day"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Тема дня"
+          }
+        }
+      }
+    },
     "WorkoutDay" : {
       "localizations" : {
         "en" : {
