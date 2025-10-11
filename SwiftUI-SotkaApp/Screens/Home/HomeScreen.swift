@@ -12,10 +12,10 @@ struct HomeScreen: View {
                 if let calculator = statusManager.currentDayCalculator {
                     ScrollView {
                         VStack(spacing: 12) {
-                            DayCountView(calculator: calculator)
+                            HomeDayCountView(calculator: calculator)
                             makeInfopostView(with: calculator)
-                            HomeActivitySection()
-//                            HomeProgressSection()
+                            HomeActivitySectionView()
+//                            HomeFillProgressSectionView()
                         }
                         .padding([.horizontal, .bottom])
                     }
@@ -45,7 +45,7 @@ private extension HomeScreen {
     func makeInfopostView(with calculator: DayCalculator) -> some View {
         let service = statusManager.infopostsService
         if let infopost = try? service.getInfopost(forDay: calculator.currentDay) {
-            DailyInfopostView(
+            HomeInfopostSectionView(
                 currentDay: calculator.currentDay,
                 infopost: infopost
             )

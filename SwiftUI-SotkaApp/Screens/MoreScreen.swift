@@ -44,6 +44,7 @@ struct MoreScreen: View {
             }
             .animation(.default, value: appSettings.workoutNotificationsEnabled)
             .navigationTitle("More")
+            .navigationBarTitleDisplayMode(.inline)
             .onAppear {
                 if aboutInfopost == nil {
                     aboutInfopost = infopostsService.loadAboutInfopost()

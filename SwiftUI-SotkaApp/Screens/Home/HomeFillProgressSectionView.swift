@@ -1,7 +1,7 @@
 import SWDesignSystem
 import SwiftUI
 
-struct HomeProgressSection: View {
+struct HomeFillProgressSectionView: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {}
             .background(Color.swCardBackground)
@@ -11,7 +11,7 @@ struct HomeProgressSection: View {
 
 #if DEBUG
 #Preview {
-    HomeProgressSection()
+    HomeFillProgressSectionView()
         .padding()
 }
 #endif

@@ -4,7 +4,7 @@ import SwiftUI
 /// Вьюха с днями сотки (текущий день и оставшиеся дни)
 ///
 /// В старом приложении это `HomeCountCell`
-struct DayCountView: View {
+struct HomeDayCountView: View {
     let calculator: DayCalculator
 
     var body: some View {
@@ -21,7 +21,7 @@ struct DayCountView: View {
     }
 }
 
-private extension DayCountView {
+private extension HomeDayCountView {
     var finishedView: some View {
         VStack(spacing: 4) {
             VStack(spacing: 12) {
@@ -77,16 +77,16 @@ private extension DayCountView {
 }
 
 #Preview("День 1") {
-    DayCountView(calculator: .init(previewDay: 1))
+    HomeDayCountView(calculator: .init(previewDay: 1))
         .padding()
 }
 
 #Preview("День 49") {
-    DayCountView(calculator: .init(previewDay: 49))
+    HomeDayCountView(calculator: .init(previewDay: 49))
         .padding()
 }
 
 #Preview("День 100") {
-    DayCountView(calculator: .init(previewDay: 100))
+    HomeDayCountView(calculator: .init(previewDay: 100))
         .padding()
 }

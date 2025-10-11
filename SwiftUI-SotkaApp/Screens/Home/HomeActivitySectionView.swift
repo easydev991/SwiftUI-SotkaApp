@@ -1,7 +1,7 @@
 import SWDesignSystem
 import SwiftUI
 
-struct HomeActivitySection: View {
+struct HomeActivitySectionView: View {
     var body: some View {
         HomeSectionView(title: "Activity") {
             HStack(spacing: 12) {
@@ -14,7 +14,7 @@ struct HomeActivitySection: View {
     }
 }
 
-private extension HomeActivitySection {
+private extension HomeActivitySectionView {
     func makeView(
         for activityType: DayActivityType
     ) -> some View {
@@ -44,7 +44,7 @@ private extension HomeActivitySection {
 
 #if DEBUG
 #Preview {
-    HomeActivitySection()
+    HomeActivitySectionView()
         .padding()
 }
 #endif

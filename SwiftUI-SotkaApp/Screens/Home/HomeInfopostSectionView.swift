@@ -4,7 +4,7 @@ import SwiftUI
 /// Секция "Инфопост" на главном экране
 ///
 /// Отображает изображение дня и название статьи с навигацией к инфопосту
-struct DailyInfopostView: View {
+struct HomeInfopostSectionView: View {
     let currentDay: Int
     let infopost: Infopost
 
@@ -15,7 +15,7 @@ struct DailyInfopostView: View {
     }
 }
 
-private extension DailyInfopostView {
+private extension HomeInfopostSectionView {
     var navigationLinkView: some View {
         NavigationLink {
             InfopostDetailScreen(infopost: infopost)
@@ -49,7 +49,7 @@ private extension DailyInfopostView {
 }
 
 #Preview(traits: .sizeThatFitsLayout) {
-    DailyInfopostView(
+    HomeInfopostSectionView(
         currentDay: 2,
         infopost: .preview
     )

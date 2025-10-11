@@ -16,7 +16,7 @@ struct SyncStartDateView: View {
                 VStack(spacing: 32) {
                     Text("DateSync.Description")
                     VStack(spacing: 12) {
-                        DayCountView(calculator: model.appDayCalculator)
+                        HomeDayCountView(calculator: model.appDayCalculator)
                             .opacity(makeOpacity(model.appDayCalculator))
                         Button("DateSync.SelectAppDate") {
                             selectedOption = .app(model.appDayCalculator)
@@ -25,7 +25,7 @@ struct SyncStartDateView: View {
                     }
                     SWDivider()
                     VStack(spacing: 12) {
-                        DayCountView(calculator: model.siteDayCalculator)
+                        HomeDayCountView(calculator: model.siteDayCalculator)
                             .opacity(makeOpacity(model.siteDayCalculator))
                         Button("DateSync.SelectSiteDate") {
                             selectedOption = .site(model.siteDayCalculator)
