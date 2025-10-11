@@ -199,14 +199,14 @@ final class InfopostsService {
 
     /// Получает инфопост для указанного дня
     /// - Parameter day: Номер дня
-    /// - Returns: Инфопост для указанного дня или nil, если не найден
-    func getInfopost(forDay day: Int) -> Infopost? {
-        let infopost = availableInfoposts.first { $0.dayNumber == day }
-        if infopost != nil {
-            logger.debug("Найден инфопост для дня \(day)")
-        } else {
+    /// - Returns: Инфопост для указанного дня
+    /// - Throws: ServiceError.infopostNotFound, если инфопост не найден
+    func getInfopost(forDay day: Int) throws -> Infopost {
+        guard let infopost = availableInfoposts.first(where: { $0.dayNumber == day }) else {
             logger.error("Инфопост для дня \(day) не найден")
+            throw ServiceError.infopostNotFound
         }
+        logger.debug("Найден инфопост для дня \(day)")
         return infopost
     }
 }
@@ -218,7 +218,7 @@ private extension InfopostsService {
     /// - Throws: Ошибка при работе с базой данных
     func getCurrentUser(modelContext: ModelContext) throws -> User {
         guard let user = try modelContext.fetch(FetchDescriptor<User>()).first else {
-            throw InfopostsServiceError.userNotFound
+            throw ServiceError.userNotFound
         }
         userGender = user.gender
         return user
@@ -251,7 +251,8 @@ private extension InfopostsService {
                 infoposts.append(infopost)
                 logger.debug("Успешно распарсен файл: \(filename)")
             } else {
-                logger.warning("Не удалось распарсить файл: \(filename)")
+                logger.error("Не удалось распарсить файл: \(filename)")
+                throw ServiceError.parsingError
             }
         }
 
@@ -277,23 +278,40 @@ extension InfopostsService {
             // Обновляем синхронизированные дни
             user.readInfopostDays = serverReadDays
 
-            // Отправляем несинхронизированные дни на сервер
-            for day in user.unsyncedReadInfopostDays {
-                do {
-                    try await infopostsClient.setPostRead(day: day)
-                    logger.debug("Успешно синхронизирован день: \(day)")
-                } catch {
-                    logger.error("Ошибка синхронизации дня \(day): \(error.localizedDescription)")
-                    // Продолжаем синхронизацию других дней
+            // Параллельно отправляем несинхронизированные дни на сервер
+            let successfullySyncedDays = try await withThrowingTaskGroup(of: Int?.self) { group in
+                var syncedDays: [Int] = []
+
+                // Добавляем задачи для каждого несинхронизированного дня
+                for day in user.unsyncedReadInfopostDays {
+                    group.addTask {
+                        do {
+                            try await self.infopostsClient.setPostRead(day: day)
+                            self.logger.debug("Успешно синхронизирован день: \(day)")
+                            return day // Возвращаем успешно синхронизированный день
+                        } catch {
+                            self.logger.error("Ошибка синхронизации дня \(day): \(error.localizedDescription)")
+                            return nil // Возвращаем nil для неуспешных
+                        }
+                    }
                 }
+
+                // Собираем результаты
+                for try await result in group {
+                    if let day = result {
+                        syncedDays.append(day)
+                    }
+                }
+
+                return syncedDays
             }
 
-            // Очищаем несинхронизированные дни после успешной отправки
-            user.unsyncedReadInfopostDays = []
+            // Перемещаем успешно синхронизированные дни
+            if !successfullySyncedDays.isEmpty {
+                try moveDaysToSynced(successfullySyncedDays, user: user, modelContext: modelContext)
+            }
 
-            // Сохраняем изменения
-            try modelContext.save()
-            logger.info("Синхронизация завершена успешно")
+            logger.info("Синхронизация завершена. Успешно синхронизировано: \(successfullySyncedDays.count) дней")
 
         } catch {
             logger.error("Ошибка синхронизации: \(error.localizedDescription)")
@@ -329,11 +347,7 @@ extension InfopostsService {
         do {
             try await infopostsClient.setPostRead(day: day)
             // Если успешно, перемещаем из несинхронизированных в синхронизированные
-            user.unsyncedReadInfopostDays.removeAll { $0 == day }
-            if !user.readInfopostDays.contains(day) {
-                user.readInfopostDays.append(day)
-            }
-            try modelContext.save()
+            try moveDaysToSynced([day], user: user, modelContext: modelContext)
             logger.info("Инфопост дня \(day) успешно синхронизирован с сервером")
         } catch {
             logger.error("Не удалось синхронизировать день \(day) с сервером: \(error.localizedDescription)")
@@ -369,19 +383,45 @@ extension InfopostsService {
     }
 }
 
-enum InfopostsServiceError: LocalizedError {
-    case userNotFound
-    case infopostNotFound
-    case parsingError
+extension InfopostsService {
+    enum ServiceError: LocalizedError {
+        case userNotFound
+        case infopostNotFound
+        case parsingError
 
-    var errorDescription: String? {
-        switch self {
-        case .userNotFound:
-            "Пользователь не найден"
-        case .infopostNotFound:
-            "Инфопост не найден"
-        case .parsingError:
-            "Ошибка парсинга инфопоста"
+        var errorDescription: String? {
+            switch self {
+            case .userNotFound:
+                "Пользователь не найден"
+            case .infopostNotFound:
+                "Инфопост не найден"
+            case .parsingError:
+                "Ошибка парсинга инфопоста"
+            }
         }
+    }
+}
+
+private extension InfopostsService {
+    /// Перемещает дни из несинхронизированных в синхронизированные
+    /// - Parameters:
+    ///   - days: Массив дней для перемещения
+    ///   - user: Пользователь
+    ///   - modelContext: Контекст модели данных
+    /// - Throws: Ошибка при работе с базой данных
+    func moveDaysToSynced(_ days: [Int], user: User, modelContext: ModelContext) throws {
+        // В одном цикле делаем обе операции
+        for day in days {
+            // Удаляем из несинхронизированных
+            user.unsyncedReadInfopostDays.removeAll { $0 == day }
+
+            // Добавляем в синхронизированные (только если еще нет)
+            if !user.readInfopostDays.contains(day) {
+                user.readInfopostDays.append(day)
+            }
+        }
+
+        // Сохраняем изменения один раз
+        try modelContext.save()
     }
 }

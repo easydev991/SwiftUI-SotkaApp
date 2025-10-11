@@ -42,7 +42,7 @@ private extension HomeScreen {
     @ViewBuilder
     func makeInfopostView(with calculator: DayCalculator) -> some View {
         let service = statusManager.infopostsService
-        if let infopost = service.getInfopost(forDay: calculator.currentDay) {
+        if let infopost = try? service.getInfopost(forDay: calculator.currentDay) {
             ThemeOfTheDayView(
                 currentDay: calculator.currentDay,
                 infopost: infopost

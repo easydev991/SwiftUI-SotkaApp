@@ -269,7 +269,7 @@ struct InfopostsServiceTests {
         let modelContext = modelContainer.mainContext
 
         // Act & Assert
-        #expect(throws: InfopostsServiceError.userNotFound) {
+        #expect(throws: InfopostsService.ServiceError.userNotFound) {
             try service.changeFavorite(id: "d1", modelContext: modelContext)
         }
     }
@@ -367,13 +367,9 @@ struct InfopostsServiceTests {
         let service = createService(language: "invalid")
 
         // Act & Assert
-        // Для несуществующего языка должны вернуться пустые результаты
-        // или ошибка парсинга, в зависимости от реализации
-        try service.loadAvailableInfoposts(currentDay: 100, maxReadInfoPostDay: 0)
-        // Если не выброшена ошибка, то должен быть пустой массив
-        let sections = service.sectionsForDisplay
-        let allInfoposts = sections.flatMap(\.infoposts)
-        #expect(allInfoposts.isEmpty)
+        #expect(throws: InfopostsService.ServiceError.parsingError) {
+            try service.loadAvailableInfoposts(currentDay: 100, maxReadInfoPostDay: 0)
+        }
     }
 
     // MARK: - Тесты фильтрации по полу
