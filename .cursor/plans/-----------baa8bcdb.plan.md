@@ -12,24 +12,7 @@
 
 ## 1. Секция "Тема" (полная реализация)
 
-### 1.1 Обновление модели DayActivityType
-
-**Файл**: `SwiftUI-SotkaApp/Models/Workout/DayActivityType.swift`
-
-Модель уже существует, нужно доработать:
-
-- Добавить computed property `color: Color` - цвет для UI (синий для workout, зеленый для rest, фиолетовый для stretch, красный для sick)
-- Добавить computed property `iconName: String` - имя SF Symbol для иконки
-- Оставить существующий `localizedTitle: LocalizedStringKey`
-
-Соответствие со старым приложением:
-
-- `workout` = `ACTIVITY_TYPE_EXERCISE` (0)
-- `rest` = `ACTIVITY_TYPE_REST` (1)
-- `stretch` = `ACTIVITY_TYPE_STRETCH` (2)
-- `sick` = `ACTIVITY_TYPE_ILL` (3)
-
-### 1.2 HomeThemeSection view
+### 1.1 HomeThemeSection view
 
 **Файл**: `SwiftUI-SotkaApp/Screens/Home/HomeThemeSection.swift`
 
@@ -51,7 +34,7 @@
 - Нужно добавить метод `func getInfopost(forDay: Int) -> Infopost?` в `InfopostsService`
 - Метод должен искать в `availableInfoposts` инфопост с `dayNumber == forDay`
 
-### 1.3 Обновление InfopostsService
+### 1.2 Обновление InfopostsService
 
 **Файл**: `SwiftUI-SotkaApp/Services/Infoposts/InfopostsService.swift`
 
@@ -63,7 +46,7 @@ func getInfopost(forDay day: Int) -> Infopost? {
 }
 ```
 
-### 1.4 Локализация
+### 1.3 Локализация
 
 **Файл**: `Localizable.xcstrings`
 
@@ -74,7 +57,24 @@ func getInfopost(forDay day: Int) -> Infopost? {
 
 ## 2. Секция "Активность" (заглушка)
 
-### 2.1 HomeActivitySection view
+### 2.1 Обновление модели DayActivityType
+
+**Файл**: `SwiftUI-SotkaApp/Models/Workout/DayActivityType.swift`
+
+Модель уже существует, нужно доработать:
+
+- Добавить computed property `color: Color` - цвет для UI (синий для workout, зеленый для rest, фиолетовый для stretch, красный для sick)
+- Добавить computed property `iconName: String` - имя SF Symbol для иконки
+- Оставить существующий `localizedTitle: LocalizedStringKey`
+
+Соответствие со старым приложением:
+
+- `workout` = `ACTIVITY_TYPE_EXERCISE` (0)
+- `rest` = `ACTIVITY_TYPE_REST` (1)
+- `stretch` = `ACTIVITY_TYPE_STRETCH` (2)
+- `sick` = `ACTIVITY_TYPE_ILL` (3)
+
+### 2.2 HomeActivitySection view
 
 **Файл**: `SwiftUI-SotkaApp/Screens/Home/HomeActivitySection.swift`
 
@@ -104,7 +104,7 @@ func getInfopost(forDay day: Int) -> Infopost? {
 - Label снизу с `.footnote` шрифтом
 - Иконка в центре кнопки белого цвета
 
-### 2.2 Локализация
+### 2.3 Локализация
 
 Добавить строки:
 
@@ -231,15 +231,14 @@ var iconName: String {
 
 ## 6. Порядок реализации
 
-1. Обновить `DayActivityType` (добавить `color` и `iconName`)
-2. Добавить метод `getInfopost(forDay:)` в `InfopostsService`
-3. Создать `HomeThemeSection` view с изображением и навигацией
+1. Добавить метод `getInfopost(forDay:)` в `InfopostsService`
+2. Создать `HomeThemeSection` view с изображением и навигацией
+3. Обновить `DayActivityType` (добавить `color` и `iconName`)
 4. Создать `HomeActivitySection` view с заглушками
 5. Создать `HomeProgressSection` view с заглушками
 6. Обновить `HomeScreen` для использования всех секций
 7. Добавить недостающие локализованные строки в `Localizable.xcstrings`
-8. Протестировать навигацию к инфопостам
-9. Запустить `make format` для форматирования кода
+8. Запустить `make format` для форматирования кода
 
 ## 7. Замечания
 
@@ -255,11 +254,11 @@ var iconName: String {
 
 ### To-dos
 
-- [ ] Создать enum ActivityType с типами активности и свойствами (цвет, иконка, описание)
 - [ ] Добавить метод getInfopost(forDay:) в InfopostsService
 - [ ] Создать HomeThemeSection с изображением дня и навигацией к инфопосту
+- [ ] Обновить DayActivityType с цветами и иконками для типов активности
 - [ ] Создать HomeActivitySection с 4 кнопками выбора активности (заглушки)
 - [ ] Создать HomeProgressSection с кнопкой перехода к прогрессу (заглушка)
 - [ ] Обновить HomeScreen для использования всех новых секций
 - [ ] Добавить все необходимые локализованные строки в Localizable.xcstrings
-- [ ] Протестировать навигацию и запустить make format для форматирования кода
+- [ ] Запустить make format для форматирования кода
