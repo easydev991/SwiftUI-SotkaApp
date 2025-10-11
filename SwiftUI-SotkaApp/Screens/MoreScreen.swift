@@ -141,9 +141,8 @@ struct MoreScreen: View {
 
     @ViewBuilder
     private var shareAppButton: some View {
-        let languageCode = locale.identifier.split(separator: "_").first == "ru" ? "ru" : "us"
-        if let appStoreLink = URL(string: "https://apps.apple.com/\(languageCode)/app/\(appId)") {
-            ShareLink(item: appStoreLink) {
+        if let shareURL = ShareAppURL(localeIdentifier: locale.identifier, appId: appId) {
+            ShareLink(item: shareURL.url) {
                 Text("Share the app")
             }
             .accessibilityIdentifier("shareAppButton")
