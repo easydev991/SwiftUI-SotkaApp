@@ -4,6 +4,20 @@
 
 Функционал заполнения результатов прогресса позволяет пользователям вносить свои показатели (подтягивания, отжимания, приседания, вес) в ключевые моменты программы тренировок. Анализ показывает различия в реализации между Android и старым iOS приложениями.
 
+### Структура программы тренировок
+
+Программа "100 дней" состоит из следующих блоков:
+- **БАЗОВЫЙ блок**: дни 1-49
+- **ПРОДВИНУТЫЙ блок**: дни 50-91  
+- **ТУРБО-блок**: дни 92-98
+- **Заключение**: дни 99-100
+
+Контрольные точки для заполнения результатов:
+- День 1 (начало БАЗОВОГО блока)
+- День 50 (начало ПРОДВИНУТОГО блока) 
+- День 92 (начало ТУРБО-блока)
+- День 100 (завершение программы)
+
 ## Android приложение (Android-SOTKA)
 
 ### Структура элемента
@@ -304,6 +318,7 @@ if ((indexPath.section == SECTION_FILL_PROGRESS) && (indexPath.row == 1)) {
 - **Отдельные флаги**: Использует `isResultEnteredFor49Day` и `isResultEnteredFor100Day`
 - **Навигация**: Открывает отдельный экран `ChangeParametersFragment`
 - **Тексты**: Разные тексты для 49-го и 100-го дня
+- **Ограниченность**: Пользователь может забыть внести прогресс, если пропустит точные дни
 
 #### Старое iOS приложение
 - **Диапазоны дней**: Показывает кнопку в зависимости от текущего дня:
@@ -311,16 +326,18 @@ if ((indexPath.section == SECTION_FILL_PROGRESS) && (indexPath.row == 1)) {
   - Дни 50-99: проверяет результаты дня 50
   - День 100+: проверяет результаты дня 100
 - **Единая логика**: Использует одну функцию `isMaximumsFilled()`
+- **Единый текст**: Использует один текст "Заполни результаты" для всех этапов
 - **Навигация**: Переключается на вкладку прогресса (tabBarController.selectedIndex = 3)
 - **Визуальная обратная связь**: Показывает галочку после заполнения
+- **Гибкость**: Пользователь может внести прогресс в любое время в рамках соответствующего диапазона
 
 ### Рекомендации для нового приложения
 
-1. **Использовать подход Android**: Более точная логика с конкретными днями (49 и 100)
+1. **Использовать подход старого iOS приложения**: Более гибкая логика с диапазонами дней для лучшего UX
 2. **Добавить визуальную обратную связь**: Показывать галочку после заполнения
-3. **Разные тексты**: Использовать разные тексты для 49-го и 100-го дня
+3. **Единый текст**: Использовать единый локализованный текст "Home.FillResults" для всех этапов
 4. **Отдельный экран**: Создать отдельный экран для заполнения результатов
-5. **Флаги состояния**: Использовать отдельные флаги для каждого контрольного дня
+5. **Единая логика проверки**: Использовать одну функцию для проверки заполненности результатов
 
 ## Реализация в новом приложении
 
@@ -330,63 +347,114 @@ if ((indexPath.section == SECTION_FILL_PROGRESS) && (indexPath.row == 1)) {
 // Progress.swift
 @Model
 final class Progress {
+    /// Совпадает с номером дня
     var id: Int
-    var dayNumber: Int
     var pullUps: Int?
     var pushUps: Int?
     var squats: Int?
     var weight: Float?
     var isSynced: Bool = false
-    var lastModified: Date = Date()
+    var lastModified = Date.now
     
-    var hasProgress: Bool {
-        pullUps != nil && pullUps != -1 &&
-        pushUps != nil && pushUps != -1 &&
-        squats != nil && squats != -1 &&
-        weight != nil && weight != -1
+    var isFilled: Bool {
+        let values = [pullUps, pushUps, squats, weight].compactMap { $0 }
+        return values.count == 4 && values.allSatisfy { $0 > 0 }
     }
+}
+
+// User.swift - добавление связи с прогрессом
+@Model
+final class User {
+    // ... существующие свойства ...
+    
+    /// Результаты прогресса пользователя
+    @Relationship(deleteRule: .cascade) var progressResults: [Progress] = []
+    
+    // ... остальные свойства ...
 }
 ```
 
 ### Логика отображения
 
 ```swift
-// HomeViewModel.swift
-@Observable
-final class HomeViewModel {
-    var shouldShowFillProgress: Bool {
-        let currentDay = dayCalculator.currentDay
-        return (currentDay == 49 && !isResultEnteredFor49Day) ||
-               (currentDay == 100 && !isResultEnteredFor100Day)
-    }
-    
-    var fillProgressText: String {
-        let currentDay = dayCalculator.currentDay
-        if currentDay == 49 {
-            return "Внести результаты БАЗОВОГО блока"
-        } else if currentDay == 100 {
-            return "Внести результаты прохождения программы"
+// User.swift - добавление вычисляемых свойств для прогресса
+extension User {
+    /// Проверяет, заполнены ли результаты для текущего дня
+    func isMaximumsFilled(for currentDay: Int) -> Bool {
+        let progressDay: Int
+        if currentDay >= 1 && currentDay <= 49 {
+            progressDay = 1  // БАЗОВЫЙ блок
+        } else if currentDay >= 50 && currentDay <= 99 {
+            progressDay = 50 // ПРОДВИНУТЫЙ блок
+        } else if currentDay >= 100 {
+            progressDay = 100 // Заключение
+        } else {
+            return true
         }
-        return ""
+        
+        // Проверяем, есть ли заполненные результаты для соответствующего дня
+        return progressResults.contains { $0.id == progressDay && $0.isFilled }
     }
 }
-```
 
-### Компонент
+// HomeScreen.swift - добавить получение текущего пользователя
+import SwiftData
 
-```swift
-// HomeFillProgressSectionView.swift
-struct HomeFillProgressSectionView: View {
-    @Environment(HomeViewModel.self) private var viewModel
+struct HomeScreen: View {
+    @Environment(StatusManager.self) private var statusManager
+    @Query private var users: [User]
+    private var user: User? { users.first }
     
     var body: some View {
-        if viewModel.shouldShowFillProgress {
-            HomeSectionView(title: "Progress") {
-                Button {
-                    viewModel.fillProgressTapped()
+        NavigationStack {
+            @Bindable var statusManager = statusManager
+            ZStack {
+                Color.swBackground.ignoresSafeArea()
+                if let calculator = statusManager.currentDayCalculator, let user {
+                    ScrollView {
+                        VStack(spacing: 12) {
+                            HomeDayCountView(calculator: calculator)
+                            makeInfopostView(with: calculator)
+                            HomeActivitySectionView()
+                            makeFillProgressView(with: calculator, user: user)
+                        }
+                        .padding([.horizontal, .bottom])
+                    }
+                } else {
+                    Text("Loading")
+                }
+            }
+            // ... остальной код
+        }
+    }
+}
+
+private extension HomeScreen {
+    func makeFillProgressView(with calculator: DayCalculator, user: User) -> some View {
+        HomeFillProgressSectionView(
+            currentDay: calculator.currentDay,
+            user: user
+        )
+    }
+}
+
+// HomeFillProgressSectionView.swift - доработка существующего компонента
+struct HomeFillProgressSectionView: View {
+    let model: Model
+    
+    init(currentDay: Int, user: User) {
+        self.model = .init(currentDay: currentDay, user: user)
+    }
+    
+    var body: some View {
+        if model.shouldShowFillProgress {
+            HomeSectionView(title: NSLocalizedString("Home.Progress", comment: "Прогресс")) {
+                NavigationLink {
+                    // TODO: Экран заполнения результатов
+                    EmptyView()
                 } label: {
                     HStack {
-                        Text(viewModel.fillProgressText)
+                        Text(model.localizedTitle)
                             .frame(maxWidth: .infinity, alignment: .leading)
                         ChevronView()
                     }
@@ -396,6 +464,126 @@ struct HomeFillProgressSectionView: View {
         }
     }
 }
+
+extension HomeFillProgressSectionView {
+    struct Model {
+        let shouldShowFillProgress: Bool
+        let localizedTitle = NSLocalizedString("Home.FillResults", comment: "Заполнить результаты")
+        
+        init(currentDay: Int, user: User) {
+            self.shouldShowFillProgress = !user.isMaximumsFilled(for: currentDay)
+        }
+    }
+}
 ```
 
-Этот анализ показывает, что Android приложение имеет более точную и понятную логику, которую следует использовать в качестве основы для нового приложения.
+Этот анализ показывает, что старое iOS приложение имеет более гибкую логику с диапазонами дней, которая помогает пользователю не забыть внести прогресс. Этот подход следует использовать в качестве основы для нового приложения.
+
+## План тестирования
+
+Для тестирования новой логики заполнения прогресса необходимо создать unit-тесты, следуя правилам из `@SwiftUI-SotkaApp/unit-testing-ios-app.mdc`.
+
+### Тесты для модели Progress
+
+**Файл**: `HomeFillProgressTests.swift`
+
+1. **Тест `isFilled` с полными данными**
+   - Создать Progress с pullUps=10, pushUps=20, squats=30, weight=70.0
+   - Проверить `#expect(progress.isFilled)`
+
+2. **Тест `isFilled` с неполными данными**
+   - Создать Progress с pullUps=10, pushUps=nil, squats=30, weight=70.0
+   - Проверить `#expect(!progress.isFilled)`
+
+3. **Тест `isFilled` с нулевыми значениями**
+   - Создать Progress с pullUps=0, pushUps=20, squats=30, weight=70.0
+   - Проверить `#expect(!progress.isFilled)`
+
+4. **Параметризированный тест для разных комбинаций**
+   - Тестировать различные комбинации nil/0/положительных значений
+   - Использовать `@Test(arguments:)` для массива тестовых данных
+
+### Тесты для User extension
+
+**Файл**: `UserTests.swift` (добавить через extension)
+
+1. **Тест `isMaximumsFilled` для дня 1-49**
+   - Создать User с progressResults для дня 1 (заполненными)
+   - Проверить `#expect(user.isMaximumsFilled(for: 25))`
+
+2. **Тест `isMaximumsFilled` для дня 50-99**
+   - Создать User с progressResults для дня 50 (заполненными)
+   - Проверить `#expect(user.isMaximumsFilled(for: 75))`
+
+3. **Тест `isMaximumsFilled` для дня 100+**
+   - Создать User с progressResults для дня 100 (заполненными)
+   - Проверить `#expect(user.isMaximumsFilled(for: 105))`
+
+4. **Тест `isMaximumsFilled` без данных**
+   - Создать User без progressResults
+   - Проверить `#expect(!user.isMaximumsFilled(for: 25))`
+
+5. **Параметризированный тест для граничных дней**
+   - Тестировать дни 1, 49, 50, 99, 100 с разными состояниями данных
+
+### Тесты для HomeFillProgressSectionView.Model
+
+**Файл**: `HomeFillProgressSectionViewModelTests.swift`
+
+**Структура тестов**:
+```swift
+private typealias Model = HomeFillProgressSectionView.Model
+```
+
+1. **Тест `shouldShowFillProgress` когда нужно показать**
+   - Создать User без заполненных результатов для текущего дня
+   - Проверить `#expect(model.shouldShowFillProgress)`
+
+2. **Тест `shouldShowFillProgress` когда не нужно показывать**
+   - Создать User с заполненными результатами для текущего дня
+   - Проверить `#expect(!model.shouldShowFillProgress)`
+
+3. **Тест `localizedTitle`**
+   - Проверить что `model.localizedTitle` возвращает правильную локализованную строку
+
+4. **Параметризированный тест для разных дней**
+   - Тестировать создание модели для дней 1, 25, 49, 50, 75, 99, 100, 105
+   - Проверять корректность `shouldShowFillProgress` для каждого случая
+
+### Принципы тестирования
+
+- **Использовать Swift Testing** (`import Testing`)
+- **Разворачивать опционалы** с `try #require()`
+- **Проверять Bool условия** напрямую: `#expect(condition)` вместо `#expect(condition == true)`
+- **Использовать параметризированные тесты** для множественных сценариев
+- **Добавлять комментарии в `#expect`** только для сложной логики
+- **Тестировать бизнес-логику**, не UI компоненты
+
+## Регистрация модели в SwiftData
+
+Новую модель `Progress` нужно зарегистрировать в SwiftData в файле `SwiftUI_SotkaAppApp.swift`:
+
+### 1. Добавить в Schema
+```swift
+let schema = Schema([User.self, Country.self, CustomExercise.self, Progress.self])
+```
+
+### 2. Добавить очистку при логауте
+```swift
+.onChange(of: authHelper.isAuthorized) { _, isAuthorized in
+    appSettings.setWorkoutNotificationsEnabled(isAuthorized)
+    if !isAuthorized {
+        appSettings.didLogout()
+        statusManager.didLogout()
+        do {
+            try modelContainer.mainContext.delete(model: User.self)
+            try modelContainer.mainContext.delete(model: CustomExercise.self)
+            try modelContainer.mainContext.delete(model: Progress.self)  // Добавить эту строку
+        } catch {
+            fatalError("Не удалось удалить данные пользователя: \(error.localizedDescription)")
+        }
+    }
+}
+```
+
+Это обеспечит корректную работу с данными прогресса в SwiftData и их очистку при выходе пользователя из системы.
