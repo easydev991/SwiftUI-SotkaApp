@@ -1,21 +1,24 @@
 import SWDesignSystem
+import SwiftData
 import SwiftUI
 
 struct HomeScreen: View {
     @Environment(StatusManager.self) private var statusManager
+    @Query private var users: [User]
+    private var user: User? { users.first }
 
     var body: some View {
         NavigationStack {
             @Bindable var statusManager = statusManager
             ZStack {
                 Color.swBackground.ignoresSafeArea()
-                if let calculator = statusManager.currentDayCalculator {
+                if let calculator = statusManager.currentDayCalculator, let user {
                     ScrollView {
                         VStack(spacing: 12) {
                             HomeDayCountView(calculator: calculator)
                             makeInfopostView(with: calculator)
                             HomeActivitySectionView()
-//                            HomeFillProgressSectionView()
+                            makeFillProgressView(with: calculator, user: user)
                         }
                         .padding([.horizontal, .bottom])
                     }
@@ -50,6 +53,13 @@ private extension HomeScreen {
                 infopost: infopost
             )
         }
+    }
+
+    func makeFillProgressView(with calculator: DayCalculator, user: User) -> some View {
+        HomeFillProgressSectionView(
+            currentDay: calculator.currentDay,
+            user: user
+        )
     }
 }
 

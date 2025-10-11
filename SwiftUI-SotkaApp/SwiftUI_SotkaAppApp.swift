@@ -29,7 +29,7 @@ struct SwiftUI_SotkaAppApp: App {
     }
 
     private var modelContainer: ModelContainer = {
-        let schema = Schema([User.self, Country.self, CustomExercise.self])
+        let schema = Schema([User.self, Country.self, CustomExercise.self, Progress.self])
         let modelConfiguration = ModelConfiguration(schema: schema, isStoredInMemoryOnly: false)
         do {
             return try ModelContainer(for: schema, configurations: [modelConfiguration])
@@ -73,7 +73,7 @@ struct SwiftUI_SotkaAppApp: App {
                 statusManager.didLogout()
                 do {
                     try modelContainer.mainContext.delete(model: User.self)
-                    try modelContainer.mainContext.delete(model: CustomExercise.self)
+                    // CustomExercise и Progress удалятся автоматически благодаря .cascade
                 } catch {
                     fatalError("Не удалось удалить данные пользователя: \(error.localizedDescription)")
                 }

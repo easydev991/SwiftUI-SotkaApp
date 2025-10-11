@@ -17,6 +17,9 @@ final class User {
     /// Пользовательские упражнения
     @Relationship(deleteRule: .cascade) var customExercises: [CustomExercise] = []
 
+    /// Результаты прогресса пользователя
+    @Relationship(deleteRule: .cascade) var progressResults: [Progress] = []
+
     /// ID избранных инфопостов
     var favoriteInfopostIds: [String] = []
 
@@ -90,6 +93,23 @@ extension User {
     var customExerciseCountText: String {
         let count = customExercises.count
         return count > 0 ? "\(count)" : ""
+    }
+
+    /// Проверяет, заполнены ли результаты для текущего дня
+    func isMaximumsFilled(for currentDay: Int) -> Bool {
+        let progressDay: Int
+        if currentDay >= 1, currentDay <= 49 {
+            progressDay = 1 // БАЗОВЫЙ блок
+        } else if currentDay >= 50, currentDay <= 99 {
+            progressDay = 50 // ПРОДВИНУТЫЙ блок
+        } else if currentDay >= 100 {
+            progressDay = 100 // Заключение
+        } else {
+            return true
+        }
+
+        // Проверяем, есть ли заполненные результаты для соответствующего дня
+        return progressResults.contains { $0.id == progressDay && $0.isFilled }
     }
 }
 

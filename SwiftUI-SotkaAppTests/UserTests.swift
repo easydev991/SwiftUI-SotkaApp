@@ -1,4 +1,5 @@
 import Foundation
+import SwiftData
 @testable import SwiftUI_SotkaApp
 import SWUtils
 import Testing
@@ -213,5 +214,98 @@ struct UserTests {
 
         let countText = user.customExerciseCountText
         #expect(countText == "3")
+    }
+
+    // MARK: - isMaximumsFilled Tests
+
+    @Test("isMaximumsFilled для дня 1-49 с заполненными результатами")
+    func isMaximumsFilledForDay1To49WithFilledResults() {
+        let user = User(id: 1)
+        let progress = Progress(id: 1)
+        progress.pullUps = 10
+        progress.pushUps = 20
+        progress.squats = 30
+        progress.weight = 70.0
+        user.progressResults.append(progress)
+
+        #expect(user.isMaximumsFilled(for: 25))
+    }
+
+    @Test("isMaximumsFilled для дня 50-99 с заполненными результатами")
+    func isMaximumsFilledForDay50To99WithFilledResults() {
+        let user = User(id: 1)
+        let progress = Progress(id: 50)
+        progress.pullUps = 15
+        progress.pushUps = 25
+        progress.squats = 35
+        progress.weight = 75.0
+        user.progressResults.append(progress)
+
+        #expect(user.isMaximumsFilled(for: 75))
+    }
+
+    @Test("isMaximumsFilled для дня 100+ с заполненными результатами")
+    func isMaximumsFilledForDay100PlusWithFilledResults() {
+        let user = User(id: 1)
+        let progress = Progress(id: 100)
+        progress.pullUps = 20
+        progress.pushUps = 30
+        progress.squats = 40
+        progress.weight = 80.0
+        user.progressResults.append(progress)
+
+        #expect(user.isMaximumsFilled(for: 105))
+    }
+
+    @Test("isMaximumsFilled без данных")
+    func isMaximumsFilledWithoutData() {
+        let user = User(id: 1)
+
+        #expect(!user.isMaximumsFilled(for: 25))
+    }
+
+    @Test("isMaximumsFilled с незаполненными результатами")
+    func isMaximumsFilledWithUnfilledResults() {
+        let user = User(id: 1)
+        let progress = Progress(id: 1)
+        progress.pullUps = 10
+        progress.pushUps = nil
+        progress.squats = 30
+        progress.weight = 70.0
+        user.progressResults.append(progress)
+
+        #expect(!user.isMaximumsFilled(for: 25))
+    }
+
+    @Test(arguments: [
+        (1, 1, true),
+        (25, 1, true),
+        (49, 1, true),
+        (50, 50, true),
+        (75, 50, true),
+        (99, 50, true),
+        (100, 100, true),
+        (105, 100, true),
+        (1, 50, false),
+        (25, 50, false),
+        (50, 1, false),
+        (75, 1, false),
+        (100, 1, false),
+        (100, 50, false)
+    ])
+    func isMaximumsFilledParameterized(
+        currentDay: Int,
+        progressDay: Int,
+        expected: Bool
+    ) {
+        let user = User(id: 1)
+        let progress = Progress(id: progressDay)
+        progress.pullUps = 10
+        progress.pushUps = 20
+        progress.squats = 30
+        progress.weight = 70.0
+        user.progressResults.append(progress)
+
+        #expect(user.isMaximumsFilled(for: currentDay) == expected)
     }
 }
