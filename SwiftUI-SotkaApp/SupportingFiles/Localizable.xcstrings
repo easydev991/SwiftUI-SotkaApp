@@ -2412,18 +2412,18 @@
         }
       }
     },
-    "Home.Theme" : {
+    "Infopost" : {
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Theme of the Day"
+            "value" : "Infopost"
           }
         },
         "ru" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Тема дня"
+            "value" : "Инфопост"
           }
         }
       }
@@ -2440,6 +2440,22 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Тренировка"
+          }
+        }
+      }
+    },
+    "Activity" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Activity"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Активность"
           }
         }
       }

@@ -11,11 +11,13 @@ struct HomeScreen: View {
                 Color.swBackground.ignoresSafeArea()
                 if let calculator = statusManager.currentDayCalculator {
                     ScrollView {
-                        VStack(spacing: 16) {
+                        VStack(spacing: 12) {
                             DayCountView(calculator: calculator)
                             makeInfopostView(with: calculator)
+                            HomeActivitySection()
+//                            HomeProgressSection()
                         }
-                        .padding()
+                        .padding([.horizontal, .bottom])
                     }
                 } else {
                     Text("Loading")
@@ -43,7 +45,7 @@ private extension HomeScreen {
     func makeInfopostView(with calculator: DayCalculator) -> some View {
         let service = statusManager.infopostsService
         if let infopost = try? service.getInfopost(forDay: calculator.currentDay) {
-            ThemeOfTheDayView(
+            DailyInfopostView(
                 currentDay: calculator.currentDay,
                 infopost: infopost
             )
