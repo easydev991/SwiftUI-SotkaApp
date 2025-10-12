@@ -8,35 +8,67 @@ struct InfopostResourceManagerTests {
     // MARK: - Тестирование создания временной директории
 
     @Test
-    func testCreateTempDirectory() throws {
+    func testCreateTempDirectory() async throws {
         let manager = InfopostResourceManager()
 
         let tempDirectory = try #require(manager.createTempDirectory())
+
+        // Ждем немного, чтобы убедиться что директория создана
+        try await Task.sleep(for: .milliseconds(100))
 
         // Проверяем, что директория создана
         #expect(fileManager.fileExists(atPath: tempDirectory.path))
 
         // Проверяем, что путь содержит правильный компонент
         #expect(tempDirectory.path.contains("infopost_preview"))
+
+        // Дополнительная проверка: пытаемся создать файл в директории
+        let testFile = tempDirectory.appendingPathComponent("test.txt")
+        let testContent = "test content"
+        try testContent.write(to: testFile, atomically: true, encoding: .utf8)
+
+        // Проверяем, что файл создался
+        #expect(fileManager.fileExists(atPath: testFile.path))
+
+        // Очищаем за собой
+        try fileManager.removeItem(at: testFile)
     }
 
     @Test
-    func createTempDirectoryRemovesExisting() throws {
+    func createTempDirectoryRemovesExisting() async throws {
         let manager = InfopostResourceManager()
 
         // Создаем первую директорию
         let firstDirectory = try #require(manager.createTempDirectory())
+        try await Task.sleep(for: .milliseconds(50))
         #expect(fileManager.fileExists(atPath: firstDirectory.path))
+
+        // Создаем файл в первой директории для проверки удаления
+        let firstTestFile = firstDirectory.appendingPathComponent("first.txt")
+        try "first content".write(to: firstTestFile, atomically: true, encoding: .utf8)
+        #expect(fileManager.fileExists(atPath: firstTestFile.path))
 
         // Создаем вторую директорию - должна заменить первую
         let secondDirectory = try #require(manager.createTempDirectory())
+        try await Task.sleep(for: .milliseconds(50))
         #expect(fileManager.fileExists(atPath: secondDirectory.path))
 
         // Проверяем, что пути одинаковые (одна и та же директория)
         #expect(firstDirectory.path == secondDirectory.path)
 
-        // Проверяем, что вторая директория существует (это новая директория)
+        // Проверяем, что вторая директория существует
         #expect(fileManager.fileExists(atPath: secondDirectory.path))
+
+        // Проверяем, что файл из первой директории был удален
+        #expect(!fileManager.fileExists(atPath: firstTestFile.path))
+
+        // Проверяем, что можем создать новый файл во второй директории
+        let secondTestFile = secondDirectory.appendingPathComponent("second.txt")
+        try "second content".write(to: secondTestFile, atomically: true, encoding: .utf8)
+        #expect(fileManager.fileExists(atPath: secondTestFile.path))
+
+        // Очищаем за собой
+        try fileManager.removeItem(at: secondTestFile)
     }
 
     // MARK: - Тестирование извлечения имен изображений

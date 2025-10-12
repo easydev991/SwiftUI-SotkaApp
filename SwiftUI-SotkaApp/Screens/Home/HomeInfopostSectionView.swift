@@ -41,6 +41,7 @@ private extension HomeInfopostSectionView {
     var shortTitleWithChevronView: some View {
         HStack {
             Text(infopost.shortTitle)
+                .multilineTextAlignment(.leading)
                 .frame(maxWidth: .infinity, alignment: .leading)
             ChevronView()
         }

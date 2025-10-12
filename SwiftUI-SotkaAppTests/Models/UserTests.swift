@@ -218,8 +218,8 @@ struct UserTests {
 
     // MARK: - isMaximumsFilled Tests
 
-    @Test("isMaximumsFilled для дня 1-49 с заполненными результатами")
-    func isMaximumsFilledForDay1To49WithFilledResults() {
+    @Test("isMaximumsFilled для дня 1-48 с заполненными результатами")
+    func isMaximumsFilledForDay1To48WithFilledResults() {
         let user = User(id: 1)
         let progress = Progress(id: 1)
         progress.pullUps = 10
@@ -231,10 +231,23 @@ struct UserTests {
         #expect(user.isMaximumsFilled(for: 25))
     }
 
+    @Test("isMaximumsFilled для дня 49 с заполненными результатами")
+    func isMaximumsFilledForDay49WithFilledResults() {
+        let user = User(id: 1)
+        let progress = Progress(id: 49)
+        progress.pullUps = 10
+        progress.pushUps = 20
+        progress.squats = 30
+        progress.weight = 70.0
+        user.progressResults.append(progress)
+
+        #expect(user.isMaximumsFilled(for: 49))
+    }
+
     @Test("isMaximumsFilled для дня 50-99 с заполненными результатами")
     func isMaximumsFilledForDay50To99WithFilledResults() {
         let user = User(id: 1)
-        let progress = Progress(id: 50)
+        let progress = Progress(id: 49)
         progress.pullUps = 15
         progress.pushUps = 25
         progress.squats = 35
@@ -280,18 +293,20 @@ struct UserTests {
     @Test(arguments: [
         (1, 1, true),
         (25, 1, true),
-        (49, 1, true),
-        (50, 50, true),
-        (75, 50, true),
-        (99, 50, true),
+        (48, 1, true),
+        (49, 49, true),
+        (50, 49, true),
+        (75, 49, true),
+        (99, 49, true),
         (100, 100, true),
         (105, 100, true),
-        (1, 50, false),
-        (25, 50, false),
+        (1, 49, false),
+        (25, 49, false),
+        (49, 1, false),
         (50, 1, false),
         (75, 1, false),
         (100, 1, false),
-        (100, 50, false)
+        (100, 49, false)
     ])
     func isMaximumsFilledParameterized(
         currentDay: Int,

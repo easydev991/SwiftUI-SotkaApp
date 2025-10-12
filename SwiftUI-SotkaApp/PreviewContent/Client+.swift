@@ -1,4 +1,5 @@
 import Foundation
+import SWUtils
 
 struct MockLoginClient: LoginClient {
     let result: MockResult
@@ -122,6 +123,92 @@ struct MockExerciseClient: ExerciseClient {
         switch result {
         case .success:
             print("Успешно удалили пользовательское упражнение")
+        case let .failure(error):
+            throw error
+        }
+    }
+}
+
+struct MockProgressClient: ProgressClient {
+    let result: MockResult
+
+    func getProgress() async throws -> [ProgressResponse] {
+        print("Имитируем запрос getProgress")
+        try await Task.sleep(for: .seconds(1))
+        switch result {
+        case .success:
+            print("Успешно получили список прогресса")
+            return [
+                .init(
+                    id: 1,
+                    pullups: 10,
+                    pushups: 20,
+                    squats: 30,
+                    weight: 70.0,
+                    createDate: "2025-01-01 12:00:00",
+                    modifyDate: "2025-01-01 12:00:00"
+                ),
+                .init(
+                    id: 50,
+                    pullups: 15,
+                    pushups: 25,
+                    squats: 35,
+                    weight: 72.0,
+                    createDate: "2025-01-02 12:00:00",
+                    modifyDate: "2025-01-02 12:00:00"
+                )
+            ]
+        case let .failure(error):
+            throw error
+        }
+    }
+
+    func createProgress(progress: ProgressRequest) async throws -> ProgressResponse {
+        print("Имитируем запрос createProgress (day=\(progress.id))")
+        try await Task.sleep(for: .seconds(1))
+        switch result {
+        case .success:
+            print("Успешно создали прогресс")
+            return .init(
+                id: progress.id,
+                pullups: progress.pullups,
+                pushups: progress.pushups,
+                squats: progress.squats,
+                weight: progress.weight,
+                createDate: DateFormatterService.stringFromFullDate(Date(), format: .serverDateTimeSec),
+                modifyDate: progress.modifyDate
+            )
+        case let .failure(error):
+            throw error
+        }
+    }
+
+    func updateProgress(day: Int, progress: ProgressRequest) async throws -> ProgressResponse {
+        print("Имитируем запрос updateProgress (day=\(day))")
+        try await Task.sleep(for: .seconds(1))
+        switch result {
+        case .success:
+            print("Успешно обновили прогресс")
+            return .init(
+                id: progress.id,
+                pullups: progress.pullups,
+                pushups: progress.pushups,
+                squats: progress.squats,
+                weight: progress.weight,
+                createDate: DateFormatterService.stringFromFullDate(Date(), format: .serverDateTimeSec),
+                modifyDate: progress.modifyDate
+            )
+        case let .failure(error):
+            throw error
+        }
+    }
+
+    func deleteProgress(day: Int) async throws {
+        print("Имитируем запрос deleteProgress (day=\(day))")
+        try await Task.sleep(for: .seconds(1))
+        switch result {
+        case .success:
+            print("Успешно удалили прогресс")
         case let .failure(error):
             throw error
         }

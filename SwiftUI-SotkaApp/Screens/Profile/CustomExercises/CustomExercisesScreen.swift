@@ -60,7 +60,7 @@ private extension CustomExercisesScreen {
                 }
             }
             .swipeActions {
-                Button("Delete", role: .destructive) {
+                Button(.commonDelete, role: .destructive) {
                     exerciseToDelete = exercise
                 }
             }
@@ -71,7 +71,7 @@ private extension CustomExercisesScreen {
             isPresented: .constant(exerciseToDelete != nil),
             titleVisibility: .visible
         ) {
-            Button("Delete", role: .destructive) {
+            Button(.commonDelete, role: .destructive) {
                 if let exerciseToDelete {
                     deleteExercise(exerciseToDelete)
                 }

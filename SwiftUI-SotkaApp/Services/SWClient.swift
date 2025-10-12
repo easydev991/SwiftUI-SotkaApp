@@ -101,6 +101,28 @@ extension SWClient: InfopostsClient {
     }
 }
 
+extension SWClient: ProgressClient {
+    func getProgress() async throws -> [ProgressResponse] {
+        let endpoint = Endpoint.getProgress
+        return try await makeResult(for: endpoint)
+    }
+
+    func createProgress(progress: ProgressRequest) async throws -> ProgressResponse {
+        let endpoint = Endpoint.createProgress(progress)
+        return try await makeResult(for: endpoint)
+    }
+
+    func updateProgress(day: Int, progress: ProgressRequest) async throws -> ProgressResponse {
+        let endpoint = Endpoint.updateProgress(day: day, progress: progress)
+        return try await makeResult(for: endpoint)
+    }
+
+    func deleteProgress(day: Int) async throws {
+        let endpoint = Endpoint.deleteProgress(day: day)
+        try await makeStatus(for: endpoint)
+    }
+}
+
 enum ClientError: Error, LocalizedError {
     case forceLogout
     case noConnection
@@ -171,6 +193,22 @@ enum Endpoint {
     /// **DELETE** ${API}/100/posts/read
     case deleteAllReadPosts
 
+    // MARK: Получить список прогресса пользователя
+    /// **GET** ${API}/100/progress
+    case getProgress
+
+    // MARK: Создать новый прогресс
+    /// **POST** ${API}/100/progress
+    case createProgress(_ progress: ProgressRequest)
+
+    // MARK: Обновить существующий прогресс для конкретного дня
+    /// **POST** ${API}/100/progress/<day>
+    case updateProgress(day: Int, progress: ProgressRequest)
+
+    // MARK: Удалить прогресс для конкретного дня
+    /// **DELETE** ${API}/100/progress/<day>
+    case deleteProgress(day: Int)
+
     var urlPath: String {
         switch self {
         case .getCountries: "/countries"
@@ -187,36 +225,42 @@ enum Endpoint {
         case .getReadPosts: "/100/posts/read"
         case let .setPostRead(day): "/100/posts/read/\(day)"
         case .deleteAllReadPosts: "/100/posts/read"
+        case .getProgress: "/100/progress"
+        case .createProgress: "/100/progress"
+        case let .updateProgress(day, _): "/100/progress/\(day)"
+        case let .deleteProgress(day): "/100/progress/\(day)"
         }
     }
 
     var method: HTTPMethod {
         switch self {
-        case .login, .resetPassword, .editUser, .changePassword, .start, .saveCustomExercise, .setPostRead: .post
-        case .getUser, .getCountries, .current, .getCustomExercises, .getReadPosts: .get
-        case .deleteCustomExercise, .deleteAllReadPosts: .delete
+        case .login, .resetPassword, .editUser, .changePassword, .start, .saveCustomExercise, .setPostRead, .createProgress,
+             .updateProgress: .post
+        case .getUser, .getCountries, .current, .getCustomExercises, .getReadPosts, .getProgress: .get
+        case .deleteCustomExercise, .deleteAllReadPosts, .deleteProgress: .delete
         }
     }
 
     var hasMultipartFormData: Bool {
         switch self {
-        case .editUser: true
+        case .editUser, .createProgress, .updateProgress: true
         case .login, .getUser, .resetPassword, .getCountries, .changePassword, .start, .current, .getCustomExercises, .saveCustomExercise,
-             .deleteCustomExercise, .getReadPosts, .setPostRead, .deleteAllReadPosts: false
+             .deleteCustomExercise, .getReadPosts, .setPostRead, .deleteAllReadPosts, .getProgress, .deleteProgress: false
         }
     }
 
     var queryItems: [URLQueryItem] {
         switch self {
         case .login, .getUser, .resetPassword, .getCountries, .editUser, .changePassword, .start, .current, .getCustomExercises,
-             .saveCustomExercise, .deleteCustomExercise, .getReadPosts, .setPostRead, .deleteAllReadPosts: []
+             .saveCustomExercise, .deleteCustomExercise, .getReadPosts, .setPostRead, .deleteAllReadPosts, .getProgress, .createProgress,
+             .updateProgress, .deleteProgress: []
         }
     }
 
     var bodyParts: BodyMaker.Parts? {
         switch self {
         case .login, .getUser, .getCountries, .current, .getCustomExercises, .deleteCustomExercise, .getReadPosts, .setPostRead,
-             .deleteAllReadPosts:
+             .deleteAllReadPosts, .getProgress, .deleteProgress:
             return nil
         case let .editUser(_, form):
             let parameters: [String: String] = [
@@ -261,6 +305,31 @@ enum Endpoint {
                 return .init(mutableParameters, nil)
             }
             return .init(parameters, nil)
+        case let .createProgress(progress), let .updateProgress(_, progress):
+            let parameters: [String: String] = [
+                "id": String(progress.id),
+                "pullups": String(progress.pullups ?? 0),
+                "pushups": String(progress.pushups ?? 0),
+                "squats": String(progress.squats ?? 0),
+                "weight": String(progress.weight ?? 0),
+                "modify_date": progress.modifyDate
+            ]
+
+            let mediaFiles: [BodyMaker.MediaFile]? = if let photos = progress.photos, !photos.isEmpty {
+                photos.compactMap { key, data -> BodyMaker.MediaFile? in
+                    guard !data.isEmpty else { return nil }
+                    return BodyMaker.MediaFile(
+                        key: key,
+                        filename: "\(UUID().uuidString).jpg",
+                        data: data,
+                        mimeType: "image/jpeg"
+                    )
+                }
+            } else {
+                nil
+            }
+
+            return .init(parameters, mediaFiles)
         }
     }
 }

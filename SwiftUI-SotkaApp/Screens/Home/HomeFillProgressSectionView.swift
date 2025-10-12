@@ -2,18 +2,19 @@ import SWDesignSystem
 import SwiftUI
 
 struct HomeFillProgressSectionView: View {
-    let model: Model
+    private let model: Model
+    private let user: User
 
     init(currentDay: Int, user: User) {
         self.model = .init(currentDay: currentDay, user: user)
+        self.user = user
     }
 
     var body: some View {
         if model.shouldShowFillProgress {
             HomeSectionView(title: "Home.Progress") {
                 NavigationLink {
-                    // TODO: Экран заполнения результатов
-                    EmptyView()
+                    ProgressScreen(user: user)
                 } label: {
                     HStack {
                         Text("Home.FillResults")

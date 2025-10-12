@@ -27,7 +27,7 @@ struct HomeFillProgressSectionViewModelTests {
         #expect(!model.shouldShowFillProgress)
     }
 
-    @Test(arguments: [1, 25, 49])
+    @Test(arguments: [1, 25, 48])
     func shouldShowFillProgressWithFilledResultsForBasicBlock(currentDay: Int) {
         let user = User(id: 1)
         let progress = Progress(id: 1)
@@ -41,10 +41,10 @@ struct HomeFillProgressSectionViewModelTests {
         #expect(!model.shouldShowFillProgress)
     }
 
-    @Test(arguments: [50, 75, 99])
+    @Test(arguments: [49, 50, 75, 99])
     func shouldShowFillProgressWithFilledResultsForAdvancedBlock(currentDay: Int) {
         let user = User(id: 1)
-        let progress = Progress(id: 50)
+        let progress = Progress(id: 49)
         progress.pullUps = 15
         progress.pushUps = 25
         progress.squats = 35

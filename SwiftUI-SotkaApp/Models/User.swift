@@ -1,4 +1,5 @@
 import Foundation
+import OSLog
 import SwiftData
 import SWUtils
 
@@ -97,19 +98,34 @@ extension User {
 
     /// Проверяет, заполнены ли результаты для текущего дня
     func isMaximumsFilled(for currentDay: Int) -> Bool {
-        let progressDay: Int
-        if currentDay >= 1, currentDay <= 49 {
-            progressDay = 1 // БАЗОВЫЙ блок
-        } else if currentDay >= 50, currentDay <= 99 {
-            progressDay = 50 // ПРОДВИНУТЫЙ блок
-        } else if currentDay >= 100 {
-            progressDay = 100 // Заключение
-        } else {
-            return true
-        }
+        let logger = Logger(subsystem: "SwiftUI-SotkaApp", category: "User.isMaximumsFilled")
+
+        // Используем Progress.Section для определения дня прогресса
+        let progressSection = Progress.Section(day: currentDay)
+        let progressDay = progressSection.rawValue
+
+        // Получаем все результаты для нужного дня
+        let allResultsForDay = progressResults.filter { $0.id == progressDay }
+        let activeResultsForDay = allResultsForDay.filter { !$0.shouldDelete }
+        let filledActiveResults = activeResultsForDay.filter(\.isFilled)
+
+        let logAllResults = allResultsForDay.map { "\($0.id): isFilled=\($0.isFilled), shouldDelete=\($0.shouldDelete)" }
+            .joined(separator: ", ")
+        let logActiveResults = activeResultsForDay.map { "\($0.id): isFilled=\($0.isFilled)" }.joined(separator: ", ")
+
+        logger.info("isMaximumsFilled: currentDay=\(currentDay), progressDay=\(progressDay)")
+        logger.info("Все результаты для дня \(progressDay): [\(logAllResults)]")
+        logger.info("Активные результаты для дня \(progressDay): [\(logActiveResults)]")
+        logger.info("Заполненные активные результаты: \(filledActiveResults.count)")
 
         // Проверяем, есть ли заполненные результаты для соответствующего дня
-        return progressResults.contains { $0.id == progressDay && $0.isFilled }
+        // Исключаем удаленные записи (shouldDelete = true)
+        let result = progressResults.contains {
+            $0.id == progressDay && $0.isFilled && !$0.shouldDelete
+        }
+
+        logger.info("isMaximumsFilled результат: \(result)")
+        return result
     }
 }
 

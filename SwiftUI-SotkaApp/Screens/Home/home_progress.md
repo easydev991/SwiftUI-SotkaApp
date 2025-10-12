@@ -341,249 +341,75 @@ if ((indexPath.section == SECTION_FILL_PROGRESS) && (indexPath.row == 1)) {
 
 ## Реализация в новом приложении
 
-### Структура данных
+### ✅ Реализованные компоненты
 
-```swift
-// Progress.swift
-@Model
-final class Progress {
-    /// Совпадает с номером дня
-    var id: Int
-    var pullUps: Int?
-    var pushUps: Int?
-    var squats: Int?
-    var weight: Float?
-    var isSynced: Bool = false
-    var lastModified = Date.now
-    
-    var isFilled: Bool {
-        let values = [pullUps, pushUps, squats, weight].compactMap { $0 }
-        return values.count == 4 && values.allSatisfy { $0 > 0 }
-    }
-}
+1. **Модель Progress** - создана в `Models/Progress.swift` с полями для хранения результатов прогресса и методом `isFilled`
+2. **Связь с User** - добавлена в `Models/User.swift` через `@Relationship(deleteRule: .cascade) var progressResults: [Progress]`
+3. **Логика проверки** - реализована в `User.isMaximumsFilled(for:)` для определения необходимости показа кнопки
+4. **UI компонент** - создан `HomeFillProgressSectionView` с логикой отображения
+5. **Интеграция в HomeScreen** - добавлен вызов `makeFillProgressView` в главном экране
+6. **Регистрация в SwiftData** - модель `Progress` добавлена в Schema и настроена очистка при логауте
 
-// User.swift - добавление связи с прогрессом
-@Model
-final class User {
-    // ... существующие свойства ...
-    
-    /// Результаты прогресса пользователя
-    @Relationship(deleteRule: .cascade) var progressResults: [Progress] = []
-    
-    // ... остальные свойства ...
-}
-```
+### ❌ Не реализовано
 
-### Логика отображения
-
-```swift
-// User.swift - добавление вычисляемых свойств для прогресса
-extension User {
-    /// Проверяет, заполнены ли результаты для текущего дня
-    func isMaximumsFilled(for currentDay: Int) -> Bool {
-        let progressDay: Int
-        if currentDay >= 1 && currentDay <= 49 {
-            progressDay = 1  // БАЗОВЫЙ блок
-        } else if currentDay >= 50 && currentDay <= 99 {
-            progressDay = 50 // ПРОДВИНУТЫЙ блок
-        } else if currentDay >= 100 {
-            progressDay = 100 // Заключение
-        } else {
-            return true
-        }
-        
-        // Проверяем, есть ли заполненные результаты для соответствующего дня
-        return progressResults.contains { $0.id == progressDay && $0.isFilled }
-    }
-}
-
-// HomeScreen.swift - добавить получение текущего пользователя
-import SwiftData
-
-struct HomeScreen: View {
-    @Environment(StatusManager.self) private var statusManager
-    @Query private var users: [User]
-    private var user: User? { users.first }
-    
-    var body: some View {
-        NavigationStack {
-            @Bindable var statusManager = statusManager
-            ZStack {
-                Color.swBackground.ignoresSafeArea()
-                if let calculator = statusManager.currentDayCalculator, let user {
-                    ScrollView {
-                        VStack(spacing: 12) {
-                            HomeDayCountView(calculator: calculator)
-                            makeInfopostView(with: calculator)
-                            HomeActivitySectionView()
-                            makeFillProgressView(with: calculator, user: user)
-                        }
-                        .padding([.horizontal, .bottom])
-                    }
-                } else {
-                    Text("Loading")
-                }
-            }
-            // ... остальной код
-        }
-    }
-}
-
-private extension HomeScreen {
-    func makeFillProgressView(with calculator: DayCalculator, user: User) -> some View {
-        HomeFillProgressSectionView(
-            currentDay: calculator.currentDay,
-            user: user
-        )
-    }
-}
-
-// HomeFillProgressSectionView.swift - доработка существующего компонента
-struct HomeFillProgressSectionView: View {
-    let model: Model
-    
-    init(currentDay: Int, user: User) {
-        self.model = .init(currentDay: currentDay, user: user)
-    }
-    
-    var body: some View {
-        if model.shouldShowFillProgress {
-            HomeSectionView(title: NSLocalizedString("Home.Progress", comment: "Прогресс")) {
-                NavigationLink {
-                    // TODO: Экран заполнения результатов
-                    EmptyView()
-                } label: {
-                    HStack {
-                        Text(model.localizedTitle)
-                            .frame(maxWidth: .infinity, alignment: .leading)
-                        ChevronView()
-                    }
-                    .padding([.horizontal, .bottom], 12)
-                }
-            }
-        }
-    }
-}
-
-extension HomeFillProgressSectionView {
-    struct Model {
-        let shouldShowFillProgress: Bool
-        let localizedTitle = NSLocalizedString("Home.FillResults", comment: "Заполнить результаты")
-        
-        init(currentDay: Int, user: User) {
-            self.shouldShowFillProgress = !user.isMaximumsFilled(for: currentDay)
-        }
-    }
-}
-```
+1. **Экран заполнения результатов** - в `HomeFillProgressSectionView` показывается `EmptyView()` вместо реального экрана
+2. **Навигация к экрану** - NavigationLink ведет к заглушке
 
 Этот анализ показывает, что старое iOS приложение имеет более гибкую логику с диапазонами дней, которая помогает пользователю не забыть внести прогресс. Этот подход следует использовать в качестве основы для нового приложения.
 
 ## План тестирования
 
-Для тестирования новой логики заполнения прогресса необходимо создать unit-тесты, следуя правилам из `@SwiftUI-SotkaApp/unit-testing-ios-app.mdc`.
+### ✅ Реализованные тесты
 
-### Тесты для модели Progress
+1. **Тесты для модели Progress** - созданы в `ProgressTests.swift`:
+   - Тест `isFilled` с полными данными
+   - Тест `isFilled` с неполными данными  
+   - Тест `isFilled` с нулевыми значениями
+   - Тест `isFilled` с отрицательными значениями
+   - Параметризированный тест для разных комбинаций
 
-**Файл**: `HomeFillProgressTests.swift`
+2. **Тесты для User.isMaximumsFilled** - добавлены в `UserTests.swift`:
+   - Тесты для дней 1-49, 50-99, 100+ с заполненными результатами
+   - Тест без данных
+   - Тест с незаполненными результатами
+   - Параметризированный тест для граничных дней
 
-1. **Тест `isFilled` с полными данными**
-   - Создать Progress с pullUps=10, pushUps=20, squats=30, weight=70.0
-   - Проверить `#expect(progress.isFilled)`
+3. **Тесты для HomeFillProgressSectionView.Model** - созданы в `HomeFillProgressSectionViewModelTests.swift`:
+   - Тест `shouldShowFillProgress` когда нужно показать
+   - Тест `shouldShowFillProgress` когда не нужно показывать
+   - Параметризированные тесты для разных дней и блоков программы
 
-2. **Тест `isFilled` с неполными данными**
-   - Создать Progress с pullUps=10, pushUps=nil, squats=30, weight=70.0
-   - Проверить `#expect(!progress.isFilled)`
+### ✅ Принципы тестирования соблюдены
 
-3. **Тест `isFilled` с нулевыми значениями**
-   - Создать Progress с pullUps=0, pushUps=20, squats=30, weight=70.0
-   - Проверить `#expect(!progress.isFilled)`
-
-4. **Параметризированный тест для разных комбинаций**
-   - Тестировать различные комбинации nil/0/положительных значений
-   - Использовать `@Test(arguments:)` для массива тестовых данных
-
-### Тесты для User extension
-
-**Файл**: `UserTests.swift` (добавить через extension)
-
-1. **Тест `isMaximumsFilled` для дня 1-49**
-   - Создать User с progressResults для дня 1 (заполненными)
-   - Проверить `#expect(user.isMaximumsFilled(for: 25))`
-
-2. **Тест `isMaximumsFilled` для дня 50-99**
-   - Создать User с progressResults для дня 50 (заполненными)
-   - Проверить `#expect(user.isMaximumsFilled(for: 75))`
-
-3. **Тест `isMaximumsFilled` для дня 100+**
-   - Создать User с progressResults для дня 100 (заполненными)
-   - Проверить `#expect(user.isMaximumsFilled(for: 105))`
-
-4. **Тест `isMaximumsFilled` без данных**
-   - Создать User без progressResults
-   - Проверить `#expect(!user.isMaximumsFilled(for: 25))`
-
-5. **Параметризированный тест для граничных дней**
-   - Тестировать дни 1, 49, 50, 99, 100 с разными состояниями данных
-
-### Тесты для HomeFillProgressSectionView.Model
-
-**Файл**: `HomeFillProgressSectionViewModelTests.swift`
-
-**Структура тестов**:
-```swift
-private typealias Model = HomeFillProgressSectionView.Model
-```
-
-1. **Тест `shouldShowFillProgress` когда нужно показать**
-   - Создать User без заполненных результатов для текущего дня
-   - Проверить `#expect(model.shouldShowFillProgress)`
-
-2. **Тест `shouldShowFillProgress` когда не нужно показывать**
-   - Создать User с заполненными результатами для текущего дня
-   - Проверить `#expect(!model.shouldShowFillProgress)`
-
-3. **Тест `localizedTitle`**
-   - Проверить что `model.localizedTitle` возвращает правильную локализованную строку
-
-4. **Параметризированный тест для разных дней**
-   - Тестировать создание модели для дней 1, 25, 49, 50, 75, 99, 100, 105
-   - Проверять корректность `shouldShowFillProgress` для каждого случая
-
-### Принципы тестирования
-
-- **Использовать Swift Testing** (`import Testing`)
-- **Разворачивать опционалы** с `try #require()`
-- **Проверять Bool условия** напрямую: `#expect(condition)` вместо `#expect(condition == true)`
-- **Использовать параметризированные тесты** для множественных сценариев
-- **Добавлять комментарии в `#expect`** только для сложной логики
-- **Тестировать бизнес-логику**, не UI компоненты
+- Используется Swift Testing (`import Testing`)
+- Bool условия проверяются напрямую: `#expect(condition)`
+- Применяются параметризированные тесты для множественных сценариев
+- Тестируется бизнес-логика, не UI компоненты
 
 ## Регистрация модели в SwiftData
 
-Новую модель `Progress` нужно зарегистрировать в SwiftData в файле `SwiftUI_SotkaAppApp.swift`:
+### ✅ Реализовано
 
-### 1. Добавить в Schema
-```swift
-let schema = Schema([User.self, Country.self, CustomExercise.self, Progress.self])
-```
+1. **Добавлена в Schema** - модель `Progress` зарегистрирована в `SwiftUI_SotkaAppApp.swift`
+2. **Настроена очистка при логауте** - благодаря `@Relationship(deleteRule: .cascade)` модель `Progress` автоматически удаляется при удалении `User`
 
-### 2. Добавить очистку при логауте
-```swift
-.onChange(of: authHelper.isAuthorized) { _, isAuthorized in
-    appSettings.setWorkoutNotificationsEnabled(isAuthorized)
-    if !isAuthorized {
-        appSettings.didLogout()
-        statusManager.didLogout()
-        do {
-            try modelContainer.mainContext.delete(model: User.self)
-            try modelContainer.mainContext.delete(model: CustomExercise.self)
-            try modelContainer.mainContext.delete(model: Progress.self)  // Добавить эту строку
-        } catch {
-            fatalError("Не удалось удалить данные пользователя: \(error.localizedDescription)")
-        }
-    }
-}
-```
+Это обеспечивает корректную работу с данными прогресса в SwiftData и их очистку при выходе пользователя из системы.
 
-Это обеспечит корректную работу с данными прогресса в SwiftData и их очистку при выходе пользователя из системы.
+## Оставшиеся задачи
+
+### 1. Создать экран заполнения результатов
+
+Необходимо создать полноценный экран для ввода результатов прогресса, который будет открываться при нажатии на кнопку в `HomeFillProgressSectionView`. Экран должен:
+
+- Позволять вводить подтягивания, отжимания, приседания и вес
+- Валидировать введенные данные
+- Сохранять результаты в SwiftData
+- Показывать соответствующий день прогресса (1, 50 или 100) в зависимости от текущего дня
+
+### 2. Обновить навигацию
+
+Заменить `EmptyView()` в `HomeFillProgressSectionView` на реальный экран заполнения результатов.
+
+### 3. Добавить визуальную обратную связь
+
+После заполнения результатов показывать галочку или другой индикатор в `HomeFillProgressSectionView`, чтобы пользователь видел, что прогресс внесен.

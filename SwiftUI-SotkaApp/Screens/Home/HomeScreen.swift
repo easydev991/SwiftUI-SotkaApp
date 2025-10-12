@@ -20,7 +20,7 @@ struct HomeScreen: View {
                             HomeActivitySectionView()
                             makeFillProgressView(with: calculator, user: user)
                         }
-                        .padding([.horizontal, .bottom])
+                        .padding()
                     }
                 } else {
                     Text("Loading")
@@ -66,17 +66,7 @@ private extension HomeScreen {
 #if DEBUG
 #Preview {
     HomeScreen()
-        .environment(
-            StatusManager(
-                customExercisesService: .init(
-                    client: MockExerciseClient(result: .success)
-                ),
-                infopostsService: .init(
-                    language: "ru",
-                    infopostsClient: MockInfopostsClient(result: .success)
-                )
-            )
-        )
+        .environment(StatusManager.preview)
         .modelContainer(PreviewModelContainer.make(with: User(id: 1)))
 }
 #endif

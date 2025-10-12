@@ -17,19 +17,21 @@ struct SwiftUI_SotkaAppApp: App {
     init() {
         let authHelper = AuthHelperImp()
         let client = SWClient(with: authHelper)
+        let progressSyncService = ProgressSyncService(client: client)
         self.statusManager = StatusManager(
             customExercisesService: .init(client: client),
             infopostsService: .init(
                 language: Locale.current.language.languageCode?.identifier ?? "ru",
                 infopostsClient: client
-            )
+            ),
+            progressSyncService: progressSyncService
         )
         self.authHelper = authHelper
         self.client = client
     }
 
     private var modelContainer: ModelContainer = {
-        let schema = Schema([User.self, Country.self, CustomExercise.self, Progress.self])
+        let schema = Schema([User.self, Country.self, CustomExercise.self, Progress.self, ProgressPhoto.self])
         let modelConfiguration = ModelConfiguration(schema: schema, isStoredInMemoryOnly: false)
         do {
             return try ModelContainer(for: schema, configurations: [modelConfiguration])

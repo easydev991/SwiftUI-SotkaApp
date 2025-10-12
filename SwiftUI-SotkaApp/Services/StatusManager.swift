@@ -14,6 +14,7 @@ final class StatusManager {
     private let defaults = UserDefaults.standard
     @ObservationIgnored let customExercisesService: CustomExercisesService
     @ObservationIgnored let infopostsService: InfopostsService
+    @ObservationIgnored let progressSyncService: ProgressSyncService
     private var isJournalSyncInProgress = false
 
     /// Дата старта сотки
@@ -66,10 +67,12 @@ final class StatusManager {
 
     init(
         customExercisesService: CustomExercisesService,
-        infopostsService: InfopostsService
+        infopostsService: InfopostsService,
+        progressSyncService: ProgressSyncService
     ) {
         self.customExercisesService = customExercisesService
         self.infopostsService = infopostsService
+        self.progressSyncService = progressSyncService
     }
 
     /// Получает статус прохождения пользователя
@@ -103,6 +106,7 @@ final class StatusManager {
                 }
             }
             currentDayCalculator = .init(startDate, .now)
+            await progressSyncService.syncProgress(context: context)
         } catch {
             logger.error("\(error.localizedDescription)")
         }

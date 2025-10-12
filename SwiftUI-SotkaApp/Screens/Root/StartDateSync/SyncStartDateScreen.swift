@@ -108,15 +108,5 @@ extension SyncStartDateView {
     let appStartDate = Calendar.current.date(byAdding: .day, value: -12, to: .now)!
     SyncStartDateView(model: .init(appStartDate, siteStartDate))
         .environment(AuthHelperImp())
-        .environment(
-            StatusManager(
-                customExercisesService: .init(
-                    client: MockExerciseClient(result: .success)
-                ),
-                infopostsService: .init(
-                    language: "ru",
-                    infopostsClient: MockInfopostsClient(result: .success)
-                )
-            )
-        )
+        .environment(StatusManager.preview)
 }

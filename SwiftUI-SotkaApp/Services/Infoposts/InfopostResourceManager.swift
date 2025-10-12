@@ -13,7 +13,12 @@ struct InfopostResourceManager {
 
         // Удаляем существующую директорию если есть
         if fileManager.fileExists(atPath: tempDirectory.path) {
-            try? fileManager.removeItem(at: tempDirectory)
+            do {
+                try fileManager.removeItem(at: tempDirectory)
+                logger.debug("🗑️ Удалена существующая временная директория")
+            } catch {
+                logger.warning("⚠️ Не удалось удалить существующую директорию: \(error.localizedDescription)")
+            }
         }
 
         do {

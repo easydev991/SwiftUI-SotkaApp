@@ -8,6 +8,7 @@ public struct SWTextField: View {
     private let isSecure: Bool
     private let isFocused: Bool
     private let errorState: ErrorState?
+    private let inputValidation: InputValidation?
 
     /// Инициализирует `SWTextField`
     /// - Parameters:
@@ -17,13 +18,15 @@ public struct SWTextField: View {
     ///   - isSecure: `true` - нужно прятать текст, `false` - не нужно, по умолчанию `false`
     ///   - isFocused: `true` - текстфилд сфокусирован, `false` - нет. Влияет на цвет рамки
     ///   - errorState: Состояние ошибки, по умолчанию отсутствует
+    ///   - inputValidation: Валидация ввода, по умолчанию отсутствует
     public init(
         placeholder: String,
         text: Binding<String>,
         lineLimit: Int = 1,
         isSecure: Bool = false,
         isFocused: Bool,
-        errorState: ErrorState? = nil
+        errorState: ErrorState? = nil,
+        inputValidation: InputValidation? = nil
     ) {
         self.placeholder = placeholder
         self._text = text
@@ -31,6 +34,7 @@ public struct SWTextField: View {
         self.isSecure = isSecure
         self.isFocused = isFocused
         self.errorState = errorState
+        self.inputValidation = inputValidation
     }
 
     public var body: some View {
@@ -65,6 +69,13 @@ public extension SWTextField {
             }
         }
     }
+
+    enum InputValidation {
+        /// Для веса: только цифры + максимум одна запятая/точка
+        case decimalNumber
+        /// Для целых чисел: только цифры
+        case integer
+    }
 }
 
 private extension SWTextField {
@@ -74,6 +85,11 @@ private extension SWTextField {
             SecureField(.init(placeholder), text: $text)
         } else {
             TextField(placeholder, text: $text, axis: .vertical)
+                .onChange(of: text) { _, newValue in
+                    if let validation = inputValidation {
+                        text = validateInput(newValue, validation: validation)
+                    }
+                }
         }
     }
 
@@ -90,6 +106,47 @@ private extension SWTextField {
     var borderColor: Color {
         guard errorState == nil else { return .swError }
         return isFocused ? .swAccent : .swSeparators
+    }
+
+    /// Валидирует ввод в зависимости от типа валидации
+    /// - Parameters:
+    ///   - input: Введенный текст
+    ///   - validation: Тип валидации
+    /// - Returns: Отфильтрованный текст
+    func validateInput(_ input: String, validation: InputValidation) -> String {
+        switch validation {
+        case .decimalNumber:
+            validateDecimalInput(input)
+        case .integer:
+            validateIntegerInput(input)
+        }
+    }
+
+    /// Валидирует ввод десятичного числа (только цифры + максимум одна запятая/точка)
+    /// - Parameter input: Введенный текст
+    /// - Returns: Отфильтрованный текст
+    func validateDecimalInput(_ input: String) -> String {
+        var result = ""
+        var hasDecimalSeparator = false
+
+        for character in input {
+            if character.isNumber {
+                result.append(character)
+            } else if character == "," || character == ".", !hasDecimalSeparator {
+                // Используем запятую как стандартный разделитель
+                result.append(",")
+                hasDecimalSeparator = true
+            }
+        }
+
+        return result
+    }
+
+    /// Валидирует ввод целого числа (только цифры)
+    /// - Parameter input: Введенный текст
+    /// - Returns: Отфильтрованный текст
+    func validateIntegerInput(_ input: String) -> String {
+        input.filter(\.isNumber)
     }
 }
 
@@ -123,6 +180,27 @@ private extension SWTextField {
             text: .constant("Text"),
             isFocused: false,
             errorState: .message("Error message")
+        )
+    }
+    .padding(.horizontal)
+}
+
+#Preview("Валидация ввода") {
+    @Previewable @State var decimalText = ""
+    @Previewable @State var integerText = ""
+
+    return VStack(spacing: 20) {
+        SWTextField(
+            placeholder: "Введите вес (десятичное число)",
+            text: $decimalText,
+            isFocused: true,
+            inputValidation: .decimalNumber
+        )
+        SWTextField(
+            placeholder: "Введите количество (целое число)",
+            text: $integerText,
+            isFocused: false,
+            inputValidation: .integer
         )
     }
     .padding(.horizontal)
