@@ -22,22 +22,50 @@ final class Progress {
     /// Связь с пользователем
     @Relationship(inverse: \User.progressResults) var user: User?
 
-    /// Связь с фотографиями прогресса
-    @Relationship(deleteRule: .cascade, inverse: \ProgressPhoto.progress)
-    var photos: [ProgressPhoto] = []
+    // MARK: - Поля для фотографий прогресса (новая архитектура)
+
+    /// URL фотографии спереди
+    var urlPhotoFront: String?
+
+    /// URL фотографии сзади
+    var urlPhotoBack: String?
+
+    /// URL фотографии сбоку
+    var urlPhotoSide: String?
+
+    /// Локальные данные изображения спереди (кэш)
+    var dataPhotoFront: Data?
+
+    /// Локальные данные изображения сзади (кэш)
+    var dataPhotoBack: Data?
+
+    /// Локальные данные изображения сбоку (кэш)
+    var dataPhotoSide: Data?
 
     init(
         id: Int,
         pullUps: Int? = nil,
         pushUps: Int? = nil,
         squats: Int? = nil,
-        weight: Float? = nil
+        weight: Float? = nil,
+        urlPhotoFront: String? = nil,
+        urlPhotoBack: String? = nil,
+        urlPhotoSide: String? = nil,
+        dataPhotoFront: Data? = nil,
+        dataPhotoBack: Data? = nil,
+        dataPhotoSide: Data? = nil
     ) {
         self.id = id
         self.pullUps = pullUps
         self.pushUps = pushUps
         self.squats = squats
         self.weight = weight
+        self.urlPhotoFront = urlPhotoFront
+        self.urlPhotoBack = urlPhotoBack
+        self.urlPhotoSide = urlPhotoSide
+        self.dataPhotoBack = dataPhotoBack
+        self.dataPhotoSide = dataPhotoSide
+        self.dataPhotoFront = dataPhotoFront
     }
 
     /// Проверяет, заполнены ли все результаты прогресса
@@ -71,35 +99,15 @@ final class Progress {
             weight: response.weight
         )
         self.user = user
-        // Если modify_date равен null, используем create_date
-        self.lastModified = response.modifyDate.flatMap {
-            DateFormatterService.dateFromString($0, format: .serverDateTimeSec)
-        } ?? DateFormatterService.dateFromString(response.createDate, format: .serverDateTimeSec)
+        // Устанавливаем lastModified в соответствии с серверным временем
+        updateLastModified(from: response)
         self.isSynced = true
         self.shouldDelete = false
 
-        // Создаем фотографии из ответа сервера, если они есть
-        if let photoFrontUrl = response.photoFront {
-            let frontPhoto = ProgressPhoto(type: .front, urlString: photoFrontUrl)
-            frontPhoto.isSynced = true
-            frontPhoto.progress = self
-            photos.append(frontPhoto)
-            logger.info("Progress: Создана фотография front с URL: \(photoFrontUrl)")
-        }
-        if let photoBackUrl = response.photoBack {
-            let backPhoto = ProgressPhoto(type: .back, urlString: photoBackUrl)
-            backPhoto.isSynced = true
-            backPhoto.progress = self
-            photos.append(backPhoto)
-            logger.info("Progress: Создана фотография back с URL: \(photoBackUrl)")
-        }
-        if let photoSideUrl = response.photoSide {
-            let sidePhoto = ProgressPhoto(type: .side, urlString: photoSideUrl)
-            sidePhoto.isSynced = true
-            sidePhoto.progress = self
-            photos.append(sidePhoto)
-            logger.info("Progress: Создана фотография side с URL: \(photoSideUrl)")
-        }
+        // Устанавливаем URL фотографий в новые поля модели (для новой архитектуры)
+        self.urlPhotoFront = response.photoFront
+        self.urlPhotoBack = response.photoBack
+        self.urlPhotoSide = response.photoSide
     }
 
     /// Создает Progress из ProgressResponse с маппингом дня
@@ -112,35 +120,15 @@ final class Progress {
             weight: response.weight
         )
         self.user = user
-        // Если modify_date равен null, используем create_date
-        self.lastModified = response.modifyDate.flatMap {
-            DateFormatterService.dateFromString($0, format: .serverDateTimeSec)
-        } ?? DateFormatterService.dateFromString(response.createDate, format: .serverDateTimeSec)
+        // Устанавливаем lastModified в соответствии с серверным временем
+        updateLastModified(from: response)
         self.isSynced = true
         self.shouldDelete = false
 
-        // Создаем фотографии из ответа сервера, если они есть
-        if let photoFrontUrl = response.photoFront {
-            let frontPhoto = ProgressPhoto(type: .front, urlString: photoFrontUrl)
-            frontPhoto.isSynced = true
-            frontPhoto.progress = self
-            photos.append(frontPhoto)
-            logger.info("Progress: Создана фотография front с URL: \(photoFrontUrl)")
-        }
-        if let photoBackUrl = response.photoBack {
-            let backPhoto = ProgressPhoto(type: .back, urlString: photoBackUrl)
-            backPhoto.isSynced = true
-            backPhoto.progress = self
-            photos.append(backPhoto)
-            logger.info("Progress: Создана фотография back с URL: \(photoBackUrl)")
-        }
-        if let photoSideUrl = response.photoSide {
-            let sidePhoto = ProgressPhoto(type: .side, urlString: photoSideUrl)
-            sidePhoto.isSynced = true
-            sidePhoto.progress = self
-            photos.append(sidePhoto)
-            logger.info("Progress: Создана фотография side с URL: \(photoSideUrl)")
-        }
+        // Устанавливаем URL фотографий в новые поля модели (для новой архитектуры)
+        self.urlPhotoFront = response.photoFront
+        self.urlPhotoBack = response.photoBack
+        self.urlPhotoSide = response.photoSide
     }
 }
 
@@ -252,55 +240,93 @@ extension Progress {
             return "\(squats)"
         }
     }
-}
 
-// MARK: - Photos Management
+    // MARK: - New Photo Data Management Methods
 
-extension Progress {
-    // MARK: - Computed Properties
-    var hasPhotos: Bool {
-        !photos.filter { !$0.isDeleted }.isEmpty
-    }
-
-    var hasUnsyncedPhotos: Bool {
-        photos.contains { !$0.isSynced && !$0.isDeleted }
-    }
-
-    var hasPhotosToDelete: Bool {
-        photos.contains { $0.isDeleted }
-    }
-
-    // MARK: - Methods
-    func getPhoto(_ type: PhotoType) -> ProgressPhoto? {
-        let result = photos.first { $0.type == type && !$0.isDeleted }
-        let photosCount = photos.count
-        logger.info("Progress.getPhoto(\(type.rawValue)): найдено \(result != nil ? "да" : "нет"), всего фотографий: \(photosCount)")
-        if let photo = result {
-            logger
-                .info(
-                    "Progress.getPhoto: data=\(photo.data != nil ? "есть" : "нет"), urlString=\(photo.urlString ?? "нет"), isDeleted=\(photo.isDeleted)"
-                )
+    /// Устанавливает данные изображения для указанного типа (новая архитектура)
+    func setPhotoData(_ type: PhotoType, data: Data) {
+        switch type {
+        case .front:
+            dataPhotoFront = data
+        case .back:
+            dataPhotoBack = data
+        case .side:
+            dataPhotoSide = data
         }
-        return result
+        lastModified = Date()
+        isSynced = false
     }
 
-    func setPhoto(_ type: PhotoType, data: Data) {
-        if let existing = getPhoto(type) {
-            existing.data = data
-            existing.lastModified = Date()
-            existing.isSynced = false
-        } else {
-            let newPhoto = ProgressPhoto(type: type, data: data)
-            photos.append(newPhoto)
+    /// Получает данные изображения указанного типа (новая архитектура)
+    func getPhotoData(_ type: PhotoType) -> Data? {
+        switch type {
+        case .front:
+            dataPhotoFront
+        case .back:
+            dataPhotoBack
+        case .side:
+            dataPhotoSide
         }
     }
 
-    func deletePhoto(_ type: PhotoType) throws {
-        guard let photo = getPhoto(type) else {
-            throw ProgressError.photoNotFound
+    /// Проверяет, есть ли локальные данные изображения указанного типа
+    func hasPhotoData(_ type: PhotoType) -> Bool {
+        getPhotoData(type) != nil
+    }
+
+    /// Удаляет локальные данные изображения указанного типа
+    func deletePhotoData(_ type: PhotoType) {
+        switch type {
+        case .front:
+            dataPhotoFront = nil
+        case .back:
+            dataPhotoBack = nil
+        case .side:
+            dataPhotoSide = nil
         }
-        photo.isDeleted = true
-        photo.lastModified = Date()
-        photo.isSynced = false
+        lastModified = Date()
+        isSynced = false
+    }
+
+    /// Проверяет, есть ли локальные данные хотя бы для одной фотографии
+    var hasAnyPhotoData: Bool {
+        dataPhotoFront != nil || dataPhotoBack != nil || dataPhotoSide != nil
+    }
+
+    /// Проверяет, есть ли локальные данные для всех трех фотографий
+    var hasAllPhotoData: Bool {
+        dataPhotoFront != nil && dataPhotoBack != nil && dataPhotoSide != nil
+    }
+
+    /// Устанавливает lastModified в соответствии с серверным временем (как в Android)
+    /// Если modify_date равен null, используем create_date
+    func updateLastModified(from response: ProgressResponse) {
+        lastModified = response.modifyDate.flatMap {
+            DateFormatterService.dateFromString($0, format: .serverDateTimeSec)
+        } ?? DateFormatterService.dateFromString(response.createDate, format: .serverDateTimeSec)
+    }
+
+    /// Проверяет, есть ли фотография указанного типа (URL или данные)
+    func hasPhoto(_ type: PhotoType) -> Bool {
+        switch type {
+        case .front:
+            urlPhotoFront != nil
+        case .back:
+            urlPhotoBack != nil
+        case .side:
+            urlPhotoSide != nil
+        }
+    }
+
+    /// Получает URL фотографии указанного типа
+    func getPhotoURL(_ type: PhotoType) -> String? {
+        switch type {
+        case .front:
+            urlPhotoFront
+        case .back:
+            urlPhotoBack
+        case .side:
+            urlPhotoSide
+        }
     }
 }

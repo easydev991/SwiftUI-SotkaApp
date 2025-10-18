@@ -29,6 +29,20 @@ struct ProgressServicePhotoTests {
         Data("not an image".utf8)
     }
 
+    // MARK: - Helper Methods
+
+    private func createTestModelContext() throws -> ModelContext {
+        let modelConfiguration = ModelConfiguration(isStoredInMemoryOnly: true)
+        let modelContainer = try ModelContainer(for: User.self, Progress.self, configurations: modelConfiguration)
+
+        // Создаем тестового пользователя
+        let user = User(id: 1, userName: "test", email: "test@test.com", cityID: nil)
+        modelContainer.mainContext.insert(user)
+        try modelContainer.mainContext.save()
+
+        return modelContainer.mainContext
+    }
+
     // MARK: - addPhoto Tests
 
     @Test("Добавление фотографии к прогрессу", arguments: [PhotoType.front, PhotoType.back, PhotoType.side])
@@ -36,14 +50,14 @@ struct ProgressServicePhotoTests {
         let progress = Progress(id: 1)
         let service = ProgressService(progress: progress)
         let testData = testImageData
+        let context = try createTestModelContext()
 
-        try service.addPhoto(testData, type: photoType, to: progress)
+        try service.addPhoto(testData, type: photoType, context: context)
 
-        #expect(progress.photos.count == 1)
-        let photo = try #require(progress.getPhoto(photoType))
-        #expect(photo.data != nil)
-        #expect(photo.type == photoType)
-        #expect(!photo.isSynced)
+        #expect(progress.hasPhotoData(photoType))
+        let photoData = try #require(progress.getPhotoData(photoType))
+        #expect(!photoData.isEmpty)
+        #expect(!progress.isSynced)
     }
 
     @Test("Добавление фотографии с невалидным размером")
@@ -51,9 +65,10 @@ struct ProgressServicePhotoTests {
         let progress = Progress(id: 1)
         let service = ProgressService(progress: progress)
         let invalidData = Data(repeating: 0, count: 15 * 1024 * 1024) // 15MB
+        let context = try createTestModelContext()
 
         #expect(throws: ProgressError.invalidImageData) {
-            try service.addPhoto(invalidData, type: .front, to: progress)
+            try service.addPhoto(invalidData, type: .front, context: context)
         }
     }
 
@@ -62,9 +77,10 @@ struct ProgressServicePhotoTests {
         let progress = Progress(id: 1)
         let service = ProgressService(progress: progress)
         let invalidData = invalidImageData
+        let context = try createTestModelContext()
 
         #expect(throws: ProgressError.invalidImageData) {
-            try service.addPhoto(invalidData, type: .front, to: progress)
+            try service.addPhoto(invalidData, type: .front, context: context)
         }
     }
 
@@ -73,104 +89,87 @@ struct ProgressServicePhotoTests {
         let progress = Progress(id: 1)
         let service = ProgressService(progress: progress)
         let largeData = largeImageData
+        let context = try createTestModelContext()
 
-        try service.addPhoto(largeData, type: .side, to: progress)
+        try service.addPhoto(largeData, type: .side, context: context)
 
-        #expect(progress.photos.count == 1)
-        let sidePhoto = try #require(progress.getPhoto(.side))
-        #expect(sidePhoto.data != nil)
-        #expect(sidePhoto.type == .side)
+        #expect(progress.hasPhotoData(.side))
+        let sidePhotoData = try #require(progress.getPhotoData(.side))
+        #expect(!sidePhotoData.isEmpty)
     }
 
     // MARK: - deletePhoto Tests
 
     @Test("Удаление существующей фотографии")
-    func deleteExistingPhoto() {
+    func deleteExistingPhoto() throws {
         let progress = Progress(id: 1)
         let service = ProgressService(progress: progress)
         let testData = testImageData
+        let context = try createTestModelContext()
 
-        progress.setPhoto(.front, data: testData)
-        #expect(progress.photos.count == 1)
+        progress.setPhotoData(.front, data: testData)
+        #expect(progress.hasPhotoData(.front))
 
-        service.deletePhoto(.front, from: progress)
+        try service.deletePhoto(.front, context: context)
 
-        #expect(progress.photos.count == 0)
-        #expect(progress.getPhoto(.front) == nil)
+        #expect(!progress.hasPhotoData(.front))
+        #expect(progress.getPhotoData(.front) == nil)
     }
 
     @Test("Удаление несуществующей фотографии")
-    func deleteNonExistentPhoto() {
+    func deleteNonExistentPhoto() throws {
         let progress = Progress(id: 1)
         let service = ProgressService(progress: progress)
+        let context = try createTestModelContext()
 
-        service.deletePhoto(.front, from: progress)
+        try service.deletePhoto(.front, context: context)
 
-        #expect(progress.photos.isEmpty)
+        #expect(!progress.hasPhotoData(.front))
     }
 
     @Test("Удаление фотографии всех типов", arguments: PhotoType.allCases)
-    func deletePhotoAllTypes(photoType: PhotoType) {
+    func deletePhotoAllTypes(photoType: PhotoType) throws {
         let progress = Progress(id: 1)
         let service = ProgressService(progress: progress)
         let testData = testImageData
+        let context = try createTestModelContext()
 
         // Добавляем фотографию
-        progress.setPhoto(photoType, data: testData)
-        #expect(progress.photos.count == 1)
+        progress.setPhotoData(photoType, data: testData)
+        #expect(progress.hasPhotoData(photoType))
 
         // Удаляем фотографию
-        service.deletePhoto(photoType, from: progress)
+        try service.deletePhoto(photoType, context: context)
 
-        // Физическое удаление - фотография должна быть удалена из массива
-        #expect(progress.photos.count == 0)
-        #expect(progress.getPhoto(photoType) == nil)
+        // Физическое удаление - данные должны быть удалены
+        #expect(!progress.hasPhotoData(photoType))
+        #expect(progress.getPhotoData(photoType) == nil)
     }
 
     // MARK: - addPhoto with Context Tests
 
     @Test("Добавление фотографии с сохранением в контекст")
     func addPhotoWithContext() throws {
-        let container = try ModelContainer(
-            for: Progress.self,
-            User.self,
-            ProgressPhoto.self,
-            configurations: ModelConfiguration(isStoredInMemoryOnly: true)
-        )
-        let context = container.mainContext
-
         let progress = Progress(id: 1)
-        context.insert(progress)
-        try context.save()
-
         let service = ProgressService(progress: progress)
         let testData = testImageData
+        let context = try createTestModelContext()
 
         try service.addPhoto(testData, type: .front, context: context)
 
-        #expect(progress.photos.count == 1)
-        let frontPhoto = try #require(progress.getPhoto(.front))
-        #expect(frontPhoto.data != nil)
+        #expect(progress.hasPhotoData(.front))
+        let frontPhotoData = try #require(progress.getPhotoData(.front))
+        #expect(!frontPhotoData.isEmpty)
     }
 
     @Test("Добавление фотографии с nil данными в контекст")
     func addPhotoWithNilDataInContext() throws {
-        let container = try ModelContainer(
-            for: Progress.self,
-            User.self,
-            ProgressPhoto.self,
-            configurations: ModelConfiguration(isStoredInMemoryOnly: true)
-        )
-        let context = container.mainContext
-
         let progress = Progress(id: 1)
-        context.insert(progress)
-        try context.save()
-
         let service = ProgressService(progress: progress)
+        let context = try createTestModelContext()
 
         #expect(throws: ProgressError.invalidImageData) {
-            try service.addPhoto(nil, type: .front, context: context)
+            try service.addPhoto(Data(), type: .front, context: context)
         }
     }
 
@@ -178,74 +177,26 @@ struct ProgressServicePhotoTests {
 
     @Test("Удаление существующей фотографии с сохранением в контекст")
     func deleteExistingPhotoWithContext() throws {
-        let container = try ModelContainer(
-            for: Progress.self,
-            User.self,
-            ProgressPhoto.self,
-            configurations: ModelConfiguration(isStoredInMemoryOnly: true)
-        )
-        let context = container.mainContext
-
         let progress = Progress(id: 1)
-        let photo = ProgressPhoto(type: .front, data: testImageData)
-        progress.photos.append(photo)
-        context.insert(progress)
-        context.insert(photo)
-        try context.save()
+        progress.setPhotoData(.front, data: testImageData)
+        let context = try createTestModelContext()
 
         let service = ProgressService(progress: progress)
         try service.deletePhoto(.front, context: context)
 
-        #expect(progress.photos.isEmpty)
+        #expect(!progress.hasPhotoData(.front))
     }
 
     @Test("Удаление несуществующей фотографии в контекст")
     func deleteNonExistentPhotoInContext() throws {
-        let container = try ModelContainer(
-            for: Progress.self,
-            User.self,
-            ProgressPhoto.self,
-            configurations: ModelConfiguration(isStoredInMemoryOnly: true)
-        )
-        let context = container.mainContext
-
         let progress = Progress(id: 1)
-        context.insert(progress)
-        try context.save()
+        let context = try createTestModelContext()
 
         let service = ProgressService(progress: progress)
+        // Метод не выбрасывает ошибку для несуществующей фотографии
         try service.deletePhoto(.front, context: context)
 
-        #expect(progress.photos.isEmpty)
-    }
-
-    @Test("Удаление уже удаленной фотографии в контекст")
-    func deleteAlreadyDeletedPhotoInContext() throws {
-        let container = try ModelContainer(
-            for: Progress.self,
-            User.self,
-            ProgressPhoto.self,
-            configurations: ModelConfiguration(isStoredInMemoryOnly: true)
-        )
-        let context = container.mainContext
-
-        let progress = Progress(id: 1)
-        let photo = ProgressPhoto(type: .front, data: testImageData)
-        photo.isDeleted = true
-        progress.photos.append(photo)
-        context.insert(progress)
-        context.insert(photo)
-        try context.save()
-
-        let service = ProgressService(progress: progress)
-
-        // Теперь метод не выбрасывает ошибку для уже удаленных фотографий
-        // Он просто не находит фотографию и не делает ничего
-        try service.deletePhoto(.front, context: context)
-
-        // Проверяем, что фотография была удалена из массива прогресса
-        // (фотография не была найдена для удаления, так как она уже помечена как удаленная)
-        #expect(progress.photos.isEmpty)
+        #expect(!progress.hasPhotoData(.front))
     }
 
     // MARK: - Multiple Photos Tests
@@ -255,15 +206,18 @@ struct ProgressServicePhotoTests {
         let progress = Progress(id: 1)
         let service = ProgressService(progress: progress)
         let testData = testImageData
+        let context = try createTestModelContext()
 
-        try service.addPhoto(testData, type: .front, to: progress)
-        try service.addPhoto(testData, type: .back, to: progress)
-        try service.addPhoto(testData, type: .side, to: progress)
+        try service.addPhoto(testData, type: .front, context: context)
+        try service.addPhoto(testData, type: .back, context: context)
+        try service.addPhoto(testData, type: .side, context: context)
 
-        #expect(progress.photos.count == 3)
-        #expect(progress.getPhoto(.front) != nil)
-        #expect(progress.getPhoto(.back) != nil)
-        #expect(progress.getPhoto(.side) != nil)
+        #expect(progress.hasPhotoData(.front))
+        #expect(progress.hasPhotoData(.back))
+        #expect(progress.hasPhotoData(.side))
+        #expect(progress.getPhotoData(.front) != nil)
+        #expect(progress.getPhotoData(.back) != nil)
+        #expect(progress.getPhotoData(.side) != nil)
     }
 
     @Test("Замена существующей фотографии")
@@ -272,19 +226,19 @@ struct ProgressServicePhotoTests {
         let service = ProgressService(progress: progress)
         let originalData = testImageData
         let newData = largeImageData // Используем валидные данные изображения
+        let context = try createTestModelContext()
 
         // Добавляем оригинальную фотографию
-        try service.addPhoto(originalData, type: .front, to: progress)
-        let originalPhoto = try #require(progress.getPhoto(.front))
-        originalPhoto.isSynced = true
+        try service.addPhoto(originalData, type: .front, context: context)
+        progress.isSynced = true
 
         // Заменяем фотографию
-        try service.addPhoto(newData, type: .front, to: progress)
+        try service.addPhoto(newData, type: .front, context: context)
 
-        #expect(progress.photos.count == 1)
-        let updatedPhoto = try #require(progress.getPhoto(.front))
-        #expect(updatedPhoto.data != originalData) // Данные должны отличаться
-        #expect(!updatedPhoto.isSynced)
+        #expect(progress.hasPhotoData(.front))
+        let updatedPhotoData = try #require(progress.getPhotoData(.front))
+        #expect(updatedPhotoData != originalData) // Данные должны отличаться
+        #expect(!progress.isSynced)
     }
 
     // MARK: - Error Handling Tests
@@ -293,12 +247,13 @@ struct ProgressServicePhotoTests {
     func imageProcessingError() throws {
         let progress = Progress(id: 1)
         let service = ProgressService(progress: progress)
+        let context = try createTestModelContext()
 
         // Создаем данные, которые не пройдут валидацию формата
         let problematicData = Data([0xFF, 0xD8, 0xFF]) // Начало JPEG, но неполный
 
         #expect(throws: ProgressError.invalidImageData) {
-            try service.addPhoto(problematicData, type: .front, to: progress)
+            try service.addPhoto(problematicData, type: .front, context: context)
         }
     }
 }

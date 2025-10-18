@@ -31,7 +31,7 @@ struct SwiftUI_SotkaAppApp: App {
     }
 
     private var modelContainer: ModelContainer = {
-        let schema = Schema([User.self, Country.self, CustomExercise.self, Progress.self, ProgressPhoto.self])
+        let schema = Schema([User.self, Country.self, CustomExercise.self, Progress.self])
         let modelConfiguration = ModelConfiguration(schema: schema, isStoredInMemoryOnly: false)
         do {
             return try ModelContainer(for: schema, configurations: [modelConfiguration])

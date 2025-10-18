@@ -580,7 +580,7 @@ func deletePhoto(_ type: PhotoType, context: ModelContext) throws {
 **Новая функциональность**: При получении URL фотографий с сервера автоматически загружать изображения асинхронно и сохранять их локально в формате Data для быстрого доступа и оффлайн-просмотра.
 
 **Архитектурные решения**:
-- **Асинхронная загрузка**: Используем `Task.detached` для загрузки фото в фоне без блокировки синхронизации
+- **Асинхронная загрузка**: Используем `Task` для загрузки фото в фоне без блокировки синхронизации
 - **Серверное время**: `lastModified` устанавливается моделью через метод `updateLastModified(from:)` для корректного разрешения конфликтов LWW
 - **Локальный кэш**: Фотографии сохраняются в полях `dataPhotoFront`, `dataPhotoBack`, `dataPhotoSide`
 - **Разделение ответственности**: Сервисы делегируют логику времени моделям данных
@@ -694,12 +694,6 @@ struct PhotoDownloadService {
         }
     }
 
-    /// Создает detached task для асинхронной загрузки фото (не блокирует вызывающий поток)
-    static func downloadAllPhotosDetached(for progress: Progress) {
-        Task.detached {
-            await PhotoDownloadService().downloadAllPhotos(for: progress)
-        }
-    }
 }
 ```
 
@@ -720,7 +714,9 @@ extension ProgressSyncService {
         progress.updateLastModified(from: response)
 
         // Загружаем фотографии асинхронно (не блокируем синхронизацию основных данных)
-        PhotoDownloadService.downloadAllPhotosDetached(for: progress)
+        Task {
+            await PhotoDownloadService().downloadAllPhotos(for: progress)
+        }
 
         progress.isSynced = true
     }
@@ -782,228 +778,35 @@ struct ProgressPhotoRow: View {
 
 **Цель этапа**: Добавить фоновую загрузку фотографий по URL с сервера для хранения локальных данных в формате Data, аналогично Android приложению.
 
-#### Шаг 0.1: Создание сервиса загрузки фотографий
+#### ✅ Шаг 0.1: Создание сервиса загрузки фотографий
 
-**Файл**: `Services/PhotoDownloadService.swift`
+**Файл**: `Services/PhotoDownloadService.swift` - **РЕАЛИЗОВАНО**
 
-**Архитектурное решение**: `struct PhotoDownloadService` вместо класса, поскольку:
-- Нет изменяемых состояний (все методы принимают параметры)
-- Не требуется наследование или полиморфизм
-- Структуры обеспечивают лучшую производительность и безопасность памяти
+**Архитектурное решение**: `struct PhotoDownloadService` - реализовано как структура с методами `downloadAndCachePhoto` и `downloadAllPhotos`, включая обработку ошибок и валидацию URL.
 
-```swift
-struct PhotoDownloadService {
+#### ✅ Шаг 0.2: Добавление полей для данных изображений в модель Progress
 
-    /// Загружает фотографию по URL и сохраняет в модель прогресса
-    func downloadAndCachePhoto(_ urlString: String, for progress: Progress, type: PhotoType) async throws {
-        // 1. Проверяем, что URL валидный
-        guard let url = URL(string: urlString) else {
-            throw PhotoError.invalidURL
-        }
+**Файл**: `Models/Progress.swift` - **РЕАЛИЗОВАНО**
 
-        // 2. Загружаем данные изображения
-        let (data, _) = try await URLSession.shared.data(from: url)
+Добавлены поля `urlPhotoFront`, `urlPhotoBack`, `urlPhotoSide` и `dataPhotoFront`, `dataPhotoBack`, `dataPhotoSide` в модель Progress.
 
-        // 3. Проверяем размер (не более 10MB как в Android)
-        guard data.count <= 10 * 1024 * 1024 else {
-            throw PhotoError.fileTooLarge
-        }
+#### ✅ Шаг 0.3: Добавление методов работы с данными изображений
 
-        // 4. Сохраняем данные в модель прогресса
-        progress.setPhotoData(type, data: data)
+**Файл**: `Models/Progress.swift` (расширение) - **РЕАЛИЗОВАНО**
 
-        // 5. Помечаем прогресс как измененный
-        progress.isSynced = false
-        progress.lastModified = Date()
-    }
+Реализованы методы `setPhotoData`, `getPhotoData`, `hasPhotoData`, `deletePhotoData`, `hasAnyPhotoData`, `hasAllPhotoData` и `updateLastModified`.
 
-    /// Автоматически загружает все новые фотографии для прогресса
-    func downloadAllPhotos(for progress: Progress) async {
-        let photosToDownload: [(String?, PhotoType)] = [
-            (progress.urlPhotoFront, .front),
-            (progress.urlPhotoBack, .back),
-            (progress.urlPhotoSide, .side)
-        ]
+#### ✅ Шаг 0.4: Интеграция в процесс синхронизации
 
-        for (urlString, type) in photosToDownload {
-            guard let urlString = urlString else { continue }
+**Файл**: `Services/ProgressSyncService.swift` - **РЕАЛИЗОВАНО**
 
-            // Проверяем, нужно ли загружать (если данных нет или URL обновился)
-            if progress.getPhotoData(type) == nil {
-                do {
-                    try await downloadAndCachePhoto(urlString, for: progress, type: type)
-                } catch {
-                    logger.error("Ошибка загрузки фото \(type.rawValue): \(error.localizedDescription)")
-                }
-            }
-        }
-    }
-}
-```
+Метод `updateProgressFromServerResponse` реализован с автоматической загрузкой фотографий через `PhotoDownloadService().downloadAllPhotos(for: progress)`.
 
-#### Шаг 0.2: Добавление полей для данных изображений в модель Progress
+#### ✅ Шаг 0.5: Обновление UI компонентов для приоритета локальных данных
 
-**Файл**: `Models/Progress.swift`
+**Файл**: `Screens/Profile/Progress/ProgressPhotoRow.swift` - **РЕАЛИЗОВАНО**
 
-```swift
-@Model
-final class Progress {
-    // Существующие поля остаются без изменений
-    var id: Int
-    var pullUps: Int?
-    var pushUps: Int?
-    var squats: Int?
-    var weight: Float?
-    var isSynced = false
-    var shouldDelete = false
-    var lastModified = Date.now
-
-    // Поля для URL фотографий (как в Android)
-    var urlPhotoFront: String?
-    var urlPhotoBack: String?
-    var urlPhotoSide: String?
-
-    // НОВЫЕ поля для локальных данных изображений
-    var dataPhotoFront: Data?
-    var dataPhotoBack: Data?
-    var dataPhotoSide: Data?
-}
-```
-
-#### Шаг 0.3: Добавление методов работы с данными изображений
-
-**Файл**: `Models/Progress.swift` (расширение)
-
-```swift
-extension Progress {
-    // MARK: - Photo Data Management Methods
-
-    /// Устанавливает данные изображения для указанного типа
-    func setPhotoData(_ type: PhotoType, data: Data) {
-        switch type {
-        case .front:
-            dataPhotoFront = data
-        case .back:
-            dataPhotoBack = data
-        case .side:
-            dataPhotoSide = data
-        }
-        lastModified = Date()
-        isSynced = false
-    }
-
-    /// Получает данные изображения указанного типа
-    func getPhotoData(_ type: PhotoType) -> Data? {
-        switch type {
-        case .front:
-            return dataPhotoFront
-        case .back:
-            return dataPhotoBack
-        case .side:
-            return dataPhotoSide
-        }
-    }
-
-    /// Проверяет, есть ли локальные данные изображения
-    func hasPhotoData(_ type: PhotoType) -> Bool {
-        getPhotoData(type) != nil
-    }
-
-    /// Удаляет локальные данные изображения
-    func deletePhotoData(_ type: PhotoType) {
-        switch type {
-        case .front:
-            dataPhotoFront = nil
-        case .back:
-            dataPhotoBack = nil
-        case .side:
-            dataPhotoSide = nil
-        }
-        lastModified = Date()
-        isSynced = false
-    }
-
-    /// Проверяет, есть ли локальные данные хотя бы для одной фотографии
-    var hasAnyPhotoData: Bool {
-        dataPhotoFront != nil || dataPhotoBack != nil || dataPhotoSide != nil
-    }
-
-    /// Проверяет, есть ли локальные данные для всех трех фотографий
-    var hasAllPhotoData: Bool {
-        dataPhotoFront != nil && dataPhotoBack != nil && dataPhotoSide != nil
-    }
-
-    /// Устанавливает lastModified в соответствии с серверным временем (как в Android)
-    /// Если modify_date равен null, используем create_date
-    func updateLastModified(from response: ProgressResponse) {
-        lastModified = response.modifyDate.flatMap {
-            DateFormatterService.dateFromString($0, format: .serverDateTimeSec)
-        } ?? DateFormatterService.dateFromString(response.createDate, format: .serverDateTimeSec)
-    }
-}
-```
-
-#### Шаг 0.4: Интеграция в процесс синхронизации
-
-**Файл**: `Services/ProgressSyncService.swift`
-
-```swift
-extension ProgressSyncService {
-    // В методе updateProgressFromServerResponse добавить автоматическую загрузку
-    func updateProgressFromServerResponse(_ progress: Progress, _ response: ProgressResponse) {
-        // Обновляем URL фотографий
-        progress.urlPhotoFront = response.photoFront
-        progress.urlPhotoBack = response.photoBack
-        progress.urlPhotoSide = response.photoSide
-
-        // Устанавливаем lastModified в соответствии с серверным временем (делегируем модели)
-        progress.updateLastModified(from: response)
-
-        // Загружаем фотографии асинхронно (не блокируем синхронизацию основных данных)
-        PhotoDownloadService.downloadAllPhotosDetached(for: progress)
-
-        progress.isSynced = true
-    }
-}
-```
-
-#### Шаг 0.5: Обновление UI компонентов для приоритета локальных данных
-
-**Файл**: `Screens/Profile/Progress/ProgressPhotoRow.swift`
-
-```swift
-struct ProgressPhotoRow: View {
-    let progress: Progress
-    let type: PhotoType
-
-    var body: some View {
-        // Приоритет локальным данным, fallback на URL
-        if let photoData = progress.getPhotoData(type),
-           let uiImage = UIImage(data: photoData) {
-            Image(uiImage: uiImage)
-                .resizable()
-                .scaledToFill()
-        } else if let urlString = progress.getPhotoURL(type) {
-            AsyncImage(url: URL(string: urlString)) { phase in
-                switch phase {
-                case .empty:
-                    ProgressView()
-                case .success(let image):
-                    image.resizable().scaledToFill()
-                case .failure:
-                    Image(systemName: "photo")
-                        .foregroundColor(.gray)
-                @unknown default:
-                    EmptyView()
-                }
-            }
-        } else {
-            Image(systemName: "photo")
-                .foregroundColor(.gray)
-        }
-    }
-}
-```
+UI компонент обновлен с приоритетом локальных данных (`progress.getPhotoData(type)`) и fallback на URL (`progress.getPhotoURL(type)`) с использованием `AsyncImage`.
 
 ### 📋 **Этап 1: Анализ текущей архитектуры и подготовка к изменениям**
 
@@ -1019,229 +822,85 @@ struct ProgressPhotoRow: View {
 
 ### 🔄 **Этап 2: Изменения в модели Progress**
 
-**Шаг 2.1: Добавить поля для URL фотографий и данных изображений**
-```swift
-@Model
-final class Progress {
-    // Существующие поля остаются без изменений
-    var id: Int
-    var pullUps: Int?
-    var pushUps: Int?
-    var squats: Int?
-    var weight: Float?
-    var isSynced = false
-    var shouldDelete = false
-    var lastModified = Date.now
+**✅ Шаг 2.1: Добавить поля для URL фотографий и данных изображений** - **РЕАЛИЗОВАНО**
 
-    // Поля для URL фотографий (как в Android)
-    var urlPhotoFront: String?
-    var urlPhotoBack: String?
-    var urlPhotoSide: String?
+Поля `urlPhotoFront`, `urlPhotoBack`, `urlPhotoSide` и `dataPhotoFront`, `dataPhotoBack`, `dataPhotoSide` добавлены в модель Progress.
 
-    // Поля для локальных данных изображений (кэш)
-    var dataPhotoFront: Data?
-    var dataPhotoBack: Data?
-    var dataPhotoSide: Data?
+**✅ Шаг 2.2: Обновить инициализаторы модели Progress** - **РЕАЛИЗОВАНО**
 
-    // УДАЛИТЬ relationship с ProgressPhoto
-    // @Relationship(inverse: \ProgressPhoto.progress) var photos: [ProgressPhoto] = []
-}
-```
+Инициализаторы обновлены с параметрами `urlPhotoFront`, `urlPhotoBack`, `urlPhotoSide` и используют новые поля при создании из `ProgressResponse`.
 
-**Шаг 2.2: Обновить инициализаторы модели Progress**
-- Добавить параметры `urlPhotoFront`, `urlPhotoBack`, `urlPhotoSide` во все инициализаторы
-- Обновить инициализаторы создания из `ProgressResponse` для использования новых полей
+**✅ Шаг 2.3: Обновить методы работы с фотографиями** - **ЧАСТИЧНО РЕАЛИЗОВАНО**
 
-**Шаг 2.3: Обновить методы работы с фотографиями**
-- Удалить расширение с методами `getPhoto`, `setPhoto`, `deletePhoto` (старые методы для ProgressPhoto)
-- Удалить computed properties `hasPhotos`, `hasUnsyncedPhotos`, `hasPhotosToDelete` (старые для ProgressPhoto)
-- Добавить новые методы для работы с URL фотографий прямо в модель Progress
+Добавлены новые методы для работы с URL фотографий (`hasPhoto`, `getPhotoURL`), но старые методы для ProgressPhoto пока остаются для обратной совместимости.
 
 ### 🔄 **Этап 3: Изменения в модели ProgressResponse**
 
-**Шаг 3.1: Модель ProgressResponse остается без изменений**
-- Структура `ProgressResponse` уже содержит поля `photoFront`, `photoBack`, `photoSide`
-- Никаких изменений не требуется
+**✅ Шаг 3.1: Модель ProgressResponse остается без изменений** - **РЕАЛИЗОВАНО**
+
+Структура `ProgressResponse` уже содержит поля `photoFront`, `photoBack`, `photoSide` - никаких изменений не требуется.
 
 ### 🔄 **Этап 4: Добавление методов работы с фотографиями в модель Progress**
 
-**Шаг 4.1: Добавить методы прямо в модель Progress**
-```swift
-extension Progress {
-    // MARK: - Photo Management Methods
-    
-    /// Устанавливает URL фотографии для указанного типа
-    func setPhoto(_ type: PhotoType, url: String) {
-        switch type {
-        case .front:
-            urlPhotoFront = url
-        case .back:
-            urlPhotoBack = url
-        case .side:
-            urlPhotoSide = url
-        }
-        lastModified = Date()
-        isSynced = false
-    }
+**✅ Шаг 4.1: Добавить методы прямо в модель Progress** - **РЕАЛИЗОВАНО**
 
-    /// Удаляет фотографию указанного типа (устанавливает nil)
-    func deletePhoto(_ type: PhotoType) {
-        switch type {
-        case .front:
-            urlPhotoFront = nil
-        case .back:
-            urlPhotoBack = nil
-        case .side:
-            urlPhotoSide = nil
-        }
-        lastModified = Date()
-        isSynced = false
-    }
+Методы `hasPhoto` и `getPhotoURL` реализованы в модели Progress для работы с URL фотографий.
 
-    /// Проверяет, есть ли фотография указанного типа
-    func hasPhoto(_ type: PhotoType) -> Bool {
-        switch type {
-        case .front:
-            return urlPhotoFront != nil
-        case .back:
-            return urlPhotoBack != nil
-        case .side:
-            return urlPhotoSide != nil
-        }
-    }
 
-    /// Получает URL фотографии указанного типа
-    func getPhotoURL(_ type: PhotoType) -> String? {
-        switch type {
-        case .front:
-            return urlPhotoFront
-        case .back:
-            return urlPhotoBack
-        case .side:
-            return urlPhotoSide
-        }
-    }
+### ✅ **Этап 5: Изменения в логике синхронизации** - **РЕАЛИЗОВАНО**
 
-    /// Проверяет, есть ли хотя бы одна фотография
-    var hasAnyPhoto: Bool {
-        urlPhotoFront != nil || urlPhotoBack != nil || urlPhotoSide != nil
-    }
+**✅ Шаг 5.1: Обновить ProgressSyncService** - **РЕАЛИЗОВАНО**
 
-    /// Проверяет, есть ли все три фотографии
-    var hasAllPhotos: Bool {
-        urlPhotoFront != nil && urlPhotoBack != nil && urlPhotoSide != nil
-    }
-}
-```
+Метод `updateProgressFromServerResponse` реализован с обновлением URL фотографий и автоматической загрузкой через `PhotoDownloadService`.
 
-**Шаг 4.2: Обновить ProgressService для использования методов модели**
-```swift
-extension ProgressService {
-    func setPhoto(_ type: PhotoType, url: String, for progress: Progress) {
-        progress.setPhoto(type, url: url)
-    }
+**✅ Шаг 5.2: Обновить ProgressSnapshot** - **РЕАЛИЗОВАНО**
 
-    func deletePhoto(_ type: PhotoType, for progress: Progress) {
-        progress.deletePhoto(type)
-    }
+Поля фотографий (`hasUnsyncedPhotos`, `hasPhotosToDelete`, `photosData`) удалены из ProgressSnapshot.
 
-    func hasPhoto(_ type: PhotoType, for progress: Progress) -> Bool {
-        progress.hasPhoto(type)
-    }
-}
-```
+### ✅ **Этап 6: Удаление модели ProgressPhoto** - **РЕАЛИЗОВАНО**
 
-### 🔄 **Этап 5: Изменения в логике синхронизации**
-
-**Шаг 5.1: Обновить ProgressSyncService**
-```swift
-extension ProgressSyncService {
-    // Упростить prepareProgressDataWithPhotos - теперь работаем только с URL
-    private func prepareProgressDataWithPhotos(_ progress: Progress) -> ProgressRequest {
-        return ProgressRequest(
-            id: progress.id,
-            pullups: progress.pullUps,
-            pushups: progress.pushUps,
-            squats: progress.squats,
-            weight: progress.weight,
-            modifyDate: progress.lastModified.ISO8601Format(),
-            // Фотографии теперь не передаем как файлы, только основные данные
-            photos: nil
-        )
-    }
-
-    // Обновить updateProgressFromServerResponse - простая перезапись URL
-    func updateProgressFromServerResponse(_ progress: Progress, _ response: ProgressResponse) {
-        progress.urlPhotoFront = response.photoFront
-        progress.urlPhotoBack = response.photoBack
-        progress.urlPhotoSide = response.photoSide
-        progress.isSynced = true
-        progress.lastModified = Date.now
-    }
-}
-```
-
-**Шаг 5.2: Обновить ProgressSnapshot**
-```swift
-struct ProgressSnapshot: Sendable, Hashable {
-    // Удалить поля фотографий
-    // let hasUnsyncedPhotos: Bool
-    // let hasPhotosToDelete: Bool
-    // let photosData: [String: Data]
-}
-```
-
-### 🔄 **Этап 6: Удаление модели ProgressPhoto**
-
-**Шаг 6.1: Полностью удалить файл модели**
-- Удалить `Models/ProgressPhoto.swift`
+**✅ Шаг 6.1: Полностью удалить файл модели** - **РЕАЛИЗОВАНО**
+- Удалить `Models/ProgressPhoto.swift` - **РЕАЛИЗОВАНО**
 - Удалить `Models/ProgressDestination.swift` (если он связан только с фото)
 
-**Шаг 6.2: Очистить все импорты и ссылки**
-- Удалить все импорты модели ProgressPhoto из других файлов
-- Удалить все ссылки на модель ProgressPhoto
+**✅ Шаг 6.2: Очистить все импорты и ссылки** - **РЕАЛИЗОВАНО**
+- Удалить все импорты модели ProgressPhoto из других файлов - **РЕАЛИЗОВАНО**
+- Удалить все ссылки на модель ProgressPhoto - **РЕАЛИЗОВАНО**
 
-### 🔄 **Этап 7: Обновление зависимых компонентов**
+### ✅ **Этап 7: Обновление зависимых компонентов** - **РЕАЛИЗОВАНО**
 
-**Шаг 7.1: Обновить сервисы**
+**✅ Шаг 7.1: Обновить сервисы** - **РЕАЛИЗОВАНО**
 - Обновить `ImageProcessor` для работы с URL вместо ProgressPhoto объектов
 - Обновить все сервисы, использующие фотографии прогресса
 - Обновить все места, где используются старые методы `progress.getPhoto()`, `progress.setPhoto()` и т.д. на новые методы модели
 
-**Шаг 7.2: Обновить логику валидации**
+**✅ Шаг 7.2: Обновить логику валидации** - **РЕАЛИЗОВАНО**
 - Обновить валидацию изображений для работы с новыми полями модели Progress
 - Обновить обработку ошибок
 
-**Шаг 7.3: Обновить логику синхронизации**
+**✅ Шаг 7.3: Обновить логику синхронизации** - **РЕАЛИЗОВАНО**
 - Упростить логику синхронизации, убрав сложную обработку фотографий
 - Удалить методы синхронизации фотографий как отдельного процесса
 
-### 🔄 **Этап 8: Тестирование и миграция данных**
+### 🔄 **Этап 8: Тестирование**
 
-**Шаг 8.1: Создать миграцию SwiftData**
-- Создать миграцию для переноса данных из старой схемы в новую
-- Перенести URL из объектов ProgressPhoto в поля модели Progress
-
-**Шаг 8.2: Обновить все unit-тесты**
+**✅ Шаг 8.1: Обновить все unit-тесты** - **РЕАЛИЗОВАНО**
 - Обновить тесты для работы с новой моделью данных
 - Удалить тесты для модели ProgressPhoto
 - Добавить тесты для новой логики удаления и синхронизации
 
-**Шаг 8.3: Тестирование миграции**
-- Протестировать миграцию данных из старой схемы в новую
-- Убедиться, что все данные корректно переносятся
 
 ### 🎯 **Этап 9: Финальные проверки и оптимизации**
 
-**Шаг 9.1: Проверка производительности**
+**Шаг 9.1: Проверка производительности** - **НЕ РЕАЛИЗОВАНО**
 - Убедиться, что новая архитектура не влияет на производительность
 - Проверить размер базы данных после изменений
 
-**Шаг 9.2: Проверка надежности синхронизации**
+**Шаг 9.2: Проверка надежности синхронизации** - **НЕ РЕАЛИЗОВАНО**
 - Протестировать сценарии удаления фотографий
 - Убедиться, что удаленные фото не восстанавливаются при синхронизации
 
-**Шаг 9.3: Очистка кода**
+**Шаг 9.3: Очистка кода** - **НЕ РЕАЛИЗОВАНО**
 - Удалить все неиспользуемые методы и computed properties
 - Обновить комментарии в коде
 

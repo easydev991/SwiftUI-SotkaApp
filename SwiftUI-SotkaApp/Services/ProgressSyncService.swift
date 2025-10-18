@@ -207,10 +207,6 @@ final class ProgressSyncService {
         let newProgress = Progress(from: progressResponse, user: user, internalDay: internalDay)
         context.insert(newProgress)
         logger.info("Создан новый прогресс дня \(newProgress.id) из ответа сервера (день \(progressResponse.id))")
-        logger.info("Количество фотографий в новом прогрессе: \(newProgress.photos.count)")
-        for photo in newProgress.photos {
-            logger.info("Фотография типа \(photo.type.rawValue) с URL: \(photo.urlString ?? "nil")")
-        }
     }
 }
 
@@ -228,11 +224,9 @@ private extension ProgressSyncService {
         let isSynced: Bool
         let shouldDelete: Bool
         let userId: Int?
-
-        // Поля для фотографий
-        let hasUnsyncedPhotos: Bool
-        let hasPhotosToDelete: Bool
-        let photosData: [String: Data] // Sendable данные фотографий
+        let photoFront: String?
+        let photoBack: String?
+        let photoSide: String?
 
         /// Создает ProgressSnapshot из Progress модели
         init(from progress: Progress) {
@@ -245,30 +239,9 @@ private extension ProgressSyncService {
             self.isSynced = progress.isSynced
             self.shouldDelete = progress.shouldDelete
             self.userId = progress.user?.id
-
-            // Проверяем фотографии
-            self.hasUnsyncedPhotos = progress.photos.contains { !$0.isSynced && !$0.isDeleted }
-            self.hasPhotosToDelete = progress.photos.contains { $0.isDeleted }
-
-            // Подготавливаем данные фотографий для отправки
-            var photosData: [String: Data] = [:]
-            if let frontPhoto = progress.getPhoto(.front), let frontData = frontPhoto.data {
-                photosData["photo_front"] = frontData
-            }
-            if let backPhoto = progress.getPhoto(.back), let backData = backPhoto.data {
-                photosData["photo_back"] = backData
-            }
-            if let sidePhoto = progress.getPhoto(.side), let sideData = sidePhoto.data {
-                photosData["photo_side"] = sideData
-            }
-            self.photosData = photosData
-
-            // Логирование для диагностики (только если есть фотографии)
-            if !photosData.isEmpty {
-                print(
-                    "ProgressSnapshot для дня \(progress.id): hasUnsyncedPhotos=\(hasUnsyncedPhotos), hasPhotosToDelete=\(hasPhotosToDelete), photosData.count=\(photosData.count)"
-                )
-            }
+            self.photoFront = progress.urlPhotoFront
+            self.photoBack = progress.urlPhotoBack
+            self.photoSide = progress.urlPhotoSide
         }
     }
 
@@ -293,12 +266,9 @@ private extension ProgressSyncService {
 
         // Логируем информацию о каждой записи для диагностики
         for progress in toSync {
-            let photosCount = progress.photos.count
-            let unsyncedPhotos = progress.photos.count(where: { !$0.isSynced && !$0.isDeleted })
-            let deletedPhotos = progress.photos.count(where: { $0.isDeleted })
             logger
                 .info(
-                    "День \(progress.id): isSynced=\(progress.isSynced), shouldDelete=\(progress.shouldDelete), photos=\(photosCount), unsynced=\(unsyncedPhotos), deleted=\(deletedPhotos)"
+                    "День \(progress.id): isSynced=\(progress.isSynced), shouldDelete=\(progress.shouldDelete)"
                 )
 
             // Дополнительная диагностика для записей, помеченных на удаление
@@ -311,34 +281,18 @@ private extension ProgressSyncService {
         }
 
         // Фильтруем только те записи, которые действительно требуют синхронизации
-        // Исключаем записи, которые помечены как синхронизированные, но не имеют реальных изменений
         let filteredSnapshots: [ProgressSnapshot] = toSync.compactMap { progress in
             // Если запись помечена для удаления - всегда отправляем
             if progress.shouldDelete {
                 return ProgressSnapshot(from: progress)
             }
 
-            // Если запись синхронизирована - проверяем, есть ли реальные изменения
+            // Если запись синхронизирована - не отправляем (нет изменений)
             if progress.isSynced {
-                // Проверяем, есть ли несинхронизированные фотографии
-                let hasUnsyncedPhotos = progress.photos.contains { !$0.isSynced && !$0.isDeleted }
-                let hasPhotosToDelete = progress.photos.contains { $0.isDeleted }
-
-                // Логирование для диагностики
-                if hasUnsyncedPhotos || hasPhotosToDelete {
-                    logger
-                        .info(
-                            "День \(progress.id): hasUnsyncedPhotos=\(hasUnsyncedPhotos), hasPhotosToDelete=\(hasPhotosToDelete), photos.count=\(progress.photos.count)"
-                        )
-                }
-
-                // Если нет изменений в основных данных и нет изменений в фотографиях - не отправляем
-                if !hasUnsyncedPhotos, !hasPhotosToDelete {
-                    return nil
-                }
+                return nil
             }
 
-            // Для несинхронизированных записей или записей с изменениями в фотографиях всегда отправляем
+            // Для несинхронизированных записей всегда отправляем
             return ProgressSnapshot(from: progress)
         }
 
@@ -393,7 +347,7 @@ private extension ProgressSyncService {
                     return .alreadyExists(id: snapshot.id)
                 }
             } else {
-                // Создаем запрос с фотографиями, если они есть
+                // Создаем запрос с URL фотографий из снапшота
                 let request = ProgressRequest(
                     id: externalDay,
                     pullups: snapshot.pullups,
@@ -401,18 +355,13 @@ private extension ProgressSyncService {
                     squats: snapshot.squats,
                     weight: snapshot.weight,
                     modifyDate: DateFormatterService.stringFromFullDate(snapshot.lastModified, format: .isoDateTimeSec),
-                    photos: snapshot.photosData.isEmpty ? nil : snapshot.photosData
+                    photos: nil // URL фотографий передаются отдельно в полях модели ProgressRequest
                 )
 
-                // Логирование для диагностики
-                if !snapshot.photosData.isEmpty {
-                    logger.info("Отправляем прогресс дня \(externalDay) с \(snapshot.photosData.count) фотографиями")
-                    for (key, data) in snapshot.photosData {
-                        logger.info("Фотография \(key): размер \(data.count) байт")
-                    }
-                } else {
-                    logger.info("Отправляем прогресс дня \(externalDay) без фотографий")
-                }
+                logger
+                    .info(
+                        "Отправляем прогресс дня \(externalDay) с URL фотографий: front=\(snapshot.photoFront ?? "nil"), back=\(snapshot.photoBack ?? "nil"), side=\(snapshot.photoSide ?? "nil")"
+                    )
 
                 // Используем единый подход: всегда пытаемся обновить/создать через updateProgress
                 // Сервер сам разберется и применит LWW логику
@@ -546,125 +495,25 @@ private extension ProgressSyncService {
             }
         }
     }
-}
-
-// MARK: - Photo Synchronization
-
-extension ProgressSyncService {
-    func syncPhotos(for progress: Progress, client: ProgressClient) async {
-        // Проверяем, есть ли несинхронизированные фотографии
-        let hasUnsyncedPhotos = progress.photos.contains { !$0.isSynced && !$0.isDeleted }
-        let hasPhotosToDelete = progress.photos.contains { $0.isDeleted }
-
-        if !hasUnsyncedPhotos, !hasPhotosToDelete {
-            logger.info("Нет фотографий для синхронизации для прогресса дня \(progress.id)")
-            return
-        }
-
-        logger.info("Начинаем синхронизацию фотографий для прогресса дня \(progress.id)")
-
-        do {
-            // Подготавливаем данные для отправки
-            let request = prepareProgressDataWithPhotos(progress)
-
-            // Отправляем данные прогресса вместе с фотографиями
-            let response: ProgressResponse = if progress.isSynced {
-                try await client.updateProgress(day: progress.id, progress: request)
-            } else {
-                try await client.createProgress(progress: request)
-            }
-
-            // Обновляем локальные данные из ответа сервера
-            updateProgressFromServerResponse(progress, response)
-
-            logger.info("Синхронизация фотографий завершена для прогресса дня \(progress.id)")
-        } catch {
-            logger.error("Ошибка синхронизации фотографий для прогресса дня \(progress.id): \(error.localizedDescription)")
-        }
-    }
-
-    /// Подготавливает данные для отправки прогресса с фотографиями
-    private func prepareProgressDataWithPhotos(_ progress: Progress) -> ProgressRequest {
-        var photosData: [String: Data] = [:]
-
-        // Подготавливаем данные фотографий для отправки
-        if let frontPhoto = progress.getPhoto(.front), let frontData = frontPhoto.data {
-            photosData["photo_front"] = frontData
-        }
-        if let backPhoto = progress.getPhoto(.back), let backData = backPhoto.data {
-            photosData["photo_back"] = backData
-        }
-        if let sidePhoto = progress.getPhoto(.side), let sideData = sidePhoto.data {
-            photosData["photo_side"] = sideData
-        }
-
-        return ProgressRequest(
-            id: progress.id,
-            pullups: progress.pullUps,
-            pushups: progress.pushUps,
-            squats: progress.squats,
-            weight: progress.weight,
-            modifyDate: progress.lastModified.ISO8601Format(),
-            photos: photosData.isEmpty ? nil : photosData
-        )
-    }
 
     /// Обновляет локальный прогресс данными из ответа сервера
     func updateProgressFromServerResponse(_ progress: Progress, _ response: ProgressResponse) {
         logger.info("Обновляем фотографии для прогресса дня \(progress.id) из ответа сервера")
 
-        if let photoFrontUrl = response.photoFront {
-            if let frontPhoto = progress.getPhoto(.front) {
-                // Обновляем существующую фотографию
-                frontPhoto.urlString = photoFrontUrl
-                frontPhoto.isSynced = true
-                frontPhoto.progress = progress // Убеждаемся, что связь установлена
-                logger.info("Обновлена существующая фотография front с URL: \(photoFrontUrl)")
-            } else {
-                // Создаем новую фотографию с URL с сервера
-                let newPhoto = ProgressPhoto(type: .front, urlString: photoFrontUrl)
-                newPhoto.isSynced = true
-                newPhoto.progress = progress
-                progress.photos.append(newPhoto)
-                logger.info("Создана новая фотография front с URL: \(photoFrontUrl)")
-            }
-        }
-        if let photoBackUrl = response.photoBack {
-            if let backPhoto = progress.getPhoto(.back) {
-                // Обновляем существующую фотографию
-                backPhoto.urlString = photoBackUrl
-                backPhoto.isSynced = true
-                backPhoto.progress = progress // Убеждаемся, что связь установлена
-                logger.info("Обновлена существующая фотография back с URL: \(photoBackUrl)")
-            } else {
-                // Создаем новую фотографию с URL с сервера
-                let newPhoto = ProgressPhoto(type: .back, urlString: photoBackUrl)
-                newPhoto.isSynced = true
-                newPhoto.progress = progress
-                progress.photos.append(newPhoto)
-                logger.info("Создана новая фотография back с URL: \(photoBackUrl)")
-            }
-        }
-        if let photoSideUrl = response.photoSide {
-            if let sidePhoto = progress.getPhoto(.side) {
-                // Обновляем существующую фотографию
-                sidePhoto.urlString = photoSideUrl
-                sidePhoto.isSynced = true
-                sidePhoto.progress = progress // Убеждаемся, что связь установлена
-                logger.info("Обновлена существующая фотография side с URL: \(photoSideUrl)")
-            } else {
-                // Создаем новую фотографию с URL с сервера
-                let newPhoto = ProgressPhoto(type: .side, urlString: photoSideUrl)
-                newPhoto.isSynced = true
-                newPhoto.progress = progress
-                progress.photos.append(newPhoto)
-                logger.info("Создана новая фотография side с URL: \(photoSideUrl)")
-            }
+        // Обновляем URL фотографий
+        progress.urlPhotoFront = response.photoFront
+        progress.urlPhotoBack = response.photoBack
+        progress.urlPhotoSide = response.photoSide
+
+        // Устанавливаем lastModified в соответствии с серверным временем (делегируем модели)
+        progress.updateLastModified(from: response)
+
+        // Загружаем фотографии асинхронно (не блокируем синхронизацию основных данных)
+        Task {
+            await PhotoDownloadService().downloadAllPhotos(for: progress)
         }
 
-        // Помечаем прогресс как синхронизированный
         progress.isSynced = true
-        logger.info("Количество фотографий в прогрессе после обновления: \(progress.photos.count)")
-        progress.lastModified = Date()
+        logger.info("Прогресс дня \(progress.id) обновлен из ответа сервера")
     }
 }

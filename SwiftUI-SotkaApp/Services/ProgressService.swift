@@ -281,8 +281,12 @@ extension ProgressService {
     /// - Parameters:
     ///   - data: Данные изображения
     ///   - type: Тип фотографии
-    ///   - progress: Прогресс для добавления фотографии
-    func addPhoto(_ data: Data, type: PhotoType, to progress: Progress) throws {
+    ///   - context: Контекст SwiftData для сохранения
+    func addPhoto(_ data: Data?, type: PhotoType, context: ModelContext) throws {
+        guard let data else {
+            throw ProgressError.invalidImageData
+        }
+
         guard ImageProcessor.validateImageSize(data),
               ImageProcessor.validateImageFormat(data) else {
             throw ProgressError.invalidImageData
@@ -297,43 +301,15 @@ extension ProgressService {
             throw ProgressError.imageProcessingFailed
         }
 
-        progress.setPhoto(type, data: processedData)
+        // Используем новые методы модели Progress
+        progress.setPhotoData(type, data: processedData)
 
-        logger.info("\(type.localizedTitle) добавлена к прогрессу дня \(progress.id)")
-    }
-
-    /// Удаляет фотографию из прогресса (физическое удаление)
-    /// - Parameters:
-    ///   - type: Тип фотографии
-    ///   - progress: Прогресс для удаления фотографии
-    func deletePhoto(_ type: PhotoType, from progress: Progress) {
-        // Проверяем, есть ли фотография для удаления
-        guard progress.photos.contains(where: { $0.type == type && !$0.isDeleted }) else {
-            logger.warning("Фотография \(type.localizedTitle) не найдена для удаления")
-            return
-        }
-
-        // Удаляем фотографию из массива прогресса
-        progress.photos.removeAll { $0.type == type }
-
-        logger.info("\(type.localizedTitle) удалена из прогресса дня \(progress.id)")
-    }
-
-    /// Добавляет фотографию к прогрессу с сохранением в контекст
-    /// - Parameters:
-    ///   - data: Данные изображения
-    ///   - type: Тип фотографии
-    ///   - context: Контекст SwiftData для сохранения
-    func addPhoto(_ data: Data?, type: PhotoType, context: ModelContext) throws {
-        guard let data else {
-            throw ProgressError.invalidImageData
-        }
-
-        try addPhoto(data, type: type, to: progress)
         try context.save()
+        let progressId = progress.id
+        logger.info("\(type.localizedTitle) добавлена к прогрессу дня \(progressId)")
     }
 
-    /// Удаляет фотографию из прогресса с сохранением в контекст
+    /// Удаляет фотографию из прогресса
     /// - Parameters:
     ///   - type: Тип фотографии
     ///   - context: Контекст SwiftData для сохранения
@@ -341,17 +317,8 @@ extension ProgressService {
         let dayNumber = progress.id
         logger.info("Удаляем фотографию \(type.localizedTitle) для прогресса дня \(dayNumber)")
 
-        // Проверяем, есть ли фотография для удаления
-        guard let photoToDelete = progress.photos.first(where: { $0.type == type && !$0.isDeleted }) else {
-            logger.warning("Фотография \(type.localizedTitle) не найдена для удаления")
-            return // Не выбрасываем ошибку, просто выходим
-        }
-
-        // Удаляем фотографию из массива прогресса
-        progress.photos.removeAll { $0.type == type }
-
-        // Физически удаляем фотографию из контекста
-        context.delete(photoToDelete)
+        // Используем новые методы модели Progress
+        progress.deletePhotoData(type)
 
         try context.save()
         logger.info("Фотография \(type.localizedTitle) успешно удалена")
