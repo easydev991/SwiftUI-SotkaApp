@@ -1,7 +1,10 @@
 import Foundation
+import OSLog
 import SwiftData
 import SwiftUI
 import SWUtils
+
+private let logger = Logger(subsystem: "SotkaApp", category: "Progress")
 
 /// Прогресс пользователя
 @Model
@@ -74,6 +77,29 @@ final class Progress {
         } ?? DateFormatterService.dateFromString(response.createDate, format: .serverDateTimeSec)
         self.isSynced = true
         self.shouldDelete = false
+
+        // Создаем фотографии из ответа сервера, если они есть
+        if let photoFrontUrl = response.photoFront {
+            let frontPhoto = ProgressPhoto(type: .front, urlString: photoFrontUrl)
+            frontPhoto.isSynced = true
+            frontPhoto.progress = self
+            photos.append(frontPhoto)
+            logger.info("Progress: Создана фотография front с URL: \(photoFrontUrl)")
+        }
+        if let photoBackUrl = response.photoBack {
+            let backPhoto = ProgressPhoto(type: .back, urlString: photoBackUrl)
+            backPhoto.isSynced = true
+            backPhoto.progress = self
+            photos.append(backPhoto)
+            logger.info("Progress: Создана фотография back с URL: \(photoBackUrl)")
+        }
+        if let photoSideUrl = response.photoSide {
+            let sidePhoto = ProgressPhoto(type: .side, urlString: photoSideUrl)
+            sidePhoto.isSynced = true
+            sidePhoto.progress = self
+            photos.append(sidePhoto)
+            logger.info("Progress: Создана фотография side с URL: \(photoSideUrl)")
+        }
     }
 
     /// Создает Progress из ProgressResponse с маппингом дня
@@ -92,6 +118,29 @@ final class Progress {
         } ?? DateFormatterService.dateFromString(response.createDate, format: .serverDateTimeSec)
         self.isSynced = true
         self.shouldDelete = false
+
+        // Создаем фотографии из ответа сервера, если они есть
+        if let photoFrontUrl = response.photoFront {
+            let frontPhoto = ProgressPhoto(type: .front, urlString: photoFrontUrl)
+            frontPhoto.isSynced = true
+            frontPhoto.progress = self
+            photos.append(frontPhoto)
+            logger.info("Progress: Создана фотография front с URL: \(photoFrontUrl)")
+        }
+        if let photoBackUrl = response.photoBack {
+            let backPhoto = ProgressPhoto(type: .back, urlString: photoBackUrl)
+            backPhoto.isSynced = true
+            backPhoto.progress = self
+            photos.append(backPhoto)
+            logger.info("Progress: Создана фотография back с URL: \(photoBackUrl)")
+        }
+        if let photoSideUrl = response.photoSide {
+            let sidePhoto = ProgressPhoto(type: .side, urlString: photoSideUrl)
+            sidePhoto.isSynced = true
+            sidePhoto.progress = self
+            photos.append(sidePhoto)
+            logger.info("Progress: Создана фотография side с URL: \(photoSideUrl)")
+        }
     }
 }
 
@@ -223,7 +272,16 @@ extension Progress {
 
     // MARK: - Methods
     func getPhoto(_ type: PhotoType) -> ProgressPhoto? {
-        photos.first { $0.type == type && !$0.isDeleted }
+        let result = photos.first { $0.type == type && !$0.isDeleted }
+        let photosCount = photos.count
+        logger.info("Progress.getPhoto(\(type.rawValue)): найдено \(result != nil ? "да" : "нет"), всего фотографий: \(photosCount)")
+        if let photo = result {
+            logger
+                .info(
+                    "Progress.getPhoto: data=\(photo.data != nil ? "есть" : "нет"), urlString=\(photo.urlString ?? "нет"), isDeleted=\(photo.isDeleted)"
+                )
+        }
+        return result
     }
 
     func setPhoto(_ type: PhotoType, data: Data) {

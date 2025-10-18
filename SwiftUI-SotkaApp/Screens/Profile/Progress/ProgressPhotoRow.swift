@@ -37,6 +37,17 @@ struct ProgressPhotoRow: View {
                 }
             }
         }
+        .onAppear {
+            logger.info("ProgressPhotoRow.onAppear: прогресс день \(progress.id), тип фотографии \(photoType.rawValue)")
+            if let photo = progress.getPhoto(photoType) {
+                logger
+                    .info(
+                        "ProgressPhotoRow.onAppear: найдена фотография, data=\(photo.data != nil ? "есть" : "нет"), urlString=\(photo.urlString ?? "нет"), isSynced=\(photo.isSynced)"
+                    )
+            } else {
+                logger.info("ProgressPhotoRow.onAppear: фотография не найдена")
+            }
+        }
     }
 }
 
@@ -52,13 +63,32 @@ private extension ProgressPhotoRow {
     @ViewBuilder
     var imageView: some View {
         ZStack {
-            if let photo = progress.getPhoto(photoType),
-               let data = photo.data,
-               let image = UIImage(data: data) {
-                Image(uiImage: image)
-                    .resizable()
-                    .scaledToFill()
+            if let photo = progress.getPhoto(photoType) {
+                if let data = photo.data,
+                   let image = UIImage(data: data) {
+                    // Локальное изображение
+                    Image(uiImage: image)
+                        .resizable()
+                        .scaledToFill()
+                } else if let urlString = photo.urlString,
+                          let url = URL(string: urlString) {
+                    // Изображение с сервера
+                    AsyncImage(url: url) { image in
+                        image
+                            .resizable()
+                            .scaledToFill()
+                    } placeholder: {
+                        ProgressView()
+                            .frame(maxWidth: .infinity, maxHeight: .infinity)
+                    }
+                } else {
+                    // Нет изображения
+                    Image(systemName: "photo")
+                        .font(.title)
+                        .frame(maxHeight: .infinity)
+                }
             } else {
+                // Нет фотографии
                 Image(systemName: "photo")
                     .font(.title)
                     .frame(maxHeight: .infinity)

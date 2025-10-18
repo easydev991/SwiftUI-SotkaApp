@@ -120,13 +120,31 @@ private extension ProgressGridView {
         type: PhotoType
     ) -> some View {
         ZStack {
-            if let photo = progress.getPhoto(type),
-               let data = photo.data,
-               let image = UIImage(data: data) {
-                Image(uiImage: image)
-                    .resizable()
-                    .scaledToFill()
+            if let photo = progress.getPhoto(type) {
+                if let data = photo.data,
+                   let image = UIImage(data: data) {
+                    // Локальное изображение
+                    Image(uiImage: image)
+                        .resizable()
+                        .scaledToFill()
+                } else if let urlString = photo.urlString,
+                          let url = URL(string: urlString) {
+                    // Изображение с сервера
+                    AsyncImage(url: url) { image in
+                        image
+                            .resizable()
+                            .scaledToFill()
+                    } placeholder: {
+                        ProgressView()
+                            .frame(maxWidth: .infinity, maxHeight: .infinity)
+                    }
+                } else {
+                    // Нет изображения
+                    Image(systemName: "photo")
+                        .font(.title2)
+                }
             } else {
+                // Нет фотографии
                 Image(systemName: "photo")
                     .font(.title2)
             }
