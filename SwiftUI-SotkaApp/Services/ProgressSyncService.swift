@@ -227,6 +227,9 @@ private extension ProgressSyncService {
         let photoFront: String?
         let photoBack: String?
         let photoSide: String?
+        let dataPhotoFront: Data?
+        let dataPhotoBack: Data?
+        let dataPhotoSide: Data?
 
         /// Создает ProgressSnapshot из Progress модели
         init(from progress: Progress) {
@@ -242,6 +245,9 @@ private extension ProgressSyncService {
             self.photoFront = progress.urlPhotoFront
             self.photoBack = progress.urlPhotoBack
             self.photoSide = progress.urlPhotoSide
+            self.dataPhotoFront = progress.dataPhotoFront
+            self.dataPhotoBack = progress.dataPhotoBack
+            self.dataPhotoSide = progress.dataPhotoSide
         }
     }
 
@@ -347,7 +353,20 @@ private extension ProgressSyncService {
                     return .alreadyExists(id: snapshot.id)
                 }
             } else {
-                // Создаем запрос с URL фотографий из снапшота
+                // Собираем данные фотографий для отправки на сервер
+                var photos: [String: Data] = [:]
+
+                if let data = snapshot.dataPhotoFront {
+                    photos["photo_front"] = data
+                }
+                if let data = snapshot.dataPhotoBack {
+                    photos["photo_back"] = data
+                }
+                if let data = snapshot.dataPhotoSide {
+                    photos["photo_side"] = data
+                }
+
+                // Создаем запрос с данными фотографий
                 let request = ProgressRequest(
                     id: externalDay,
                     pullups: snapshot.pullups,
@@ -355,12 +374,12 @@ private extension ProgressSyncService {
                     squats: snapshot.squats,
                     weight: snapshot.weight,
                     modifyDate: DateFormatterService.stringFromFullDate(snapshot.lastModified, format: .isoDateTimeSec),
-                    photos: nil // URL фотографий передаются отдельно в полях модели ProgressRequest
+                    photos: photos.isEmpty ? nil : photos
                 )
 
                 logger
                     .info(
-                        "Отправляем прогресс дня \(externalDay) с URL фотографий: front=\(snapshot.photoFront ?? "nil"), back=\(snapshot.photoBack ?? "nil"), side=\(snapshot.photoSide ?? "nil")"
+                        "Отправляем прогресс дня \(externalDay) с фотографиями: front=\(snapshot.dataPhotoFront != nil ? "есть данные" : "нет"), back=\(snapshot.dataPhotoBack != nil ? "есть данные" : "нет"), side=\(snapshot.dataPhotoSide != nil ? "есть данные" : "нет")"
                     )
 
                 // Используем единый подход: всегда пытаемся обновить/создать через updateProgress
