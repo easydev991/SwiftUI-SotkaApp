@@ -43,14 +43,7 @@ extension SWNetworkService: SWNetworkProtocol {
             }
             switch StatusCodeGroup(code: response.statusCode) {
             case .success:
-                guard let decodedResult = try? decoder.decode(T.self, from: data) else {
-                    throw log(
-                        APIError.decodingError,
-                        request: request,
-                        data: data,
-                        response: response
-                    )
-                }
+                let decodedResult = try decoder.decode(T.self, from: data)
                 logSuccess(request: request, data: data)
                 return decodedResult
             default:
