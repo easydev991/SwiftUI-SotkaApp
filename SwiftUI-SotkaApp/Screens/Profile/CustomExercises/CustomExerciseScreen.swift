@@ -61,7 +61,7 @@ struct CustomExerciseScreen: View {
 
     private var iconSection: some View {
         VStack(alignment: .leading, spacing: 8) {
-            makeSectionHeader("Icon")
+            makeSectionHeader(String(localized: .icon))
             exercise.image
                 .resizable()
                 .aspectRatio(contentMode: .fit)
@@ -70,15 +70,15 @@ struct CustomExerciseScreen: View {
                 .clipShape(.rect(cornerRadius: 12))
         }
         .accessibilityElement()
-        .accessibilityLabel("Exercise icon")
+        .accessibilityLabel(.exerciseIcon)
     }
 
     private var datesSection: some View {
         VStack(alignment: .leading, spacing: 12) {
-            makeSectionHeader("Dates")
+            makeSectionHeader(String(localized: .dates))
             VStack(alignment: .leading, spacing: 8) {
-                makeDateRow(label: "Created:", date: exercise.createDate)
-                makeDateRow(label: "Modified:", date: exercise.modifyDate)
+                makeDateRow(label: String(localized: .created), date: exercise.createDate)
+                makeDateRow(label: String(localized: .modified), date: exercise.modifyDate)
             }
         }
         .accessibilityElement()
@@ -87,13 +87,13 @@ struct CustomExerciseScreen: View {
 }
 
 private extension CustomExerciseScreen {
-    func makeSectionHeader(_ title: LocalizedStringKey) -> some View {
+    func makeSectionHeader(_ title: String) -> some View {
         Text(title)
             .font(.headline)
             .foregroundStyle(.secondary)
     }
 
-    func makeDateRow(label: LocalizedStringKey, date: Date) -> some View {
+    func makeDateRow(label: String, date: Date) -> some View {
         HStack {
             Text(label)
                 .foregroundStyle(.secondary)

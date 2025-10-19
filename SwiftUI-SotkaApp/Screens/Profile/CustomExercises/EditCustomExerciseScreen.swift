@@ -82,7 +82,7 @@ struct EditCustomExerciseScreen: View {
 
     private var iconSection: some View {
         VStack(alignment: .leading, spacing: 16) {
-            Text("Choose icon")
+            Text(.chooseIcon)
                 .font(.headline)
                 .foregroundStyle(.secondary)
 
@@ -104,7 +104,7 @@ struct EditCustomExerciseScreen: View {
             }
         }
         .accessibilityElement()
-        .accessibilityLabel("Exercise icon")
+        .accessibilityLabel(.exerciseIcon)
     }
 
     private var backButtonTitle: LocalizedStringKey {
