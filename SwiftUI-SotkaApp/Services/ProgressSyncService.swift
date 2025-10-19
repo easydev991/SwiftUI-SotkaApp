@@ -53,7 +53,7 @@ final class ProgressSyncService {
             let eventsById = await runSyncTasks(snapshots: snapshots, client: client)
 
             // 3) Применяем результаты к ModelContext единым этапом
-            applySyncEvents(eventsById, context: context)
+            await applySyncEvents(eventsById, context: context)
 
             logger.info("Синхронизация несинхронизированных записей прогресса завершена")
         } catch {
@@ -198,7 +198,7 @@ final class ProgressSyncService {
             logger.info("Локальный прогресс дня \(internalDay) помечен для удаления, пропускаем")
         } else {
             // Разрешение конфликтов по LWW
-            applyLWWLogic(local: local, server: server, internalDay: internalDay)
+            await applyLWWLogic(local: local, server: server, internalDay: internalDay)
         }
     }
 
@@ -276,18 +276,23 @@ private extension ProgressSyncService {
 
         logger.info("Найдено \(toSync.count) записей прогресса для проверки синхронизации")
 
+        // Проверяем каждую запись на "пустоту" и помечаем для удаления при необходимости
+        for progress in toSync {
+            checkAndMarkForDeletionIfEmpty(progress)
+        }
+
         // Логируем информацию о каждой записи для диагностики
         for progress in toSync {
             logger
                 .info(
-                    "День \(progress.id): isSynced=\(progress.isSynced), shouldDelete=\(progress.shouldDelete)"
+                    "День \(progress.id): isSynced=\(progress.isSynced), shouldDelete=\(progress.shouldDelete), isEmpty=\(progress.isEmpty)"
                 )
 
             // Дополнительная диагностика для записей, помеченных на удаление
             if progress.shouldDelete {
                 logger
                     .info(
-                        "Запись дня \(progress.id) помечена для удаления. Данные: pullUps=\(progress.pullUps ?? 0), pushUps=\(progress.pushUps ?? 0), squats=\(progress.squats ?? 0), weight=\(progress.weight ?? 0)"
+                        "Запись дня \(progress.id) помечена для удаления. Данные: pullUps=\(progress.pullUps ?? 0), pushUps=\(progress.pushUps ?? 0), squats=\(progress.squats ?? 0), weight=\(progress.weight ?? 0), hasPhotos=\(progress.hasAnyPhotoData)"
                     )
             }
         }
@@ -425,7 +430,7 @@ private extension ProgressSyncService {
     }
 
     /// Применяет результаты синхронизации к локальному хранилищу в одном месте
-    func applySyncEvents(_ events: [Int: SyncEvent], context: ModelContext) {
+    func applySyncEvents(_ events: [Int: SyncEvent], context: ModelContext) async {
         do {
             // Загружаем текущего пользователя и все записи прогресса заранее
             guard let user = try context.fetch(FetchDescriptor<User>()).first else {
@@ -440,9 +445,9 @@ private extension ProgressSyncService {
                 case let .createdOrUpdated(_, server):
                     if let local = dict[id] {
                         // Реальный ответ сервера - применяем LWW логику
-                        applyLWWLogic(local: local, server: server, internalDay: id)
+                        await applyLWWLogic(local: local, server: server, internalDay: id)
                         // Обновляем фотографии из ответа сервера
-                        updateProgressFromServerResponse(local, server)
+                        await updateProgressFromServerResponse(local, server)
                         // Сбрасываем флаги удаления фото после успешной синхронизации
                         local.resetPhotoDeletionFlags()
                     } else {
@@ -450,7 +455,7 @@ private extension ProgressSyncService {
                         let newProgress = Progress(from: server, user: user)
                         context.insert(newProgress)
                         // Обновляем фотографии из ответа сервера
-                        updateProgressFromServerResponse(newProgress, server)
+                        await updateProgressFromServerResponse(newProgress, server)
                     }
                 case let .alreadyExists(localId):
                     if let local = dict[localId] {
@@ -492,7 +497,7 @@ private extension ProgressSyncService {
     }
 
     /// Применяет логику Last Write Wins для разрешения конфликтов между локальными и серверными данными
-    private func applyLWWLogic(local: Progress, server: ProgressResponse, internalDay: Int) {
+    private func applyLWWLogic(local: Progress, server: ProgressResponse, internalDay: Int) async {
         // Если modify_date равен null, используем create_date
         let serverModifyDate = server.modifyDate.flatMap {
             DateFormatterService.dateFromString($0, format: .serverDateTimeSec)
@@ -534,7 +539,7 @@ private extension ProgressSyncService {
 
             updateLocalFromServer(local, server, internalDay: internalDay)
             // Обновляем фотографии из ответа сервера
-            updateProgressFromServerResponse(local, server)
+            await updateProgressFromServerResponse(local, server)
             // Сбрасываем флаги удаления фото после успешной синхронизации
             local.resetPhotoDeletionFlags()
         } else {
@@ -543,7 +548,7 @@ private extension ProgressSyncService {
                 logger.warning("Одинаковые даты модификации, но разные данные для дня \(internalDay). Серверная версия имеет приоритет.")
                 updateLocalFromServer(local, server, internalDay: internalDay)
                 // Обновляем фотографии из ответа сервера
-                updateProgressFromServerResponse(local, server)
+                await updateProgressFromServerResponse(local, server)
                 // Сбрасываем флаги удаления фото после успешной синхронизации
                 local.resetPhotoDeletionFlags()
             } else {
@@ -554,8 +559,24 @@ private extension ProgressSyncService {
         }
     }
 
-    /// Обновляет локальный прогресс данными из ответа сервера
-    func updateProgressFromServerResponse(_ progress: Progress, _ response: ProgressResponse) {
+    /// Проверяет прогресс на "пустоту" и помечает для удаления целиком при необходимости
+    private func checkAndMarkForDeletionIfEmpty(_ progress: Progress) {
+        // Проверяем только несинхронизированные записи, которые не помечены для удаления
+        guard !progress.isSynced, !progress.shouldDelete else {
+            return
+        }
+
+        // Если прогресс стал пустым после изменений, помечаем его для удаления целиком
+        if progress.isEmpty {
+            logger.info("Прогресс дня \(progress.id) стал пустым - помечаем для удаления целиком")
+            progress.shouldDelete = true
+            progress.isSynced = false
+            progress.lastModified = Date.now
+        }
+    }
+
+    /// Обновляет локальный прогресс (фотографии) данными из ответа сервера
+    func updateProgressFromServerResponse(_ progress: Progress, _ response: ProgressResponse) async {
         logger.info("Обновляем фотографии для прогресса дня \(progress.id) из ответа сервера")
 
         // Обновляем URL фотографий только если они не помечены для удаления локально
@@ -586,10 +607,8 @@ private extension ProgressSyncService {
         // Устанавливаем lastModified в соответствии с серверным временем (делегируем модели)
         progress.updateLastModified(from: response)
 
-        // Загружаем фотографии асинхронно (не блокируем синхронизацию основных данных)
-        Task {
-            await PhotoDownloadService().downloadAllPhotos(for: progress)
-        }
+        // Загружаем фотографии синхронно
+        await PhotoDownloadService().downloadAllPhotos(for: progress)
 
         progress.isSynced = true
         logger.info("Прогресс дня \(progress.id) обновлен из ответа сервера")

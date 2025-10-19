@@ -26,7 +26,7 @@ struct InfopostErrorTests {
     }
 
     @Test
-    func testUnknownError() throws {
+    func unknownError() throws {
         let error = SUT.unknownError
         let description = try #require(error.errorDescription)
         #expect(description == "Неизвестная ошибка")

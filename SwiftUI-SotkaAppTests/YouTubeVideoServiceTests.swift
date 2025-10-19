@@ -6,7 +6,7 @@ struct YouTubeVideoServiceTests {
     private let youtubeService = YouTubeVideoService()
 
     @Test
-    func testLoadVideos() throws {
+    func loadVideos() throws {
         // Given & When
         let videos = try youtubeService.loadVideos()
 

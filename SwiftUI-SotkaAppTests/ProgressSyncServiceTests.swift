@@ -6,7 +6,7 @@ import Testing
 
 @MainActor
 struct ProgressSyncServiceTests {
-    @Test("Синхронизация нового прогресса - создание", .disabled("TODO: починить работу с ModelContainer"))
+    @Test("Синхронизация нового прогресса - создание")
     func syncNewProgressCreation() async throws {
         // Arrange
         let mockClient = MockProgressClient()
@@ -56,8 +56,8 @@ struct ProgressSyncServiceTests {
         #expect(syncedProgress.weight == 70.0)
     }
 
-    @Test("Синхронизация обновления существующего прогресса", .disabled("TODO: починить работу с ModelContainer"))
-    func syncExistingProgressUpdate() async throws { // падает
+    @Test("Синхронизация обновления существующего прогресса")
+    func syncExistingProgressUpdate() async throws {
         // Arrange
         let mockClient = MockProgressClient()
         let service = ProgressSyncService(client: mockClient)
@@ -155,7 +155,7 @@ struct ProgressSyncServiceTests {
         #expect(updatedProgress.weight == 70.0)
     }
 
-    @Test("LWW конфликт-резолюшн - серверная версия новее", .disabled("TODO: починить работу с ModelContainer"))
+    @Test("LWW конфликт-резолюшн - серверная версия новее")
     func conflictResolutionServerNewer() async throws {
         // Arrange
         let mockClient = MockProgressClient()
@@ -204,7 +204,7 @@ struct ProgressSyncServiceTests {
         #expect(updatedProgress.weight == 72.0)
     }
 
-    @Test("Удаление прогресса помеченного для удаления", .disabled("TODO: починить работу с ModelContainer"))
+    @Test("Удаление прогресса помеченного для удаления")
     func deleteMarkedForDeletionProgress() async throws {
         // Arrange
         let mockClient = MockProgressClient()
@@ -370,6 +370,21 @@ private class MockProgressClient: ProgressClient {
             throw NSError(domain: "TestError", code: 1, userInfo: [NSLocalizedDescriptionKey: "Test error"])
         }
         return mockedProgressResponses
+    }
+
+    func getProgress(day: Int) async throws -> ProgressResponse {
+        if shouldThrowError {
+            throw NSError(domain: "TestError", code: 1, userInfo: [NSLocalizedDescriptionKey: "Test error"])
+        }
+        return ProgressResponse(
+            id: day,
+            pullups: nil,
+            pushups: nil,
+            squats: nil,
+            weight: nil,
+            createDate: DateFormatterService.stringFromFullDate(Date(), format: .serverDateTimeSec),
+            modifyDate: nil
+        )
     }
 
     func createProgress(progress: ProgressRequest) async throws -> ProgressResponse {

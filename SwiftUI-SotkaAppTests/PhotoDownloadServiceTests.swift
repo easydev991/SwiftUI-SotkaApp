@@ -3,6 +3,7 @@ import SwiftData
 @testable import SwiftUI_SotkaApp
 import Testing
 
+@MainActor
 struct PhotoDownloadServiceTests {
     private typealias PhotoType = SwiftUI_SotkaApp.PhotoType
     private typealias ProgressSUT = SwiftUI_SotkaApp.Progress

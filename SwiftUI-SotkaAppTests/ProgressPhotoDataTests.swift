@@ -24,7 +24,6 @@ struct ProgressPhotoDataTests {
     }
 
     private var testImageData: Data {
-        // Создаем тестовые данные изображения (1x1 пиксель PNG)
         let testImage = UIImage(systemName: "photo") ?? UIImage()
         return testImage.pngData() ?? Data()
     }
@@ -32,115 +31,80 @@ struct ProgressPhotoDataTests {
     // MARK: - Photo Data Management Tests
 
     @Test("Установка данных изображения")
-    func testSetPhotoData() throws {
-        // Given
+    func setPhotoData() throws {
         let container = try ModelContainer(for: Progress.self, configurations: ModelConfiguration(isStoredInMemoryOnly: true))
         let context = ModelContext(container)
         let progress = createTestProgress(context: context)
         let originalLastModified = progress.lastModified
 
-        // When
         progress.setPhotoData(SwiftUI_SotkaApp.PhotoType.front, data: testImageData)
 
-        // Then
         #expect(progress.getPhotoData(SwiftUI_SotkaApp.PhotoType.front) == testImageData)
         #expect(progress.getPhotoData(SwiftUI_SotkaApp.PhotoType.back) == nil)
         #expect(progress.getPhotoData(SwiftUI_SotkaApp.PhotoType.side) == nil)
         #expect(progress.lastModified > originalLastModified)
-        #expect(progress.isSynced == false)
+        #expect(!progress.isSynced)
     }
 
     @Test("Получение данных изображения")
-    func testGetPhotoData() throws {
-        // Given
+    func getPhotoData() throws {
         let container = try ModelContainer(for: Progress.self, configurations: ModelConfiguration(isStoredInMemoryOnly: true))
         let context = ModelContext(container)
         let progress = createTestProgress(context: context)
         progress.setPhotoData(SwiftUI_SotkaApp.PhotoType.back, data: testImageData)
 
-        // When/Then
         #expect(progress.getPhotoData(SwiftUI_SotkaApp.PhotoType.front) == nil)
         #expect(progress.getPhotoData(SwiftUI_SotkaApp.PhotoType.back) == testImageData)
         #expect(progress.getPhotoData(SwiftUI_SotkaApp.PhotoType.side) == nil)
     }
 
     @Test("Проверка наличия данных изображения")
-    func testHasPhotoData() throws {
-        // Given
+    func hasPhotoData() throws {
         let container = try ModelContainer(for: Progress.self, configurations: ModelConfiguration(isStoredInMemoryOnly: true))
         let context = ModelContext(container)
         let progress = createTestProgress(context: context)
         progress.setPhotoData(SwiftUI_SotkaApp.PhotoType.side, data: testImageData)
 
-        // When/Then
-        #expect(progress.hasPhotoData(SwiftUI_SotkaApp.PhotoType.front) == false)
-        #expect(progress.hasPhotoData(SwiftUI_SotkaApp.PhotoType.back) == false)
-        #expect(progress.hasPhotoData(SwiftUI_SotkaApp.PhotoType.side) == true)
+        #expect(!progress.hasPhotoData(SwiftUI_SotkaApp.PhotoType.front))
+        #expect(!progress.hasPhotoData(SwiftUI_SotkaApp.PhotoType.back))
+        #expect(progress.hasPhotoData(SwiftUI_SotkaApp.PhotoType.side))
     }
 
     @Test("Удаление данных изображения")
-    func testDeletePhotoData() throws {
-        // Given
+    func deletePhotoData() throws {
         let container = try ModelContainer(for: Progress.self, configurations: ModelConfiguration(isStoredInMemoryOnly: true))
         let context = ModelContext(container)
         let progress = createTestProgress(context: context)
         progress.setPhotoData(SwiftUI_SotkaApp.PhotoType.front, data: testImageData)
         let originalLastModified = progress.lastModified
 
-        // When
         progress.deletePhotoData(SwiftUI_SotkaApp.PhotoType.front)
 
-        // Then
         #expect(progress.getPhotoData(SwiftUI_SotkaApp.PhotoType.front) == nil)
         #expect(progress.lastModified > originalLastModified)
-        #expect(progress.isSynced == false)
+        #expect(!progress.isSynced)
     }
 
     @Test("Проверка наличия любых данных фото")
-    func testHasAnyPhotoData() throws {
-        // Given
+    func hasAnyPhotoData() throws {
         let container = try ModelContainer(for: Progress.self, configurations: ModelConfiguration(isStoredInMemoryOnly: true))
         let context = ModelContext(container)
         let progress = createTestProgress(context: context)
 
-        // When/Then (изначально нет данных)
-        #expect(progress.hasAnyPhotoData == false)
+        #expect(!progress.hasAnyPhotoData)
 
-        // When (добавляем данные)
         progress.setPhotoData(SwiftUI_SotkaApp.PhotoType.front, data: testImageData)
 
-        // Then
-        #expect(progress.hasAnyPhotoData == true)
-    }
-
-    @Test("Проверка наличия всех данных фото")
-    func testHasAllPhotoData() throws {
-        // Given
-        let container = try ModelContainer(for: Progress.self, configurations: ModelConfiguration(isStoredInMemoryOnly: true))
-        let context = ModelContext(container)
-        let progress = createTestProgress(context: context)
-
-        // When/Then (изначально нет данных)
-        #expect(progress.hasAllPhotoData == false)
-
-        // When (добавляем данные для всех типов)
-        progress.setPhotoData(SwiftUI_SotkaApp.PhotoType.front, data: testImageData)
-        progress.setPhotoData(SwiftUI_SotkaApp.PhotoType.back, data: testImageData)
-        progress.setPhotoData(SwiftUI_SotkaApp.PhotoType.side, data: testImageData)
-
-        // Then
-        #expect(progress.hasAllPhotoData == true)
+        #expect(progress.hasAnyPhotoData)
     }
 
     @Test("Обновление lastModified из серверного ответа")
-    func testUpdateLastModified() throws {
-        // Given
+    func updateLastModified() throws {
         let container = try ModelContainer(for: Progress.self, configurations: ModelConfiguration(isStoredInMemoryOnly: true))
         let context = ModelContext(container)
         let progress = createTestProgress(context: context)
         let originalLastModified = progress.lastModified
 
-        // Создаем моковый ответ сервера
         let response = ProgressResponse(
             id: 1,
             pullups: 10,
@@ -154,22 +118,18 @@ struct ProgressPhotoDataTests {
             photoSide: "https://example.com/side.jpg"
         )
 
-        // When
         progress.updateLastModified(from: response)
 
-        // Then
         #expect(progress.lastModified > originalLastModified)
     }
 
     @Test("Обновление lastModified когда modifyDate равен null")
     func updateLastModifiedWithNullModifyDate() throws {
-        // Given
         let container = try ModelContainer(for: Progress.self, configurations: ModelConfiguration(isStoredInMemoryOnly: true))
         let context = ModelContext(container)
         let progress = createTestProgress(context: context)
         let originalLastModified = progress.lastModified
 
-        // Создаем моковый ответ сервера без modifyDate
         let response = ProgressResponse(
             id: 1,
             pullups: 10,
@@ -183,20 +143,16 @@ struct ProgressPhotoDataTests {
             photoSide: "https://example.com/side.jpg"
         )
 
-        // When
         progress.updateLastModified(from: response)
 
-        // Then
         #expect(progress.lastModified > originalLastModified)
     }
 
     @Test("Создание прогресса с URL фотографий")
     func progressCreationWithPhotoURLs() throws {
-        // Given
         let container = try ModelContainer(for: Progress.self, configurations: ModelConfiguration(isStoredInMemoryOnly: true))
         let context = ModelContext(container)
 
-        // When
         let progress = Progress(
             id: 1,
             pullUps: 10,
@@ -209,12 +165,68 @@ struct ProgressPhotoDataTests {
         )
         context.insert(progress)
 
-        // Then
         #expect(progress.urlPhotoFront == "https://example.com/front.jpg")
         #expect(progress.urlPhotoBack == "https://example.com/back.jpg")
         #expect(progress.urlPhotoSide == "https://example.com/side.jpg")
         #expect(progress.getPhotoData(SwiftUI_SotkaApp.PhotoType.front) == nil)
         #expect(progress.getPhotoData(SwiftUI_SotkaApp.PhotoType.back) == nil)
         #expect(progress.getPhotoData(SwiftUI_SotkaApp.PhotoType.side) == nil)
+    }
+
+    @Test("Проверка hasAnyPhotoDataIncludingURLs с URL")
+    func hasAnyPhotoDataIncludingURLs() throws {
+        let container = try ModelContainer(for: Progress.self, configurations: ModelConfiguration(isStoredInMemoryOnly: true))
+        let context = ModelContext(container)
+        let progress = createTestProgress(context: context)
+
+        #expect(progress.hasAnyPhotoDataIncludingURLs)
+
+        progress.urlPhotoFront = nil
+        progress.urlPhotoBack = nil
+        progress.urlPhotoSide = nil
+
+        #expect(!progress.hasAnyPhotoDataIncludingURLs)
+
+        progress.setPhotoData(SwiftUI_SotkaApp.PhotoType.front, data: testImageData)
+
+        #expect(progress.hasAnyPhotoDataIncludingURLs)
+    }
+
+    @Test("Проверка isEmpty")
+    func isEmpty() throws {
+        let container = try ModelContainer(for: Progress.self, configurations: ModelConfiguration(isStoredInMemoryOnly: true))
+        let context = ModelContext(container)
+        let progress = Progress(id: 1)
+        context.insert(progress)
+
+        #expect(progress.isEmpty)
+
+        progress.pullUps = 10
+
+        #expect(!progress.isEmpty)
+
+        progress.pullUps = nil
+        progress.setPhotoData(SwiftUI_SotkaApp.PhotoType.front, data: testImageData)
+
+        #expect(!progress.isEmpty)
+    }
+
+    @Test("Проверка canBeDeleted")
+    func canBeDeleted() throws {
+        let container = try ModelContainer(for: Progress.self, configurations: ModelConfiguration(isStoredInMemoryOnly: true))
+        let context = ModelContext(container)
+        let progress = Progress(id: 1)
+        context.insert(progress)
+
+        #expect(!progress.canBeDeleted)
+
+        progress.pullUps = 10
+
+        #expect(progress.canBeDeleted)
+
+        progress.pullUps = nil
+        progress.urlPhotoFront = "https://example.com/front.jpg"
+
+        #expect(progress.canBeDeleted)
     }
 }

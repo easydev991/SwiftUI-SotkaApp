@@ -46,7 +46,7 @@ struct ImageAssetManagerTests {
     // MARK: - Тесты копирования изображений
 
     @Test
-    func testCopyImageToTemp() throws {
+    func copyImageToTemp() throws {
         // Тест копирования изображения во временную директорию
         let tempDir = FileManager.default.temporaryDirectory
         let destinationURL = tempDir.appendingPathComponent("test_image_\(UUID().uuidString).jpg")
@@ -108,7 +108,7 @@ struct ImageAssetManagerTests {
     // MARK: - Тесты проверки существования изображений
 
     @Test
-    func testImageExists() {
+    func imageExists() {
         // Тест проверки существования изображения
         let exists = ImageAssetManager.imageExists("1")
         #expect(exists)
@@ -124,7 +124,7 @@ struct ImageAssetManagerTests {
     // MARK: - Тесты получения списка изображений
 
     @Test
-    func testGetAllAvailableImages() {
+    func getAllAvailableImages() {
         // Тест получения списка всех доступных изображений
         let images = ImageAssetManager.getAllAvailableImages()
         #expect(images.count > 0)
@@ -133,7 +133,7 @@ struct ImageAssetManagerTests {
     // MARK: - Тесты получения размера изображений
 
     @Test
-    func testGetImageSize() throws {
+    func getImageSize() throws {
         // Тест получения размера изображения
         let size = try #require(ImageAssetManager.getImageSize("1"))
         #expect(size.width > 0)

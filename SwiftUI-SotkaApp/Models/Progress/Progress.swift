@@ -315,9 +315,20 @@ extension Progress {
         dataPhotoFront != nil || dataPhotoBack != nil || dataPhotoSide != nil
     }
 
-    /// Проверяет, есть ли локальные данные для всех трех фотографий
-    var hasAllPhotoData: Bool {
-        dataPhotoFront != nil && dataPhotoBack != nil && dataPhotoSide != nil
+    /// Проверяет, есть ли данные хотя бы для одной фотографии (локальные или URL)
+    var hasAnyPhotoDataIncludingURLs: Bool {
+        hasAnyPhotoData || urlPhotoFront != nil || urlPhotoBack != nil || urlPhotoSide != nil
+    }
+
+    /// Проверяет, является ли прогресс "пустым" (нет значимых данных)
+    /// Возвращает true, если все показатели равны нулю или отсутствуют, и нет фотографий
+    var isEmpty: Bool {
+        !hasAnyData && !hasAnyPhotoDataIncludingURLs
+    }
+
+    /// Проверяет, можно ли удалить прогресс (есть данные упражнений или фотографии)
+    var canBeDeleted: Bool {
+        hasAnyData || hasAnyPhotoDataIncludingURLs
     }
 
     /// Устанавливает lastModified в соответствии с серверным временем (как в Android)

@@ -231,6 +231,108 @@ struct ProgressTests {
         #expect(progress.hasAnyData == expected)
     }
 
+    // MARK: - canBeDeleted Tests
+
+    @Test("canBeDeleted с пустыми данными и без фото")
+    func canBeDeletedWithEmptyDataAndNoPhotos() {
+        let progress = Progress(id: 1)
+        #expect(!progress.canBeDeleted)
+    }
+
+    @Test("canBeDeleted с данными упражнений и без фото")
+    func canBeDeletedWithExerciseDataAndNoPhotos() {
+        let progress = Progress(id: 1, pullUps: 10, pushUps: 20, squats: 30, weight: 70.0)
+        #expect(progress.canBeDeleted)
+    }
+
+    @Test("canBeDeleted без данных упражнений и с фото")
+    func canBeDeletedWithNoExerciseDataAndWithPhotos() {
+        let progress = Progress(id: 1)
+        progress.dataPhotoFront = "test".data(using: .utf8)
+        #expect(progress.canBeDeleted)
+    }
+
+    @Test("canBeDeleted с данными упражнений и фото")
+    func canBeDeletedWithExerciseDataAndPhotos() {
+        let progress = Progress(id: 1, pullUps: 10, weight: 70.0)
+        progress.dataPhotoFront = "test".data(using: .utf8)
+        progress.dataPhotoBack = "test2".data(using: .utf8)
+        #expect(progress.canBeDeleted)
+    }
+
+    @Test("canBeDeleted с нулевыми данными упражнений и фото")
+    func canBeDeletedWithZeroExerciseDataAndPhotos() {
+        let progress = Progress(id: 1, pullUps: 0, pushUps: 0, squats: 0, weight: 0.0)
+        progress.dataPhotoFront = "test".data(using: .utf8)
+        #expect(progress.canBeDeleted)
+    }
+
+    @Test("canBeDeleted с отрицательными данными упражнений и фото")
+    func canBeDeletedWithNegativeExerciseDataAndPhotos() {
+        let progress = Progress(id: 1, pullUps: -5, pushUps: -10)
+        progress.dataPhotoSide = "test".data(using: .utf8)
+        #expect(progress.canBeDeleted)
+    }
+
+    @Test("canBeDeleted с одним типом фото")
+    func canBeDeletedWithOnePhotoType() {
+        let progress = Progress(id: 1)
+        progress.dataPhotoFront = "test".data(using: .utf8)
+        #expect(progress.canBeDeleted)
+    }
+
+    @Test("canBeDeleted с URL фото и без локальных данных")
+    func canBeDeletedWithPhotoURLsAndNoLocalData() {
+        let progress = Progress(id: 1)
+        progress.urlPhotoFront = "https://example.com/photo1.jpg"
+        #expect(progress.canBeDeleted)
+    }
+
+    @Test("canBeDeleted с комбинацией локальных и URL фото")
+    func canBeDeletedWithMixedPhotoTypes() {
+        let progress = Progress(id: 1)
+        progress.dataPhotoFront = "test".data(using: .utf8)
+        progress.urlPhotoBack = "https://example.com/photo2.jpg"
+        #expect(progress.canBeDeleted)
+    }
+
+    @Test(arguments: [
+        // (pullUps, pushUps, squats, weight, hasPhotoData, expected)
+        (nil, nil, nil, nil, false, false),
+        (10, nil, nil, nil, false, true),
+        (nil, 20, nil, nil, false, true),
+        (nil, nil, 30, nil, false, true),
+        (nil, nil, nil, 70.0, false, true),
+        (0, 0, 0, 0.0, false, false),
+        (-5, -10, -15, -1.0, false, false),
+        (nil, nil, nil, nil, true, true),
+        (10, 20, 30, 70.0, true, true),
+        (0, 0, 0, 0.0, true, true),
+        (-5, -10, -15, -1.0, true, true),
+        (5, 10, nil, 75.5, true, true),
+        (nil, 10, 20, nil, true, true)
+    ])
+    func canBeDeletedParameterized(
+        pullUps: Int?,
+        pushUps: Int?,
+        squats: Int?,
+        weight: Float?,
+        hasPhotoData: Bool,
+        expected: Bool
+    ) {
+        let progress = Progress(id: 1)
+        progress.pullUps = pullUps
+        progress.pushUps = pushUps
+        progress.squats = squats
+        progress.weight = weight
+
+        if hasPhotoData {
+            progress.dataPhotoFront = Data("test".utf8)
+        }
+
+        #expect(progress.canBeDeleted == expected)
+    }
+
     // MARK: - displayedValue Tests
 
     @Test("displayedValue для weight с значением")

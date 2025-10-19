@@ -67,12 +67,27 @@ struct ProgressSyncServicePhotoTests {
                 throw errorToThrow
             }
         }
+
+        func getProgress(day: Int) async throws -> ProgressResponse {
+            if shouldThrowError {
+                throw errorToThrow
+            }
+            return mockedProgressResponses.first ?? ProgressResponse(
+                id: day,
+                pullups: 10,
+                pushups: 20,
+                squats: 30,
+                weight: 70.0,
+                createDate: DateFormatterService.stringFromFullDate(Date(), format: .serverDateTimeSec),
+                modifyDate: DateFormatterService.stringFromFullDate(Date(), format: .serverDateTimeSec)
+            )
+        }
     }
 
     // MARK: - Progress Model Photo Tests
 
     @Test("Создание прогресса из ответа сервера с фотографиями")
-    func createProgressFromServerResponseWithPhotos() async throws {
+    func createProgressFromServerResponseWithPhotos() {
         let user = User(id: 1, userName: "test", email: "test@test.com", cityID: nil)
 
         let serverResponse = ProgressResponse(
@@ -90,7 +105,6 @@ struct ProgressSyncServicePhotoTests {
 
         let progress = Progress(from: serverResponse, user: user)
 
-        // Проверяем, что URL фотографий установлены
         #expect(progress.urlPhotoFront == "https://example.com/photo_front.jpg")
         #expect(progress.urlPhotoBack == "https://example.com/photo_back.jpg")
         #expect(progress.urlPhotoSide == "https://example.com/photo_side.jpg")
@@ -98,7 +112,7 @@ struct ProgressSyncServicePhotoTests {
     }
 
     @Test("Создание прогресса из ответа сервера с одной фотографией")
-    func createProgressFromServerResponseWithSinglePhoto() async throws {
+    func createProgressFromServerResponseWithSinglePhoto() {
         let user = User(id: 1, userName: "test", email: "test@test.com", cityID: nil)
 
         let serverResponse = ProgressResponse(
@@ -114,7 +128,6 @@ struct ProgressSyncServicePhotoTests {
 
         let progress = Progress(from: serverResponse, user: user)
 
-        // Проверяем, что URL фотографии установлен
         #expect(progress.urlPhotoFront == "https://example.com/photo_front.jpg")
         #expect(progress.urlPhotoBack == nil)
         #expect(progress.urlPhotoSide == nil)
@@ -122,7 +135,7 @@ struct ProgressSyncServicePhotoTests {
     }
 
     @Test("Создание прогресса из ответа сервера без фотографий")
-    func createProgressFromServerResponseWithoutPhotos() async throws {
+    func createProgressFromServerResponseWithoutPhotos() {
         let user = User(id: 1, userName: "test", email: "test@test.com", cityID: nil)
 
         let serverResponse = ProgressResponse(
@@ -137,7 +150,6 @@ struct ProgressSyncServicePhotoTests {
 
         let progress = Progress(from: serverResponse, user: user)
 
-        // Проверяем, что URL фотографий не установлены, но прогресс синхронизирован
         #expect(progress.urlPhotoFront == nil)
         #expect(progress.urlPhotoBack == nil)
         #expect(progress.urlPhotoSide == nil)
@@ -145,7 +157,7 @@ struct ProgressSyncServicePhotoTests {
     }
 
     @Test("Создание прогресса из ответа сервера с обновлением lastModified")
-    func createProgressFromServerResponseUpdatesLastModified() async throws {
+    func createProgressFromServerResponseUpdatesLastModified() {
         let user = User(id: 1, userName: "test", email: "test@test.com", cityID: nil)
         let originalDate = Date()
 
@@ -162,7 +174,6 @@ struct ProgressSyncServicePhotoTests {
 
         let progress = Progress(from: serverResponse, user: user)
 
-        // Проверяем, что lastModified установлен из серверного времени
         #expect(progress.lastModified >= originalDate)
         #expect(progress.isSynced)
     }
@@ -170,26 +181,23 @@ struct ProgressSyncServicePhotoTests {
     // MARK: - Progress Data Tests
 
     @Test("Проверка работы с локальными данными фотографий")
-    func progressPhotoDataHandling() async throws {
+    func progressPhotoDataHandling() {
         let progress = Progress(id: 1, pullUps: 10, pushUps: 20, squats: 30, weight: 70.0)
 
-        // Добавляем локальные данные фотографий
         progress.setPhotoData(.front, data: testImageData)
         progress.setPhotoData(.back, data: testImageData)
         progress.setPhotoData(.side, data: testImageData)
 
-        // Проверяем, что данные установлены
         #expect(progress.hasPhotoData(.front))
         #expect(progress.hasPhotoData(.back))
         #expect(progress.hasPhotoData(.side))
         #expect(progress.hasAnyPhotoData)
-        #expect(progress.hasAllPhotoData)
     }
 
     // MARK: - Integration Tests
 
     @Test("Полная интеграция создания прогресса с фотографиями")
-    func fullProgressCreationIntegration() async throws {
+    func fullProgressCreationIntegration() {
         let user = User(id: 1, userName: "test", email: "test@test.com", cityID: nil)
 
         let serverResponse = ProgressResponse(
@@ -207,7 +215,6 @@ struct ProgressSyncServicePhotoTests {
 
         let progress = Progress(from: serverResponse, user: user)
 
-        // Проверяем, что URL фотографий установлены
         #expect(progress.urlPhotoFront == "https://example.com/photo_front.jpg")
         #expect(progress.urlPhotoBack == "https://example.com/photo_back.jpg")
         #expect(progress.urlPhotoSide == "https://example.com/photo_side.jpg")
@@ -215,7 +222,7 @@ struct ProgressSyncServicePhotoTests {
     }
 
     @Test("Создание прогресса с внутренним днем")
-    func createProgressWithInternalDay() async throws {
+    func createProgressWithInternalDay() {
         let user = User(id: 1, userName: "test", email: "test@test.com", cityID: nil)
 
         let serverResponse = ProgressResponse(
@@ -231,14 +238,13 @@ struct ProgressSyncServicePhotoTests {
 
         let progress = Progress(from: serverResponse, user: user, internalDay: 100)
 
-        // Проверяем, что прогресс создан с правильным внутренним днем
         #expect(progress.id == 100)
         #expect(progress.urlPhotoFront == "https://example.com/photo_front.jpg")
         #expect(progress.isSynced)
     }
 
     @Test("Параметризированный тест создания прогресса", arguments: [1, 49, 100])
-    func parameterizedProgressCreation(dayId: Int) async throws {
+    func parameterizedProgressCreation(dayId: Int) {
         let user = User(id: 1, userName: "test", email: "test@test.com", cityID: nil)
 
         let serverResponse = ProgressResponse(
@@ -254,7 +260,6 @@ struct ProgressSyncServicePhotoTests {
 
         let progress = Progress(from: serverResponse, user: user)
 
-        // Проверяем результат
         #expect(progress.id == dayId)
         #expect(progress.isSynced)
         #expect(progress.urlPhotoFront == "https://example.com/photo_front.jpg")

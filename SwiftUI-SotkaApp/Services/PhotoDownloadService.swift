@@ -7,6 +7,7 @@ private let logger = Logger(subsystem: "SotkaApp", category: "PhotoDownload")
 /// Сервис для асинхронной загрузки и кэширования фотографий прогресса
 struct PhotoDownloadService {
     /// Загружает фотографию по URL и сохраняет в модель прогресса
+    @MainActor
     func downloadAndCachePhoto(_ urlString: String, for progress: Progress, type: PhotoType) async throws {
         // 1. Проверяем, что URL валидный и является HTTP/HTTPS
         guard let url = URL(string: urlString),
@@ -32,6 +33,7 @@ struct PhotoDownloadService {
     }
 
     /// Автоматически загружает все новые фотографии для прогресса
+    @MainActor
     func downloadAllPhotos(for progress: Progress) async {
         let photosToDownload: [(String?, PhotoType)] = [
             (progress.urlPhotoFront, .front),

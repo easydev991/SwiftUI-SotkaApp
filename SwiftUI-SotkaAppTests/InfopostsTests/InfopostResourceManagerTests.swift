@@ -3,12 +3,11 @@ import Foundation
 import Testing
 
 struct InfopostResourceManagerTests {
-    private let fileManager = FileManager.default
-
     // MARK: - Тестирование создания временной директории
 
     @Test
-    func testCreateTempDirectory() async throws {
+    func createTempDirectory() async throws {
+        let fileManager = FileManager.default
         let manager = InfopostResourceManager()
 
         let tempDirectory = try #require(manager.createTempDirectory())
@@ -31,11 +30,14 @@ struct InfopostResourceManagerTests {
         #expect(fileManager.fileExists(atPath: testFile.path))
 
         // Очищаем за собой
-        try fileManager.removeItem(at: testFile)
+        if fileManager.fileExists(atPath: testFile.path) {
+            try fileManager.removeItem(at: testFile)
+        }
     }
 
     @Test
     func createTempDirectoryRemovesExisting() async throws {
+        let fileManager = FileManager.default
         let manager = InfopostResourceManager()
 
         // Создаем первую директорию
@@ -68,7 +70,9 @@ struct InfopostResourceManagerTests {
         #expect(fileManager.fileExists(atPath: secondTestFile.path))
 
         // Очищаем за собой
-        try fileManager.removeItem(at: secondTestFile)
+        if fileManager.fileExists(atPath: secondTestFile.path) {
+            try fileManager.removeItem(at: secondTestFile)
+        }
     }
 
     // MARK: - Тестирование извлечения имен изображений
@@ -166,6 +170,7 @@ struct InfopostResourceManagerTests {
 
     @Test
     func copyResourcesCreatesDirectories() throws {
+        let fileManager = FileManager.default
         let manager = InfopostResourceManager()
 
         let htmlContent = """

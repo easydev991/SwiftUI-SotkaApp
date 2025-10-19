@@ -48,7 +48,7 @@ struct InfopostAvailabilityManagerTests {
     }
 
     @Test
-    func testFilterAvailablePosts() {
+    func filterAvailablePosts() {
         let manager = InfopostAvailabilityManager(currentDay: 10, maxReadInfoPostDay: 0)
         let posts = [
             createInfopost(section: .preparation, dayNumber: nil),
@@ -62,7 +62,7 @@ struct InfopostAvailabilityManagerTests {
     }
 
     @Test
-    func testGetAvailablePostsBySection() throws {
+    func getAvailablePostsBySection() throws {
         let manager = InfopostAvailabilityManager(currentDay: 10, maxReadInfoPostDay: 0)
         let posts = [
             createInfopost(section: .preparation, dayNumber: nil),

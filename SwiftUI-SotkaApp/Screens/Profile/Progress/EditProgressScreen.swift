@@ -25,7 +25,7 @@ struct EditProgressScreen: View {
         .animation(.default, value: progressService.displayMode)
         .navigationBarTitleDisplayMode(.inline)
         .toolbar {
-            if progress.hasAnyData {
+            if progress.canBeDeleted {
                 ToolbarItem(placement: .topBarTrailing) {
                     Button(role: .destructive) {
                         showDeleteDialog = true
