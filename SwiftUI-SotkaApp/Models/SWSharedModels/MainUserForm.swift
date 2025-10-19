@@ -59,14 +59,14 @@ extension MainUserForm {
 
         var localizedString: String {
             switch self {
-            case .userName: NSLocalizedString("Placeholder.Login", comment: "")
-            case .fullname: NSLocalizedString("Placeholder.Name", comment: "")
-            case .email: NSLocalizedString("Placeholder.Email", comment: "")
-            case .password: NSLocalizedString("Placeholder.Password", comment: "")
-            case .birthDate: NSLocalizedString("Placeholder.BirthDate", comment: "")
-            case .country: NSLocalizedString("Placeholder.Country", comment: "")
-            case .city: NSLocalizedString("Placeholder.City", comment: "")
-            case .gender: NSLocalizedString("Placeholder.Gender", comment: "")
+            case .userName: String(localized: .placeholderLogin)
+            case .fullname: String(localized: .placeholderName)
+            case .email: String(localized: .placeholderEmail)
+            case .password: String(localized: .placeholderPassword)
+            case .birthDate: String(localized: .placeholderBirthDate)
+            case .country: String(localized: .placeholderCountry)
+            case .city: String(localized: .placeholderCity)
+            case .gender: String(localized: .placeholderGender)
             }
         }
     }

@@ -41,7 +41,7 @@ struct CustomExerciseScreen: View {
         .navigationTitle("Exercise")
         .toolbar {
             ToolbarItem(placement: .topBarTrailing) {
-                Button("Edit") { isEditing.toggle() }
+                Button(.edit) { isEditing.toggle() }
                     .accessibilityIdentifier("editButton")
             }
         }
@@ -82,7 +82,7 @@ struct CustomExerciseScreen: View {
             }
         }
         .accessibilityElement()
-        .accessibilityLabel("Exercise dates")
+        .accessibilityLabel(.exerciseDates)
     }
 }
 

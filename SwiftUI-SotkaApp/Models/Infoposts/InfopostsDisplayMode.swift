@@ -9,12 +9,12 @@ enum InfopostsDisplayMode: CaseIterable, Identifiable {
     case favorites
 
     /// Локализованные названия режимов
-    var title: LocalizedStringKey {
+    var title: String {
         switch self {
         case .all:
-            "Infoposts.All"
+            String(localized: .infopostsAll)
         case .favorites:
-            "Infoposts.Favorites"
+            String(localized: .infopostsFavorites)
         }
     }
 

@@ -67,7 +67,7 @@ private extension CustomExercisesScreen {
         }
         .listStyle(.plain)
         .confirmationDialog(
-            "Delete Exercise",
+            .deleteExercise,
             isPresented: .constant(exerciseToDelete != nil),
             titleVisibility: .visible
         ) {

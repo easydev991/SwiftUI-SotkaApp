@@ -11,18 +11,18 @@ enum InfopostSection: String, Codable, CaseIterable, Identifiable {
     case conclusion
 
     /// Локализованные заголовки секций
-    var localizedTitle: LocalizedStringKey {
+    var localizedTitle: String {
         switch self {
         case .preparation:
-            "Section.Preparation"
+            String(localized: .sectionPreparation)
         case .base:
-            "Section.BasicBlock"
+            String(localized: .sectionBasicBlock)
         case .advanced:
-            "Section.AdvancedBlock"
+            String(localized: .sectionAdvancedBlock)
         case .turbo:
-            "Section.TurboBlock"
+            String(localized: .sectionTurboBlock)
         case .conclusion:
-            "Section.Conclusion"
+            String(localized: .sectionConclusion)
         }
     }
 

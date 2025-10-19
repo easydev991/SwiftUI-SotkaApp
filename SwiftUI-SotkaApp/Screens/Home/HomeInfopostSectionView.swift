@@ -9,7 +9,7 @@ struct HomeInfopostSectionView: View {
     let infopost: Infopost
 
     var body: some View {
-        HomeSectionView(title: "Infopost") {
+        HomeSectionView(title: String(localized: .infopost)) {
             navigationLinkView
         }
     }

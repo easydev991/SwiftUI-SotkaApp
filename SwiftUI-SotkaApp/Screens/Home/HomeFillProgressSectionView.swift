@@ -12,12 +12,12 @@ struct HomeFillProgressSectionView: View {
 
     var body: some View {
         if model.shouldShowFillProgress {
-            HomeSectionView(title: "Home.Progress") {
+            HomeSectionView(title: String(localized: .homeProgress)) {
                 NavigationLink {
                     ProgressScreen(user: user)
                 } label: {
                     HStack {
-                        Text("Home.FillResults")
+                        Text(.homeFillResults)
                             .frame(maxWidth: .infinity, alignment: .leading)
                         ChevronView()
                     }

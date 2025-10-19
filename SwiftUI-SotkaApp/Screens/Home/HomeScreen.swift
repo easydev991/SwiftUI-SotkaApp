@@ -23,19 +23,19 @@ struct HomeScreen: View {
                         .padding()
                     }
                 } else {
-                    Text("Loading")
+                    Text(.loading)
                 }
             }
             .frame(maxWidth: .infinity)
             .sheet(item: $statusManager.conflictingSyncModel) { model in
                 SyncStartDateView(model: model)
             }
-            .navigationTitle("SOTKA")
+            .navigationTitle(.sotka)
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .topBarTrailing) {
                     NavigationLink(destination: InfopostsListScreen()) {
-                        Text("Infoposts")
+                        Text(.infoposts)
                     }
                 }
             }

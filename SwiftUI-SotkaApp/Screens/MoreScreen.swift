@@ -14,7 +14,7 @@ struct MoreScreen: View {
         NavigationStack {
             @Bindable var settings = appSettings
             List {
-                Section("Settings") {
+                Section(.settings) {
                     appThemePicker
                     appLanguageButton
                     notificationToggle
@@ -26,7 +26,7 @@ struct MoreScreen: View {
                     makeTimerSoundToggle($settings.playTimerSound)
                     makeVibrateToggle($settings.vibrate)
                 }
-                Section("About app") {
+                Section(.aboutApp) {
                     rateAppButton
                     feedbackButton
                     officialSiteButton
@@ -43,7 +43,7 @@ struct MoreScreen: View {
                 }
             }
             .animation(.default, value: appSettings.workoutNotificationsEnabled)
-            .navigationTitle("More")
+            .navigationTitle(.more)
             .navigationBarTitleDisplayMode(.inline)
             .onAppear {
                 if aboutInfopost == nil {
@@ -77,9 +77,9 @@ struct MoreScreen: View {
         .onTapGesture {
             settings.showLanguageAlert.toggle()
         }
-        .alert("Alert.language", isPresented: $settings.showLanguageAlert) {
+        .alert(.alertLanguage, isPresented: $settings.showLanguageAlert) {
             Button("Cancel", role: .cancel) {}
-            Button("Go to settings") {
+            Button(.goToSettings) {
                 let settingsUrl = URL(string: UIApplication.openSettingsURLString)
                 URLOpener.open(settingsUrl)
             }
@@ -90,7 +90,7 @@ struct MoreScreen: View {
     private var notificationToggle: some View {
         @Bindable var settings = appSettings
         Toggle(
-            "Workout notifications",
+            .workoutNotifications,
             isOn: .init(
                 get: { appSettings.workoutNotificationsEnabled },
                 set: {
@@ -102,22 +102,22 @@ struct MoreScreen: View {
 
     private func makeNotificationTimePicker(_ value: Binding<Date>) -> some View {
         DatePicker(
-            "Notification Time",
+            .notificationTime,
             selection: value,
             displayedComponents: .hourAndMinute
         )
     }
 
     private func makeTimerSoundToggle(_ value: Binding<Bool>) -> some View {
-        Toggle("TimerSoundToggle", isOn: value)
+        Toggle(.timerSoundToggle, isOn: value)
     }
 
     private func makeVibrateToggle(_ value: Binding<Bool>) -> some View {
-        Toggle("TimerVibrateToggle", isOn: value)
+        Toggle(.timerVibrateToggle, isOn: value)
     }
 
     private var feedbackButton: some View {
-        Button("Send feedback") {
+        Button(.sendFeedback) {
             appSettings.sendFeedback()
         }
         .accessibilityIdentifier("sendFeedbackButton")
@@ -143,7 +143,7 @@ struct MoreScreen: View {
     private var shareAppButton: some View {
         if let model = ShareAppURL(localeIdentifier: locale.identifier, appId: appId) {
             ShareLink(item: model.url) {
-                Text("Share the app")
+                Text(.shareTheApp)
             }
             .accessibilityIdentifier("shareAppButton")
         }
@@ -161,7 +161,7 @@ struct MoreScreen: View {
     @ViewBuilder
     private var swParksButton: some View {
         if let githubLink = URL(string: "https://apps.apple.com/app/id6749501617") {
-            Link("Street Workout: Parks", destination: githubLink)
+            Link(.streetWorkoutParks, destination: githubLink)
                 .accessibilityIdentifier("swParksButton")
         }
     }
@@ -186,7 +186,7 @@ struct MoreScreen: View {
     private var aboutProgramButton: some View {
         if let aboutInfopost {
             NavigationLink(destination: InfopostDetailScreen(infopost: aboutInfopost)) {
-                Text("infopost.about")
+                Text(.infopostAbout)
             }
             .accessibilityIdentifier("aboutProgramButton")
         }

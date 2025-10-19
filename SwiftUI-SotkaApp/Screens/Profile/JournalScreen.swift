@@ -4,8 +4,8 @@ struct JournalScreen: View {
     let user: User
 
     var body: some View {
-        Text("Journal")
-            .navigationTitle("Journal")
+        Text(.journal)
+            .navigationTitle(.journal)
     }
 }
 

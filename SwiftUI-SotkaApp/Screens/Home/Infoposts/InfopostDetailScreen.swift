@@ -28,7 +28,7 @@ struct InfopostDetailScreen: View {
             Button("Close", role: .cancel) {
                 dismiss()
             }
-            Button("Report") {
+            Button(.report) {
                 appSettings.sendFeedback(message: currentError?.localizedDescription)
             }
         }
@@ -64,7 +64,7 @@ private extension InfopostDetailScreen {
                 }
             }
         } label: {
-            Label("Font Size", systemImage: "textformat.size")
+            Label(.fontSize, systemImage: "textformat.size")
         }
     }
 

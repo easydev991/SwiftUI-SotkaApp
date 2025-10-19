@@ -23,7 +23,7 @@ struct InfopostsListScreen: View {
             }
         }
         .listStyle(.plain)
-        .navigationTitle("Infoposts")
+        .navigationTitle(.infoposts)
         .task {
             try? await infopostsService.syncReadPosts(modelContext: modelContext)
         }
@@ -38,7 +38,7 @@ private extension InfopostsListScreen {
     var displayModePicker: some View {
         if infopostsService.showDisplayModePicker {
             @Bindable var service = infopostsService
-            Picker("Infoposts.DisplayMode", selection: $service.displayMode) {
+            Picker(.infopostsDisplayMode, selection: $service.displayMode) {
                 ForEach(InfopostsDisplayMode.allCases) {
                     Text($0.title).tag($0)
                 }

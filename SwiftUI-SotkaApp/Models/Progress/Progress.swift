@@ -201,12 +201,12 @@ extension Progress {
         case squats
 
         /// Локализованное название типа данных
-        var localizedTitle: LocalizedStringKey {
+        var localizedTitle: String {
             switch self {
-            case .weight: "Weight"
-            case .pullUps: ExerciseType.pullups.localizedTitle
-            case .pushUps: ExerciseType.pushups.localizedTitle
-            case .squats: ExerciseType.squats.localizedTitle
+            case .weight: String(localized: .weight)
+            case .pullUps: String(localized: ExerciseType.pullups.localizedTitle)
+            case .pushUps: String(localized: ExerciseType.pushups.localizedTitle)
+            case .squats: String(localized: ExerciseType.squats.localizedTitle)
             }
         }
 
@@ -230,7 +230,7 @@ extension Progress {
         switch dataType {
         case .weight:
             guard let weight, weight > 0 else { return "—" }
-            return String(format: String(localized: "Progress.Weight"), weight) + String(localized: "Progress.WeightUnit")
+            return String(format: String(localized: "Progress.Weight"), weight) + String(localized: .progressWeightUnit)
         case .pullUps:
             guard let pullUps, pullUps > 0 else { return "—" }
             return "\(pullUps)"

@@ -89,7 +89,7 @@ private extension EditProgressPhotoScreen {
     @ViewBuilder
     var deleteDialogMessage: some View {
         if let photoToDelete {
-            Text("Progress.Photo.DeleteMessage \(photoToDelete.localizedTitle)")
+            Text(.progressPhotoDeleteMessage(photoToDelete.localizedTitle))
         }
     }
 

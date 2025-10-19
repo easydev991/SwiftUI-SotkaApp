@@ -12,7 +12,7 @@ struct InfopostSectionDisplay: Identifiable, Equatable {
         !infoposts.isEmpty
     }
 
-    var title: LocalizedStringKey {
+    var title: String {
         section.localizedTitle
     }
 }

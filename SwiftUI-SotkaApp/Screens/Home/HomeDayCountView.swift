@@ -25,14 +25,14 @@ private extension HomeDayCountView {
     var finishedView: some View {
         VStack(spacing: 4) {
             VStack(spacing: 12) {
-                Text("Congratulations.Title")
+                Text(.congratulationsTitle)
                     .font(.title2)
                 makeNumberView(for: 100)
                     .frame(height: 80)
             }
-            Text("Congratulations.Subtitle")
+            Text(.congratulationsSubtitle)
                 .padding(.bottom, 8)
-            Text("Congratulations.Body")
+            Text(.congratulationsBody)
                 .multilineTextAlignment(.center)
         }
         .padding(.horizontal)
@@ -43,7 +43,7 @@ private extension HomeDayCountView {
     var notFinishedView: some View {
         HStack(spacing: 0) {
             let currentDayTitle = NSLocalizedString("Current day", comment: "")
-            let daysLeftTitle = NSLocalizedString("Days left", comment: "")
+            let daysLeftTitle = String(localized: .daysLeft)
             makeDayStack(title: currentDayTitle, day: calculator.currentDay)
             Rectangle()
                 .fill(Color.swSeparators)

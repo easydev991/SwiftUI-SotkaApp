@@ -2,7 +2,7 @@ import SWDesignSystem
 import SwiftUI
 
 struct HomeSectionView<Content: View>: View {
-    let title: LocalizedStringKey
+    let title: String
     @ViewBuilder let content: Content
 
     var body: some View {

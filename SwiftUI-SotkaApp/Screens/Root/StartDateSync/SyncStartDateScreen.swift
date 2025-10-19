@@ -14,11 +14,11 @@ struct SyncStartDateView: View {
         NavigationStack {
             ScrollView {
                 VStack(spacing: 32) {
-                    Text("DateSync.Description")
+                    Text(.dateSyncDescription)
                     VStack(spacing: 12) {
                         HomeDayCountView(calculator: model.appDayCalculator)
                             .opacity(makeOpacity(model.appDayCalculator))
-                        Button("DateSync.SelectAppDate") {
+                        Button(.dateSyncSelectAppDate) {
                             selectedOption = .app(model.appDayCalculator)
                         }
                         .buttonStyle(SWButtonStyle(mode: .filled, size: .small))
@@ -27,7 +27,7 @@ struct SyncStartDateView: View {
                     VStack(spacing: 12) {
                         HomeDayCountView(calculator: model.siteDayCalculator)
                             .opacity(makeOpacity(model.siteDayCalculator))
-                        Button("DateSync.SelectSiteDate") {
+                        Button(.dateSyncSelectSiteDate) {
                             selectedOption = .site(model.siteDayCalculator)
                         }
                         .buttonStyle(SWButtonStyle(mode: .filled, size: .small))
@@ -46,11 +46,11 @@ struct SyncStartDateView: View {
                     }
                 }
                 ToolbarItem(placement: .topBarTrailing) {
-                    Button("Done", action: applySelection)
+                    Button(.done, action: applySelection)
                         .disabled(selectedOption == .none)
                 }
             }
-            .navigationTitle("DateSync.Title")
+            .navigationTitle(.dateSyncTitle)
             .navigationBarTitleDisplayMode(.inline)
         }
         .interactiveDismissDisabled()

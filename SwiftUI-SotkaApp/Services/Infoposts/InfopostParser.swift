@@ -236,20 +236,11 @@ private extension InfopostParser {
         // Специальная обработка для файлов organiz, aims и about
         switch filename {
         case "organiz":
-            return NSLocalizedString(
-                "infopost.organizational",
-                comment: "Заголовок для инфопоста 'organiz' с организационной информацией"
-            )
+            return String(localized: .infopostOrganizational)
         case "aims":
-            return NSLocalizedString(
-                "infopost.aims",
-                comment: "Заголовок для инфопоста 'aims' с описанием целей программы"
-            )
+            return String(localized: .infopostAims)
         case "about":
-            return NSLocalizedString(
-                "infopost.about",
-                comment: "Заголовок для инфопоста 'about' с информацией о SOTKA"
-            )
+            return String(localized: .infopostAbout)
         default:
             break
         }

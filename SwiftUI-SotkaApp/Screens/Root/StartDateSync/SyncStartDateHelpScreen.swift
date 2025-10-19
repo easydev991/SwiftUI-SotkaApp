@@ -5,25 +5,25 @@ struct SyncStartDateHelpScreen: View {
     var body: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: 20) {
-                Text("DateSync.Help.Introduction")
+                Text(.dateSyncHelpIntroduction)
                 VStack(alignment: .leading, spacing: 8) {
-                    Text("DateSync.Help.AppChoiceTitle")
+                    Text(.dateSyncHelpAppChoiceTitle)
                         .font(.title3).bold()
-                    Text("DateSync.Help.AppChoiceDescription")
+                    Text(.dateSyncHelpAppChoiceDescription)
                 }
                 VStack(alignment: .leading, spacing: 8) {
-                    Text("DateSync.Help.SiteChoiceTitle")
+                    Text(.dateSyncHelpSiteChoiceTitle)
                         .font(.title3).bold()
-                    Text("DateSync.Help.SiteChoiceDescription")
+                    Text(.dateSyncHelpSiteChoiceDescription)
                 }
                 SWDivider()
-                Text("DateSync.Help.Summary")
-                Text("DateSync.Help.Warning")
+                Text(.dateSyncHelpSummary)
+                Text(.dateSyncHelpWarning)
                     .fontWeight(.medium)
             }
             .padding()
         }
-        .navigationTitle("DateSync.Help.Title")
+        .navigationTitle(.dateSyncHelpTitle)
         .navigationBarTitleDisplayMode(.inline)
     }
 }

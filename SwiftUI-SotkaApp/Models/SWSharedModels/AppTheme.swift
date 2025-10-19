@@ -6,11 +6,11 @@ enum AppTheme: Int, CaseIterable, Identifiable {
     case light = 1
     case dark = 2
 
-    var title: LocalizedStringKey {
+    var title: String {
         switch self {
-        case .system: "System"
-        case .light: "Light"
-        case .dark: "Dark"
+        case .system: String(localized: .system)
+        case .light: String(localized: .light)
+        case .dark: String(localized: .dark)
         }
     }
 

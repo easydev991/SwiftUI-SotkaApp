@@ -20,10 +20,10 @@ struct ProgressPhotoRow: View {
             }
             .buttonStyle(.plain)
             .confirmationDialog(
-                "Progress.Photo.DialogTitle",
+                .progressPhotoDialogTitle,
                 isPresented: $showDialog
             ) {
-                Button("Take a photo") {
+                Button(.takeAPhoto) {
                     onPhotoTap(.camera)
                 }
                 Button("Pick from gallery") {

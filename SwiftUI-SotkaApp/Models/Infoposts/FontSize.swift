@@ -8,11 +8,11 @@ enum FontSize: String, CaseIterable, Identifiable {
     case medium
     case large
 
-    var title: LocalizedStringKey {
+    var title: String {
         switch self {
-        case .small: "FontSize.Small"
-        case .medium: "FontSize.Medium"
-        case .large: "FontSize.Large"
+        case .small: String(localized: .fontSizeSmall)
+        case .medium: String(localized: .fontSizeMedium)
+        case .large: String(localized: .fontSizeLarge)
         }
     }
 

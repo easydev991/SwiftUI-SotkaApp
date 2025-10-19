@@ -20,7 +20,7 @@ struct RootScreen: View {
             error: appSettings.notificationError
         ) {
             Button("Cancel", role: .cancel) {}
-            Button("Go to settings") {
+            Button(.goToSettings) {
                 let settingsUrl = URL(string: UIApplication.openSettingsURLString)
                 URLOpener.open(settingsUrl)
             }
@@ -34,11 +34,11 @@ extension RootScreen {
         case profile
         case more
 
-        private var localizedTitle: LocalizedStringKey {
+        private var localizedTitle: String {
             switch self {
-            case .home: "Home"
-            case .profile: "Profile"
-            case .more: "More"
+            case .home: String(localized: .home)
+            case .profile: String(localized: .profile)
+            case .more: String(localized: .more)
             }
         }
 

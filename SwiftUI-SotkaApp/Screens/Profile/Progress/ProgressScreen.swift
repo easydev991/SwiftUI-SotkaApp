@@ -15,7 +15,7 @@ struct ProgressScreen: View {
         ScrollView {
             gridView.padding()
         }
-        .navigationTitle("Progress")
+        .navigationTitle(.progress)
         .navigationDestination(item: $navigationDestination) { destination in
             switch destination {
             case let .editProgress(progress):

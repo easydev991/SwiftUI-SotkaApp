@@ -55,7 +55,7 @@ struct EditProfileScreen: View {
         .background(Color.swBackground)
         .onAppear(perform: prepareUserForm)
         .onDisappear { editUserTask?.cancel() }
-        .navigationTitle("Edit profile")
+        .navigationTitle(.editProfile)
         .navigationBarTitleDisplayMode(.inline)
     }
 }
@@ -84,7 +84,7 @@ private extension EditProfileScreen {
                 CachedImage(url: user.avatarUrl, mode: .profileAvatar)
                     .transition(.scale.combined(with: .slide).combined(with: .opacity))
             }
-            Button("Change profile photo") { showImagePickerDialog.toggle() }
+            Button(.changeProfilePhoto) { showImagePickerDialog.toggle() }
                 .buttonStyle(SWButtonStyle(mode: .tinted, size: .large, maxWidth: nil))
                 .padding(.bottom, 8)
                 .confirmationDialog(
@@ -92,7 +92,7 @@ private extension EditProfileScreen {
                     isPresented: $showImagePickerDialog,
                     titleVisibility: .hidden
                 ) {
-                    Button("Take a photo") {
+                    Button(.takeAPhoto) {
                         pickerSourceType = .camera
                     }
                     Button("Pick from gallery") {
@@ -281,7 +281,7 @@ private extension EditProfileScreen {
     }
 
     var saveChangesButton: some View {
-        Button("Save changes", action: saveChangesAction)
+        Button(.saveChanges, action: saveChangesAction)
             .buttonStyle(SWButtonStyle(mode: .filled, size: .large))
             .padding([.horizontal, .bottom])
             .disabled(!userForm.isReadyToSave(comparedTo: oldUserForm))

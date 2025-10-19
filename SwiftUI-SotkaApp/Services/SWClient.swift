@@ -129,8 +129,8 @@ enum ClientError: Error, LocalizedError {
 
     var errorDescription: String? {
         switch self {
-        case .forceLogout: NSLocalizedString("Error.ForceLogout", comment: "")
-        case .noConnection: NSLocalizedString("Error.NoConnection", comment: "")
+        case .forceLogout: String(localized: .errorForceLogout)
+        case .noConnection: String(localized: .errorNoConnection)
         }
     }
 }

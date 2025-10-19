@@ -83,7 +83,7 @@ private extension ProgressGridView {
 
     func dayHeaderView(for section: Progress.Section) -> some View {
         VStack(spacing: 4) {
-            Text("Day")
+            Text(.day)
                 .font(.footnote)
                 .foregroundColor(.secondary)
             Text("\(section.rawValue)")

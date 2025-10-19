@@ -83,7 +83,7 @@ enum ExerciseType: Int {
     /// турбо-приседания 98 (лесенка)
     case turbo98Squats = 983
 
-    var localizedTitle: LocalizedStringKey {
+    var localizedTitle: LocalizedStringResource {
         switch self {
         case .pullups: "Pull-ups"
         case .austrPullups: "Australian pull-ups"

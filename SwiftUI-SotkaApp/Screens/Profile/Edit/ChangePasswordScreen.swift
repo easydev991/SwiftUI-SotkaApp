@@ -46,7 +46,7 @@ private extension ChangePasswordScreen {
             var errorMessage: String {
                 text.trueCount < Constants.minPasswordSize
                     && !text.isEmpty
-                    ? NSLocalizedString("Error.PasswordMinLenght", comment: "")
+                    ? String(localized: .errorPasswordMinLenght)
                     : ""
             }
         }
@@ -58,7 +58,7 @@ private extension ChangePasswordScreen {
                 guard !text.isEmpty else { return "" }
                 return text == new
                     ? ""
-                    : NSLocalizedString("Error.PasswordNotMatch", comment: "")
+                    : String(localized: .errorPasswordNotMatch)
             }
         }
 
@@ -84,7 +84,7 @@ private extension ChangePasswordScreen {
 
     @ViewBuilder
     var passwordField: some View {
-        let localizedPlaceholder = NSLocalizedString("Placeholder.EnterPassword", comment: "")
+        let localizedPlaceholder = String(localized: .placeholderEnterPassword)
         SWTextField(
             placeholder: localizedPlaceholder,
             text: $model.current,
@@ -101,7 +101,7 @@ private extension ChangePasswordScreen {
 
     @ViewBuilder
     var newPasswordField: some View {
-        let localizedPlaceholder = NSLocalizedString("Placeholder.EnterNewPassword", comment: "")
+        let localizedPlaceholder = String(localized: .placeholderEnterNewPassword)
         SWTextField(
             placeholder: localizedPlaceholder,
             text: $model.new.text,
@@ -116,7 +116,7 @@ private extension ChangePasswordScreen {
 
     @ViewBuilder
     var newRepeatedField: some View {
-        let localizedPlaceholder = NSLocalizedString("Placeholder.RepeatNewPassword", comment: "")
+        let localizedPlaceholder = String(localized: .placeholderRepeatNewPassword)
         let errorMessage = model.newRepeated.check(with: model.new.text)
         SWTextField(
             placeholder: localizedPlaceholder,
@@ -129,11 +129,11 @@ private extension ChangePasswordScreen {
     }
 
     var changePasswordButton: some View {
-        Button("Save changes", action: changePasswordAction)
+        Button(.saveChanges, action: changePasswordAction)
             .buttonStyle(SWButtonStyle(mode: .filled, size: .large))
             .disabled(!canChangePassword)
-            .alert("Alert.PasswordChanged", isPresented: $isChangeSuccessful) {
-                Button("Ok") { dismiss() }
+            .alert(.alertPasswordChanged, isPresented: $isChangeSuccessful) {
+                Button(.ok) { dismiss() }
             }
     }
 
@@ -153,7 +153,7 @@ private extension ChangePasswordScreen {
                 isChangeSuccessful = true
             } catch {
                 SWAlert.shared.presentDefaultUIKit(
-                    title: NSLocalizedString("Error", comment: ""),
+                    title: String(localized: .error),
                     message: error.localizedDescription
                 )
             }

@@ -3,7 +3,7 @@ import SwiftUI
 
 struct HomeActivitySectionView: View {
     var body: some View {
-        HomeSectionView(title: "Home.Activity") {
+        HomeSectionView(title: String(localized: .homeActivity)) {
             HStack(spacing: 12) {
                 ForEach(DayActivityType.allCases, id: \.self) {
                     makeView(for: $0)

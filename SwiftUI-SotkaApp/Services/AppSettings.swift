@@ -135,7 +135,7 @@ enum NotificationError: Error, LocalizedError {
     case denied
 
     var errorDescription: String? {
-        NSLocalizedString("Error.NotificationPermission", comment: "")
+        String(localized: .errorNotificationPermission)
     }
 }
 
@@ -187,8 +187,8 @@ private extension AppSettings {
         removePendingDailyNotifications()
 
         let content = UNMutableNotificationContent()
-        content.title = NSLocalizedString("Notification.DailyWorkoutTitle", comment: "")
-        content.body = NSLocalizedString("Notification.DailyWorkoutBody", comment: "")
+        content.title = String(localized: .notificationDailyWorkoutTitle)
+        content.body = String(localized: .notificationDailyWorkoutBody)
         content.sound = .default
 
         let components = Calendar.current.dateComponents(

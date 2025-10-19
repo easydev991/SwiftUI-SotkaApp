@@ -47,11 +47,11 @@ struct EditProgressScreen: View {
             }
         }
         .confirmationDialog(
-            "Progress.Edit.ConfirmDelete.Title",
+            .progressEditConfirmDeleteTitle,
             isPresented: $showDeleteDialog,
             titleVisibility: .visible
         ) {
-            Button("Progress.Edit.Delete", role: .destructive) {
+            Button(.progressEditDelete, role: .destructive) {
                 do {
                     try progressService.deleteProgress(context: modelContext)
                     dismiss()
@@ -60,7 +60,7 @@ struct EditProgressScreen: View {
                 }
             }
         } message: {
-            Text("Progress.Edit.ConfirmDelete.Message")
+            Text(.progressEditConfirmDeleteMessage)
         }
     }
 }
@@ -99,7 +99,7 @@ private extension EditProgressScreen {
     @ViewBuilder
     var displayModePicker: some View {
         @Bindable var service = progressService
-        Picker("Progress.DisplayMode", selection: $service.displayMode) {
+        Picker(.progressDisplayMode, selection: $service.displayMode) {
             ForEach(ProgressDisplayMode.allCases) {
                 Text($0.title).tag($0)
             }
@@ -130,7 +130,7 @@ private extension EditProgressScreen {
             }
             .listStyle(.plain)
             .background(Color.swBackground)
-            .navigationTitle("Progress.Edit.Title")
+            .navigationTitle(.progressEditTitle)
             .task {
                 guard focus == nil else { return }
                 try? await Task.sleep(for: .milliseconds(500))
@@ -172,9 +172,9 @@ private extension EditProgressScreen {
             )
             .id(FocusableField.squats)
         } header: {
-            Text("Progress.Edit.Header")
+            Text(.progressEditHeader)
         } footer: {
-            Text("Progress.Edit.Footer")
+            Text(.progressEditFooter)
                 .foregroundStyle(.secondary)
         }
     }
@@ -193,7 +193,7 @@ private extension EditProgressScreen {
     }
 
     var saveButton: some View {
-        Button("Progress.Edit.Save", action: performSave)
+        Button(.progressEditSave, action: performSave)
             .buttonStyle(SWButtonStyle(mode: .filled, size: .large))
             .disabled(!progressService.hasChanges || !progressService.canSave)
     }
@@ -250,7 +250,7 @@ private struct ProgressInputRow: View {
                 .foregroundStyle(Color.swMainText)
                 .frame(maxWidth: .infinity, alignment: .leading)
             SWTextField(
-                placeholder: NSLocalizedString("Progress.Edit.Enter", comment: ""),
+                placeholder: String(localized: .progressEditEnter),
                 text: $value,
                 isFocused: focus.wrappedValue == field,
                 inputValidation: dataType == .weight ? .decimalNumber : .integer

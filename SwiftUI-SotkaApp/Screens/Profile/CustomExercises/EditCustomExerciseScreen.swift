@@ -54,7 +54,7 @@ struct EditCustomExerciseScreen: View {
                 .accessibilityIdentifier(backButtonAccessibilityIdentifier)
             }
             ToolbarItem(placement: .topBarTrailing) {
-                Button("Save") {
+                Button(.save) {
                     save()
                 }
                 .disabled(!canSave)

@@ -42,7 +42,7 @@ struct ProfileScreen: View {
                 .padding(.horizontal)
             }
             .background(Color.swBackground)
-            .navigationTitle("Profile")
+            .navigationTitle(.profile)
             .navigationBarTitleDisplayMode(.inline)
         }
     }
@@ -61,17 +61,16 @@ private extension ProfileScreen {
     }
 
     func makeEditProfileButton(for user: User) -> some View {
-        NavigationLink(
-            "Edit profile",
-            destination: EditProfileScreen(user: user)
-        )
+        NavigationLink(.editProfile) {
+            EditProfileScreen(user: user)
+        }
         .buttonStyle(SWButtonStyle(icon: .pencil, mode: .tinted, size: .large))
         .padding(.bottom, 24)
     }
 
     func makeJournalButton(for user: User) -> some View {
         NavigationLink(destination: JournalScreen(user: user)) {
-            let localizedString = NSLocalizedString("Journal", comment: "")
+            let localizedString = String(localized: .journal)
             FormRowView(
                 title: localizedString,
                 trailingContent: .textWithChevron("")
@@ -81,7 +80,7 @@ private extension ProfileScreen {
 
     func makeProgressButton(for user: User) -> some View {
         NavigationLink(destination: ProgressScreen(user: user)) {
-            let localizedString = NSLocalizedString("Progress", comment: "")
+            let localizedString = String(localized: .progress)
             FormRowView(
                 title: localizedString,
                 trailingContent: .textWithChevron("")
@@ -100,18 +99,18 @@ private extension ProfileScreen {
     }
 
     var logoutButton: some View {
-        Button("Log out") {
+        Button(.logOut) {
             showLogoutDialog = true
         }
         .foregroundStyle(Color.swSmallElements)
         .padding(.top, 36)
         .padding(.bottom, 20)
         .confirmationDialog(
-            "Alert.logout",
+            .alertLogout,
             isPresented: $showLogoutDialog,
             titleVisibility: .visible
         ) {
-            Button("Log out", role: .destructive) {
+            Button(.logOut, role: .destructive) {
                 authHelper.triggerLogout()
             }
         }

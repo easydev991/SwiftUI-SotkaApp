@@ -63,7 +63,7 @@ private extension LoginScreen {
 
     @ViewBuilder
     var loginField: some View {
-        let localizedPlaceholder = NSLocalizedString("Login or email", comment: "")
+        let localizedPlaceholder = String(localized: .loginOrEmail)
         SWTextField(
             placeholder: localizedPlaceholder,
             text: $credentials.login,
@@ -99,14 +99,14 @@ private extension LoginScreen {
     }
 
     var loginButton: some View {
-        Button("Log in", action: performLogin)
+        Button(.logIn, action: performLogin)
             .buttonStyle(SWButtonStyle(mode: .filled, size: .large))
             .disabled(!canLogIn)
             .accessibilityIdentifier("loginButton")
     }
 
     var forgotPasswordButton: some View {
-        Button("Restore password", action: performRestorePassword)
+        Button(.restorePassword, action: performRestorePassword)
             .tint(.swMainText)
     }
 
@@ -136,7 +136,7 @@ private extension LoginScreen {
 
     func performRestorePassword() {
         guard credentials.canRestorePassword else {
-            let localizedString = NSLocalizedString("Alert.restorePassword", comment: "")
+            let localizedString = String(localized: .alertRestorePassword)
             SWAlert.shared.presentDefaultUIKit(
                 message: localizedString,
                 completion: { focus = .username }
@@ -150,8 +150,8 @@ private extension LoginScreen {
             do {
                 try await client.resetPassword(for: credentials.login)
                 SWAlert.shared.presentDefaultUIKit(
-                    title: NSLocalizedString("Done", comment: ""),
-                    message: NSLocalizedString("Alert.resetSuccessful", comment: "")
+                    title: String(localized: .done),
+                    message: String(localized: .alertResetSuccessful)
                 )
             } catch ClientError.noConnection {
                 SWAlert.shared.presentNoConnection(true)

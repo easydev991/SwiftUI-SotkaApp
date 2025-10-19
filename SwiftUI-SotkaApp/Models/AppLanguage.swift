@@ -5,8 +5,11 @@ enum AppLanguage: CaseIterable, Identifiable {
     case russian
     case english
 
-    var title: LocalizedStringKey {
-        self == .russian ? "Russian" : "English"
+    var title: String {
+        switch self {
+        case .russian: String(localized: .russian)
+        case .english: String(localized: .english)
+        }
     }
 
     static func makeCurrentValue(_ localeIdentifier: String) -> AppLanguage {

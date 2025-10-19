@@ -11,12 +11,12 @@ enum DayActivityType: CaseIterable {
     /// Пропуск из-за болезни/травмы
     case sick
 
-    var localizedTitle: LocalizedStringKey {
+    var localizedTitle: String {
         switch self {
-        case .workout: "WorkoutDay"
-        case .stretch: "StretchDay"
-        case .rest: "RestDay"
-        case .sick: "SickDay"
+        case .workout: String(localized: .workoutDay)
+        case .stretch: String(localized: .stretchDay)
+        case .rest: String(localized: .restDay)
+        case .sick: String(localized: .sickDay)
         }
     }
 

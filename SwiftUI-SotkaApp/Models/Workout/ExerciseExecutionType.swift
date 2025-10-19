@@ -7,10 +7,10 @@ enum ExerciseExecutionType {
     /// Подходы
     case sets
 
-    var localizedTitle: LocalizedStringKey {
+    var localizedTitle: String {
         switch self {
-        case .cycles: "Cycles"
-        case .sets: "Sets"
+        case .cycles: String(localized: .cycles)
+        case .sets: String(localized: .sets)
         }
     }
 }
