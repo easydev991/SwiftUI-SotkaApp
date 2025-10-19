@@ -19,9 +19,9 @@ struct ProgressScreen: View {
         .navigationDestination(item: $navigationDestination) { destination in
             switch destination {
             case let .editProgress(progress):
-                EditProgressScreen(progress: progress)
+                EditProgressScreen(progress: progress, mode: .metrics)
             case let .editPhotos(progress):
-                EditProgressPhotoScreen(progress: progress)
+                EditProgressScreen(progress: progress, mode: .photos)
             }
         }
         .onAppear {

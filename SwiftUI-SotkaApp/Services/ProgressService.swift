@@ -13,6 +13,8 @@ final class ProgressService {
         category: String(describing: ProgressService.self)
     )
 
+    var displayMode: ProgressDisplayMode
+
     // MARK: - Edited Values (данные для редактирования)
 
     var pullUps = ""
@@ -27,9 +29,12 @@ final class ProgressService {
     // MARK: - Initialization
 
     /// Инициализирует сервис с прогрессом
-    /// - Parameter progress: Прогресс для загрузки
-    init(progress: Progress) {
+    /// - Parameters:
+    ///   - progress: Модель прогресса для изменения
+    ///   - mode: Режим отображения
+    init(progress: Progress, mode: ProgressDisplayMode) {
         self.progress = progress
+        self.displayMode = mode
         loadProgress()
     }
 

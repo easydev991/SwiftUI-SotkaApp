@@ -53,7 +53,8 @@ final class Progress {
         urlPhotoSide: String? = nil,
         dataPhotoFront: Data? = nil,
         dataPhotoBack: Data? = nil,
-        dataPhotoSide: Data? = nil
+        dataPhotoSide: Data? = nil,
+        lastModified: Date = .now
     ) {
         self.id = id
         self.pullUps = pullUps
@@ -66,6 +67,7 @@ final class Progress {
         self.dataPhotoBack = dataPhotoBack
         self.dataPhotoSide = dataPhotoSide
         self.dataPhotoFront = dataPhotoFront
+        self.lastModified = lastModified
     }
 
     /// Проверяет, заполнены ли все результаты прогресса
@@ -91,44 +93,44 @@ final class Progress {
 
     /// Создает Progress из ProgressResponse
     convenience init(from response: ProgressResponse, user: User) {
+        let lastModified = response.modifyDate.flatMap {
+            DateFormatterService.dateFromString($0, format: .serverDateTimeSec)
+        } ?? DateFormatterService.dateFromString(response.createDate, format: .serverDateTimeSec)
         self.init(
             id: response.id,
             pullUps: response.pullups,
             pushUps: response.pushups,
             squats: response.squats,
-            weight: response.weight
+            weight: response.weight,
+            urlPhotoFront: response.photoFront,
+            urlPhotoBack: response.photoBack,
+            urlPhotoSide: response.photoSide,
+            lastModified: lastModified
         )
         self.user = user
-        // Устанавливаем lastModified в соответствии с серверным временем
-        updateLastModified(from: response)
         self.isSynced = true
         self.shouldDelete = false
-
-        // Устанавливаем URL фотографий в новые поля модели (для новой архитектуры)
-        self.urlPhotoFront = response.photoFront
-        self.urlPhotoBack = response.photoBack
-        self.urlPhotoSide = response.photoSide
     }
 
     /// Создает Progress из ProgressResponse с маппингом дня
     convenience init(from response: ProgressResponse, user: User, internalDay: Int) {
+        let lastModified = response.modifyDate.flatMap {
+            DateFormatterService.dateFromString($0, format: .serverDateTimeSec)
+        } ?? DateFormatterService.dateFromString(response.createDate, format: .serverDateTimeSec)
         self.init(
             id: internalDay,
             pullUps: response.pullups,
             pushUps: response.pushups,
             squats: response.squats,
-            weight: response.weight
+            weight: response.weight,
+            urlPhotoFront: response.photoFront,
+            urlPhotoBack: response.photoBack,
+            urlPhotoSide: response.photoSide,
+            lastModified: lastModified
         )
         self.user = user
-        // Устанавливаем lastModified в соответствии с серверным временем
-        updateLastModified(from: response)
         self.isSynced = true
         self.shouldDelete = false
-
-        // Устанавливаем URL фотографий в новые поля модели (для новой архитектуры)
-        self.urlPhotoFront = response.photoFront
-        self.urlPhotoBack = response.photoBack
-        self.urlPhotoSide = response.photoSide
     }
 }
 

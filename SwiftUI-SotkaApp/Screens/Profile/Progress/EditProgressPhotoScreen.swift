@@ -8,20 +8,18 @@ struct EditProgressPhotoScreen: View {
     private let logger = Logger(subsystem: "SotkaApp", category: "EditProgressPhotoScreen")
     @Bindable private var progress: Progress
     @Environment(\.modelContext) private var modelContext
-    @State private var progressService: ProgressService
+    @Environment(ProgressService.self) private var progressService: ProgressService
     @State private var pickerSourceType: UIImagePickerController.SourceType?
     @State private var selectedPhotoType: PhotoType?
     @State private var photoToDelete: PhotoType?
 
     init(progress: Progress) {
         self.progress = progress
-        self._progressService = State(initialValue: ProgressService(progress: progress))
     }
 
     var body: some View {
         listView
-            .navigationTitle("Progress.Photos.ScreenTitle")
-            .navigationBarTitleDisplayMode(.inline)
+            .navigationTitle(.progressPhotosScreenTitle)
             .confirmationDialog(
                 .progressPhotoDeleteConfirm,
                 isPresented: $photoToDelete.mappedToBool(),
@@ -120,6 +118,7 @@ private extension EditProgressPhotoScreen {
 #Preview {
     NavigationStack {
         EditProgressPhotoScreen(progress: .previewDay1)
+            .environment(ProgressService(progress: .previewDay1, mode: .photos))
             .modelContainer(PreviewModelContainer.make(with: .preview))
     }
 }

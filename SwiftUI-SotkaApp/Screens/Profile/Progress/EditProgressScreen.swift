@@ -10,36 +10,20 @@ struct EditProgressScreen: View {
     @State private var showDeleteDialog = false
     @FocusState private var focus: FocusableField?
 
-    init(progress: Progress) {
+    init(progress: Progress, mode: ProgressDisplayMode) {
         self.progress = progress
-        self._progressService = State(initialValue: ProgressService(progress: progress))
+        self._progressService = .init(
+            initialValue: .init(progress: progress, mode: mode)
+        )
     }
 
     var body: some View {
-        ScrollViewReader { proxy in
-            List {
-                exerciseSection
-                weightSection
-                    .listSectionSeparator(.hidden)
-                saveButton
-                    .listRowSeparator(.hidden)
-            }
-            .listStyle(.plain)
-            .background(Color.swBackground)
-            .navigationTitle("Progress.Edit.Title")
-            .navigationBarTitleDisplayMode(.inline)
-            .task {
-                guard focus == nil else { return }
-                try? await Task.sleep(for: .milliseconds(500))
-                focus = .pullUps
-            }
-            .onChange(of: focus) { _, newFocus in
-                guard let newFocus else { return }
-                withAnimation(.easeInOut(duration: 0.5)) {
-                    proxy.scrollTo(newFocus, anchor: .center)
-                }
-            }
+        VStack(spacing: 12) {
+            displayModePicker
+            contentView
         }
+        .animation(.default, value: progressService.displayMode)
+        .navigationBarTitleDisplayMode(.inline)
         .toolbar {
             if progress.hasAnyData {
                 ToolbarItem(placement: .topBarTrailing) {
@@ -108,6 +92,55 @@ private extension EditProgressScreen {
                 .pushUps
             case .weight:
                 .squats
+            }
+        }
+    }
+
+    @ViewBuilder
+    var displayModePicker: some View {
+        @Bindable var service = progressService
+        Picker("Progress.DisplayMode", selection: $service.displayMode) {
+            ForEach(ProgressDisplayMode.allCases) {
+                Text($0.title).tag($0)
+            }
+        }
+        .pickerStyle(.segmented)
+        .padding([.top, .horizontal])
+    }
+
+    @ViewBuilder
+    var contentView: some View {
+        switch progressService.displayMode {
+        case .metrics:
+            metricsSection
+        case .photos:
+            EditProgressPhotoScreen(progress: progress)
+                .environment(progressService)
+        }
+    }
+
+    var metricsSection: some View {
+        ScrollViewReader { proxy in
+            List {
+                exerciseSection
+                weightSection
+                    .listSectionSeparator(.hidden)
+                saveButton
+                    .listRowSeparator(.hidden)
+            }
+            .listStyle(.plain)
+            .background(Color.swBackground)
+            .navigationTitle("Progress.Edit.Title")
+            .task {
+                guard focus == nil else { return }
+                try? await Task.sleep(for: .milliseconds(500))
+                focus = .pullUps
+            }
+            .onChange(of: focus) { _, newFocus in
+                guard let newFocus else { return }
+                withAnimation(.easeInOut(duration: 0.5)) {
+                    proxy.scrollTo(newFocus, anchor: .center)
+                }
             }
         }
     }
@@ -232,13 +265,16 @@ private struct ProgressInputRow: View {
 #if DEBUG
 #Preview("Пустой прогресс") {
     NavigationStack {
-        EditProgressScreen(progress: .init(id: 1))
+        EditProgressScreen(progress: .init(id: 1), mode: .metrics)
     }
 }
 
 #Preview("С данными") {
     NavigationStack {
-        EditProgressScreen(progress: .init(id: 1, pullUps: 10, pushUps: 20, squats: 30, weight: 70.5))
+        EditProgressScreen(
+            progress: .init(id: 1, pullUps: 10, pushUps: 20, squats: 30, weight: 70.5),
+            mode: .metrics
+        )
     }
 }
 
@@ -248,7 +284,7 @@ private struct ProgressInputRow: View {
             let progress = Progress(id: 1, pullUps: 10, pushUps: 20, squats: 30, weight: 70.5)
             progress.isSynced = true
             return progress
-        }())
+        }(), mode: .metrics)
     }
 }
 #endif
