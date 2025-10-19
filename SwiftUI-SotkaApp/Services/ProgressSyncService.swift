@@ -230,6 +230,9 @@ private extension ProgressSyncService {
         let dataPhotoFront: Data?
         let dataPhotoBack: Data?
         let dataPhotoSide: Data?
+        let shouldDeletePhotoFront: Bool
+        let shouldDeletePhotoBack: Bool
+        let shouldDeletePhotoSide: Bool
 
         /// Создает ProgressSnapshot из Progress модели
         init(from progress: Progress) {
@@ -248,6 +251,9 @@ private extension ProgressSyncService {
             self.dataPhotoFront = progress.dataPhotoFront
             self.dataPhotoBack = progress.dataPhotoBack
             self.dataPhotoSide = progress.dataPhotoSide
+            self.shouldDeletePhotoFront = progress.shouldDeletePhotoFront
+            self.shouldDeletePhotoBack = progress.shouldDeletePhotoBack
+            self.shouldDeletePhotoSide = progress.shouldDeletePhotoSide
         }
     }
 
@@ -355,15 +361,30 @@ private extension ProgressSyncService {
             } else {
                 // Собираем данные фотографий для отправки на сервер
                 var photos: [String: Data] = [:]
+                var photosToDelete: [String] = []
 
+                // Обрабатываем фронтальную фотографию
                 if let data = snapshot.dataPhotoFront {
                     photos["photo_front"] = data
+                } else if snapshot.shouldDeletePhotoFront {
+                    // Фотография помечена для удаления - добавляем в список для удаления
+                    photosToDelete.append("photo_front")
                 }
+
+                // Обрабатываем заднюю фотографию
                 if let data = snapshot.dataPhotoBack {
                     photos["photo_back"] = data
+                } else if snapshot.shouldDeletePhotoBack {
+                    // Фотография помечена для удаления - добавляем в список для удаления
+                    photosToDelete.append("photo_back")
                 }
+
+                // Обрабатываем боковую фотографию
                 if let data = snapshot.dataPhotoSide {
                     photos["photo_side"] = data
+                } else if snapshot.shouldDeletePhotoSide {
+                    // Фотография помечена для удаления - добавляем в список для удаления
+                    photosToDelete.append("photo_side")
                 }
 
                 // Создаем запрос с данными фотографий
@@ -374,12 +395,13 @@ private extension ProgressSyncService {
                     squats: snapshot.squats,
                     weight: snapshot.weight,
                     modifyDate: DateFormatterService.stringFromFullDate(snapshot.lastModified, format: .isoDateTimeSec),
-                    photos: photos.isEmpty ? nil : photos
+                    photos: photos.isEmpty ? nil : photos,
+                    photosToDelete: photosToDelete.isEmpty ? nil : photosToDelete
                 )
 
                 logger
                     .info(
-                        "Отправляем прогресс дня \(externalDay) с фотографиями: front=\(snapshot.dataPhotoFront != nil ? "есть данные" : "нет"), back=\(snapshot.dataPhotoBack != nil ? "есть данные" : "нет"), side=\(snapshot.dataPhotoSide != nil ? "есть данные" : "нет")"
+                        "Отправляем прогресс дня \(externalDay) с фотографиями: для отправки=\(photos.keys.count), для удаления=\(photosToDelete.count)"
                     )
 
                 // Используем единый подход: всегда пытаемся обновить/создать через updateProgress
@@ -421,6 +443,8 @@ private extension ProgressSyncService {
                         applyLWWLogic(local: local, server: server, internalDay: id)
                         // Обновляем фотографии из ответа сервера
                         updateProgressFromServerResponse(local, server)
+                        // Сбрасываем флаги удаления фото после успешной синхронизации
+                        local.resetPhotoDeletionFlags()
                     } else {
                         // Создаем новую запись локально по ответу сервера
                         let newProgress = Progress(from: server, user: user)
@@ -433,6 +457,7 @@ private extension ProgressSyncService {
                         // Локальная запись уже существует на сервере - помечаем как синхронизированную
                         local.isSynced = true
                         local.shouldDelete = false
+                        local.resetPhotoDeletionFlags()
                         logger.info("Помечаем прогресс дня \(localId) как синхронизированный (уже существует на сервере)")
                     }
                 case .deleted:
@@ -510,6 +535,8 @@ private extension ProgressSyncService {
             updateLocalFromServer(local, server, internalDay: internalDay)
             // Обновляем фотографии из ответа сервера
             updateProgressFromServerResponse(local, server)
+            // Сбрасываем флаги удаления фото после успешной синхронизации
+            local.resetPhotoDeletionFlags()
         } else {
             // Даты одинаковые или очень близкие - сравниваем данные
             if hasDataDifference {
@@ -517,6 +544,8 @@ private extension ProgressSyncService {
                 updateLocalFromServer(local, server, internalDay: internalDay)
                 // Обновляем фотографии из ответа сервера
                 updateProgressFromServerResponse(local, server)
+                // Сбрасываем флаги удаления фото после успешной синхронизации
+                local.resetPhotoDeletionFlags()
             } else {
                 logger.info("Данные идентичны для дня \(internalDay) - помечаем как синхронизированные")
                 local.isSynced = true
@@ -529,10 +558,30 @@ private extension ProgressSyncService {
     func updateProgressFromServerResponse(_ progress: Progress, _ response: ProgressResponse) {
         logger.info("Обновляем фотографии для прогресса дня \(progress.id) из ответа сервера")
 
-        // Обновляем URL фотографий
-        progress.urlPhotoFront = response.photoFront
-        progress.urlPhotoBack = response.photoBack
-        progress.urlPhotoSide = response.photoSide
+        // Обновляем URL фотографий только если они не помечены для удаления локально
+        if !progress.shouldDeletePhotoFront {
+            progress.urlPhotoFront = response.photoFront
+        } else if response.photoFront == nil || response.photoFront?.isEmpty == true {
+            // Сервер успешно удалил фото - очищаем локальный URL
+            progress.urlPhotoFront = nil
+            progress.shouldDeletePhotoFront = false
+        }
+
+        if !progress.shouldDeletePhotoBack {
+            progress.urlPhotoBack = response.photoBack
+        } else if response.photoBack == nil || response.photoBack?.isEmpty == true {
+            // Сервер успешно удалил фото - очищаем локальный URL
+            progress.urlPhotoBack = nil
+            progress.shouldDeletePhotoBack = false
+        }
+
+        if !progress.shouldDeletePhotoSide {
+            progress.urlPhotoSide = response.photoSide
+        } else if response.photoSide == nil || response.photoSide?.isEmpty == true {
+            // Сервер успешно удалил фото - очищаем локальный URL
+            progress.urlPhotoSide = nil
+            progress.shouldDeletePhotoSide = false
+        }
 
         // Устанавливаем lastModified в соответствии с серверным временем (делегируем модели)
         progress.updateLastModified(from: response)

@@ -42,6 +42,11 @@ final class Progress {
     /// Локальные данные изображения сбоку (кэш)
     var dataPhotoSide: Data?
 
+    /// Флаги пометки фото для удаления с сервера
+    var shouldDeletePhotoFront = false
+    var shouldDeletePhotoBack = false
+    var shouldDeletePhotoSide = false
+
     init(
         id: Int,
         pullUps: Int? = nil,
@@ -54,6 +59,9 @@ final class Progress {
         dataPhotoFront: Data? = nil,
         dataPhotoBack: Data? = nil,
         dataPhotoSide: Data? = nil,
+        shouldDeletePhotoFront: Bool = false,
+        shouldDeletePhotoBack: Bool = false,
+        shouldDeletePhotoSide: Bool = false,
         lastModified: Date = .now
     ) {
         self.id = id
@@ -67,6 +75,9 @@ final class Progress {
         self.dataPhotoBack = dataPhotoBack
         self.dataPhotoSide = dataPhotoSide
         self.dataPhotoFront = dataPhotoFront
+        self.shouldDeletePhotoFront = shouldDeletePhotoFront
+        self.shouldDeletePhotoBack = shouldDeletePhotoBack
+        self.shouldDeletePhotoSide = shouldDeletePhotoSide
         self.lastModified = lastModified
     }
 
@@ -250,10 +261,13 @@ extension Progress {
         switch type {
         case .front:
             dataPhotoFront = data
+            shouldDeletePhotoFront = false // Сбрасываем флаг удаления при добавлении нового фото
         case .back:
             dataPhotoBack = data
+            shouldDeletePhotoBack = false // Сбрасываем флаг удаления при добавлении нового фото
         case .side:
             dataPhotoSide = data
+            shouldDeletePhotoSide = false // Сбрасываем флаг удаления при добавлении нового фото
         }
         lastModified = Date()
         isSynced = false
@@ -281,10 +295,16 @@ extension Progress {
         switch type {
         case .front:
             dataPhotoFront = nil
+            urlPhotoFront = nil
+            shouldDeletePhotoFront = true
         case .back:
             dataPhotoBack = nil
+            urlPhotoBack = nil
+            shouldDeletePhotoBack = true
         case .side:
             dataPhotoSide = nil
+            urlPhotoSide = nil
+            shouldDeletePhotoSide = true
         }
         lastModified = Date()
         isSynced = false
@@ -308,15 +328,22 @@ extension Progress {
         } ?? DateFormatterService.dateFromString(response.createDate, format: .serverDateTimeSec)
     }
 
+    /// Сбрасывает флаги удаления фото после успешной синхронизации
+    func resetPhotoDeletionFlags() {
+        shouldDeletePhotoFront = false
+        shouldDeletePhotoBack = false
+        shouldDeletePhotoSide = false
+    }
+
     /// Проверяет, есть ли фотография указанного типа (URL или данные)
     func hasPhoto(_ type: PhotoType) -> Bool {
         switch type {
         case .front:
-            urlPhotoFront != nil
+            dataPhotoFront != nil || urlPhotoFront != nil
         case .back:
-            urlPhotoBack != nil
+            dataPhotoBack != nil || urlPhotoBack != nil
         case .side:
-            urlPhotoSide != nil
+            dataPhotoSide != nil || urlPhotoSide != nil
         }
     }
 

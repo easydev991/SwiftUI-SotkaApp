@@ -6,15 +6,14 @@ import SWUtils
 
 struct EditProgressPhotoScreen: View {
     private let logger = Logger(subsystem: "SotkaApp", category: "EditProgressPhotoScreen")
-    @Bindable private var progress: Progress
     @Environment(\.modelContext) private var modelContext
     @Environment(ProgressService.self) private var progressService: ProgressService
     @State private var pickerSourceType: UIImagePickerController.SourceType?
     @State private var selectedPhotoType: PhotoType?
     @State private var photoToDelete: PhotoType?
 
-    init(progress: Progress) {
-        self.progress = progress
+    init(progress _: Progress) {
+        // Не храним progress локально, используем progressService.progress
     }
 
     var body: some View {
@@ -38,7 +37,7 @@ struct EditProgressPhotoScreen: View {
                 }
             }
             .onAppear {
-                logger.info("EditProgressPhotoScreen появился для прогресса дня \(progress.id)")
+                logger.info("EditProgressPhotoScreen появился для прогресса дня \(progressService.progress.id)")
             }
     }
 }
@@ -47,7 +46,7 @@ private extension EditProgressPhotoScreen {
     var listView: some View {
         List(PhotoType.allCases, id: \.self) { photoType in
             ProgressPhotoRow(
-                progress: progress,
+                progress: progressService.progress,
                 photoType: photoType,
                 onPhotoTap: { action in
                     switch action {
@@ -60,7 +59,7 @@ private extension EditProgressPhotoScreen {
                     case let .delete(photoType):
                         logger
                             .info(
-                                "Пользователь выбрал удаление фотографии типа: \(photoType.localizedTitle) для прогресса дня \(progress.id)"
+                                "Пользователь выбрал удаление фотографии типа: \(photoType.localizedTitle) для прогресса дня \(progressService.progress.id)"
                             )
                         photoToDelete = photoType
                     }

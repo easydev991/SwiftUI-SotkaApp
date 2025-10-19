@@ -24,7 +24,12 @@ final class ProgressService {
 
     // MARK: - Progress Reference
 
-    private let progress: Progress
+    private let progressModel: Progress
+
+    /// Доступ к прогрессу (для использования в других экранах)
+    var progress: Progress {
+        progressModel
+    }
 
     // MARK: - Initialization
 
@@ -33,7 +38,7 @@ final class ProgressService {
     ///   - progress: Модель прогресса для изменения
     ///   - mode: Режим отображения
     init(progress: Progress, mode: ProgressDisplayMode) {
-        self.progress = progress
+        self.progressModel = progress
         self.displayMode = mode
         loadProgress()
     }
@@ -47,10 +52,10 @@ final class ProgressService {
         logger.info("Загружаем данные прогресса для дня \(logId)")
 
         // Загружаем текущие значения, преобразуя 0 в пустые строки
-        let newPullUps = progress.pullUps.stringFromInt()
-        let newPushUps = progress.pushUps.stringFromInt()
-        let newSquats = progress.squats.stringFromInt()
-        let newWeight = progress.weight.stringFromFloat()
+        let newPullUps = progressModel.pullUps.stringFromInt()
+        let newPushUps = progressModel.pushUps.stringFromInt()
+        let newSquats = progressModel.squats.stringFromInt()
+        let newWeight = progressModel.weight.stringFromFloat()
 
         // Обновляем только если данные изменились
         if pullUps != newPullUps || pushUps != newPushUps || squats != newSquats || weight != newWeight {
@@ -84,42 +89,42 @@ final class ProgressService {
         }
 
         // Определяем, является ли это новым прогрессом
-        let isNewProgress = progress.pullUps == nil && progress.pushUps == nil &&
-            progress.squats == nil && progress.weight == nil
+        let isNewProgress = progressModel.pullUps == nil && progressModel.pushUps == nil &&
+            progressModel.squats == nil && progressModel.weight == nil
 
         // Проверяем, есть ли реальные изменения в данных
-        let currentPullUps = progress.pullUps.stringFromInt()
-        let currentPushUps = progress.pushUps.stringFromInt()
-        let currentSquats = progress.squats.stringFromInt()
-        let currentWeight = progress.weight.stringFromFloat()
+        let currentPullUps = progressModel.pullUps.stringFromInt()
+        let currentPushUps = progressModel.pushUps.stringFromInt()
+        let currentSquats = progressModel.squats.stringFromInt()
+        let currentWeight = progressModel.weight.stringFromFloat()
 
         let hasRealChanges = pullUps != currentPullUps || pushUps != currentPushUps ||
             squats != currentSquats || weight != currentWeight
 
         // Обновляем данные прогресса только если есть изменения
         if hasRealChanges {
-            progress.pullUps = pullUps.isEmpty ? nil : Int(pullUps)
-            progress.pushUps = pushUps.isEmpty ? nil : Int(pushUps)
-            progress.squats = squats.isEmpty ? nil : Int(squats)
-            progress.weight = weight.isEmpty ? nil : Float.fromUIString(weight)
+            progressModel.pullUps = pullUps.isEmpty ? nil : Int(pullUps)
+            progressModel.pushUps = pushUps.isEmpty ? nil : Int(pushUps)
+            progressModel.squats = squats.isEmpty ? nil : Int(squats)
+            progressModel.weight = weight.isEmpty ? nil : Float.fromUIString(weight)
 
             // Обновляем флаги синхронизации только при реальных изменениях
-            progress.isSynced = false
-            progress.shouldDelete = false
-            progress.lastModified = Date.now
+            progressModel.isSynced = false
+            progressModel.shouldDelete = false
+            progressModel.lastModified = Date.now
 
             logger.info("Данные прогресса обновлены для дня \(logId)")
         } else {
             // Данные не изменились - просто обновляем флаги синхронизации
-            progress.isSynced = true
-            progress.shouldDelete = false
+            progressModel.isSynced = true
+            progressModel.shouldDelete = false
             logger.info("Данные прогресса не изменились для дня \(logId) - помечаем как синхронизированные")
         }
 
         // Устанавливаем связь с пользователем, если она не установлена
-        if progress.user == nil {
+        if progressModel.user == nil {
             let user = try getCurrentUser(context: context)
-            progress.user = user
+            progressModel.user = user
             logger.info("Установлена связь прогресса с пользователем: \(user.id)")
         }
 
@@ -127,10 +132,10 @@ final class ProgressService {
         try context.save()
 
         // Предварительные ссылки для логирования
-        let logPullUps = progress.pullUps?.description ?? "nil"
-        let logPushUps = progress.pushUps?.description ?? "nil"
-        let logSquats = progress.squats?.description ?? "nil"
-        let logWeight = progress.weight?.description ?? "nil"
+        let logPullUps = progressModel.pullUps?.description ?? "nil"
+        let logPushUps = progressModel.pushUps?.description ?? "nil"
+        let logSquats = progressModel.squats?.description ?? "nil"
+        let logWeight = progressModel.weight?.description ?? "nil"
 
         logger
             .info(
@@ -149,18 +154,18 @@ final class ProgressService {
     /// - Parameter context: Контекст SwiftData
     func deleteProgress(context: ModelContext) throws {
         // Предварительная ссылка для логирования
-        let logId = progress.id
-        let logShouldDelete = progress.shouldDelete
+        let logId = progressModel.id
+        let logShouldDelete = progressModel.shouldDelete
         logger.info("Удаляем прогресс для дня \(logId), текущий shouldDelete: \(logShouldDelete)")
 
         // Мягкое удаление: помечаем для удаления
-        progress.shouldDelete = true
-        progress.isSynced = false
-        progress.lastModified = Date.now
+        progressModel.shouldDelete = true
+        progressModel.isSynced = false
+        progressModel.lastModified = Date.now
 
         try context.save()
 
-        let logNewShouldDelete = progress.shouldDelete
+        let logNewShouldDelete = progressModel.shouldDelete
         logger.info("Прогресс для дня \(logId) помечен для удаления, новый shouldDelete: \(logNewShouldDelete)")
         logger.info("Синхронизация удаления будет выполнена отдельно")
     }
@@ -171,10 +176,11 @@ final class ProgressService {
 
     /// Проверяет, можно ли сохранить прогресс
     var canSave: Bool {
-        // Проверяем, что есть хотя бы одно заполненное поле
-        let hasAnyData = [pullUps, pushUps, squats, weight].contains { !$0.isEmpty }
+        // Проверяем, что есть хотя бы одно заполненное поле или фото
+        let hasTextData = [pullUps, pushUps, squats, weight].contains { !$0.isEmpty }
+        let hasPhotoData = progressModel.hasAnyPhotoData
 
-        guard hasAnyData else {
+        guard hasTextData || hasPhotoData else {
             logger.debug("Нет данных для сохранения")
             return false
         }
@@ -201,10 +207,10 @@ final class ProgressService {
     /// Проверяет, есть ли изменения в данных
     var hasChanges: Bool {
         // Получаем оригинальные значения из progress, преобразуя 0 в пустые строки
-        let originalPullUps = progress.pullUps.stringFromInt()
-        let originalPushUps = progress.pushUps.stringFromInt()
-        let originalSquats = progress.squats.stringFromInt()
-        let originalWeight = progress.weight.stringFromFloat()
+        let originalPullUps = progressModel.pullUps.stringFromInt()
+        let originalPushUps = progressModel.pushUps.stringFromInt()
+        let originalSquats = progressModel.squats.stringFromInt()
+        let originalWeight = progressModel.weight.stringFromFloat()
 
         // Проверяем, является ли это новым прогрессом (все оригинальные значения пустые)
         let isNewProgress = originalPullUps.isEmpty && originalPushUps.isEmpty &&
@@ -307,10 +313,17 @@ extension ProgressService {
         }
 
         // Используем новые методы модели Progress
-        progress.setPhotoData(type, data: processedData)
+        progressModel.setPhotoData(type, data: processedData)
+
+        // Устанавливаем связь с пользователем, если она не установлена
+        if progressModel.user == nil {
+            let user = try getCurrentUser(context: context)
+            progressModel.user = user
+            logger.info("Установлена связь прогресса с пользователем: \(user.id)")
+        }
 
         try context.save()
-        let progressId = progress.id
+        let progressId = progressModel.id
         logger.info("\(type.localizedTitle) добавлена к прогрессу дня \(progressId)")
     }
 
@@ -319,11 +332,18 @@ extension ProgressService {
     ///   - type: Тип фотографии
     ///   - context: Контекст SwiftData для сохранения
     func deletePhoto(_ type: PhotoType, context: ModelContext) throws {
-        let dayNumber = progress.id
+        let dayNumber = progressModel.id
         logger.info("Удаляем фотографию \(type.localizedTitle) для прогресса дня \(dayNumber)")
 
         // Используем новые методы модели Progress
-        progress.deletePhotoData(type)
+        progressModel.deletePhotoData(type)
+
+        // Устанавливаем связь с пользователем, если она не установлена
+        if progressModel.user == nil {
+            let user = try getCurrentUser(context: context)
+            progressModel.user = user
+            logger.info("Установлена связь прогресса с пользователем: \(user.id)")
+        }
 
         try context.save()
         logger.info("Фотография \(type.localizedTitle) успешно удалена")

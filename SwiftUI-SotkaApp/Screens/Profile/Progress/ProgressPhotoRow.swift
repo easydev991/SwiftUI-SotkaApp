@@ -8,6 +8,17 @@ struct ProgressPhotoRow: View {
     let photoType: PhotoType
     let onPhotoTap: (Action) -> Void
 
+    private var isPhotoMarkedForDeletion: Bool {
+        switch photoType {
+        case .front:
+            progress.shouldDeletePhotoFront
+        case .back:
+            progress.shouldDeletePhotoBack
+        case .side:
+            progress.shouldDeletePhotoSide
+        }
+    }
+
     var body: some View {
         HStack(spacing: 12) {
             Text(photoType.localizedTitle)
@@ -29,7 +40,7 @@ struct ProgressPhotoRow: View {
                 Button("Pick from gallery") {
                     onPhotoTap(.library)
                 }
-                if progress.hasPhoto(photoType) {
+                if progress.hasPhoto(photoType), !isPhotoMarkedForDeletion {
                     Button(.commonDelete, role: .destructive) {
                         logger.info("Пользователь нажал кнопку удаления для \(photoType.localizedTitle)")
                         onPhotoTap(.delete(photoType))
@@ -70,9 +81,9 @@ private extension ProgressPhotoRow {
                 Image(uiImage: uiImage)
                     .resizable()
                     .scaledToFill()
-            } else if let urlString = progress.getPhotoURL(photoType) {
-                // Изображение с сервера (асинхронная загрузка)
-                AsyncImage(url: URL(string: urlString)) { phase in
+            } else if progress.getPhotoURL(photoType) != nil, !isPhotoMarkedForDeletion {
+                // Изображение с сервера (асинхронная загрузка) - только если не помечено для удаления
+                AsyncImage(url: URL(string: progress.getPhotoURL(photoType) ?? "")) { phase in
                     switch phase {
                     case .empty:
                         ProgressView()
@@ -89,7 +100,7 @@ private extension ProgressPhotoRow {
                     }
                 }
             } else {
-                // Нет изображения
+                // Нет изображения или помечено для удаления
                 Image(systemName: "photo")
                     .font(.title)
                     .frame(maxHeight: .infinity)

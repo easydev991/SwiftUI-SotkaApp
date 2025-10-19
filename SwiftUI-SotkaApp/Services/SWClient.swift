@@ -336,18 +336,32 @@ enum Endpoint {
                 "modify_date": progress.modifyDate
             ]
 
-            let mediaFiles: [BodyMaker.MediaFile]? = if let photos = progress.photos, !photos.isEmpty {
-                photos.compactMap { key, data -> BodyMaker.MediaFile? in
-                    guard !data.isEmpty else { return nil }
-                    return BodyMaker.MediaFile(
+            // Пустые медиа-файлы для удаления фото добавляются ниже
+            // Создаем медиа-файлы для отправки фото
+            var mediaFiles: [BodyMaker.MediaFile] = []
+
+            if let photos = progress.photos, !photos.isEmpty {
+                for (key, data) in photos {
+                    guard !data.isEmpty else { continue }
+                    mediaFiles.append(BodyMaker.MediaFile(
                         key: key,
                         filename: "\(UUID().uuidString).jpg",
                         data: data,
                         mimeType: "image/jpeg"
-                    )
+                    ))
                 }
-            } else {
-                nil
+            }
+
+            // Добавляем пустые медиа-файлы для фото, помеченных для удаления
+            if let photosToDelete = progress.photosToDelete {
+                for photoKey in photosToDelete {
+                    mediaFiles.append(BodyMaker.MediaFile(
+                        key: photoKey,
+                        filename: "\(UUID().uuidString).jpg",
+                        data: Data(), // Пустые данные для удаления
+                        mimeType: "image/jpeg"
+                    ))
+                }
             }
 
             return .init(parameters, mediaFiles)

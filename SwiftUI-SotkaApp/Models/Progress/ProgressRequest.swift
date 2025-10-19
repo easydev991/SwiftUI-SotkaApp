@@ -16,6 +16,8 @@ struct ProgressRequest: Codable, Sendable {
     let modifyDate: String
     /// Фотографии для отправки (используется локально, не сериализуется в JSON)
     let photos: [String: Data]?
+    /// Фотографии для удаления (используется локально, не сериализуется в JSON)
+    let photosToDelete: [String]?
 
     /// Инициализатор для создания нового прогресса
     init(
@@ -25,7 +27,8 @@ struct ProgressRequest: Codable, Sendable {
         squats: Int? = nil,
         weight: Float? = nil,
         modifyDate: String,
-        photos: [String: Data]? = nil
+        photos: [String: Data]? = nil,
+        photosToDelete: [String]? = nil
     ) {
         self.id = id
         self.pullups = pullups
@@ -34,5 +37,6 @@ struct ProgressRequest: Codable, Sendable {
         self.weight = weight
         self.modifyDate = modifyDate
         self.photos = photos
+        self.photosToDelete = photosToDelete
     }
 }
