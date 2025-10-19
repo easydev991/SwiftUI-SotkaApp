@@ -365,10 +365,20 @@ private extension ProgressSyncService {
 
                 // Используем единый подход: всегда пытаемся обновить/создать через updateProgress
                 // Сервер сам разберется и применит LWW логику
+                logger.info("Отправляем данные на сервер: внутренний день \(snapshot.id), внешний день \(externalDay)")
                 let response = try await client.updateProgress(day: externalDay, progress: request)
+                logger
+                    .info(
+                        "Получен ответ сервера: id=\(response.id), pullups=\(response.pullups ?? 0), pushups=\(response.pushups ?? 0), squats=\(response.squats ?? 0), weight=\(response.weight ?? 0.0)"
+                    )
                 return .createdOrUpdated(id: snapshot.id, server: response)
             }
         } catch {
+            let externalDay = Progress.getExternalDayFromProgressId(snapshot.id)
+            logger.error("Ошибка синхронизации прогресса дня \(snapshot.id) (внешний день \(externalDay)): \(error.localizedDescription)")
+            if let decodingError = error as? DecodingError {
+                logger.error("Детали ошибки декодирования: \(decodingError)")
+            }
             return .failed(id: snapshot.id, errorDescription: error.localizedDescription)
         }
     }

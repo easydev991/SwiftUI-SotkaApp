@@ -147,17 +147,39 @@ struct MockProgressClient: ProgressClient {
                     weight: 70.0,
                     createDate: "2025-01-01 12:00:00",
                     modifyDate: "2025-01-01 12:00:00"
-                ),
-                .init(
-                    id: 50,
-                    pullups: 15,
-                    pushups: 25,
-                    squats: 35,
-                    weight: 72.0,
-                    createDate: "2025-01-02 12:00:00",
-                    modifyDate: "2025-01-02 12:00:00"
                 )
             ]
+        case .failure:
+            print("Ошибка получения списка прогресса")
+            throw NSError(domain: "MockProgressClient", code: 1, userInfo: [NSLocalizedDescriptionKey: "Имитированная ошибка"])
+        }
+    }
+
+    func getProgress(day: Int) async throws -> ProgressResponse {
+        print("Имитируем запрос getProgress для дня \(day)")
+        try await Task.sleep(for: .seconds(0.5))
+        switch result {
+        case .success:
+            print("Успешно получили прогресс для дня \(day)")
+            // Имитируем случай, когда день найден
+            if day == 1 || day == 49 || day == 100 {
+                return .init(
+                    id: day,
+                    pullups: 10,
+                    pushups: 20,
+                    squats: 30,
+                    weight: 70.0,
+                    createDate: "2025-01-01 12:00:00",
+                    modifyDate: "2025-01-01 12:00:00"
+                )
+            } else {
+                // День не найден - имитируем ошибку прогресса не найден
+                throw NSError(
+                    domain: "MockProgressClient",
+                    code: 404,
+                    userInfo: [NSLocalizedDescriptionKey: "Progress not found for day \(day)"]
+                )
+            }
         case let .failure(error):
             throw error
         }

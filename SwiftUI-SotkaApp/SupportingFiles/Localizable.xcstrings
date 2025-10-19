@@ -2425,6 +2425,24 @@
         }
       }
     },
+    "Progress.Error.NotFound %lld" : {
+      "comment" : "Error message when progress for a specific day is not found",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Progress for day %lld not found"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Прогресс за день %lld не найден"
+          }
+        }
+      }
+    },
     "Pull-ups" : {
       "localizations" : {
         "ru" : {

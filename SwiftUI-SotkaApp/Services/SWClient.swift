@@ -107,6 +107,17 @@ extension SWClient: ProgressClient {
         return try await makeResult(for: endpoint)
     }
 
+    func getProgress(day: Int) async throws -> ProgressResponse {
+        let endpoint = Endpoint.getProgressDay(day: day)
+        do {
+            return try await makeResult(for: endpoint)
+        } catch APIError.notFound {
+            throw ClientError.progressNotFound(day: day)
+        } catch {
+            throw error
+        }
+    }
+
     func createProgress(progress: ProgressRequest) async throws -> ProgressResponse {
         let endpoint = Endpoint.createProgress(progress)
         return try await makeResult(for: endpoint)
@@ -126,11 +137,13 @@ extension SWClient: ProgressClient {
 enum ClientError: Error, LocalizedError {
     case forceLogout
     case noConnection
+    case progressNotFound(day: Int)
 
     var errorDescription: String? {
         switch self {
         case .forceLogout: String(localized: .errorForceLogout)
         case .noConnection: String(localized: .errorNoConnection)
+        case let .progressNotFound(day): String(localized: "Progress.Error.NotFound \(day)")
         }
     }
 }
@@ -197,6 +210,10 @@ enum Endpoint {
     /// **GET** ${API}/100/progress
     case getProgress
 
+    // MARK: Получить прогресс для конкретного дня
+    /// **GET** ${API}/100/progress/<day>
+    case getProgressDay(day: Int)
+
     // MARK: Создать новый прогресс
     /// **POST** ${API}/100/progress
     case createProgress(_ progress: ProgressRequest)
@@ -226,6 +243,7 @@ enum Endpoint {
         case let .setPostRead(day): "/100/posts/read/\(day)"
         case .deleteAllReadPosts: "/100/posts/read"
         case .getProgress: "/100/progress"
+        case let .getProgressDay(day): "/100/progress/\(day)"
         case .createProgress: "/100/progress"
         case let .updateProgress(day, _): "/100/progress/\(day)"
         case let .deleteProgress(day): "/100/progress/\(day)"
@@ -236,6 +254,7 @@ enum Endpoint {
         switch self {
         case .login, .resetPassword, .editUser, .changePassword, .start, .saveCustomExercise, .setPostRead, .createProgress,
              .updateProgress: .post
+        case .getProgressDay: .get
         case .getUser, .getCountries, .current, .getCustomExercises, .getReadPosts, .getProgress: .get
         case .deleteCustomExercise, .deleteAllReadPosts, .deleteProgress: .delete
         }
@@ -244,6 +263,7 @@ enum Endpoint {
     var hasMultipartFormData: Bool {
         switch self {
         case .editUser, .createProgress, .updateProgress: true
+        case .getProgressDay: false
         case .login, .getUser, .resetPassword, .getCountries, .changePassword, .start, .current, .getCustomExercises, .saveCustomExercise,
              .deleteCustomExercise, .getReadPosts, .setPostRead, .deleteAllReadPosts, .getProgress, .deleteProgress: false
         }
@@ -252,7 +272,8 @@ enum Endpoint {
     var queryItems: [URLQueryItem] {
         switch self {
         case .login, .getUser, .resetPassword, .getCountries, .editUser, .changePassword, .start, .current, .getCustomExercises,
-             .saveCustomExercise, .deleteCustomExercise, .getReadPosts, .setPostRead, .deleteAllReadPosts, .getProgress, .createProgress,
+             .saveCustomExercise, .deleteCustomExercise, .getReadPosts, .setPostRead, .deleteAllReadPosts, .getProgress, .getProgressDay,
+             .createProgress,
              .updateProgress, .deleteProgress: []
         }
     }
@@ -260,7 +281,7 @@ enum Endpoint {
     var bodyParts: BodyMaker.Parts? {
         switch self {
         case .login, .getUser, .getCountries, .current, .getCustomExercises, .deleteCustomExercise, .getReadPosts, .setPostRead,
-             .deleteAllReadPosts, .getProgress, .deleteProgress:
+             .deleteAllReadPosts, .getProgress, .getProgressDay, .deleteProgress:
             return nil
         case let .editUser(_, form):
             let parameters: [String: String] = [

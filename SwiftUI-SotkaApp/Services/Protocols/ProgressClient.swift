@@ -5,6 +5,9 @@ protocol ProgressClient: Sendable {
     /// Получить список прогресса пользователя
     func getProgress() async throws -> [ProgressResponse]
 
+    /// Получить прогресс для конкретного дня
+    func getProgress(day: Int) async throws -> ProgressResponse
+
     /// Создать новый прогресс (день передается в body)
     func createProgress(progress: ProgressRequest) async throws -> ProgressResponse
 
