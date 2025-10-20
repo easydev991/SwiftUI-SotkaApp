@@ -14,9 +14,23 @@
   "testTargets" : [
     {
       "target" : {
+        "containerPath" : "container:SwiftUI-SotkaApp\/Libraries\/SWKeychain",
+        "identifier" : "SWKeychainTests",
+        "name" : "SWKeychainTests"
+      }
+    },
+    {
+      "target" : {
         "containerPath" : "container:SwiftUI-SotkaApp\/Libraries\/SWUtils",
         "identifier" : "SWUtilsTests",
         "name" : "SWUtilsTests"
+      }
+    },
+    {
+      "target" : {
+        "containerPath" : "container:SwiftUI-SotkaApp\/Libraries\/SWNetwork",
+        "identifier" : "SWNetworkTests",
+        "name" : "SWNetworkTests"
       }
     },
     {
@@ -28,16 +42,9 @@
     },
     {
       "target" : {
-        "containerPath" : "container:SwiftUI-SotkaApp\/Libraries\/SWKeychain",
-        "identifier" : "SWKeychainTests",
-        "name" : "SWKeychainTests"
-      }
-    },
-    {
-      "target" : {
-        "containerPath" : "container:SwiftUI-SotkaApp\/Libraries\/SWNetwork",
-        "identifier" : "SWNetworkTests",
-        "name" : "SWNetworkTests"
+        "containerPath" : "container:SwiftUI-SotkaApp\/Libraries\/CachedAsyncImage",
+        "identifier" : "CachedAsyncImageTests",
+        "name" : "CachedAsyncImageTests"
       }
     }
   ],
