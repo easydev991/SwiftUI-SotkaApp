@@ -9,14 +9,7 @@ struct ProgressPhotoRow: View {
     let onPhotoTap: (Action) -> Void
 
     private var isPhotoMarkedForDeletion: Bool {
-        switch photoType {
-        case .front:
-            progress.shouldDeletePhotoFront
-        case .back:
-            progress.shouldDeletePhotoBack
-        case .side:
-            progress.shouldDeletePhotoSide
-        }
+        progress.shouldDeletePhoto(photoType)
     }
 
     var body: some View {

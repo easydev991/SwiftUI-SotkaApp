@@ -47,11 +47,6 @@ final class Progress {
     /// Локальные данные изображения сбоку (кэш)
     var dataPhotoSide: Data?
 
-    /// Флаги пометки фото для удаления с сервера
-    var shouldDeletePhotoFront = false
-    var shouldDeletePhotoBack = false
-    var shouldDeletePhotoSide = false
-
     init(
         id: Int,
         pullUps: Int? = nil,
@@ -64,9 +59,6 @@ final class Progress {
         dataPhotoFront: Data? = nil,
         dataPhotoBack: Data? = nil,
         dataPhotoSide: Data? = nil,
-        shouldDeletePhotoFront: Bool = false,
-        shouldDeletePhotoBack: Bool = false,
-        shouldDeletePhotoSide: Bool = false,
         lastModified: Date = .now
     ) {
         self.id = id
@@ -80,9 +72,6 @@ final class Progress {
         self.dataPhotoBack = dataPhotoBack
         self.dataPhotoSide = dataPhotoSide
         self.dataPhotoFront = dataPhotoFront
-        self.shouldDeletePhotoFront = shouldDeletePhotoFront
-        self.shouldDeletePhotoBack = shouldDeletePhotoBack
-        self.shouldDeletePhotoSide = shouldDeletePhotoSide
         self.lastModified = lastModified
     }
 
@@ -266,13 +255,10 @@ extension Progress {
         switch type {
         case .front:
             dataPhotoFront = data
-            shouldDeletePhotoFront = false // Сбрасываем флаг удаления при добавлении нового фото
         case .back:
             dataPhotoBack = data
-            shouldDeletePhotoBack = false // Сбрасываем флаг удаления при добавлении нового фото
         case .side:
             dataPhotoSide = data
-            shouldDeletePhotoSide = false // Сбрасываем флаг удаления при добавлении нового фото
         }
         lastModified = Date()
         isSynced = false
@@ -290,7 +276,7 @@ extension Progress {
         case .side:
             dataPhotoSide
         }
-        return data == DELETED_DATA ? nil : data
+        return data == Progress.DELETED_DATA ? nil : data
     }
 
     /// Проверяет, есть ли локальные данные изображения указанного типа
@@ -302,17 +288,14 @@ extension Progress {
     func deletePhotoData(_ type: PhotoType) {
         switch type {
         case .front:
-            dataPhotoFront = DELETED_DATA
+            dataPhotoFront = Progress.DELETED_DATA
             urlPhotoFront = nil
-            shouldDeletePhotoFront = true
         case .back:
-            dataPhotoBack = DELETED_DATA
+            dataPhotoBack = Progress.DELETED_DATA
             urlPhotoBack = nil
-            shouldDeletePhotoBack = true
         case .side:
-            dataPhotoSide = DELETED_DATA
+            dataPhotoSide = Progress.DELETED_DATA
             urlPhotoSide = nil
-            shouldDeletePhotoSide = true
         }
         lastModified = Date()
         isSynced = false
@@ -349,13 +332,6 @@ extension Progress {
         } ?? DateFormatterService.dateFromString(response.createDate, format: .serverDateTimeSec)
     }
 
-    /// Сбрасывает флаги удаления фото после успешной синхронизации
-    func resetPhotoDeletionFlags() {
-        shouldDeletePhotoFront = false
-        shouldDeletePhotoBack = false
-        shouldDeletePhotoSide = false
-    }
-
     /// Проверяет, нужно ли удалить фотографию определенного типа
     func shouldDeletePhoto(_ type: PhotoType) -> Bool {
         let data: Data? = switch type {
@@ -363,7 +339,7 @@ extension Progress {
         case .back: dataPhotoBack
         case .side: dataPhotoSide
         }
-        return data == DELETED_DATA
+        return data == Progress.DELETED_DATA
     }
 
     /// Проверяет, есть ли фотографии для удаления
@@ -379,15 +355,12 @@ extension Progress {
         case .front:
             dataPhotoFront = nil
             urlPhotoFront = nil
-            shouldDeletePhotoFront = false
         case .back:
             dataPhotoBack = nil
             urlPhotoBack = nil
-            shouldDeletePhotoBack = false
         case .side:
             dataPhotoSide = nil
             urlPhotoSide = nil
-            shouldDeletePhotoSide = false
         }
         lastModified = Date()
         // isSynced устанавливается в handlePhotoDeletion после обработки всех фотографий
@@ -416,4 +389,10 @@ extension Progress {
             urlPhotoSide
         }
     }
+}
+
+// MARK: - Constants
+extension Progress {
+    /// Константа для пометки удаленных фотографий (точно как в старом приложении)
+    static let DELETED_DATA = Data([0x64]) // Только байт "d"
 }
