@@ -235,6 +235,17 @@ struct MockProgressClient: ProgressClient {
             throw error
         }
     }
+
+    func deletePhoto(day: Int, type: String) async throws {
+        print("Имитируем запрос deletePhoto (day=\(day), type=\(type))")
+        try await Task.sleep(for: .seconds(1))
+        switch result {
+        case .success:
+            print("Успешно удалили фотографию")
+        case let .failure(error):
+            throw error
+        }
+    }
 }
 
 struct MockInfopostsClient: InfopostsClient {

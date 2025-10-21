@@ -422,4 +422,10 @@ private class MockProgressClient: ProgressClient {
             throw NSError(domain: "TestError", code: 1, userInfo: [NSLocalizedDescriptionKey: "Test error"])
         }
     }
+
+    func deletePhoto(day _: Int, type _: String) async throws {
+        if shouldThrowError {
+            throw NSError(domain: "TestError", code: 1, userInfo: [NSLocalizedDescriptionKey: "Test error"])
+        }
+    }
 }

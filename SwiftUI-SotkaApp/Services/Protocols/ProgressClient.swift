@@ -16,4 +16,7 @@ protocol ProgressClient: Sendable {
 
     /// Удалить прогресс для конкретного дня
     func deleteProgress(day: Int) async throws
+
+    /// Удалить фотографию определенного типа для конкретного дня
+    func deletePhoto(day: Int, type: String) async throws
 }

@@ -234,6 +234,33 @@ private extension ProgressSyncService {
         let shouldDeletePhotoBack: Bool
         let shouldDeletePhotoSide: Bool
 
+        /// Проверяет, есть ли фотографии для удаления
+        var shouldDeletePhoto: Bool {
+            shouldDeletePhotoFront || shouldDeletePhotoBack || shouldDeletePhotoSide
+        }
+
+        /// Создает словарь фотографий для отправки на сервер (только не удаленные)
+        var photosForUpload: [String: Data] {
+            var photos: [String: Data] = [:]
+
+            // Обрабатываем фронтальную фотографию (только если не помечена для удаления)
+            if let data = dataPhotoFront, !shouldDeletePhotoFront {
+                photos["photo_front"] = data
+            }
+
+            // Обрабатываем заднюю фотографию (только если не помечена для удаления)
+            if let data = dataPhotoBack, !shouldDeletePhotoBack {
+                photos["photo_back"] = data
+            }
+
+            // Обрабатываем боковую фотографию (только если не помечена для удаления)
+            if let data = dataPhotoSide, !shouldDeletePhotoSide {
+                photos["photo_side"] = data
+            }
+
+            return photos
+        }
+
         /// Создает ProgressSnapshot из Progress модели
         init(from progress: Progress) {
             self.id = progress.id
@@ -260,8 +287,11 @@ private extension ProgressSyncService {
     /// Результат конкурентной операции синхронизации одного прогресса
     enum SyncEvent: Sendable, Hashable {
         case createdOrUpdated(id: Int, server: ProgressResponse)
-        case alreadyExists(id: Int) // Локальная запись уже существует на сервере
+        /// Локальная запись уже существует на сервере
+        case alreadyExists(id: Int)
         case deleted(id: Int)
+        /// Требуется удаление фотографий
+        case needsPhotoDeletion(id: Int)
         case failed(id: Int, errorDescription: String)
     }
 
@@ -364,35 +394,15 @@ private extension ProgressSyncService {
                     return .alreadyExists(id: snapshot.id)
                 }
             } else {
-                // Собираем данные фотографий для отправки на сервер
-                var photos: [String: Data] = [:]
-                var photosToDelete: [String] = []
-
-                // Обрабатываем фронтальную фотографию
-                if let data = snapshot.dataPhotoFront {
-                    photos["photo_front"] = data
-                } else if snapshot.shouldDeletePhotoFront {
-                    // Фотография помечена для удаления - добавляем в список для удаления
-                    photosToDelete.append("photo_front")
+                if snapshot.shouldDeletePhoto {
+                    // Есть фотографии для удаления - возвращаем специальный статус для последовательной обработки
+                    return .needsPhotoDeletion(id: snapshot.id)
                 }
 
-                // Обрабатываем заднюю фотографию
-                if let data = snapshot.dataPhotoBack {
-                    photos["photo_back"] = data
-                } else if snapshot.shouldDeletePhotoBack {
-                    // Фотография помечена для удаления - добавляем в список для удаления
-                    photosToDelete.append("photo_back")
-                }
+                // Собираем данные фотографий для отправки на сервер (только не удаленные)
+                let photos = snapshot.photosForUpload
 
-                // Обрабатываем боковую фотографию
-                if let data = snapshot.dataPhotoSide {
-                    photos["photo_side"] = data
-                } else if snapshot.shouldDeletePhotoSide {
-                    // Фотография помечена для удаления - добавляем в список для удаления
-                    photosToDelete.append("photo_side")
-                }
-
-                // Создаем запрос с данными фотографий
+                // Создаем запрос с данными фотографий (без photosToDelete)
                 let request = ProgressRequest(
                     id: externalDay,
                     pullups: snapshot.pullups,
@@ -401,12 +411,12 @@ private extension ProgressSyncService {
                     weight: snapshot.weight,
                     modifyDate: DateFormatterService.stringFromFullDate(snapshot.lastModified, format: .isoDateTimeSec),
                     photos: photos.isEmpty ? nil : photos,
-                    photosToDelete: photosToDelete.isEmpty ? nil : photosToDelete
+                    photosToDelete: nil // Убираем photosToDelete - будем обрабатывать отдельно
                 )
 
                 logger
                     .info(
-                        "Отправляем прогресс дня \(externalDay) с фотографиями: для отправки=\(photos.keys.count), для удаления=\(photosToDelete.count)"
+                        "Отправляем прогресс дня \(externalDay) с фотографиями: для отправки=\(photos.keys.count)"
                     )
 
                 // Используем единый подход: всегда пытаемся обновить/создать через updateProgress
@@ -470,6 +480,11 @@ private extension ProgressSyncService {
                         context.delete(local)
                     } else {
                         logger.debug("Удаление: локальный прогресс дня \(id) не найден")
+                    }
+                case .needsPhotoDeletion:
+                    // Обрабатываем удаление фотографий последовательно
+                    if let local = dict[id] {
+                        await handlePhotoDeletion(local, context: context)
                     }
                 case let .failed(id, errorDescription):
                     logger.error("Ошибка синхронизации прогресса дня \(id): \(errorDescription)")
@@ -612,5 +627,50 @@ private extension ProgressSyncService {
 
         progress.isSynced = true
         logger.info("Прогресс дня \(progress.id) обновлен из ответа сервера")
+    }
+
+    /// Обрабатывает удаление фотографий последовательно (как в старом приложении)
+    private func handlePhotoDeletion(_ progress: Progress, context: ModelContext) async {
+        logger.info("Начинаем последовательное удаление фотографий для дня \(progress.id)")
+
+        var hasErrors = false
+
+        // Проверяем каждую фотографию и удаляем по одной
+        for photoType in PhotoType.allCases {
+            if progress.shouldDeletePhoto(photoType) {
+                do {
+                    let externalDay = Progress.getExternalDayFromProgressId(progress.id)
+                    try await client.deletePhoto(day: externalDay, type: photoType.deleteRequestName)
+
+                    // Очищаем данные фотографии после успешного удаления
+                    progress.clearPhotoData(photoType)
+
+                    logger.info("Фотография \(photoType.localizedTitle) успешно удалена с сервера для дня \(progress.id)")
+                } catch {
+                    logger
+                        .error(
+                            "Ошибка удаления фотографии \(photoType.localizedTitle) для дня \(progress.id): \(error.localizedDescription)"
+                        )
+                    hasErrors = true
+                    // Продолжаем с другими фотографиями даже при ошибке
+                }
+            }
+        }
+
+        // После обработки всех фотографий
+        progress.shouldDelete = false
+        progress.resetPhotoDeletionFlags()
+
+        // Помечаем как синхронизированный только если не было ошибок
+        if !hasErrors {
+            progress.isSynced = true
+        }
+
+        do {
+            try context.save()
+            logger.info("Последовательное удаление фотографий для дня \(progress.id) завершено")
+        } catch {
+            logger.error("Ошибка сохранения контекста после удаления фотографий: \(error.localizedDescription)")
+        }
     }
 }

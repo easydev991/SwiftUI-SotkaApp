@@ -19,4 +19,13 @@ enum PhotoType: Int, Codable, CaseIterable {
             NSLocalizedString("PhotoType.side", comment: "Фото сбоку")
         }
     }
+
+    /// Название типа для DELETE запроса
+    var deleteRequestName: String {
+        switch self {
+        case .front: "front"
+        case .back: "back"
+        case .side: "side"
+        }
+    }
 }

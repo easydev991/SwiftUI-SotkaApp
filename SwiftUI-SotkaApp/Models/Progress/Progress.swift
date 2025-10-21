@@ -6,6 +6,11 @@ import SWUtils
 
 private let logger = Logger(subsystem: "SotkaApp", category: "Progress")
 
+/// Константа для пометки удаленных фотографий
+///
+/// Только байт "d", как в старом приложении
+private let DELETED_DATA = Data([0x64])
+
 /// Прогресс пользователя
 @Model
 final class Progress {
@@ -274,8 +279,10 @@ extension Progress {
     }
 
     /// Получает данные изображения указанного типа (новая архитектура)
+    ///
+    /// Возвращает nil для удаленных данных (DELETED_DATA)
     func getPhotoData(_ type: PhotoType) -> Data? {
-        switch type {
+        let data: Data? = switch type {
         case .front:
             dataPhotoFront
         case .back:
@@ -283,6 +290,7 @@ extension Progress {
         case .side:
             dataPhotoSide
         }
+        return data == DELETED_DATA ? nil : data
     }
 
     /// Проверяет, есть ли локальные данные изображения указанного типа
@@ -294,15 +302,15 @@ extension Progress {
     func deletePhotoData(_ type: PhotoType) {
         switch type {
         case .front:
-            dataPhotoFront = nil
+            dataPhotoFront = DELETED_DATA
             urlPhotoFront = nil
             shouldDeletePhotoFront = true
         case .back:
-            dataPhotoBack = nil
+            dataPhotoBack = DELETED_DATA
             urlPhotoBack = nil
             shouldDeletePhotoBack = true
         case .side:
-            dataPhotoSide = nil
+            dataPhotoSide = DELETED_DATA
             urlPhotoSide = nil
             shouldDeletePhotoSide = true
         }
@@ -321,7 +329,8 @@ extension Progress {
     }
 
     /// Проверяет, является ли прогресс "пустым" (нет значимых данных)
-    /// Возвращает true, если все показатели равны нулю или отсутствуют, и нет фотографий
+    ///
+    /// Возвращает `true`, если все показатели равны нулю или отсутствуют, и нет фотографий
     var isEmpty: Bool {
         !hasAnyData && !hasAnyPhotoDataIncludingURLs
     }
@@ -332,7 +341,8 @@ extension Progress {
     }
 
     /// Устанавливает lastModified в соответствии с серверным временем (как в Android)
-    /// Если modify_date равен null, используем create_date
+    ///
+    /// Если `modify_date` равен `nil`, используем `create_date`
     func updateLastModified(from response: ProgressResponse) {
         lastModified = response.modifyDate.flatMap {
             DateFormatterService.dateFromString($0, format: .serverDateTimeSec)
@@ -344,6 +354,43 @@ extension Progress {
         shouldDeletePhotoFront = false
         shouldDeletePhotoBack = false
         shouldDeletePhotoSide = false
+    }
+
+    /// Проверяет, нужно ли удалить фотографию определенного типа
+    func shouldDeletePhoto(_ type: PhotoType) -> Bool {
+        let data: Data? = switch type {
+        case .front: dataPhotoFront
+        case .back: dataPhotoBack
+        case .side: dataPhotoSide
+        }
+        return data == DELETED_DATA
+    }
+
+    /// Проверяет, есть ли фотографии для удаления
+    func hasPhotosToDelete() -> Bool {
+        shouldDeletePhoto(.front) ||
+            shouldDeletePhoto(.back) ||
+            shouldDeletePhoto(.side)
+    }
+
+    /// Очищает данные фотографии после успешного удаления
+    func clearPhotoData(_ type: PhotoType) {
+        switch type {
+        case .front:
+            dataPhotoFront = nil
+            urlPhotoFront = nil
+            shouldDeletePhotoFront = false
+        case .back:
+            dataPhotoBack = nil
+            urlPhotoBack = nil
+            shouldDeletePhotoBack = false
+        case .side:
+            dataPhotoSide = nil
+            urlPhotoSide = nil
+            shouldDeletePhotoSide = false
+        }
+        lastModified = Date()
+        // isSynced устанавливается в handlePhotoDeletion после обработки всех фотографий
     }
 
     /// Проверяет, есть ли фотография указанного типа (URL или данные)

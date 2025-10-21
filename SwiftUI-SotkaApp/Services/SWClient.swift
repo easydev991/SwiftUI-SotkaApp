@@ -132,6 +132,11 @@ extension SWClient: ProgressClient {
         let endpoint = Endpoint.deleteProgress(day: day)
         try await makeStatus(for: endpoint)
     }
+
+    func deletePhoto(day: Int, type: String) async throws {
+        let endpoint = Endpoint.deleteProgressPhoto(day: day, type: type)
+        try await makeStatus(for: endpoint)
+    }
 }
 
 enum ClientError: Error, LocalizedError {
@@ -226,6 +231,10 @@ enum Endpoint {
     /// **DELETE** ${API}/100/progress/<day>
     case deleteProgress(day: Int)
 
+    // MARK: Удалить фотографию прогресса для конкретного дня
+    /// **DELETE** ${API}/100/progress/<day>/photos/<type>
+    case deleteProgressPhoto(day: Int, type: String)
+
     var urlPath: String {
         switch self {
         case .getCountries: "/countries"
@@ -247,6 +256,7 @@ enum Endpoint {
         case .createProgress: "/100/progress"
         case let .updateProgress(day, _): "/100/progress/\(day)"
         case let .deleteProgress(day): "/100/progress/\(day)"
+        case let .deleteProgressPhoto(day, type): "/100/progress/\(day)/photos/\(type)"
         }
     }
 
@@ -256,7 +266,7 @@ enum Endpoint {
              .updateProgress: .post
         case .getProgressDay: .get
         case .getUser, .getCountries, .current, .getCustomExercises, .getReadPosts, .getProgress: .get
-        case .deleteCustomExercise, .deleteAllReadPosts, .deleteProgress: .delete
+        case .deleteCustomExercise, .deleteAllReadPosts, .deleteProgress, .deleteProgressPhoto: .delete
         }
     }
 
@@ -265,7 +275,8 @@ enum Endpoint {
         case .editUser, .createProgress, .updateProgress: true
         case .getProgressDay: false
         case .login, .getUser, .resetPassword, .getCountries, .changePassword, .start, .current, .getCustomExercises, .saveCustomExercise,
-             .deleteCustomExercise, .getReadPosts, .setPostRead, .deleteAllReadPosts, .getProgress, .deleteProgress: false
+             .deleteCustomExercise, .getReadPosts, .setPostRead, .deleteAllReadPosts, .getProgress, .deleteProgress,
+             .deleteProgressPhoto: false
         }
     }
 
@@ -274,14 +285,14 @@ enum Endpoint {
         case .login, .getUser, .resetPassword, .getCountries, .editUser, .changePassword, .start, .current, .getCustomExercises,
              .saveCustomExercise, .deleteCustomExercise, .getReadPosts, .setPostRead, .deleteAllReadPosts, .getProgress, .getProgressDay,
              .createProgress,
-             .updateProgress, .deleteProgress: []
+             .updateProgress, .deleteProgress, .deleteProgressPhoto: []
         }
     }
 
     var bodyParts: BodyMaker.Parts? {
         switch self {
         case .login, .getUser, .getCountries, .current, .getCustomExercises, .deleteCustomExercise, .getReadPosts, .setPostRead,
-             .deleteAllReadPosts, .getProgress, .getProgressDay, .deleteProgress:
+             .deleteAllReadPosts, .getProgress, .getProgressDay, .deleteProgress, .deleteProgressPhoto:
             return nil
         case let .editUser(_, form):
             let parameters: [String: String] = [

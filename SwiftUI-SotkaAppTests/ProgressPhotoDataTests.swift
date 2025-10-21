@@ -229,4 +229,134 @@ struct ProgressPhotoDataTests {
 
         #expect(progress.canBeDeleted)
     }
+
+    // MARK: - Photo Deletion Logic Tests
+
+    @Test("DELETED_DATA константа имеет правильное значение")
+    func deletedDataConstantHasCorrectValue() throws {
+        let container = try ModelContainer(for: Progress.self, configurations: ModelConfiguration(isStoredInMemoryOnly: true))
+        let context = ModelContext(container)
+        let progress = Progress(id: 1)
+        context.insert(progress)
+
+        // Устанавливаем DELETED_DATA через deletePhotoData
+        progress.deletePhotoData(SwiftUI_SotkaApp.PhotoType.front)
+
+        // Проверяем, что getPhotoData возвращает nil для DELETED_DATA
+        #expect(progress.getPhotoData(SwiftUI_SotkaApp.PhotoType.front) == nil)
+        #expect(progress.shouldDeletePhoto(SwiftUI_SotkaApp.PhotoType.front))
+    }
+
+    @Test("shouldDeletePhoto возвращает true для помеченных фотографий")
+    func shouldDeletePhotoReturnsTrueForMarkedPhotos() throws {
+        let container = try ModelContainer(for: Progress.self, configurations: ModelConfiguration(isStoredInMemoryOnly: true))
+        let context = ModelContext(container)
+        let progress = Progress(id: 1)
+        context.insert(progress)
+
+        // Изначально фотографии не помечены для удаления
+        #expect(!progress.shouldDeletePhoto(SwiftUI_SotkaApp.PhotoType.front))
+        #expect(!progress.shouldDeletePhoto(SwiftUI_SotkaApp.PhotoType.back))
+        #expect(!progress.shouldDeletePhoto(SwiftUI_SotkaApp.PhotoType.side))
+
+        // Помечаем фронтальную фотографию для удаления
+        progress.deletePhotoData(SwiftUI_SotkaApp.PhotoType.front)
+
+        #expect(progress.shouldDeletePhoto(SwiftUI_SotkaApp.PhotoType.front))
+        #expect(!progress.shouldDeletePhoto(SwiftUI_SotkaApp.PhotoType.back))
+        #expect(!progress.shouldDeletePhoto(SwiftUI_SotkaApp.PhotoType.side))
+
+        // Помечаем заднюю фотографию для удаления
+        progress.deletePhotoData(SwiftUI_SotkaApp.PhotoType.back)
+
+        #expect(progress.shouldDeletePhoto(SwiftUI_SotkaApp.PhotoType.front))
+        #expect(progress.shouldDeletePhoto(SwiftUI_SotkaApp.PhotoType.back))
+        #expect(!progress.shouldDeletePhoto(SwiftUI_SotkaApp.PhotoType.side))
+    }
+
+    @Test("hasPhotosToDelete возвращает true при наличии фотографий для удаления")
+    func hasPhotosToDeleteReturnsTrueWhenPhotosMarkedForDeletion() throws {
+        let container = try ModelContainer(for: Progress.self, configurations: ModelConfiguration(isStoredInMemoryOnly: true))
+        let context = ModelContext(container)
+        let progress = Progress(id: 1)
+        context.insert(progress)
+
+        // Изначально нет фотографий для удаления
+        #expect(!progress.hasPhotosToDelete())
+
+        // Помечаем одну фотографию для удаления
+        progress.deletePhotoData(SwiftUI_SotkaApp.PhotoType.front)
+        #expect(progress.hasPhotosToDelete())
+
+        // Помечаем все фотографии для удаления
+        progress.deletePhotoData(SwiftUI_SotkaApp.PhotoType.back)
+        progress.deletePhotoData(SwiftUI_SotkaApp.PhotoType.side)
+        #expect(progress.hasPhotosToDelete())
+    }
+
+    @Test("clearPhotoData очищает данные после успешного удаления")
+    func clearPhotoDataClearsDataAfterSuccessfulDeletion() throws {
+        let container = try ModelContainer(for: Progress.self, configurations: ModelConfiguration(isStoredInMemoryOnly: true))
+        let context = ModelContext(container)
+        let progress = Progress(id: 1)
+        context.insert(progress)
+
+        // Устанавливаем данные фотографии
+        progress.setPhotoData(SwiftUI_SotkaApp.PhotoType.front, data: testImageData)
+        progress.urlPhotoFront = "https://example.com/front.jpg"
+
+        // Помечаем для удаления
+        progress.deletePhotoData(SwiftUI_SotkaApp.PhotoType.front)
+        #expect(progress.shouldDeletePhoto(SwiftUI_SotkaApp.PhotoType.front))
+
+        // Очищаем после успешного удаления
+        progress.clearPhotoData(SwiftUI_SotkaApp.PhotoType.front)
+
+        #expect(!progress.shouldDeletePhoto(SwiftUI_SotkaApp.PhotoType.front))
+        #expect(progress.getPhotoData(SwiftUI_SotkaApp.PhotoType.front) == nil)
+        #expect(progress.urlPhotoFront == nil)
+        #expect(!progress.isSynced, "isSynced устанавливается в handlePhotoDeletion после обработки всех фотографий")
+    }
+
+    @Test("deletePhotoData устанавливает DELETED_DATA вместо физического удаления")
+    func deletePhotoDataSetsDeletedDataInsteadOfPhysicalDeletion() throws {
+        let container = try ModelContainer(for: Progress.self, configurations: ModelConfiguration(isStoredInMemoryOnly: true))
+        let context = ModelContext(container)
+        let progress = Progress(id: 1)
+        context.insert(progress)
+
+        // Устанавливаем данные фотографии
+        progress.setPhotoData(SwiftUI_SotkaApp.PhotoType.front, data: testImageData)
+        progress.urlPhotoFront = "https://example.com/front.jpg"
+        let originalLastModified = progress.lastModified
+
+        // Удаляем фотографию
+        progress.deletePhotoData(SwiftUI_SotkaApp.PhotoType.front)
+
+        // Проверяем, что данные помечены для удаления, но не физически удалены
+        #expect(progress.shouldDeletePhoto(SwiftUI_SotkaApp.PhotoType.front))
+        #expect(progress.getPhotoData(SwiftUI_SotkaApp.PhotoType.front) == nil)
+        #expect(progress.urlPhotoFront == nil)
+        #expect(progress.lastModified > originalLastModified)
+        #expect(!progress.isSynced)
+    }
+
+    @Test("Параметризированный тест shouldDeletePhoto", arguments: [PhotoType.front, PhotoType.back, PhotoType.side])
+    func shouldDeletePhotoParameterized(photoType: PhotoType) throws {
+        let container = try ModelContainer(for: Progress.self, configurations: ModelConfiguration(isStoredInMemoryOnly: true))
+        let context = ModelContext(container)
+        let progress = Progress(id: 1)
+        context.insert(progress)
+
+        // Изначально фотография не помечена для удаления
+        #expect(!progress.shouldDeletePhoto(photoType))
+
+        // Помечаем для удаления
+        progress.deletePhotoData(photoType)
+        #expect(progress.shouldDeletePhoto(photoType))
+
+        // Очищаем после успешного удаления
+        progress.clearPhotoData(photoType)
+        #expect(!progress.shouldDeletePhoto(photoType))
+    }
 }

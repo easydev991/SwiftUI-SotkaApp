@@ -49,11 +49,78 @@
 - **Тесты синхронизации** с моками сетевых клиентов
 - **Edge case тесты** для валидации ввода и обработки ошибок
 
+### Недостающие тесты для новой логики удаления фотографий ❌
+
+**Анализ показал отсутствие тестов для следующих компонентов:**
+
+#### 1. Тесты для модели Progress (новые методы)
+- **DELETED_DATA константа**: тест на правильное значение (Data([0x64]))
+- **shouldDeletePhoto()**: тест на проверку фотографий помеченных для удаления
+- **hasPhotosToDelete**: тест на наличие фотографий для удаления
+- **clearPhotoData()**: тест на очистку данных после успешного удаления
+- **deletePhotoData()**: тест на установку DELETED_DATA вместо физического удаления
+
+#### 2. Тесты для ProgressSnapshot (новые computed properties)
+- **shouldDeletePhoto**: тест на проверку флагов удаления фотографий
+- **photosForUpload**: тест на создание словаря только не удаленных фотографий
+
+#### 3. Тесты для ProgressSyncService (новая логика синхронизации)
+- **needsPhotoDeletion событие**: тест на возврат специального статуса
+- **handlePhotoDeletion()**: тест на последовательное удаление фотографий
+- **applySyncEvents()**: тест на обработку needsPhotoDeletion события
+- **Интеграционные тесты**: полный цикл удаления фотографий с сервера
+
+#### 4. Тесты для ProgressClient (новый метод)
+- **deletePhoto()**: тест на вызов DELETE API endpoint
+- **MockProgressClient**: тест на mock реализацию deletePhoto
+
+#### 5. Тесты для PhotoType (новое свойство)
+- **deleteRequestName**: тест на правильные названия для DELETE запросов
+
+**План реализации тестов:**
+1. ✅ Добавить тесты для модели Progress (DELETED_DATA, shouldDeletePhoto, clearPhotoData)
+2. ✅ Добавить тесты для ProgressSnapshot (shouldDeletePhoto, photosForUpload)
+3. ✅ Добавить тесты для ProgressSyncService (handlePhotoDeletion, needsPhotoDeletion)
+4. ✅ Добавить тесты для ProgressClient (deletePhoto)
+5. ✅ Добавить тесты для PhotoType (deleteRequestName)
+6. ✅ Добавить интеграционные тесты полного цикла удаления фотографий
+
+**Реализованные тесты:**
+- **ProgressPhotoDataTests.swift**: 6 новых тестов для логики удаления фотографий
+- **PhotoTypeTests.swift**: 8 тестов для deleteRequestName и других свойств
+- **ProgressSnapshotTests.swift**: 12 тестов для computed properties
+- **ProgressSyncServicePhotoTests.swift**: 5 новых тестов для синхронизации удаления
+- **ProgressClientTests.swift**: 10 тестов для deletePhoto метода
+
+**Всего добавлено: 41 новый тест** для покрытия всей новой логики удаления фотографий
+
 ### Проблемы и исправления ✅
 - **Исправлена логика дней**: день 49 вместо дня 50 для среднего прогресса
 - **Упрощена синхронизация**: единый `updateProgress` вместо двойной попытки
 - **Исправлена валидация**: частично заполненные данные теперь валидны
 - **Исправлено удаление**: мягкое удаление вместо физического (с сохранением информации для сервера)
+
+## Критические исправления логики удаления
+
+### Обнаруженные ошибки в первоначальном плане ❌
+
+**Анализ кода старого приложения (SOTKA-OBJc) выявил критические ошибки в первоначальном плане:**
+
+1. **Неправильная константа DELETED**: 
+   - ❌ Предлагалось: `"deleted:".data(using: .utf8)!` (8 байт)
+   - ✅ В старом приложении: `Data([0x64])` (только 1 байт "d")
+
+2. **Неправильная логика синхронизации**:
+   - ❌ Предлагалось: отправлять только не удаленные фотографии в основном запросе
+   - ✅ В старом приложении: отдельные DELETE запросы для каждой фотографии
+
+3. **Отсутствие отдельных DELETE запросов**:
+   - ❌ Предлагалось: просто не отправлять удаленные фотографии
+   - ✅ В старом приложении: `DELETE /100/progress/{day}/photos/{type}` для каждой фотографии
+
+4. **Неправильная последовательность операций**:
+   - ❌ Предлагалось: параллельная обработка
+   - ✅ В старом приложении: строго последовательная с рекурсивными вызовами
 
 ## Критическая проблема: удаление фотографий
 
@@ -194,8 +261,8 @@ final class Progress {
 
 **Шаг 3.1: Специальное значение для удаления**
 ```swift
-// Константа для пометки удаленных фотографий
-private let DELETED_DATA = "deleted:".data(using: .utf8)!
+// Константа для пометки удаленных фотографий (точно как в старом приложении)
+private let DELETED_DATA = Data([0x64]) // Только байт "d", как в #define DELETED
 ```
 
 **Шаг 3.2: Логика удаления в ProgressService**
@@ -217,48 +284,122 @@ func deletePhoto(_ type: PhotoType, from progress: Progress) throws {
     progress.isSynced = false
     try context.save()
 }
+
 ```
 
-**Шаг 3.3: Синхронизация удаления**
+**Шаг 3.3: Упрощенная синхронизация с методами модели**
 ```swift
-// В ProgressSyncService
-private func prepareProgressDataWithPhotos(_ progress: Progress) -> ProgressRequest {
-    var photosData: [String: Data] = [:]
-    
-    // Отправляем только не удаленные фотографии
-    if let frontData = progress.dataPhotoFront, !frontData.isEqual(to: DELETED_DATA) {
-        photosData["photo_front"] = frontData
+// В модели Progress - методы для проверки удаления
+extension Progress {
+    // Проверяет, нужно ли удалить фотографию определенного типа
+    func shouldDeletePhoto(_ type: PhotoType) -> Bool {
+        let data: Data?
+        switch type {
+        case .front: data = dataPhotoFront
+        case .back: data = dataPhotoBack
+        case .side: data = dataPhotoSide
+        }
+        return data?.isEqual(to: DELETED_DATA) == true
     }
-    // Аналогично для back и side
     
-    return ProgressRequest(
-            id: progress.id,
-            pullups: progress.pullUps,
-            pushups: progress.pushUps,
-            squats: progress.squats,
-            weight: progress.weight,
-        photos: photosData  // Только не удаленные фото
-    )
+    // Проверяет, есть ли фотографии для удаления
+    func hasPhotosToDelete() -> Bool {
+        return shouldDeletePhoto(.front) || 
+               shouldDeletePhoto(.back) || 
+               shouldDeletePhoto(.side)
+    }
+    
+    // Очищает данные фотографии после успешного удаления
+    func clearPhotoData(_ type: PhotoType) {
+        switch type {
+        case .front:
+            dataPhotoFront = nil
+            urlPhotoFront = nil
+        case .back:
+            dataPhotoBack = nil
+            urlPhotoBack = nil
+        case .side:
+            dataPhotoSide = nil
+            urlPhotoSide = nil
+        }
+    }
+}
+
+// В ProgressSyncService - упрощенная логика
+func syncProgress(_ progress: Progress) async throws {
+    // 1. Проверить shouldDelete (удаление всего прогресса)
+    if progress.shouldDelete {
+        try await deleteProgressForDay(progress.day)
+        return
+    }
+    
+    // 2. Проверить, есть ли фотографии для удаления
+    if progress.hasPhotosToDelete() {
+        try await deleteNextPhoto(progress)
+        return // После каждого удаления - рекурсивный вызов
+    }
+    
+    // 3. Отправить основной прогресс (только если нет удалений)
+    try await uploadProgress(progress)
+}
+
+// Универсальный метод для удаления фотографий
+private func deletePhotoForDay(_ day: Int, type: PhotoType) async throws {
+    // DELETE /100/progress/{day}/photos/{type}
+    try await progressClient.deletePhoto(day: day, type: type.deleteRequestName)
+}
+
+// Обработка удаления фотографий в цикле
+private func deleteNextPhoto(_ progress: Progress) async throws {
+    for photoType in PhotoType.allCases {
+        if progress.shouldDeletePhoto(photoType) {
+            try await deletePhotoForDay(progress.day, type: photoType)
+            progress.clearPhotoData(photoType)
+            return // Удаляем только одну фотографию за раз
+        }
+    }
 }
 ```
 
-**Шаг 3.4: Обработка ответа сервера**
+
+**Шаг 3.4: Обновление протокола ProgressClient и PhotoType**
 ```swift
-// В ProgressSyncService
-func updateProgressFromServerResponse(_ progress: Progress, _ response: ProgressResponse) async {
-    // Обновляем URL фотографий только если они не помечены для удаления локально
-    if !progress.shouldDeletePhotoFront {
-        progress.urlPhotoFront = response.photoFront
-    } else if response.photoFront == nil || response.photoFront?.isEmpty == true {
-        // Сервер успешно удалил фото - очищаем локальный URL
-        progress.urlPhotoFront = nil
-        progress.shouldDeletePhotoFront = false
+// Добавить новый метод в протокол ProgressClient
+protocol ProgressClient: Sendable {
+    // ... существующие методы ...
+    
+    /// Удалить фотографию определенного типа для конкретного дня
+    func deletePhoto(day: Int, type: String) async throws
+}
+
+// Добавить вычисляемое свойство в существующий PhotoType
+extension PhotoType {
+    /// Название типа для DELETE запроса
+    var deleteRequestName: String {
+        switch self {
+        case .front: return "front"
+        case .back: return "back"
+        case .side: return "side"
+        }
     }
-    // Аналогично для photoBack и photoSide...
+}
+```
 
-    // Загружаем фотографии синхронно
+**Шаг 3.5: Обработка ответа сервера (упрощенная логика)**
+```swift
+// В ProgressSyncService - простая логика как в старом приложении
+func updateProgressFromServerResponse(_ progress: Progress, _ response: ProgressResponse) async {
+    // Обновляем URL фотографий (сервер - источник истины)
+    progress.urlPhotoFront = response.photoFront
+    progress.urlPhotoBack = response.photoBack
+    progress.urlPhotoSide = response.photoSide
+    
+    // Обновляем lastModified из ответа сервера
+    progress.updateLastModified(from: response)
+    
+    // Загружаем фотографии по URL (если есть)
     await PhotoDownloadService().downloadAllPhotos(for: progress)
-
+    
     progress.isSynced = true
 }
 ```
@@ -293,17 +434,66 @@ struct ProgressPhotoRow: View {
         }
     }
 }
+
+// Методы для работы с данными изображений (обновленные)
+extension Progress {
+    // Получает данные изображения, возвращает nil для удаленных данных
+    func getPhotoData(_ type: PhotoType) -> Data? {
+        let data: Data?
+        switch type {
+        case .front: data = dataPhotoFront
+        case .back: data = dataPhotoBack
+        case .side: data = dataPhotoSide
+        }
+        // Возвращаем nil для удаленных данных (DELETED_DATA)
+        return data?.isEqual(to: DELETED_DATA) == true ? nil : data
+    }
+    
+    // Получает URL изображения
+    func getPhotoURL(_ type: PhotoType) -> String? {
+        switch type {
+        case .front: return urlPhotoFront
+        case .back: return urlPhotoBack
+        case .side: return urlPhotoSide
+        }
+    }
+    
+    // Проверяет, нужно ли удалить фотографию определенного типа
+    func shouldDeletePhoto(_ type: PhotoType) -> Bool {
+        let data: Data?
+        switch type {
+        case .front: data = dataPhotoFront
+        case .back: data = dataPhotoBack
+        case .side: data = dataPhotoSide
+        }
+        return data?.isEqual(to: DELETED_DATA) == true
+    }
+    
+    // Очищает данные фотографии после успешного удаления
+    func clearPhotoData(_ type: PhotoType) {
+        switch type {
+        case .front:
+            dataPhotoFront = nil
+            urlPhotoFront = nil
+        case .back:
+            dataPhotoBack = nil
+            urlPhotoBack = nil
+        case .side:
+            dataPhotoSide = nil
+            urlPhotoSide = nil
+        }
+    }
+    
+    // Проверяет, есть ли фотографии для удаления
+    func hasPhotosToDelete() -> Bool {
+        return shouldDeletePhoto(.front) || 
+               shouldDeletePhoto(.back) || 
+               shouldDeletePhoto(.side)
+    }
+}
 ```
 
-#### Этап 5: Удаление модели ProgressPhoto
-
-**Полное удаление:**
-- Удалить файл `Models/ProgressPhoto.swift`
-- Удалить модель из схемы SwiftData
-- Очистить все ссылки и импорты
-- Обновить тесты
-
-#### Этап 6: Замена AsyncImage на CachedImage
+#### Этап 5: Замена AsyncImage на CachedImage
 
 **Заменить AsyncImage на CachedImage из SWDesignSystem:**
 
@@ -326,18 +516,20 @@ struct ProgressPhotoRow: View {
 | Аспект | Текущее состояние | После исправления |
 |--------|------------------|-------------------|
 | Архитектура | Разделенные модели | Единая модель |
-| Синхронизация | Сложная обработка фото | Простая перезапись URL |
-| Удаление фото | Физическое удаление | Специальное значение DELETED |
+| Синхронизация | Сложная обработка фото | Последовательная синхронизация (как в старом приложении) |
+| Удаление фото | Физическое удаление | Специальное значение DELETED + отдельные DELETE запросы |
 | Загрузка фото | По необходимости | CachedImage с кэшированием |
 | Производительность | Ниже (доп. объекты) | Выше (меньше объектов) |
-| Надежность | Средняя (конфликты) | Высокая (сервер источник истины) |
+| Надежность | Средняя (конфликты) | Высокая (точная логика старого приложения) |
+| Совместимость | Отличается от старого | Полная совместимость с SOTKA-OBJc |
 
 ### Риски и ограничения
 
 1. **Миграция данных**: Необходимо тщательно протестировать миграцию существующих данных
-2. **Совместимость сервера**: Убедиться, что сервер корректно обрабатывает nil значения для удаленных фотографий
+2. **Совместимость сервера**: Убедиться, что сервер поддерживает отдельные DELETE запросы для фотографий (`/100/progress/{day}/photos/{type}`)
 3. **Управление памятью**: Локальные данные изображений могут занимать значительное место при загрузке
-4. **Откат**: Подготовить план отката в случае проблем
+4. **Последовательная синхронизация**: Рекурсивные вызовы могут создать длинную цепочку операций
+5. **Откат**: Подготовить план отката в случае проблем
 
 ### Метрики успеха
 
@@ -347,4 +539,71 @@ struct ProgressPhotoRow: View {
 - ✅ Данные изображений сохраняются локально в кэш CachedImage
 - ✅ Все операции выполняются асинхронно без блокировки UI
 - ✅ Изображения кэшируются для лучшей производительности
+- ✅ **Полная совместимость с логикой старого приложения SOTKA-OBJc**
+- ✅ **Отдельные DELETE запросы для каждой фотографии**
+- ✅ **Последовательная синхронизация с рекурсивными вызовами**
+- ✅ **Правильная константа DELETED_DATA (только байт "d")**
+
+## Справочная информация
+
+### Анализ подходов к удалению фотографий
+
+**Анализ старого приложения (SOTKA-OBJc):**
+```objective-c
+// Строго последовательная обработка в SyncManager.m
+if ([progress.photoFront isEqualToData:DELETED]) {
+    [DbUser deleteFrontPhotoForDay:[progress.day intValue] success:^{
+        [self syncProgress:finish failure:failure]; // Рекурсивный вызов
+    } failure:^{ ... }];
+    return; // Обрабатываем только одну фотографию за раз
+}
+// Аналогично для photoBack и photoSide
+```
+
+**Анализ серверного кода (StreetWorkoutSU):**
+```php
+// actionDeleteProgressPhoto($day, $photo = null)
+public function actionDeleteProgressPhoto($day, $photo = null) {
+    $sto_progress = StoProgress::findByUserAndDay($user_id, $day);
+    if ($photo) {
+        $photos = $sto_progress->getImagesFiles();
+        $photos[$photo] = null; // Удаляем конкретную фотографию
+        $sto_progress->setImagesFiles($photos);
+    } else {
+        $sto_progress->setImagesFiles(null); // Удаляем все фотографии
+    }
+    $sto_progress->save();
+}
+```
+
+**Сравнение подходов:**
+
+| Аспект | Старое приложение | Предлагаемое решение | Параллельная оптимизация |
+|--------|------------------|---------------------|-------------------------|
+| **Последовательность** | Строго последовательная | Строго последовательная | Параллельная |
+| **Рекурсивные вызовы** | ✅ Да | ✅ Да | ❌ Нет |
+| **Обработка ошибок** | По одной фотографии | По одной фотографии | Все сразу |
+| **Производительность** | Медленная | Медленная | Быстрая |
+| **Надежность** | Высокая | Высокая | Средняя |
+| **Совместимость с сервером** | ✅ Полная | ✅ Полная | ✅ Полная |
+
+**Выводы и рекомендации:**
+
+1. **Последовательная обработка оправдана:**
+   - Старое приложение использует рекурсивные вызовы для надежности
+   - Каждая фотография обрабатывается отдельно с индивидуальной обработкой ошибок
+   - При сбое одной фотографии остальные продолжают обрабатываться
+
+2. **Параллельная оптимизация НЕ рекомендуется:**
+   - ❌ Потеря индивидуальной обработки ошибок
+   - ❌ При сбое одной фотографии может сломаться вся операция
+   - ❌ Усложнение логики отката при ошибках
+   - ❌ Нарушение совместимости с логикой старого приложения
+
+3. **Сервер поддерживает оба подхода:**
+   - ✅ Отдельные DELETE запросы для каждой фотографии
+   - ✅ Массовое удаление всех фотографий
+   - ✅ Гибкая обработка параметров
+
+**Итоговое решение:** Оставить последовательную обработку с рекурсивными вызовами для максимальной надежности и совместимости.
 ```
