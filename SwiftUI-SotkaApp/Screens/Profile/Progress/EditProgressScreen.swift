@@ -23,6 +23,10 @@ struct EditProgressScreen: View {
             contentView
         }
         .animation(.default, value: progressService.displayMode)
+        .safeAreaInset(edge: .bottom, alignment: .center) {
+            saveButton
+                .padding([.horizontal, .bottom])
+        }
         .navigationBarTitleDisplayMode(.inline)
         .toolbar {
             if progress.canBeDeleted {
@@ -125,8 +129,6 @@ private extension EditProgressScreen {
                 exerciseSection
                 weightSection
                     .listSectionSeparator(.hidden)
-                saveButton
-                    .listRowSeparator(.hidden)
             }
             .listStyle(.plain)
             .background(Color.swBackground)
