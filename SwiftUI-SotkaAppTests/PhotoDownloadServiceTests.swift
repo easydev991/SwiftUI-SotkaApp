@@ -15,18 +15,9 @@ struct PhotoDownloadServiceTests {
         let progress = ProgressSUT(id: 1, pullUps: 10, pushUps: 20, squats: 30, weight: 70.0)
 
         #expect(progress.urlPhotoFront == nil)
-        #expect(progress.getPhotoData(PhotoType.front) == nil)
-        #expect(progress.getPhotoData(PhotoType.back) == nil)
-        #expect(progress.getPhotoData(PhotoType.side) == nil)
-    }
-
-    @Test("Должен выбрасывать ошибку для некорректного URL")
-    func invalidURLThrowsError() async throws {
-        let progress = ProgressSUT(id: 1, pullUps: 10, pushUps: 20, squats: 30, weight: 70.0)
-
-        await #expect(throws: PhotoError.invalidURL) {
-            try await SwiftUI_SotkaApp.PhotoDownloadService().downloadAndCachePhoto("invalid-url", for: progress, type: PhotoType.front)
-        }
+        #expect(progress.getPhotoData(.front) == nil)
+        #expect(progress.getPhotoData(.back) == nil)
+        #expect(progress.getPhotoData(.side) == nil)
     }
 
     @Test("Автоматическая загрузка всех фото не должна падать")
@@ -39,46 +30,49 @@ struct PhotoDownloadServiceTests {
 
         await service.downloadAllPhotos(for: progress)
 
-        #expect(true)
+        #expect(progress.urlPhotoFront != nil)
+        #expect(progress.urlPhotoBack != nil)
+        #expect(progress.urlPhotoSide != nil)
     }
 
     @Test("Создание detached task для загрузки фото")
-    func detachedTaskCreation() {
+    func detachedTaskCreation() async {
         let progress = ProgressSUT(id: 1, pullUps: 10, pushUps: 20, squats: 30, weight: 70.0)
         progress.urlPhotoFront = "https://example.com/front.jpg"
         progress.urlPhotoBack = "https://example.com/back.jpg"
         progress.urlPhotoSide = "https://example.com/side.jpg"
 
-        Task {
+        let task = Task {
             await SwiftUI_SotkaApp.PhotoDownloadService().downloadAllPhotos(for: progress)
         }
 
-        #expect(true)
+        await task.value
+
+        #expect(progress.urlPhotoFront != nil)
+        #expect(progress.urlPhotoBack != nil)
+        #expect(progress.urlPhotoSide != nil)
     }
 
     @Test("Проверка методов hasPhoto и getPhotoURL")
     func photoURLMethods() {
         let progress = ProgressSUT(id: 1, pullUps: 10, pushUps: 20, squats: 30, weight: 70.0)
 
-        // Изначально нет фотографий
-        #expect(!progress.hasPhoto(PhotoType.front))
-        #expect(!progress.hasPhoto(PhotoType.back))
-        #expect(!progress.hasPhoto(PhotoType.side))
-        #expect(progress.getPhotoURL(PhotoType.front) == nil)
-        #expect(progress.getPhotoURL(PhotoType.back) == nil)
-        #expect(progress.getPhotoURL(PhotoType.side) == nil)
+        #expect(!progress.hasPhoto(.front))
+        #expect(!progress.hasPhoto(.back))
+        #expect(!progress.hasPhoto(.side))
+        #expect(progress.getPhotoURL(.front) == nil)
+        #expect(progress.getPhotoURL(.back) == nil)
+        #expect(progress.getPhotoURL(.side) == nil)
 
-        // Устанавливаем URL фотографий
         progress.urlPhotoFront = "https://example.com/front.jpg"
         progress.urlPhotoBack = "https://example.com/back.jpg"
         progress.urlPhotoSide = "https://example.com/side.jpg"
 
-        // Проверяем методы
-        #expect(progress.hasPhoto(PhotoType.front))
-        #expect(progress.hasPhoto(PhotoType.back))
-        #expect(progress.hasPhoto(PhotoType.side))
-        #expect(progress.getPhotoURL(PhotoType.front) == "https://example.com/front.jpg")
-        #expect(progress.getPhotoURL(PhotoType.back) == "https://example.com/back.jpg")
-        #expect(progress.getPhotoURL(PhotoType.side) == "https://example.com/side.jpg")
+        #expect(progress.hasPhoto(.front))
+        #expect(progress.hasPhoto(.back))
+        #expect(progress.hasPhoto(.side))
+        #expect(progress.getPhotoURL(.front) == "https://example.com/front.jpg")
+        #expect(progress.getPhotoURL(.back) == "https://example.com/back.jpg")
+        #expect(progress.getPhotoURL(.side) == "https://example.com/side.jpg")
     }
 }

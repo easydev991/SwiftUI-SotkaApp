@@ -107,11 +107,11 @@ extension User {
         // Получаем все результаты для нужного дня
         let allResultsForDay = progressResults.filter { $0.id == progressDay }
         let activeResultsForDay = allResultsForDay.filter { !$0.shouldDelete }
-        let filledActiveResults = activeResultsForDay.filter(\.isFilled)
+        let filledActiveResults = activeResultsForDay.filter(\.isMetricsFilled)
 
-        let logAllResults = allResultsForDay.map { "\($0.id): isFilled=\($0.isFilled), shouldDelete=\($0.shouldDelete)" }
+        let logAllResults = allResultsForDay.map { "\($0.id): isMetricsFilled=\($0.isMetricsFilled), shouldDelete=\($0.shouldDelete)" }
             .joined(separator: ", ")
-        let logActiveResults = activeResultsForDay.map { "\($0.id): isFilled=\($0.isFilled)" }.joined(separator: ", ")
+        let logActiveResults = activeResultsForDay.map { "\($0.id): isMetricsFilled=\($0.isMetricsFilled)" }.joined(separator: ", ")
 
         logger.info("isMaximumsFilled: currentDay=\(currentDay), progressDay=\(progressDay)")
         logger.info("Все результаты для дня \(progressDay): [\(logAllResults)]")
@@ -121,7 +121,7 @@ extension User {
         // Проверяем, есть ли заполненные результаты для соответствующего дня
         // Исключаем удаленные записи (shouldDelete = true)
         let result = progressResults.contains {
-            $0.id == progressDay && $0.isFilled && !$0.shouldDelete
+            $0.id == progressDay && $0.isMetricsFilled && !$0.shouldDelete
         }
 
         logger.info("isMaximumsFilled результат: \(result)")

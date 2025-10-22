@@ -49,46 +49,46 @@ struct ProgressTests {
         #expect(progress.section == .one)
     }
 
-    // MARK: - isFilled Tests
+    // MARK: - isMetricsFilled Tests
 
-    @Test("isFilled с полными данными")
+    @Test("isMetricsFilled с полными данными")
     func isFilledWithCompleteData() {
         let progress = Progress(id: 1)
         progress.pullUps = 10
         progress.pushUps = 20
         progress.squats = 30
         progress.weight = 70.0
-        #expect(progress.isFilled)
+        #expect(progress.isMetricsFilled)
     }
 
-    @Test("isFilled с неполными данными")
+    @Test("isMetricsFilled с неполными данными")
     func isFilledWithIncompleteData() {
         let progress = Progress(id: 1)
         progress.pullUps = 10
         progress.pushUps = nil
         progress.squats = 30
         progress.weight = 70.0
-        #expect(!progress.isFilled)
+        #expect(!progress.isMetricsFilled)
     }
 
-    @Test("isFilled с нулевыми значениями")
+    @Test("isMetricsFilled с нулевыми значениями")
     func isFilledWithZeroValues() {
         let progress = Progress(id: 1)
         progress.pullUps = 0
         progress.pushUps = 20
         progress.squats = 30
         progress.weight = 70.0
-        #expect(!progress.isFilled)
+        #expect(!progress.isMetricsFilled)
     }
 
-    @Test("isFilled с отрицательными значениями")
+    @Test("isMetricsFilled с отрицательными значениями")
     func isFilledWithNegativeValues() {
         let progress = Progress(id: 1)
         progress.pullUps = -5
         progress.pushUps = 20
         progress.squats = 30
         progress.weight = 70.0
-        #expect(!progress.isFilled)
+        #expect(!progress.isMetricsFilled)
     }
 
     @Test(arguments: [
@@ -117,81 +117,81 @@ struct ProgressTests {
         progress.squats = squats
         progress.weight = weight
 
-        #expect(!progress.isFilled)
+        #expect(!progress.isMetricsFilled)
     }
 
-    // MARK: - hasAnyData Tests
+    // MARK: - hasAnyMetricsData Tests
 
-    @Test("hasAnyData с пустыми данными")
+    @Test("hasAnyMetricsData с пустыми данными")
     func hasAnyDataWithEmptyData() {
         let progress = Progress(id: 1)
-        #expect(!progress.hasAnyData)
+        #expect(!progress.hasAnyMetricsData)
     }
 
-    @Test("hasAnyData с одним полем pullUps")
+    @Test("hasAnyMetricsData с одним полем pullUps")
     func hasAnyDataWithPullUpsOnly() {
         let progress = Progress(id: 1, pullUps: 10)
-        #expect(progress.hasAnyData)
+        #expect(progress.hasAnyMetricsData)
     }
 
-    @Test("hasAnyData с одним полем pushUps")
+    @Test("hasAnyMetricsData с одним полем pushUps")
     func hasAnyDataWithPushUpsOnly() {
         let progress = Progress(id: 1, pushUps: 20)
-        #expect(progress.hasAnyData)
+        #expect(progress.hasAnyMetricsData)
     }
 
-    @Test("hasAnyData с одним полем squats")
+    @Test("hasAnyMetricsData с одним полем squats")
     func hasAnyDataWithSquatsOnly() {
         let progress = Progress(id: 1, squats: 30)
-        #expect(progress.hasAnyData)
+        #expect(progress.hasAnyMetricsData)
     }
 
-    @Test("hasAnyData с одним полем weight")
+    @Test("hasAnyMetricsData с одним полем weight")
     func hasAnyDataWithWeightOnly() {
         let progress = Progress(id: 1, weight: 70.0)
-        #expect(progress.hasAnyData)
+        #expect(progress.hasAnyMetricsData)
     }
 
-    @Test("hasAnyData с полными данными")
+    @Test("hasAnyMetricsData с полными данными")
     func hasAnyDataWithCompleteData() {
         let progress = Progress(id: 1, pullUps: 10, pushUps: 20, squats: 30, weight: 70.0)
-        #expect(progress.hasAnyData)
+        #expect(progress.hasAnyMetricsData)
     }
 
-    @Test("hasAnyData с частичными данными")
+    @Test("hasAnyMetricsData с частичными данными")
     func hasAnyDataWithPartialData() {
         let progress = Progress(id: 1, pullUps: 10, weight: 70.0)
-        #expect(progress.hasAnyData)
+        #expect(progress.hasAnyMetricsData)
     }
 
-    @Test("hasAnyData с нулевыми значениями")
+    @Test("hasAnyMetricsData с нулевыми значениями")
     func hasAnyDataWithZeroValues() {
         let progress = Progress(id: 1, pullUps: 0, pushUps: 0, squats: 0, weight: 0.0)
-        #expect(!progress.hasAnyData)
+        #expect(!progress.hasAnyMetricsData)
     }
 
-    @Test("hasAnyData с отрицательными значениями")
+    @Test("hasAnyMetricsData с отрицательными значениями")
     func hasAnyDataWithNegativeValues() {
         let progress = Progress(id: 1, pullUps: -5, pushUps: -10, squats: -15, weight: -1.0)
-        #expect(!progress.hasAnyData)
+        #expect(!progress.hasAnyMetricsData)
     }
 
-    @Test("hasAnyData с смешанными значениями (положительные и нулевые)")
+    @Test("hasAnyMetricsData с смешанными значениями (положительные и нулевые)")
     func hasAnyDataWithMixedValues() {
         let progress = Progress(id: 1, pullUps: 10, pushUps: 0, squats: 0, weight: 0.0)
-        #expect(progress.hasAnyData)
+        #expect(progress.hasAnyMetricsData)
     }
 
-    @Test("hasAnyData с одним нулевым значением")
+    @Test("hasAnyMetricsData с одним нулевым значением")
     func hasAnyDataWithOneZeroValue() {
         let progress = Progress(id: 1, pullUps: 0)
-        #expect(!progress.hasAnyData)
+        #expect(!progress.hasAnyMetricsData)
     }
 
-    @Test("hasAnyData с одним отрицательным значением")
+    @Test("hasAnyMetricsData с одним отрицательным значением")
     func hasAnyDataWithOneNegativeValue() {
         let progress = Progress(id: 1, pushUps: -5)
-        #expect(!progress.hasAnyData)
+        #expect(!progress.hasAnyMetricsData)
     }
 
     @Test(arguments: [
@@ -228,7 +228,7 @@ struct ProgressTests {
         progress.squats = squats
         progress.weight = weight
 
-        #expect(progress.hasAnyData == expected)
+        #expect(progress.hasAnyMetricsData == expected)
     }
 
     // MARK: - canBeDeleted Tests

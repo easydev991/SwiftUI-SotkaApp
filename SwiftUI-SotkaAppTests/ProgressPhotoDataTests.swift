@@ -37,11 +37,11 @@ struct ProgressPhotoDataTests {
         let progress = createTestProgress(context: context)
         let originalLastModified = progress.lastModified
 
-        progress.setPhotoData(SwiftUI_SotkaApp.PhotoType.front, data: testImageData)
+        progress.setPhotoData(testImageData, type: .front)
 
-        #expect(progress.getPhotoData(SwiftUI_SotkaApp.PhotoType.front) == testImageData)
-        #expect(progress.getPhotoData(SwiftUI_SotkaApp.PhotoType.back) == nil)
-        #expect(progress.getPhotoData(SwiftUI_SotkaApp.PhotoType.side) == nil)
+        #expect(progress.getPhotoData(.front) == testImageData)
+        #expect(progress.getPhotoData(.back) == nil)
+        #expect(progress.getPhotoData(.side) == nil)
         #expect(progress.lastModified > originalLastModified)
         #expect(!progress.isSynced)
     }
@@ -51,23 +51,11 @@ struct ProgressPhotoDataTests {
         let container = try ModelContainer(for: Progress.self, configurations: ModelConfiguration(isStoredInMemoryOnly: true))
         let context = ModelContext(container)
         let progress = createTestProgress(context: context)
-        progress.setPhotoData(SwiftUI_SotkaApp.PhotoType.back, data: testImageData)
+        progress.setPhotoData(testImageData, type: .back)
 
-        #expect(progress.getPhotoData(SwiftUI_SotkaApp.PhotoType.front) == nil)
-        #expect(progress.getPhotoData(SwiftUI_SotkaApp.PhotoType.back) == testImageData)
-        #expect(progress.getPhotoData(SwiftUI_SotkaApp.PhotoType.side) == nil)
-    }
-
-    @Test("Проверка наличия данных изображения")
-    func hasPhotoData() throws {
-        let container = try ModelContainer(for: Progress.self, configurations: ModelConfiguration(isStoredInMemoryOnly: true))
-        let context = ModelContext(container)
-        let progress = createTestProgress(context: context)
-        progress.setPhotoData(SwiftUI_SotkaApp.PhotoType.side, data: testImageData)
-
-        #expect(!progress.hasPhotoData(SwiftUI_SotkaApp.PhotoType.front))
-        #expect(!progress.hasPhotoData(SwiftUI_SotkaApp.PhotoType.back))
-        #expect(progress.hasPhotoData(SwiftUI_SotkaApp.PhotoType.side))
+        #expect(progress.getPhotoData(.front) == nil)
+        #expect(progress.getPhotoData(.back) == testImageData)
+        #expect(progress.getPhotoData(.side) == nil)
     }
 
     @Test("Удаление данных изображения")
@@ -75,12 +63,12 @@ struct ProgressPhotoDataTests {
         let container = try ModelContainer(for: Progress.self, configurations: ModelConfiguration(isStoredInMemoryOnly: true))
         let context = ModelContext(container)
         let progress = createTestProgress(context: context)
-        progress.setPhotoData(SwiftUI_SotkaApp.PhotoType.front, data: testImageData)
+        progress.setPhotoData(testImageData, type: .front)
         let originalLastModified = progress.lastModified
 
-        progress.deletePhotoData(SwiftUI_SotkaApp.PhotoType.front)
+        progress.deletePhotoData(.front)
 
-        #expect(progress.getPhotoData(SwiftUI_SotkaApp.PhotoType.front) == nil)
+        #expect(progress.getPhotoData(.front) == nil)
         #expect(progress.lastModified > originalLastModified)
         #expect(!progress.isSynced)
     }
@@ -93,7 +81,7 @@ struct ProgressPhotoDataTests {
 
         #expect(!progress.hasAnyPhotoData)
 
-        progress.setPhotoData(SwiftUI_SotkaApp.PhotoType.front, data: testImageData)
+        progress.setPhotoData(testImageData, type: .front)
 
         #expect(progress.hasAnyPhotoData)
     }
@@ -168,9 +156,9 @@ struct ProgressPhotoDataTests {
         #expect(progress.urlPhotoFront == "https://example.com/front.jpg")
         #expect(progress.urlPhotoBack == "https://example.com/back.jpg")
         #expect(progress.urlPhotoSide == "https://example.com/side.jpg")
-        #expect(progress.getPhotoData(SwiftUI_SotkaApp.PhotoType.front) == nil)
-        #expect(progress.getPhotoData(SwiftUI_SotkaApp.PhotoType.back) == nil)
-        #expect(progress.getPhotoData(SwiftUI_SotkaApp.PhotoType.side) == nil)
+        #expect(progress.getPhotoData(.front) == nil)
+        #expect(progress.getPhotoData(.back) == nil)
+        #expect(progress.getPhotoData(.side) == nil)
     }
 
     @Test("Проверка hasAnyPhotoDataIncludingURLs с URL")
@@ -187,7 +175,7 @@ struct ProgressPhotoDataTests {
 
         #expect(!progress.hasAnyPhotoDataIncludingURLs)
 
-        progress.setPhotoData(SwiftUI_SotkaApp.PhotoType.front, data: testImageData)
+        progress.setPhotoData(testImageData, type: .front)
 
         #expect(progress.hasAnyPhotoDataIncludingURLs)
     }
@@ -202,11 +190,12 @@ struct ProgressPhotoDataTests {
         #expect(progress.isEmpty)
 
         progress.pullUps = 10
+        try context.save()
 
         #expect(!progress.isEmpty)
 
         progress.pullUps = nil
-        progress.setPhotoData(SwiftUI_SotkaApp.PhotoType.front, data: testImageData)
+        progress.setPhotoData(testImageData, type: .front)
 
         #expect(!progress.isEmpty)
     }
@@ -221,6 +210,7 @@ struct ProgressPhotoDataTests {
         #expect(!progress.canBeDeleted)
 
         progress.pullUps = 10
+        try context.save()
 
         #expect(progress.canBeDeleted)
 
@@ -240,11 +230,11 @@ struct ProgressPhotoDataTests {
         context.insert(progress)
 
         // Устанавливаем DELETED_DATA через deletePhotoData
-        progress.deletePhotoData(SwiftUI_SotkaApp.PhotoType.front)
+        progress.deletePhotoData(.front)
 
         // Проверяем, что getPhotoData возвращает nil для DELETED_DATA
-        #expect(progress.getPhotoData(SwiftUI_SotkaApp.PhotoType.front) == nil)
-        #expect(progress.shouldDeletePhoto(SwiftUI_SotkaApp.PhotoType.front))
+        #expect(progress.getPhotoData(.front) == nil)
+        #expect(progress.shouldDeletePhoto(.front))
     }
 
     @Test("shouldDeletePhoto возвращает true для помеченных фотографий")
@@ -255,23 +245,23 @@ struct ProgressPhotoDataTests {
         context.insert(progress)
 
         // Изначально фотографии не помечены для удаления
-        #expect(!progress.shouldDeletePhoto(SwiftUI_SotkaApp.PhotoType.front))
-        #expect(!progress.shouldDeletePhoto(SwiftUI_SotkaApp.PhotoType.back))
-        #expect(!progress.shouldDeletePhoto(SwiftUI_SotkaApp.PhotoType.side))
+        #expect(!progress.shouldDeletePhoto(.front))
+        #expect(!progress.shouldDeletePhoto(.back))
+        #expect(!progress.shouldDeletePhoto(.side))
 
         // Помечаем фронтальную фотографию для удаления
-        progress.deletePhotoData(SwiftUI_SotkaApp.PhotoType.front)
+        progress.deletePhotoData(.front)
 
-        #expect(progress.shouldDeletePhoto(SwiftUI_SotkaApp.PhotoType.front))
-        #expect(!progress.shouldDeletePhoto(SwiftUI_SotkaApp.PhotoType.back))
-        #expect(!progress.shouldDeletePhoto(SwiftUI_SotkaApp.PhotoType.side))
+        #expect(progress.shouldDeletePhoto(.front))
+        #expect(!progress.shouldDeletePhoto(.back))
+        #expect(!progress.shouldDeletePhoto(.side))
 
         // Помечаем заднюю фотографию для удаления
-        progress.deletePhotoData(SwiftUI_SotkaApp.PhotoType.back)
+        progress.deletePhotoData(.back)
 
-        #expect(progress.shouldDeletePhoto(SwiftUI_SotkaApp.PhotoType.front))
-        #expect(progress.shouldDeletePhoto(SwiftUI_SotkaApp.PhotoType.back))
-        #expect(!progress.shouldDeletePhoto(SwiftUI_SotkaApp.PhotoType.side))
+        #expect(progress.shouldDeletePhoto(.front))
+        #expect(progress.shouldDeletePhoto(.back))
+        #expect(!progress.shouldDeletePhoto(.side))
     }
 
     @Test("hasPhotosToDelete возвращает true при наличии фотографий для удаления")
@@ -285,12 +275,12 @@ struct ProgressPhotoDataTests {
         #expect(!progress.hasPhotosToDelete())
 
         // Помечаем одну фотографию для удаления
-        progress.deletePhotoData(SwiftUI_SotkaApp.PhotoType.front)
+        progress.deletePhotoData(.front)
         #expect(progress.hasPhotosToDelete())
 
         // Помечаем все фотографии для удаления
-        progress.deletePhotoData(SwiftUI_SotkaApp.PhotoType.back)
-        progress.deletePhotoData(SwiftUI_SotkaApp.PhotoType.side)
+        progress.deletePhotoData(.back)
+        progress.deletePhotoData(.side)
         #expect(progress.hasPhotosToDelete())
     }
 
@@ -302,18 +292,18 @@ struct ProgressPhotoDataTests {
         context.insert(progress)
 
         // Устанавливаем данные фотографии
-        progress.setPhotoData(SwiftUI_SotkaApp.PhotoType.front, data: testImageData)
+        progress.setPhotoData(testImageData, type: .front)
         progress.urlPhotoFront = "https://example.com/front.jpg"
 
         // Помечаем для удаления
-        progress.deletePhotoData(SwiftUI_SotkaApp.PhotoType.front)
-        #expect(progress.shouldDeletePhoto(SwiftUI_SotkaApp.PhotoType.front))
+        progress.deletePhotoData(.front)
+        #expect(progress.shouldDeletePhoto(.front))
 
         // Очищаем после успешного удаления
-        progress.clearPhotoData(SwiftUI_SotkaApp.PhotoType.front)
+        progress.clearPhotoData(.front)
 
-        #expect(!progress.shouldDeletePhoto(SwiftUI_SotkaApp.PhotoType.front))
-        #expect(progress.getPhotoData(SwiftUI_SotkaApp.PhotoType.front) == nil)
+        #expect(!progress.shouldDeletePhoto(.front))
+        #expect(progress.getPhotoData(.front) == nil)
         #expect(progress.urlPhotoFront == nil)
         #expect(!progress.isSynced, "isSynced устанавливается в handlePhotoDeletion после обработки всех фотографий")
     }
@@ -326,16 +316,16 @@ struct ProgressPhotoDataTests {
         context.insert(progress)
 
         // Устанавливаем данные фотографии
-        progress.setPhotoData(SwiftUI_SotkaApp.PhotoType.front, data: testImageData)
+        progress.setPhotoData(testImageData, type: .front)
         progress.urlPhotoFront = "https://example.com/front.jpg"
         let originalLastModified = progress.lastModified
 
         // Удаляем фотографию
-        progress.deletePhotoData(SwiftUI_SotkaApp.PhotoType.front)
+        progress.deletePhotoData(.front)
 
         // Проверяем, что данные помечены для удаления, но не физически удалены
-        #expect(progress.shouldDeletePhoto(SwiftUI_SotkaApp.PhotoType.front))
-        #expect(progress.getPhotoData(SwiftUI_SotkaApp.PhotoType.front) == nil)
+        #expect(progress.shouldDeletePhoto(.front))
+        #expect(progress.getPhotoData(.front) == nil)
         #expect(progress.urlPhotoFront == nil)
         #expect(progress.lastModified > originalLastModified)
         #expect(!progress.isSynced)

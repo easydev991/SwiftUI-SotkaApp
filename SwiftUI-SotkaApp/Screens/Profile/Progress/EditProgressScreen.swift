@@ -3,15 +3,15 @@ import SwiftData
 import SwiftUI
 
 struct EditProgressScreen: View {
-    @Bindable var progress: Progress
     @Environment(\.dismiss) private var dismiss
     @Environment(\.modelContext) private var modelContext
     @State private var progressService: ProgressService
     @State private var showDeleteDialog = false
+    @State private var pickerSourceType: UIImagePickerController.SourceType?
+    @State private var selectedPhotoType: PhotoType?
     @FocusState private var focus: FocusableField?
 
     init(progress: Progress, mode: ProgressDisplayMode) {
-        self.progress = progress
         self._progressService = .init(
             initialValue: .init(progress: progress, mode: mode)
         )
@@ -23,21 +23,11 @@ struct EditProgressScreen: View {
             contentView
         }
         .animation(.default, value: progressService.displayMode)
-        .safeAreaInset(edge: .bottom, alignment: .center) {
-            saveButton
-                .padding([.horizontal, .bottom])
-        }
+        .navigationTitle(.progressEditTitle)
         .navigationBarTitleDisplayMode(.inline)
         .toolbar {
-            if progress.canBeDeleted {
-                ToolbarItem(placement: .topBarTrailing) {
-                    Button(role: .destructive) {
-                        showDeleteDialog = true
-                    } label: {
-                        Image(systemName: "trash")
-                    }
-                    .buttonStyle(.borderless)
-                }
+            ToolbarItem(placement: .topBarTrailing) {
+                saveButton
             }
             ToolbarItemGroup(placement: .keyboard) {
                 Button { focus = nil } label: {
@@ -118,8 +108,10 @@ private extension EditProgressScreen {
         case .metrics:
             metricsSection
         case .photos:
-            EditProgressPhotoScreen(progress: progress)
-                .environment(progressService)
+            photoSection
+                .fullScreenCover(item: $pickerSourceType) { sourceType in
+                    makeImagePickerView(for: sourceType)
+                }
         }
     }
 
@@ -128,11 +120,10 @@ private extension EditProgressScreen {
             List {
                 exerciseSection
                 weightSection
-                    .listSectionSeparator(.hidden)
+                deleteSection
             }
             .listStyle(.plain)
             .background(Color.swBackground)
-            .navigationTitle(.progressEditTitle)
             .task {
                 guard focus == nil else { return }
                 try? await Task.sleep(for: .milliseconds(500))
@@ -147,11 +138,23 @@ private extension EditProgressScreen {
         }
     }
 
+    @ViewBuilder
+    var deleteSection: some View {
+        if progressService.progress.canBeDeleted {
+            Button(.progressDeleteButton, role: .destructive) {
+                showDeleteDialog = true
+            }
+            .tint(.swError)
+            .buttonStyle(.bordered)
+            .listSectionSeparator(.hidden)
+        }
+    }
+
     var exerciseSection: some View {
         Section {
             ProgressInputRow(
                 dataType: .pullUps,
-                value: $progressService.pullUps,
+                value: $progressService.metricsModel.pullUps,
                 keyboardType: .numberPad,
                 focus: $focus,
                 field: .pullUps
@@ -159,7 +162,7 @@ private extension EditProgressScreen {
             .id(FocusableField.pullUps)
             ProgressInputRow(
                 dataType: .pushUps,
-                value: $progressService.pushUps,
+                value: $progressService.metricsModel.pushUps,
                 keyboardType: .numberPad,
                 focus: $focus,
                 field: .pushUps
@@ -167,7 +170,7 @@ private extension EditProgressScreen {
             .id(FocusableField.pushUps)
             ProgressInputRow(
                 dataType: .squats,
-                value: $progressService.squats,
+                value: $progressService.metricsModel.squats,
                 keyboardType: .numberPad,
                 focus: $focus,
                 field: .squats
@@ -185,7 +188,7 @@ private extension EditProgressScreen {
         Section {
             ProgressInputRow(
                 dataType: .weight,
-                value: $progressService.weight,
+                value: $progressService.metricsModel.weight,
                 keyboardType: .decimalPad,
                 focus: $focus,
                 field: .weight
@@ -196,8 +199,7 @@ private extension EditProgressScreen {
 
     var saveButton: some View {
         Button(.progressEditSave, action: performSave)
-            .buttonStyle(SWButtonStyle(mode: .filled, size: .large))
-            .disabled(!progressService.hasChanges || !progressService.canSave)
+            .disabled(!progressService.canSave)
     }
 
     var previousButton: some View {
@@ -220,6 +222,43 @@ private extension EditProgressScreen {
             Image(systemName: "chevron.right")
         }
         .disabled(focus?.next == nil)
+    }
+
+    var photoSection: some View {
+        List(progressService.photoModels) { tempModel in
+            ProgressPhotoRow(
+                model: tempModel,
+                onPhotoTap: { action in
+                    switch action {
+                    case .camera:
+                        selectedPhotoType = tempModel.type
+                        pickerSourceType = .camera
+                    case .library:
+                        selectedPhotoType = tempModel.type
+                        pickerSourceType = .photoLibrary
+                    case let .delete(photoType):
+                        progressService.deleteTempPhoto(type: photoType)
+                    }
+                }
+            )
+            .listRowSeparator(.hidden)
+        }
+        .listStyle(.plain)
+        .background(Color.swBackground)
+    }
+
+    func makeImagePickerView(
+        for sourceType: UIImagePickerController.SourceType
+    ) -> some View {
+        SWImagePicker(sourceType: sourceType) { image in
+            if let selectedPhotoType {
+                progressService.pickTempPhoto(
+                    image.jpegData(compressionQuality: 1),
+                    type: selectedPhotoType
+                )
+            }
+        }
+        .ignoresSafeArea()
     }
 
     func performSave() {

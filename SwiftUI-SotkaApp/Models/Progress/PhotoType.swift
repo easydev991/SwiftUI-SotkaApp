@@ -21,11 +21,17 @@ enum PhotoType: Int, Codable, CaseIterable {
     }
 
     /// Название типа для DELETE запроса
-    var deleteRequestName: String {
+    var requestName: String {
         switch self {
         case .front: "front"
         case .back: "back"
         case .side: "side"
         }
+    }
+}
+
+extension PhotoType: CustomStringConvertible {
+    var description: String {
+        "Тип фотографии: photo_\(requestName)"
     }
 }

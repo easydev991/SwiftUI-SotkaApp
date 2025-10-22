@@ -123,13 +123,11 @@ private extension ProgressGridView {
             // Приоритет локальным данным, fallback на URL
             if let photoData = progress.getPhotoData(type),
                let uiImage = UIImage(data: photoData) {
-                // Локальное изображение (быстрый доступ)
                 Image(uiImage: uiImage)
                     .resizable()
                     .scaledToFill()
             } else if let urlString = progress.getPhotoURL(type),
                       let url = URL(string: urlString) {
-                // Изображение с сервера (асинхронная загрузка)
                 AsyncImage(url: url) { image in
                     image
                         .resizable()
@@ -139,7 +137,6 @@ private extension ProgressGridView {
                         .frame(maxWidth: .infinity, maxHeight: .infinity)
                 }
             } else {
-                // Нет изображения
                 Image(systemName: "photo")
                     .font(.title2)
             }

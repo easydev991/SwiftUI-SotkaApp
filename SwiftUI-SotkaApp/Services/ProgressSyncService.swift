@@ -4,6 +4,10 @@ import OSLog
 import SwiftData
 import SWUtils
 
+#warning(
+    "TODO: починить синхронизацию при добавлении фото после удаления в другом слоте за одну итерацию; при следующем добавлении нового фото все фотографии разом отправляются на сервер исправно"
+)
+
 /// Сервис синхронизации прогресса пользователя
 @MainActor
 @Observable
@@ -24,83 +28,68 @@ final class ProgressSyncService {
             logger.info("Синхронизация прогресса уже выполняется")
             return
         }
-
         isSyncing = true
         logger.info("Начинаем синхронизацию прогресса")
 
-        // 0. Сначала очищаем дубликаты
-        cleanupDuplicateProgress(context: context)
+        do {
+            // Очищаем дубликаты
+            try cleanupDuplicateProgress(context: context)
 
-        // 1. Потом отправляем локальные изменения на сервер
-        await syncUnsyncedProgress(context: context)
+            // Готовим снимки данных (без доступа к контексту в задачах)
+            let snapshots = try makeProgressSnapshotsForSync(context: context)
+            logger.info("Начинаем синхронизацию \(snapshots.count) записей прогресса")
 
-        // 2. Затем загружаем серверные изменения
-        await downloadServerProgress(context: context)
+            // Параллельные сетевые операции (без ModelContext)
+            let eventsById = await runSyncTasks(snapshots: snapshots, client: client)
 
-        logger.info("Синхронизация прогресса завершена успешно")
+            // Отправляем локальные изменения на сервер и применяем результаты к ModelContext единым этапом
+            await applySyncEvents(eventsById, context: context)
+            logger.info("Синхронизация несинхронизированных записей прогресса завершена")
+
+            // Затем загружаем серверные изменения
+            await downloadServerProgress(context: context)
+
+            logger.info("Синхронизация прогресса завершена успешно")
+        } catch {
+            logger.error("Ошибка синхронизации прогресса: \(error.localizedDescription)")
+        }
 
         isSyncing = false
     }
 
-    /// Синхронизирует все несинхронизированные записи прогресса с сервером
-    private func syncUnsyncedProgress(context: ModelContext) async {
-        do {
-            // 1) Готовим снимки данных (без доступа к контексту в задачах)
-            let snapshots = try makeProgressSnapshotsForSync(context: context)
-            logger.info("Начинаем синхронизацию \(snapshots.count) записей прогресса")
-
-            // 2) Параллельные сетевые операции (без ModelContext)
-            let eventsById = await runSyncTasks(snapshots: snapshots, client: client)
-
-            // 3) Применяем результаты к ModelContext единым этапом
-            await applySyncEvents(eventsById, context: context)
-
-            logger.info("Синхронизация несинхронизированных записей прогресса завершена")
-        } catch {
-            logger.error("Ошибка получения несинхронизированного прогресса: \(error.localizedDescription)")
-        }
-    }
-
     /// Очищает дубликаты прогресса в базе данных
-    private func cleanupDuplicateProgress(context: ModelContext) {
+    private func cleanupDuplicateProgress(context: ModelContext) throws {
         do {
             guard let user = try context.fetch(FetchDescriptor<User>()).first else {
                 logger.error("Не удалось получить текущего пользователя для очистки дубликатов")
                 return
             }
-
             let allProgress = try context.fetch(FetchDescriptor<Progress>())
                 .filter { $0.user?.id == user.id }
-
-            // Группируем по id
-            let groupedProgress = Dictionary(grouping: allProgress) { $0.id }
-
+            let groupedProgress = Dictionary(grouping: allProgress, by: \.id)
             var duplicatesRemoved = 0
             for (dayId, progressList) in groupedProgress {
                 if progressList.count > 1 {
-                    // Сортируем по lastModified (новые первыми)
-                    let sortedProgress = progressList.sorted { $0.lastModified > $1.lastModified }
-
-                    // Оставляем только первую (самую новую) запись
-                    let toKeep = sortedProgress.first!
-                    let toRemove = Array(sortedProgress.dropFirst())
-
-                    // Удаляем дубликаты
-                    for duplicate in toRemove {
+                    var sortedProgress = progressList.sorted { $0.lastModified > $1.lastModified }
+                    // Оставляем только самую новую запись
+                    let toKeep = sortedProgress.removeFirst()
+                    for duplicate in sortedProgress {
                         context.delete(duplicate)
                         duplicatesRemoved += 1
                     }
-
-                    logger.info("Удалено \(toRemove.count) дубликатов для дня \(dayId), оставлена запись с датой \(toKeep.lastModified)")
+                    logger
+                        .info(
+                            "Удалено \(sortedProgress.count) дубликатов для дня \(dayId), оставлена запись с датой \(toKeep.lastModified)"
+                        )
                 }
             }
-
             if duplicatesRemoved > 0 {
                 try context.save()
                 logger.info("Очистка дубликатов завершена, удалено \(duplicatesRemoved) записей")
             }
         } catch {
             logger.error("Ошибка очистки дубликатов прогресса: \(error.localizedDescription)")
+            throw error
         }
     }
 
@@ -111,12 +100,11 @@ final class ProgressSyncService {
                 logger.error("Не удалось получить текущего пользователя для синхронизации прогресса")
                 return
             }
+            let serverProgress = try await client.getProgress()
+            logger.info("Получен ответ сервера: \(serverProgress.count) записей")
 
-            let serverProgressList = try await client.getProgress()
-            logger.info("Получен ответ сервера: \(serverProgressList.count) записей")
-
-            await mergeServerProgress(serverProgressList, user: user, context: context)
-            await handleDeletedProgress(serverProgressList, user: user, context: context)
+            await mergeServerProgress(serverProgress, user: user, context: context)
+            await handleDeletedProgress(serverProgress, user: user, context: context)
 
             try context.save()
             logger.info("Серверный прогресс загружен и обработан")
@@ -209,8 +197,6 @@ final class ProgressSyncService {
         logger.info("Создан новый прогресс дня \(newProgress.id) из ответа сервера (день \(progressResponse.id))")
     }
 }
-
-// MARK: - Snapshot & Sync Events (для конкурентной синхронизации без ModelContext)
 
 private extension ProgressSyncService {
     /// Снимок локального прогресса для безопасной передачи в конкурентные задачи без доступа к ModelContext
@@ -613,7 +599,7 @@ private extension ProgressSyncService {
             if progress.shouldDeletePhoto(photoType) {
                 do {
                     let externalDay = Progress.getExternalDayFromProgressId(progress.id)
-                    try await client.deletePhoto(day: externalDay, type: photoType.deleteRequestName)
+                    try await client.deletePhoto(day: externalDay, type: photoType.requestName)
 
                     // Очищаем данные фотографии после успешного удаления
                     progress.clearPhotoData(photoType)

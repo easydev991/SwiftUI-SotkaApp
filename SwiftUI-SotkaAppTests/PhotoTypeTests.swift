@@ -7,9 +7,9 @@ struct PhotoTypeTests {
 
     @Test("deleteRequestName возвращает правильные названия для DELETE запросов")
     func deleteRequestNameReturnsCorrectNamesForDeleteRequests() {
-        #expect(PhotoType.front.deleteRequestName == "front")
-        #expect(PhotoType.back.deleteRequestName == "back")
-        #expect(PhotoType.side.deleteRequestName == "side")
+        #expect(PhotoType.front.requestName == "front")
+        #expect(PhotoType.back.requestName == "back")
+        #expect(PhotoType.side.requestName == "side")
     }
 
     @Test("Параметризированный тест deleteRequestName", arguments: [
@@ -18,7 +18,7 @@ struct PhotoTypeTests {
         (PhotoType.side, "side")
     ])
     func deleteRequestNameParameterized(photoType: PhotoType, expectedName: String) {
-        #expect(photoType.deleteRequestName == expectedName)
+        #expect(photoType.requestName == expectedName)
     }
 
     // MARK: - localizedTitle Tests

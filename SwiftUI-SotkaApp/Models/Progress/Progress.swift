@@ -4,12 +4,9 @@ import SwiftData
 import SwiftUI
 import SWUtils
 
-private let logger = Logger(subsystem: "SotkaApp", category: "Progress")
+#warning("TODO: обновить тесты для Progress")
 
-/// Константа для пометки удаленных фотографий
-///
-/// Только байт "d", как в старом приложении
-private let DELETED_DATA = Data([0x64])
+private let logger = Logger(subsystem: "SotkaApp", category: "Progress")
 
 /// Прогресс пользователя
 @Model
@@ -26,8 +23,6 @@ final class Progress {
 
     /// Связь с пользователем
     @Relationship(inverse: \User.progressResults) var user: User?
-
-    // MARK: - Поля для фотографий прогресса (новая архитектура)
 
     /// URL фотографии спереди
     var urlPhotoFront: String?
@@ -76,7 +71,7 @@ final class Progress {
     }
 
     /// Проверяет, заполнены ли все результаты прогресса
-    var isFilled: Bool {
+    var isMetricsFilled: Bool {
         guard let pullUps, let pushUps, let squats, let weight else {
             return false
         }
@@ -84,11 +79,10 @@ final class Progress {
     }
 
     /// Проверяет, есть ли в прогрессе хотя бы какие-то данные (больше нуля)
-    var hasAnyData: Bool {
-        (pullUps.map { $0 > 0 } ?? false) ||
-            (pushUps.map { $0 > 0 } ?? false) ||
-            (squats.map { $0 > 0 } ?? false) ||
-            (weight.map { $0 > 0 } ?? false)
+    var hasAnyMetricsData: Bool {
+        let intValues = [pullUps, pushUps, squats].compactMap(\.self)
+        let hasWeightInfo = if let weight { weight > 0 } else { false }
+        return intValues.contains(where: { $0 > 0 }) || hasWeightInfo
     }
 
     /// Блок программы на основе номера дня
@@ -248,25 +242,68 @@ extension Progress {
         }
     }
 
-    // MARK: - New Photo Data Management Methods
+    func setMetricsData(_ model: TempMetricsModel) {
+        pullUps = model.pullUps.isEmpty ? nil : Int(model.pullUps)
+        pushUps = model.pushUps.isEmpty ? nil : Int(model.pushUps)
+        squats = model.squats.isEmpty ? nil : Int(model.squats)
+        weight = model.weight.isEmpty ? nil : Float.fromUIString(model.weight)
+        isSynced = false
+        shouldDelete = false
+        lastModified = .now
+    }
 
-    /// Устанавливает данные изображения для указанного типа (новая архитектура)
-    func setPhotoData(_ type: PhotoType, data: Data) {
-        switch type {
-        case .front:
-            dataPhotoFront = data
-        case .back:
-            dataPhotoBack = data
-        case .side:
-            dataPhotoSide = data
+    /// Проверяет, является ли прогресс "пустым" (нет значимых данных)
+    ///
+    /// Возвращает `true`, если все показатели равны нулю или отсутствуют, и нет фотографий
+    var isEmpty: Bool {
+        !hasAnyMetricsData && !hasAnyPhotoDataIncludingURLs
+    }
+
+    /// Проверяет, можно ли удалить прогресс (есть данные упражнений или фотографии)
+    var canBeDeleted: Bool {
+        hasAnyMetricsData || hasAnyPhotoDataIncludingURLs
+    }
+
+    /// Устанавливает lastModified в соответствии с серверным временем (как в Android)
+    ///
+    /// Если `modify_date` равен `nil`, используем `create_date`
+    func updateLastModified(from response: ProgressResponse) {
+        lastModified = response.modifyDate.flatMap {
+            DateFormatterService.dateFromString($0, format: .serverDateTimeSec)
+        } ?? DateFormatterService.dateFromString(response.createDate, format: .serverDateTimeSec)
+    }
+}
+
+extension Progress {
+    var tempPhotoItems: [TempPhotoModel] {
+        PhotoType.allCases.map { type in
+            .init(
+                type: type,
+                urlString: getPhotoURL(type),
+                data: getPhotoData(type)
+            )
         }
-        lastModified = Date()
+    }
+
+    func setPhotosData(_ photos: [TempPhotoModel]) {
+        photos.forEach { photo in
+            setPhotoData(photo.data, type: photo.type)
+        }
+    }
+
+    func setPhotoData(_ data: Data?, type: PhotoType) {
+        switch type {
+        case .front: dataPhotoFront = data
+        case .back: dataPhotoBack = data
+        case .side: dataPhotoSide = data
+        }
+        lastModified = .now
         isSynced = false
     }
 
-    /// Получает данные изображения указанного типа (новая архитектура)
-    ///
-    /// Возвращает nil для удаленных данных (DELETED_DATA)
+    /// Достает данные изображения указанного типа
+    /// - Parameter type: Тип фотографии
+    /// - Returns: Данные для фотографии или `nil`, если фото отмечено для удаления
     func getPhotoData(_ type: PhotoType) -> Data? {
         let data: Data? = switch type {
         case .front:
@@ -276,12 +313,7 @@ extension Progress {
         case .side:
             dataPhotoSide
         }
-        return data == Progress.DELETED_DATA ? nil : data
-    }
-
-    /// Проверяет, есть ли локальные данные изображения указанного типа
-    func hasPhotoData(_ type: PhotoType) -> Bool {
-        getPhotoData(type) != nil
+        return shouldDeletePhoto(type) ? nil : data
     }
 
     /// Удаляет локальные данные изображения указанного типа
@@ -309,27 +341,6 @@ extension Progress {
     /// Проверяет, есть ли данные хотя бы для одной фотографии (локальные или URL)
     var hasAnyPhotoDataIncludingURLs: Bool {
         hasAnyPhotoData || urlPhotoFront != nil || urlPhotoBack != nil || urlPhotoSide != nil
-    }
-
-    /// Проверяет, является ли прогресс "пустым" (нет значимых данных)
-    ///
-    /// Возвращает `true`, если все показатели равны нулю или отсутствуют, и нет фотографий
-    var isEmpty: Bool {
-        !hasAnyData && !hasAnyPhotoDataIncludingURLs
-    }
-
-    /// Проверяет, можно ли удалить прогресс (есть данные упражнений или фотографии)
-    var canBeDeleted: Bool {
-        hasAnyData || hasAnyPhotoDataIncludingURLs
-    }
-
-    /// Устанавливает lastModified в соответствии с серверным временем (как в Android)
-    ///
-    /// Если `modify_date` равен `nil`, используем `create_date`
-    func updateLastModified(from response: ProgressResponse) {
-        lastModified = response.modifyDate.flatMap {
-            DateFormatterService.dateFromString($0, format: .serverDateTimeSec)
-        } ?? DateFormatterService.dateFromString(response.createDate, format: .serverDateTimeSec)
     }
 
     /// Проверяет, нужно ли удалить фотографию определенного типа
@@ -378,9 +389,10 @@ extension Progress {
         }
     }
 
-    /// Получает URL фотографии указанного типа
+    /// Достает `stringUrl` фотографии указанного типа или `nil`,
+    /// если фото отмечено для удаления
     func getPhotoURL(_ type: PhotoType) -> String? {
-        switch type {
+        let urlString: String? = switch type {
         case .front:
             urlPhotoFront
         case .back:
@@ -388,11 +400,37 @@ extension Progress {
         case .side:
             urlPhotoSide
         }
+        return shouldDeletePhoto(type) ? nil : urlString
+    }
+}
+
+extension Progress: CustomStringConvertible {
+    var description: String {
+        let pullUpsDescription = "pullUps: \(pullUps ?? 0)"
+        let pushUpsDescription = "pushUps: \(pushUps ?? 0)"
+        let squatsDescription = "squats: \(squats ?? 0)"
+        let weightDescription = "weight: \(weight ?? 0)"
+        let lastModifiedDescription = "lastModified: \(lastModified)"
+        let photoFrontDescription = "urlPhotoFront: \(getPhotoURL(.front) ?? "отсутствует"), hasData: \(getPhotoData(.front) != nil)"
+        let photoBackDescription = "urlPhotoBack: \(getPhotoURL(.back) ?? "отсутствует"), hasData: \(getPhotoData(.back) != nil)"
+        let photoSideDescription = "urlPhotoSide: \(getPhotoURL(.side) ?? "отсутствует"), hasData: \(getPhotoData(.side) != nil)"
+        return [
+            pullUpsDescription,
+            pushUpsDescription,
+            squatsDescription,
+            weightDescription,
+            lastModifiedDescription,
+            photoFrontDescription,
+            photoBackDescription,
+            photoSideDescription
+        ].joined(separator: ", ")
     }
 }
 
 // MARK: - Constants
 extension Progress {
-    /// Константа для пометки удаленных фотографий (точно как в старом приложении)
-    static let DELETED_DATA = Data([0x64]) // Только байт "d"
+    /// Константа для пометки удаленных фотографий
+    ///
+    /// Только байт "d", как в старом приложении
+    static let DELETED_DATA = Data([0x64])
 }

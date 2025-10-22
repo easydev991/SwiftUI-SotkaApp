@@ -15,38 +15,20 @@ struct ProgressServiceTests {
         #expect(!service.canSave)
     }
 
-    @Test("canSave возвращает true для данных только с подтягиваниями")
+    @Test("canSave возвращает false, если данные не изменились")
     func canSaveReturnsTrueForPullUpsOnly() {
         let progress = Progress(id: 1, pullUps: 10)
         let service = ProgressService(progress: progress, mode: .metrics)
-        service.pullUps = "10"
+        service.metricsModel.pullUps = "10"
 
-        #expect(service.canSave)
-    }
-
-    @Test("canSave возвращает true для данных только с отжиманиями")
-    func canSaveReturnsTrueForPushUpsOnly() {
-        let progress = Progress(id: 1, pushUps: 20)
-        let service = ProgressService(progress: progress, mode: .metrics)
-        service.pushUps = "20"
-
-        #expect(service.canSave)
-    }
-
-    @Test("canSave возвращает true для данных только с приседаниями")
-    func canSaveReturnsTrueForSquatsOnly() {
-        let progress = Progress(id: 1, squats: 30)
-        let service = ProgressService(progress: progress, mode: .metrics)
-        service.squats = "30"
-
-        #expect(service.canSave)
+        #expect(!service.canSave)
     }
 
     @Test("canSave возвращает true для данных только с весом")
     func canSaveReturnsTrueForWeightOnly() {
         let progress = Progress(id: 1, weight: 70.5)
         let service = ProgressService(progress: progress, mode: .metrics)
-        service.weight = "70.5"
+        service.metricsModel.weight = "70.5"
 
         #expect(service.canSave)
     }
@@ -55,10 +37,10 @@ struct ProgressServiceTests {
     func canSaveReturnsTrueForCompleteData() {
         let progress = Progress(id: 1, pullUps: 10, pushUps: 20, squats: 30, weight: 70.5)
         let service = ProgressService(progress: progress, mode: .metrics)
-        service.pullUps = "10"
-        service.pushUps = "20"
-        service.squats = "30"
-        service.weight = "70.5"
+        service.metricsModel.pullUps = "10"
+        service.metricsModel.pushUps = "20"
+        service.metricsModel.squats = "30"
+        service.metricsModel.weight = "70.5"
 
         #expect(service.canSave)
     }
@@ -67,7 +49,7 @@ struct ProgressServiceTests {
     func canSaveReturnsFalseForNegativePullUps() {
         let progress = Progress(id: 1)
         let service = ProgressService(progress: progress, mode: .metrics)
-        service.pullUps = "-5"
+        service.metricsModel.pullUps = "-5"
 
         #expect(!service.canSave)
     }
@@ -76,7 +58,7 @@ struct ProgressServiceTests {
     func canSaveReturnsFalseForNegativePushUps() {
         let progress = Progress(id: 1)
         let service = ProgressService(progress: progress, mode: .metrics)
-        service.pushUps = "-10"
+        service.metricsModel.pushUps = "-10"
 
         #expect(!service.canSave)
     }
@@ -85,7 +67,7 @@ struct ProgressServiceTests {
     func canSaveReturnsFalseForNegativeSquats() {
         let progress = Progress(id: 1)
         let service = ProgressService(progress: progress, mode: .metrics)
-        service.squats = "-15"
+        service.metricsModel.squats = "-15"
 
         #expect(!service.canSave)
     }
@@ -94,7 +76,7 @@ struct ProgressServiceTests {
     func canSaveReturnsFalseForNegativeWeight() {
         let progress = Progress(id: 1)
         let service = ProgressService(progress: progress, mode: .metrics)
-        service.weight = "-70.5"
+        service.metricsModel.weight = "-70.5"
 
         #expect(!service.canSave)
     }
@@ -103,7 +85,7 @@ struct ProgressServiceTests {
     func canSaveReturnsTrueForZeroPullUps() {
         let progress = Progress(id: 1)
         let service = ProgressService(progress: progress, mode: .metrics)
-        service.pullUps = "0"
+        service.metricsModel.pullUps = "0"
 
         #expect(service.canSave)
     }
@@ -112,7 +94,7 @@ struct ProgressServiceTests {
     func canSaveReturnsTrueForZeroPushUps() {
         let progress = Progress(id: 1)
         let service = ProgressService(progress: progress, mode: .metrics)
-        service.pushUps = "0"
+        service.metricsModel.pushUps = "0"
 
         #expect(service.canSave)
     }
@@ -121,7 +103,7 @@ struct ProgressServiceTests {
     func canSaveReturnsTrueForZeroSquats() {
         let progress = Progress(id: 1)
         let service = ProgressService(progress: progress, mode: .metrics)
-        service.squats = "0"
+        service.metricsModel.squats = "0"
 
         #expect(service.canSave)
     }
@@ -130,7 +112,7 @@ struct ProgressServiceTests {
     func canSaveReturnsTrueForZeroWeight() {
         let progress = Progress(id: 1)
         let service = ProgressService(progress: progress, mode: .metrics)
-        service.weight = "0"
+        service.metricsModel.weight = "0"
 
         #expect(service.canSave)
     }
@@ -139,7 +121,7 @@ struct ProgressServiceTests {
     func canSaveReturnsTrueForDecimalWeight() {
         let progress = Progress(id: 1)
         let service = ProgressService(progress: progress, mode: .metrics)
-        service.weight = "70.5"
+        service.metricsModel.weight = "70.5"
 
         #expect(service.canSave)
     }
@@ -148,7 +130,7 @@ struct ProgressServiceTests {
     func canSaveReturnsFalseForInvalidCharactersInPullUps() {
         let progress = Progress(id: 1)
         let service = ProgressService(progress: progress, mode: .metrics)
-        service.pullUps = "10a"
+        service.metricsModel.pullUps = "10a"
 
         #expect(!service.canSave)
     }
@@ -157,64 +139,64 @@ struct ProgressServiceTests {
     func canSaveReturnsFalseForInvalidCharactersInWeight() {
         let progress = Progress(id: 1)
         let service = ProgressService(progress: progress, mode: .metrics)
-        service.weight = "70.5.5"
+        service.metricsModel.weight = "70.5.5"
 
         #expect(!service.canSave)
     }
 
     // MARK: - Определение изменений (hasChanges)
 
-    @Test("hasChanges возвращает false для нового прогресса без данных")
-    func hasChangesReturnsFalseForNewProgressWithoutData() {
+    @Test("canSave возвращает false для нового прогресса без данных")
+    func canSaveReturnsFalseForNewProgressWithoutData() {
         let progress = Progress(id: 1)
         let service = ProgressService(progress: progress, mode: .metrics)
 
-        #expect(!service.hasChanges)
+        #expect(!service.canSave)
     }
 
-    @Test("hasChanges возвращает true для нового прогресса с данными")
-    func hasChangesReturnsTrueForNewProgressWithData() {
+    @Test("canSave возвращает true для нового прогресса с данными")
+    func canSaveReturnsTrueForNewProgressWithData() {
         let progress = Progress(id: 1)
         let service = ProgressService(progress: progress, mode: .metrics)
-        service.pullUps = "10"
+        service.metricsModel.pullUps = "10"
 
-        #expect(service.hasChanges)
+        #expect(service.canSave)
     }
 
-    @Test("hasChanges возвращает false для существующего прогресса без изменений")
-    func hasChangesReturnsFalseForExistingProgressWithoutChanges() {
+    @Test("canSave возвращает false для существующего прогресса без изменений")
+    func canSaveReturnsFalseForExistingProgressWithoutChanges() {
         let progress = Progress(id: 1, pullUps: 10, pushUps: 20, squats: 30, weight: 70.5)
         let service = ProgressService(progress: progress, mode: .metrics)
         // Данные загружаются из прогресса, поэтому изменений нет
 
-        #expect(!service.hasChanges)
+        #expect(!service.canSave)
     }
 
-    @Test("hasChanges возвращает true при изменении подтягиваний")
-    func hasChangesReturnsTrueWhenPullUpsChanged() {
+    @Test("canSave возвращает true при изменении подтягиваний")
+    func canSaveReturnsTrueWhenPullUpsChanged() {
         let progress = Progress(id: 1, pullUps: 10, pushUps: 20, squats: 30, weight: 70.5)
         let service = ProgressService(progress: progress, mode: .metrics)
-        service.pullUps = "15" // Изменили значение
+        service.metricsModel.pullUps = "15" // Изменили значение
 
-        #expect(service.hasChanges)
+        #expect(service.canSave)
     }
 
-    @Test("hasChanges возвращает true при изменении веса")
-    func hasChangesReturnsTrueWhenWeightChanged() {
+    @Test("canSave возвращает true при изменении веса")
+    func canSaveReturnsTrueWhenWeightChanged() {
         let progress = Progress(id: 1, pullUps: 10, pushUps: 20, squats: 30, weight: 70.5)
         let service = ProgressService(progress: progress, mode: .metrics)
-        service.weight = "75.0" // Изменили значение
+        service.metricsModel.weight = "75.0" // Изменили значение
 
-        #expect(service.hasChanges)
+        #expect(service.canSave)
     }
 
-    @Test("hasChanges возвращает false при установке того же значения")
-    func hasChangesReturnsFalseWhenSettingSameValue() {
+    @Test("canSave возвращает false при установке того же значения")
+    func canSaveReturnsFalseWhenSettingSameValue() {
         let progress = Progress(id: 1, pullUps: 10, pushUps: 20, squats: 30, weight: 70.5)
         let service = ProgressService(progress: progress, mode: .metrics)
-        service.pullUps = "10" // Установили то же значение
+        service.metricsModel.pullUps = "10" // Установили то же значение
 
-        #expect(!service.hasChanges)
+        #expect(!service.canSave)
     }
 
     // MARK: - Загрузка данных (loadProgress)
@@ -224,10 +206,10 @@ struct ProgressServiceTests {
         let progress = Progress(id: 1, pullUps: 10, pushUps: 20, squats: 30, weight: 70.5)
         let service = ProgressService(progress: progress, mode: .metrics)
 
-        #expect(service.pullUps == "10")
-        #expect(service.pushUps == "20")
-        #expect(service.squats == "30")
-        #expect(service.weight == "70,5") // Конвертация точки в запятую для UI
+        #expect(service.metricsModel.pullUps == "10")
+        #expect(service.metricsModel.pushUps == "20")
+        #expect(service.metricsModel.squats == "30")
+        #expect(service.metricsModel.weight == "70,5") // Конвертация точки в запятую для UI
     }
 
     @Test("loadProgress корректно обрабатывает nil значения")
@@ -235,10 +217,10 @@ struct ProgressServiceTests {
         let progress = Progress(id: 1, pullUps: nil, pushUps: 20, squats: nil, weight: nil)
         let service = ProgressService(progress: progress, mode: .metrics)
 
-        #expect(service.pullUps == "")
-        #expect(service.pushUps == "20")
-        #expect(service.squats == "")
-        #expect(service.weight == "")
+        #expect(service.metricsModel.pullUps == "")
+        #expect(service.metricsModel.pushUps == "20")
+        #expect(service.metricsModel.squats == "")
+        #expect(service.metricsModel.weight == "")
     }
 
     @Test("loadProgress корректно обрабатывает нулевые значения")
@@ -246,10 +228,10 @@ struct ProgressServiceTests {
         let progress = Progress(id: 1, pullUps: 0, pushUps: 0, squats: 0, weight: 0.0)
         let service = ProgressService(progress: progress, mode: .metrics)
 
-        #expect(service.pullUps == "")
-        #expect(service.pushUps == "")
-        #expect(service.squats == "")
-        #expect(service.weight == "")
+        #expect(service.metricsModel.pullUps == "")
+        #expect(service.metricsModel.pushUps == "")
+        #expect(service.metricsModel.squats == "")
+        #expect(service.metricsModel.weight == "")
     }
 
     // MARK: - Сохранение данных (saveProgress)
@@ -274,10 +256,10 @@ struct ProgressServiceTests {
         let service = ProgressService(progress: progress, mode: .metrics)
 
         // Устанавливаем данные
-        service.pullUps = "15"
-        service.pushUps = "25"
-        service.squats = "35"
-        service.weight = "75.5"
+        service.metricsModel.pullUps = "15"
+        service.metricsModel.pushUps = "25"
+        service.metricsModel.squats = "35"
+        service.metricsModel.weight = "75.5"
 
         // Сохраняем
         try service.saveProgress(context: modelContext)
@@ -310,7 +292,7 @@ struct ProgressServiceTests {
         let service = ProgressService(progress: progress, mode: .metrics)
 
         // Устанавливаем данные
-        service.pullUps = "10"
+        service.metricsModel.pullUps = "10"
 
         // Сохраняем
         try service.saveProgress(context: modelContext)

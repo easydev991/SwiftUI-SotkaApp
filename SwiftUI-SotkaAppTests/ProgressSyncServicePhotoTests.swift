@@ -190,14 +190,9 @@ struct ProgressSyncServicePhotoTests {
     @Test("Проверка работы с локальными данными фотографий")
     func progressPhotoDataHandling() {
         let progress = Progress(id: 1, pullUps: 10, pushUps: 20, squats: 30, weight: 70.0)
-
-        progress.setPhotoData(.front, data: testImageData)
-        progress.setPhotoData(.back, data: testImageData)
-        progress.setPhotoData(.side, data: testImageData)
-
-        #expect(progress.hasPhotoData(.front))
-        #expect(progress.hasPhotoData(.back))
-        #expect(progress.hasPhotoData(.side))
+        progress.setPhotoData(testImageData, type: .front)
+        progress.setPhotoData(testImageData, type: .back)
+        progress.setPhotoData(testImageData, type: .side)
         #expect(progress.hasAnyPhotoData)
     }
 
@@ -475,9 +470,9 @@ struct ProgressSyncServicePhotoTests {
         // Создаем прогресс с данными и фотографиями
         let progress = Progress(id: 1, pullUps: 10, pushUps: 20, squats: 30, weight: 70.0)
         progress.user = user
-        progress.setPhotoData(.front, data: testImageData)
-        progress.setPhotoData(.back, data: testImageData)
-        progress.setPhotoData(.side, data: testImageData)
+        progress.setPhotoData(testImageData, type: .front)
+        progress.setPhotoData(testImageData, type: .back)
+        progress.setPhotoData(testImageData, type: .side)
         context.insert(progress)
         try context.save()
 
@@ -495,5 +490,100 @@ struct ProgressSyncServicePhotoTests {
         #expect(!updatedProgress.shouldDeletePhoto(.side)) // Не была помечена для удаления
         #expect(updatedProgress.getPhotoData(.side) == testImageData) // Должна остаться
         #expect(updatedProgress.isSynced)
+    }
+
+    @Test("Тест ProgressSnapshot логики фильтрации фотографий")
+    func progressSnapshotPhotoFiltering() {
+        let progress = Progress(id: 1, pullUps: 10, pushUps: 20, squats: 30, weight: 70.0)
+
+        // Устанавливаем данные фотографий
+        let frontData = Data("front_photo".utf8)
+        let backData = Data("back_photo".utf8)
+        let sideData = Data("side_photo".utf8)
+
+        progress.setPhotoData(frontData, type: .front)
+        progress.setPhotoData(backData, type: .back)
+        progress.setPhotoData(sideData, type: .side)
+
+        // Помечаем заднюю фотографию для удаления
+        progress.deletePhotoData(.back)
+
+        let snapshot = SwiftUI_SotkaApp.ProgressSnapshot(from: progress)
+
+        #expect(snapshot.shouldDeletePhoto, "shouldDeletePhoto должен быть true (есть фото для удаления)")
+        #expect(!snapshot.isSynced, "Прогресс не синхронизирован")
+        #expect(!snapshot.shouldDelete, "Прогресс не помечен для удаления (только фото помечено для удаления)")
+
+        // Проверяем photosForUpload - только не удаленные фото должны быть включены
+        let photosForUpload = snapshot.photosForUpload
+        #expect(photosForUpload.count == 2, "Должно быть 2 фото для загрузки")
+        #expect(photosForUpload["photo_front"] != nil, "photo_front должна быть в photosForUpload")
+        #expect(photosForUpload["photo_side"] != nil, "photo_side должна быть в photosForUpload")
+        #expect(photosForUpload["photo_back"] == nil, "photo_back НЕ должна быть в photosForUpload (помечена для удаления)")
+    }
+
+    @Test("Тест ProgressSnapshot с несколькими типами данных")
+    func progressSnapshotMultipleDataTypes() {
+        let progress = Progress(id: 1, pullUps: 10, pushUps: 20, squats: 30, weight: 70.0)
+
+        // Устанавливаем только некоторые данные
+        progress.setPhotoData(Data("front_photo".utf8), type: .front)
+        progress.deletePhotoData(.side) // Помечаем для удаления без данных
+
+        let snapshot = SwiftUI_SotkaApp.ProgressSnapshot(from: progress)
+
+        #expect(snapshot.pullups == 10, "pullups должен соответствовать")
+        #expect(snapshot.pushups == 20, "pushups должен соответствовать")
+        #expect(snapshot.squats == 30, "squats должен соответствовать")
+        #expect(snapshot.weight == 70.0, "weight должен соответствовать")
+
+        #expect(snapshot.shouldDeletePhoto, "shouldDeletePhoto должен быть true")
+        #expect(snapshot.photosForUpload.count == 1, "Должно быть 1 фото для загрузки")
+        #expect(snapshot.photosForUpload["photo_front"] != nil, "photo_front должна быть в photosForUpload")
+        #expect(snapshot.photosForUpload["photo_side"] == nil, "photo_side не должна быть в photosForUpload")
+    }
+
+    @Test("Тест ProgressSnapshot без фотографий для удаления")
+    func progressSnapshotNoPhotosToDelete() {
+        let progress = Progress(id: 1, pullUps: 10, pushUps: 20, squats: 30, weight: 70.0)
+        progress.setPhotoData(Data("front_photo".utf8), type: .front)
+        progress.setPhotoData(Data("back_photo".utf8), type: .back)
+
+        let snapshot = SwiftUI_SotkaApp.ProgressSnapshot(from: progress)
+
+        #expect(!snapshot.shouldDeletePhoto, "shouldDeletePhoto должен быть false")
+        #expect(snapshot.photosForUpload.count == 2, "Должно быть 2 фото для загрузки")
+        #expect(snapshot.photosForUpload["photo_front"] != nil, "photo_front должна быть в photosForUpload")
+        #expect(snapshot.photosForUpload["photo_back"] != nil, "photo_back должна быть в photosForUpload")
+    }
+
+    @Test("Тест ProgressSnapshot с пустыми данными")
+    func progressSnapshotEmptyData() {
+        let progress = Progress(id: 1, pullUps: 0, pushUps: 0, squats: 0, weight: 0.0)
+
+        let snapshot = SwiftUI_SotkaApp.ProgressSnapshot(from: progress)
+
+        #expect(!snapshot.shouldDeletePhoto, "shouldDeletePhoto должен быть false")
+        #expect(snapshot.photosForUpload.isEmpty, "photosForUpload должен быть пустым")
+        #expect(snapshot.pullups == 0, "pullups должен быть 0")
+        #expect(snapshot.pushups == 0, "pushups должен быть 0")
+        #expect(snapshot.squats == 0, "squats должен быть 0")
+        #expect(snapshot.weight == 0.0, "weight должен быть 0.0")
+    }
+
+    @Test("Тест isDeletedPhoto логики")
+    func isDeletedPhotoLogic() {
+        let progress = Progress(id: 1, pullUps: 10, pushUps: 20, squats: 30, weight: 70.0)
+
+        // Тестируем с DELETED_DATA
+        progress.setPhotoData(Progress.DELETED_DATA, type: .front)
+        progress.setPhotoData(Data("normal_photo".utf8), type: .back)
+
+        let snapshot = SwiftUI_SotkaApp.ProgressSnapshot(from: progress)
+
+        #expect(snapshot.shouldDeletePhoto, "shouldDeletePhoto должен быть true")
+        #expect(snapshot.photosForUpload.count == 1, "Должно быть 1 фото для загрузки")
+        #expect(snapshot.photosForUpload["photo_front"] == nil, "photo_front не должна быть в photosForUpload")
+        #expect(snapshot.photosForUpload["photo_back"] != nil, "photo_back должна быть в photosForUpload")
     }
 }

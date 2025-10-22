@@ -229,7 +229,7 @@ private extension CustomExercisesService {
             let exercises = try await client.getCustomExercises()
             let existingExercises = try context.fetch(FetchDescriptor<CustomExercise>())
                 .filter { $0.user?.id == user.id }
-            let existingDict = Dictionary(uniqueKeysWithValues: existingExercises.map { ($0.id, $0) })
+            let existingDict = Dictionary(existingExercises.map { ($0.id, $0) }, uniquingKeysWith: { $1 })
 
             for exerciseResponse in exercises {
                 if let existingExercise = existingDict[exerciseResponse.id] {
@@ -289,8 +289,12 @@ private extension CustomExercisesService {
     /// Синхронизирует все несинхронизированные упражнения с сервером
     /// - Parameter context: Контекст Swift Data
     func syncUnsyncedExercises(context: ModelContext) async {
-        guard !isSyncing else { return }
+        guard !isSyncing else {
+            logger.info("Синхронизация упражнений уже выполняется")
+            return
+        }
         isSyncing = true
+        logger.info("Начинаем синхронизацию упражнений")
 
         do {
             // 1) Готовим снимки данных (без доступа к контексту в задачах)
@@ -413,7 +417,7 @@ private extension CustomExercisesService {
                 return
             }
             let existing = try context.fetch(FetchDescriptor<CustomExercise>()).filter { $0.user?.id == user.id }
-            let dict = Dictionary(uniqueKeysWithValues: existing.map { ($0.id, $0) })
+            let dict = Dictionary(existing.map { ($0.id, $0) }, uniquingKeysWith: { $1 })
 
             for (id, event) in events {
                 switch event {
