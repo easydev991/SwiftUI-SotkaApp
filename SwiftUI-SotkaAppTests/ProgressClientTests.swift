@@ -143,17 +143,17 @@ struct ProgressClientTests {
         #expect(mockClient.lastDeletePhotoType == type)
     }
 
-    // MARK: - Integration with PhotoType Tests
+    // MARK: - Integration with ProgressPhotoType Tests
 
-    @Test("deletePhoto работает с PhotoType.requestName")
+    @Test("deletePhoto работает с ProgressPhotoType.requestName")
     func deletePhotoWorksWithPhotoTyperequestName() async throws {
         // Arrange
         let mockClient = MockProgressClient()
 
         // Act
-        try await mockClient.deletePhoto(day: 1, type: PhotoType.front.requestName)
-        try await mockClient.deletePhoto(day: 49, type: PhotoType.back.requestName)
-        try await mockClient.deletePhoto(day: 100, type: PhotoType.side.requestName)
+        try await mockClient.deletePhoto(day: 1, type: ProgressPhotoType.front.requestName)
+        try await mockClient.deletePhoto(day: 49, type: ProgressPhotoType.back.requestName)
+        try await mockClient.deletePhoto(day: 100, type: ProgressPhotoType.side.requestName)
 
         // Assert
         #expect(mockClient.deletePhotoCallCount == 3)

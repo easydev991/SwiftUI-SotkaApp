@@ -11,7 +11,7 @@ struct ProgressSyncServiceMixedPhotoOperationsTests {
     @Test("Баг: удаление photo_back и добавление photo_front - новое фото не загружается")
     func bugDeleteBackAddFrontPhoto() async throws {
         let container = try ModelContainer(
-            for: Progress.self,
+            for: UserProgress.self,
             User.self,
             configurations: ModelConfiguration(isStoredInMemoryOnly: true)
         )
@@ -19,7 +19,7 @@ struct ProgressSyncServiceMixedPhotoOperationsTests {
         let user = User(id: 1)
         context.insert(user)
 
-        let progress = Progress(
+        let progress = UserProgress(
             id: 1,
             pullUps: 10,
             pushUps: 20,
@@ -72,7 +72,7 @@ struct ProgressSyncServiceMixedPhotoOperationsTests {
     @Test("Корректный сценарий: удаление и добавление в тот же слот")
     func correctDeleteAndAddSameSlot() async throws {
         let container = try ModelContainer(
-            for: Progress.self,
+            for: UserProgress.self,
             User.self,
             configurations: ModelConfiguration(isStoredInMemoryOnly: true)
         )
@@ -80,7 +80,7 @@ struct ProgressSyncServiceMixedPhotoOperationsTests {
         let user = User(id: 1)
         context.insert(user)
 
-        let progress = Progress(
+        let progress = UserProgress(
             id: 1,
             pullUps: 10,
             pushUps: 20,
@@ -132,7 +132,7 @@ struct ProgressSyncServiceMixedPhotoOperationsTests {
     @Test("ProgressSnapshot shouldDeletePhoto логика")
     func progressSnapshotShouldDeletePhotoLogic() throws {
         let container = try ModelContainer(
-            for: Progress.self,
+            for: UserProgress.self,
             User.self,
             configurations: ModelConfiguration(isStoredInMemoryOnly: true)
         )
@@ -140,7 +140,7 @@ struct ProgressSyncServiceMixedPhotoOperationsTests {
         let user = User(id: 1)
         context.insert(user)
 
-        let progress = Progress(
+        let progress = UserProgress(
             id: 1,
             pullUps: 10,
             pushUps: 20,
@@ -152,12 +152,12 @@ struct ProgressSyncServiceMixedPhotoOperationsTests {
         progress.user = user
         context.insert(progress)
 
-        progress.deletePhotoData(PhotoType.back)
+        progress.deletePhotoData(ProgressPhotoType.back)
         progress.setPhotoData(Data("side_photo".utf8), type: .side)
 
         try context.save()
 
-        let snapshot = SwiftUI_SotkaApp.ProgressSnapshot(from: progress)
+        let snapshot = ProgressSnapshot(from: progress)
 
         #expect(snapshot.shouldDeletePhoto, "shouldDeletePhoto должен быть true (есть photo_back для удаления)")
         #expect(progress.shouldDeletePhoto(.back), "photo_back должна быть помечена для удаления")
@@ -176,7 +176,7 @@ struct ProgressSyncServiceMixedPhotoOperationsTests {
     @Test("Race condition: параллельная обработка двух слотов с конфликтами")
     func raceConditionTwoSlotsWithConflicts() async throws {
         let container = try ModelContainer(
-            for: Progress.self,
+            for: UserProgress.self,
             User.self,
             configurations: ModelConfiguration(isStoredInMemoryOnly: true)
         )
@@ -185,13 +185,13 @@ struct ProgressSyncServiceMixedPhotoOperationsTests {
         context.insert(user)
 
         // Создаем два слота с конфликтами
-        let progressA = Progress(id: 1, pullUps: 10, pushUps: 20, squats: 30, weight: 70.0)
+        let progressA = UserProgress(id: 1, pullUps: 10, pushUps: 20, squats: 30, weight: 70.0)
         progressA.user = user
         progressA.isSynced = false
         progressA.deletePhotoData(.front) // Удаление фото в слоте A
         context.insert(progressA)
 
-        let progressB = Progress(id: 2, pullUps: 15, pushUps: 25, squats: 35, weight: 72.0)
+        let progressB = UserProgress(id: 2, pullUps: 15, pushUps: 25, squats: 35, weight: 72.0)
         progressB.user = user
         progressB.isSynced = false
         progressB.setPhotoData(Data("new_photo".utf8), type: .back) // Добавление фото в слоте B
@@ -234,7 +234,7 @@ struct ProgressSyncServiceMixedPhotoOperationsTests {
         await syncService.syncProgress(context: context)
 
         // Проверяем, что оба слота обработаны корректно
-        let allProgress = try context.fetch(FetchDescriptor<SwiftUI_SotkaApp.Progress>())
+        let allProgress = try context.fetch(FetchDescriptor<UserProgress>())
         #expect(allProgress.count == 2)
 
         let updatedProgressA = allProgress.first { $0.id == 1 }
@@ -259,7 +259,7 @@ struct ProgressSyncServiceMixedPhotoOperationsTests {
     @Test("Конфликт состояний флагов синхронизации - запись синхронизируется")
     func conflictingSyncFlagsSynchronized() async throws {
         let container = try ModelContainer(
-            for: Progress.self,
+            for: UserProgress.self,
             User.self,
             configurations: ModelConfiguration(isStoredInMemoryOnly: true)
         )
@@ -267,7 +267,7 @@ struct ProgressSyncServiceMixedPhotoOperationsTests {
         let user = User(id: 1)
         context.insert(user)
 
-        let progress = Progress(id: 1, pullUps: 10, pushUps: 20, squats: 30, weight: 70.0)
+        let progress = UserProgress(id: 1, pullUps: 10, pushUps: 20, squats: 30, weight: 70.0)
         progress.user = user
         progress.shouldDelete = true
         progress.isSynced = false
@@ -289,16 +289,16 @@ struct ProgressSyncServiceMixedPhotoOperationsTests {
         let syncService = ProgressSyncService(client: mockClient)
         await syncService.syncProgress(context: context)
 
-        let allProgress = try context.fetch(FetchDescriptor<SwiftUI_SotkaApp.Progress>())
+        let allProgress = try context.fetch(FetchDescriptor<UserProgress>())
         let updatedProgress = try #require(allProgress.first)
         #expect(updatedProgress.isSynced, "Запись должна быть синхронизирована")
         #expect(!updatedProgress.shouldDelete, "Флаг shouldDelete должен быть сброшен")
     }
 
-    @Test("Конфликт состояний флагов синхронизации - запись синхронизируется при ошибке")
-    func conflictingSyncFlagsErrorHandling() async throws {
+    @Test("Конфликт состояний флагов синхронизации - запись удаляется при ошибке")
+    func conflictingSyncFlagsErrorHandlingRecordDeleted() async throws {
         let container = try ModelContainer(
-            for: Progress.self,
+            for: UserProgress.self,
             User.self,
             configurations: ModelConfiguration(isStoredInMemoryOnly: true)
         )
@@ -306,7 +306,7 @@ struct ProgressSyncServiceMixedPhotoOperationsTests {
         let user = User(id: 1)
         context.insert(user)
 
-        let progress = Progress(id: 1, pullUps: 10, pushUps: 20, squats: 30, weight: 70.0)
+        let progress = UserProgress(id: 1, pullUps: 10, pushUps: 20, squats: 30, weight: 70.0)
         progress.user = user
         progress.shouldDelete = true
         progress.isSynced = false
@@ -319,16 +319,14 @@ struct ProgressSyncServiceMixedPhotoOperationsTests {
         let syncService = ProgressSyncService(client: mockClient)
         await syncService.syncProgress(context: context)
 
-        let allProgress = try context.fetch(FetchDescriptor<SwiftUI_SotkaApp.Progress>())
-        let updatedProgress = try #require(allProgress.first)
-        #expect(!updatedProgress.shouldDelete, "Флаг shouldDelete должен быть сброшен при синхронизации")
-        #expect(updatedProgress.isSynced, "Флаг isSynced должен быть установлен при синхронизации")
+        let allProgress = try context.fetch(FetchDescriptor<UserProgress>())
+        #expect(allProgress.isEmpty, "При ошибке запись должна быть удалена из контекста")
     }
 
     @Test("Проверка логирования состояний флагов")
     func verifyFlagStateLogging() async throws {
         let container = try ModelContainer(
-            for: Progress.self,
+            for: UserProgress.self,
             User.self,
             configurations: ModelConfiguration(isStoredInMemoryOnly: true)
         )
@@ -336,7 +334,7 @@ struct ProgressSyncServiceMixedPhotoOperationsTests {
         let user = User(id: 1)
         context.insert(user)
 
-        let progress = Progress(id: 1, pullUps: 10, pushUps: 20, squats: 30, weight: 70.0)
+        let progress = UserProgress(id: 1, pullUps: 10, pushUps: 20, squats: 30, weight: 70.0)
         progress.user = user
         progress.isSynced = false
         progress.setPhotoData(Data("test_photo".utf8), type: .front)
@@ -361,7 +359,7 @@ struct ProgressSyncServiceMixedPhotoOperationsTests {
         await syncService.syncProgress(context: context)
 
         // Проверяем финальное состояние
-        let updatedProgress = try #require(context.fetch(FetchDescriptor<SwiftUI_SotkaApp.Progress>()).first)
+        let updatedProgress = try #require(context.fetch(FetchDescriptor<UserProgress>()).first)
         #expect(updatedProgress.isSynced, "Должен быть синхронизирован")
         #expect(!updatedProgress.shouldDelete, "Не должен быть помечен для удаления")
         #expect(updatedProgress.urlPhotoFront == "https://server.com/photo.jpg", "URL фото должен быть обновлен")
@@ -370,7 +368,7 @@ struct ProgressSyncServiceMixedPhotoOperationsTests {
     @Test("Тест обработки пустого прогресса")
     func handleEmptyProgress() async throws {
         let container = try ModelContainer(
-            for: Progress.self,
+            for: UserProgress.self,
             User.self,
             configurations: ModelConfiguration(isStoredInMemoryOnly: true)
         )
@@ -379,7 +377,7 @@ struct ProgressSyncServiceMixedPhotoOperationsTests {
         context.insert(user)
 
         // Создаем пустой прогресс (без данных)
-        let progress = Progress(id: 1, pullUps: 0, pushUps: 0, squats: 0, weight: 0.0)
+        let progress = UserProgress(id: 1, pullUps: 0, pushUps: 0, squats: 0, weight: 0.0)
         progress.user = user
         progress.isSynced = false
         context.insert(progress)
@@ -402,14 +400,14 @@ struct ProgressSyncServiceMixedPhotoOperationsTests {
         await syncService.syncProgress(context: context)
 
         // Пустой прогресс должен быть обработан корректно
-        let updatedProgress = try #require(context.fetch(FetchDescriptor<SwiftUI_SotkaApp.Progress>()).first)
+        let updatedProgress = try #require(context.fetch(FetchDescriptor<UserProgress>()).first)
         #expect(updatedProgress.isSynced, "Пустой прогресс должен быть синхронизирован")
     }
 
     @Test("Тест параллельной обработки нескольких независимых слотов")
     func parallelProcessingIndependentSlots() async throws {
         let container = try ModelContainer(
-            for: Progress.self,
+            for: UserProgress.self,
             User.self,
             configurations: ModelConfiguration(isStoredInMemoryOnly: true)
         )
@@ -419,7 +417,13 @@ struct ProgressSyncServiceMixedPhotoOperationsTests {
 
         // Создаем несколько независимых слотов
         for dayId in 1 ... 3 {
-            let progress = Progress(id: dayId, pullUps: dayId * 10, pushUps: dayId * 20, squats: dayId * 30, weight: Float(dayId) * 70.0)
+            let progress = UserProgress(
+                id: dayId,
+                pullUps: dayId * 10,
+                pushUps: dayId * 20,
+                squats: dayId * 30,
+                weight: Float(dayId) * 70.0
+            )
             progress.user = user
             progress.isSynced = false
             context.insert(progress)
@@ -446,7 +450,7 @@ struct ProgressSyncServiceMixedPhotoOperationsTests {
         await syncService.syncProgress(context: context)
 
         // Все слоты должны быть синхронизированы
-        let allProgress = try context.fetch(FetchDescriptor<SwiftUI_SotkaApp.Progress>())
+        let allProgress = try context.fetch(FetchDescriptor<UserProgress>())
         #expect(allProgress.count == 3, "Все 3 слота должны существовать")
 
         for progress in allProgress {

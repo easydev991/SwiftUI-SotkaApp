@@ -33,7 +33,7 @@ struct ProgressServicePhotoTests {
 
     private func createTestModelContext() throws -> ModelContext {
         let modelConfiguration = ModelConfiguration(isStoredInMemoryOnly: true)
-        let modelContainer = try ModelContainer(for: User.self, Progress.self, configurations: modelConfiguration)
+        let modelContainer = try ModelContainer(for: User.self, UserProgress.self, configurations: modelConfiguration)
 
         // Создаем тестового пользователя
         let user = User(id: 1, userName: "test", email: "test@test.com", cityID: nil)

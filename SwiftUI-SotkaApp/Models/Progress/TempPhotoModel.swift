@@ -4,18 +4,18 @@ import Foundation
 /// Модель для временной фотографии, пока ее не сохранят в `SwiftData`
 struct TempPhotoModel: Identifiable, Equatable {
     let id: String
-    let type: PhotoType
+    let type: ProgressPhotoType
     let urlString: String?
     let data: Data?
     let canBeDeleted: Bool
     let isMarkedForDeletion: Bool
 
     init(
-        type: PhotoType,
+        type: ProgressPhotoType,
         urlString: String?,
         data: Data?
     ) {
-        let isMarkedForDeletion = data == Progress.DELETED_DATA
+        let isMarkedForDeletion = data == UserProgress.DELETED_DATA
         self.id = type.requestName
         self.type = type
         self.urlString = isMarkedForDeletion ? nil : urlString
@@ -29,7 +29,7 @@ extension TempPhotoModel: CustomStringConvertible {
     var description: String {
         let typeDescription = type.description
         let urlDescription = "ссылка: \(urlString.map(\.description) ?? "отсутствует")"
-        let dataStateDescription = data != nil && data != Progress.DELETED_DATA
+        let dataStateDescription = data != nil && data != UserProgress.DELETED_DATA
             ? "данные для картинки есть"
             : "нет данных для картинки"
         let isMarkedForDeletionDescription = isMarkedForDeletion

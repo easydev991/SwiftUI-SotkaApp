@@ -4,13 +4,13 @@ import SwiftData
 import SwiftUI
 import SWUtils
 
-#warning("TODO: обновить тесты для Progress")
+#warning("TODO: обновить тесты для UserProgress")
 
-private let logger = Logger(subsystem: "SotkaApp", category: "Progress")
+private let logger = Logger(subsystem: "SotkaApp", category: "UserProgress")
 
 /// Прогресс пользователя
 @Model
-final class Progress {
+final class UserProgress {
     /// Совпадает с номером дня
     var id: Int
     var pullUps: Int?
@@ -90,7 +90,7 @@ final class Progress {
         Section(day: id)
     }
 
-    /// Создает Progress из ProgressResponse
+    /// Создает UserProgress из ProgressResponse
     convenience init(from response: ProgressResponse, user: User) {
         let lastModified = response.modifyDate.flatMap {
             DateFormatterService.dateFromString($0, format: .serverDateTimeSec)
@@ -111,7 +111,7 @@ final class Progress {
         self.shouldDelete = false
     }
 
-    /// Создает Progress из ProgressResponse с маппингом дня
+    /// Создает UserProgress из ProgressResponse с маппингом дня
     convenience init(from response: ProgressResponse, user: User, internalDay: Int) {
         let lastModified = response.modifyDate.flatMap {
             DateFormatterService.dateFromString($0, format: .serverDateTimeSec)
@@ -133,7 +133,7 @@ final class Progress {
     }
 }
 
-extension Progress {
+extension UserProgress {
     enum Section: Int, CaseIterable, Codable {
         /// Базовый блок
         case one = 1
@@ -191,7 +191,7 @@ extension Progress {
 
 // MARK: - ProgressDataType
 
-extension Progress {
+extension UserProgress {
     /// Типы данных прогресса
     enum DataType: CaseIterable {
         case weight
@@ -274,9 +274,9 @@ extension Progress {
     }
 }
 
-extension Progress {
+extension UserProgress {
     var tempPhotoItems: [TempPhotoModel] {
-        PhotoType.allCases.map { type in
+        ProgressPhotoType.allCases.map { type in
             .init(
                 type: type,
                 urlString: getPhotoURL(type),
@@ -291,7 +291,7 @@ extension Progress {
         }
     }
 
-    func setPhotoData(_ data: Data?, type: PhotoType) {
+    func setPhotoData(_ data: Data?, type: ProgressPhotoType) {
         switch type {
         case .front: dataPhotoFront = data
         case .back: dataPhotoBack = data
@@ -304,7 +304,7 @@ extension Progress {
     /// Достает данные изображения указанного типа
     /// - Parameter type: Тип фотографии
     /// - Returns: Данные для фотографии или `nil`, если фото отмечено для удаления
-    func getPhotoData(_ type: PhotoType) -> Data? {
+    func getPhotoData(_ type: ProgressPhotoType) -> Data? {
         let data: Data? = switch type {
         case .front:
             dataPhotoFront
@@ -317,16 +317,16 @@ extension Progress {
     }
 
     /// Удаляет локальные данные изображения указанного типа
-    func deletePhotoData(_ type: PhotoType) {
+    func deletePhotoData(_ type: ProgressPhotoType) {
         switch type {
         case .front:
-            dataPhotoFront = Progress.DELETED_DATA
+            dataPhotoFront = UserProgress.DELETED_DATA
             urlPhotoFront = nil
         case .back:
-            dataPhotoBack = Progress.DELETED_DATA
+            dataPhotoBack = UserProgress.DELETED_DATA
             urlPhotoBack = nil
         case .side:
-            dataPhotoSide = Progress.DELETED_DATA
+            dataPhotoSide = UserProgress.DELETED_DATA
             urlPhotoSide = nil
         }
         lastModified = Date()
@@ -344,13 +344,13 @@ extension Progress {
     }
 
     /// Проверяет, нужно ли удалить фотографию определенного типа
-    func shouldDeletePhoto(_ type: PhotoType) -> Bool {
+    func shouldDeletePhoto(_ type: ProgressPhotoType) -> Bool {
         let data: Data? = switch type {
         case .front: dataPhotoFront
         case .back: dataPhotoBack
         case .side: dataPhotoSide
         }
-        return data == Progress.DELETED_DATA
+        return data == UserProgress.DELETED_DATA
     }
 
     /// Проверяет, есть ли фотографии для удаления
@@ -361,7 +361,7 @@ extension Progress {
     }
 
     /// Очищает данные фотографии после успешного удаления
-    func clearPhotoData(_ type: PhotoType) {
+    func clearPhotoData(_ type: ProgressPhotoType) {
         switch type {
         case .front:
             dataPhotoFront = nil
@@ -378,7 +378,7 @@ extension Progress {
     }
 
     /// Проверяет, есть ли фотография указанного типа (URL или данные)
-    func hasPhoto(_ type: PhotoType) -> Bool {
+    func hasPhoto(_ type: ProgressPhotoType) -> Bool {
         switch type {
         case .front:
             dataPhotoFront != nil || urlPhotoFront != nil
@@ -391,7 +391,7 @@ extension Progress {
 
     /// Достает `stringUrl` фотографии указанного типа или `nil`,
     /// если фото отмечено для удаления
-    func getPhotoURL(_ type: PhotoType) -> String? {
+    func getPhotoURL(_ type: ProgressPhotoType) -> String? {
         let urlString: String? = switch type {
         case .front:
             urlPhotoFront
@@ -404,7 +404,7 @@ extension Progress {
     }
 }
 
-extension Progress: CustomStringConvertible {
+extension UserProgress: CustomStringConvertible {
     var description: String {
         let pullUpsDescription = "pullUps: \(pullUps ?? 0)"
         let pushUpsDescription = "pushUps: \(pushUps ?? 0)"
@@ -428,7 +428,7 @@ extension Progress: CustomStringConvertible {
 }
 
 // MARK: - Constants
-extension Progress {
+extension UserProgress {
     /// Константа для пометки удаленных фотографий
     ///
     /// Только байт "d", как в старом приложении

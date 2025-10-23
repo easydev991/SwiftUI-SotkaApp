@@ -8,10 +8,10 @@ struct EditProgressScreen: View {
     @State private var progressService: ProgressService
     @State private var showDeleteDialog = false
     @State private var pickerSourceType: UIImagePickerController.SourceType?
-    @State private var selectedPhotoType: PhotoType?
+    @State private var selectedPhotoType: ProgressPhotoType?
     @FocusState private var focus: FocusableField?
 
-    init(progress: Progress, mode: ProgressDisplayMode) {
+    init(progress: UserProgress, mode: ProgressDisplayMode) {
         self._progressService = .init(
             initialValue: .init(progress: progress, mode: mode)
         )
@@ -274,7 +274,7 @@ private extension EditProgressScreen {
 // MARK: - ProgressInputRow
 
 private struct ProgressInputRow: View {
-    let dataType: Progress.DataType
+    let dataType: UserProgress.DataType
     @Binding var value: String
     let keyboardType: UIKeyboardType
     let focus: FocusState<EditProgressScreen.FocusableField?>.Binding
@@ -322,7 +322,7 @@ private struct ProgressInputRow: View {
 #Preview("Синхронизированный") {
     NavigationStack {
         EditProgressScreen(progress: {
-            let progress = Progress(id: 1, pullUps: 10, pushUps: 20, squats: 30, weight: 70.5)
+            let progress = UserProgress(id: 1, pullUps: 10, pushUps: 20, squats: 30, weight: 70.5)
             progress.isSynced = true
             return progress
         }(), mode: .metrics)

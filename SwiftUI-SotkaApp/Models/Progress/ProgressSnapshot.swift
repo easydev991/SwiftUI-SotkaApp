@@ -26,7 +26,7 @@ struct ProgressSnapshot: Sendable, Hashable {
     /// Проверяет, является ли данные фотографии помеченными для удаления
     private func isDeletedPhoto(_ data: Data?) -> Bool {
         guard let data else { return false }
-        return data == Progress.DELETED_DATA
+        return data == UserProgress.DELETED_DATA
     }
 
     /// Создает словарь фотографий для отправки на сервер (только не удаленные)
@@ -51,8 +51,8 @@ struct ProgressSnapshot: Sendable, Hashable {
         return photos
     }
 
-    /// Создает ProgressSnapshot из Progress модели
-    init(from progress: Progress) {
+    /// Создает ProgressSnapshot из UserProgress модели
+    init(from progress: UserProgress) {
         self.id = progress.id
         self.pullups = progress.pullUps
         self.pushups = progress.pushUps

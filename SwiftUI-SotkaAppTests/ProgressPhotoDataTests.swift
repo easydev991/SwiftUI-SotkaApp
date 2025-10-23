@@ -7,8 +7,8 @@ import UIKit
 struct ProgressPhotoDataTests {
     // MARK: - Test Data
 
-    private func createTestProgress(context: ModelContext) -> SwiftUI_SotkaApp.Progress {
-        let progress = Progress(
+    private func createTestProgress(context: ModelContext) -> UserProgress {
+        let progress = UserProgress(
             id: 1,
             pullUps: 10,
             pushUps: 20,
@@ -32,7 +32,7 @@ struct ProgressPhotoDataTests {
 
     @Test("Установка данных изображения")
     func setPhotoData() throws {
-        let container = try ModelContainer(for: Progress.self, configurations: ModelConfiguration(isStoredInMemoryOnly: true))
+        let container = try ModelContainer(for: UserProgress.self, configurations: ModelConfiguration(isStoredInMemoryOnly: true))
         let context = ModelContext(container)
         let progress = createTestProgress(context: context)
         let originalLastModified = progress.lastModified
@@ -48,7 +48,7 @@ struct ProgressPhotoDataTests {
 
     @Test("Получение данных изображения")
     func getPhotoData() throws {
-        let container = try ModelContainer(for: Progress.self, configurations: ModelConfiguration(isStoredInMemoryOnly: true))
+        let container = try ModelContainer(for: UserProgress.self, configurations: ModelConfiguration(isStoredInMemoryOnly: true))
         let context = ModelContext(container)
         let progress = createTestProgress(context: context)
         progress.setPhotoData(testImageData, type: .back)
@@ -60,7 +60,7 @@ struct ProgressPhotoDataTests {
 
     @Test("Удаление данных изображения")
     func deletePhotoData() throws {
-        let container = try ModelContainer(for: Progress.self, configurations: ModelConfiguration(isStoredInMemoryOnly: true))
+        let container = try ModelContainer(for: UserProgress.self, configurations: ModelConfiguration(isStoredInMemoryOnly: true))
         let context = ModelContext(container)
         let progress = createTestProgress(context: context)
         progress.setPhotoData(testImageData, type: .front)
@@ -75,7 +75,7 @@ struct ProgressPhotoDataTests {
 
     @Test("Проверка наличия любых данных фото")
     func hasAnyPhotoData() throws {
-        let container = try ModelContainer(for: Progress.self, configurations: ModelConfiguration(isStoredInMemoryOnly: true))
+        let container = try ModelContainer(for: UserProgress.self, configurations: ModelConfiguration(isStoredInMemoryOnly: true))
         let context = ModelContext(container)
         let progress = createTestProgress(context: context)
 
@@ -88,7 +88,7 @@ struct ProgressPhotoDataTests {
 
     @Test("Обновление lastModified из серверного ответа")
     func updateLastModified() throws {
-        let container = try ModelContainer(for: Progress.self, configurations: ModelConfiguration(isStoredInMemoryOnly: true))
+        let container = try ModelContainer(for: UserProgress.self, configurations: ModelConfiguration(isStoredInMemoryOnly: true))
         let context = ModelContext(container)
         let progress = createTestProgress(context: context)
         let originalLastModified = progress.lastModified
@@ -113,7 +113,7 @@ struct ProgressPhotoDataTests {
 
     @Test("Обновление lastModified когда modifyDate равен null")
     func updateLastModifiedWithNullModifyDate() throws {
-        let container = try ModelContainer(for: Progress.self, configurations: ModelConfiguration(isStoredInMemoryOnly: true))
+        let container = try ModelContainer(for: UserProgress.self, configurations: ModelConfiguration(isStoredInMemoryOnly: true))
         let context = ModelContext(container)
         let progress = createTestProgress(context: context)
         let originalLastModified = progress.lastModified
@@ -138,10 +138,10 @@ struct ProgressPhotoDataTests {
 
     @Test("Создание прогресса с URL фотографий")
     func progressCreationWithPhotoURLs() throws {
-        let container = try ModelContainer(for: Progress.self, configurations: ModelConfiguration(isStoredInMemoryOnly: true))
+        let container = try ModelContainer(for: UserProgress.self, configurations: ModelConfiguration(isStoredInMemoryOnly: true))
         let context = ModelContext(container)
 
-        let progress = Progress(
+        let progress = UserProgress(
             id: 1,
             pullUps: 10,
             pushUps: 20,
@@ -163,7 +163,7 @@ struct ProgressPhotoDataTests {
 
     @Test("Проверка hasAnyPhotoDataIncludingURLs с URL")
     func hasAnyPhotoDataIncludingURLs() throws {
-        let container = try ModelContainer(for: Progress.self, configurations: ModelConfiguration(isStoredInMemoryOnly: true))
+        let container = try ModelContainer(for: UserProgress.self, configurations: ModelConfiguration(isStoredInMemoryOnly: true))
         let context = ModelContext(container)
         let progress = createTestProgress(context: context)
 
@@ -182,9 +182,9 @@ struct ProgressPhotoDataTests {
 
     @Test("Проверка isEmpty")
     func isEmpty() throws {
-        let container = try ModelContainer(for: Progress.self, configurations: ModelConfiguration(isStoredInMemoryOnly: true))
+        let container = try ModelContainer(for: UserProgress.self, configurations: ModelConfiguration(isStoredInMemoryOnly: true))
         let context = ModelContext(container)
-        let progress = Progress(id: 1)
+        let progress = UserProgress(id: 1)
         context.insert(progress)
 
         #expect(progress.isEmpty)
@@ -202,9 +202,9 @@ struct ProgressPhotoDataTests {
 
     @Test("Проверка canBeDeleted")
     func canBeDeleted() throws {
-        let container = try ModelContainer(for: Progress.self, configurations: ModelConfiguration(isStoredInMemoryOnly: true))
+        let container = try ModelContainer(for: UserProgress.self, configurations: ModelConfiguration(isStoredInMemoryOnly: true))
         let context = ModelContext(container)
-        let progress = Progress(id: 1)
+        let progress = UserProgress(id: 1)
         context.insert(progress)
 
         #expect(!progress.canBeDeleted)
@@ -224,9 +224,9 @@ struct ProgressPhotoDataTests {
 
     @Test("DELETED_DATA константа имеет правильное значение")
     func deletedDataConstantHasCorrectValue() throws {
-        let container = try ModelContainer(for: Progress.self, configurations: ModelConfiguration(isStoredInMemoryOnly: true))
+        let container = try ModelContainer(for: UserProgress.self, configurations: ModelConfiguration(isStoredInMemoryOnly: true))
         let context = ModelContext(container)
-        let progress = Progress(id: 1)
+        let progress = UserProgress(id: 1)
         context.insert(progress)
 
         // Устанавливаем DELETED_DATA через deletePhotoData
@@ -239,9 +239,9 @@ struct ProgressPhotoDataTests {
 
     @Test("shouldDeletePhoto возвращает true для помеченных фотографий")
     func shouldDeletePhotoReturnsTrueForMarkedPhotos() throws {
-        let container = try ModelContainer(for: Progress.self, configurations: ModelConfiguration(isStoredInMemoryOnly: true))
+        let container = try ModelContainer(for: UserProgress.self, configurations: ModelConfiguration(isStoredInMemoryOnly: true))
         let context = ModelContext(container)
-        let progress = Progress(id: 1)
+        let progress = UserProgress(id: 1)
         context.insert(progress)
 
         // Изначально фотографии не помечены для удаления
@@ -266,9 +266,9 @@ struct ProgressPhotoDataTests {
 
     @Test("hasPhotosToDelete возвращает true при наличии фотографий для удаления")
     func hasPhotosToDeleteReturnsTrueWhenPhotosMarkedForDeletion() throws {
-        let container = try ModelContainer(for: Progress.self, configurations: ModelConfiguration(isStoredInMemoryOnly: true))
+        let container = try ModelContainer(for: UserProgress.self, configurations: ModelConfiguration(isStoredInMemoryOnly: true))
         let context = ModelContext(container)
-        let progress = Progress(id: 1)
+        let progress = UserProgress(id: 1)
         context.insert(progress)
 
         // Изначально нет фотографий для удаления
@@ -286,9 +286,9 @@ struct ProgressPhotoDataTests {
 
     @Test("clearPhotoData очищает данные после успешного удаления")
     func clearPhotoDataClearsDataAfterSuccessfulDeletion() throws {
-        let container = try ModelContainer(for: Progress.self, configurations: ModelConfiguration(isStoredInMemoryOnly: true))
+        let container = try ModelContainer(for: UserProgress.self, configurations: ModelConfiguration(isStoredInMemoryOnly: true))
         let context = ModelContext(container)
-        let progress = Progress(id: 1)
+        let progress = UserProgress(id: 1)
         context.insert(progress)
 
         // Устанавливаем данные фотографии
@@ -310,9 +310,9 @@ struct ProgressPhotoDataTests {
 
     @Test("deletePhotoData устанавливает DELETED_DATA вместо физического удаления")
     func deletePhotoDataSetsDeletedDataInsteadOfPhysicalDeletion() throws {
-        let container = try ModelContainer(for: Progress.self, configurations: ModelConfiguration(isStoredInMemoryOnly: true))
+        let container = try ModelContainer(for: UserProgress.self, configurations: ModelConfiguration(isStoredInMemoryOnly: true))
         let context = ModelContext(container)
-        let progress = Progress(id: 1)
+        let progress = UserProgress(id: 1)
         context.insert(progress)
 
         // Устанавливаем данные фотографии
@@ -331,11 +331,14 @@ struct ProgressPhotoDataTests {
         #expect(!progress.isSynced)
     }
 
-    @Test("Параметризированный тест shouldDeletePhoto", arguments: [PhotoType.front, PhotoType.back, PhotoType.side])
-    func shouldDeletePhotoParameterized(photoType: PhotoType) throws {
-        let container = try ModelContainer(for: Progress.self, configurations: ModelConfiguration(isStoredInMemoryOnly: true))
+    @Test(
+        "Параметризированный тест shouldDeletePhoto",
+        arguments: [ProgressPhotoType.front, ProgressPhotoType.back, ProgressPhotoType.side]
+    )
+    func shouldDeletePhotoParameterized(photoType: ProgressPhotoType) throws {
+        let container = try ModelContainer(for: UserProgress.self, configurations: ModelConfiguration(isStoredInMemoryOnly: true))
         let context = ModelContext(container)
-        let progress = Progress(id: 1)
+        let progress = UserProgress(id: 1)
         context.insert(progress)
 
         // Изначально фотография не помечена для удаления

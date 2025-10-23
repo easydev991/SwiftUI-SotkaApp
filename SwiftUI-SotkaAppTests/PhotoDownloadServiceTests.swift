@@ -5,12 +5,12 @@ import Testing
 
 @MainActor
 struct PhotoDownloadServiceTests {
-    private typealias PhotoType = SwiftUI_SotkaApp.PhotoType
-    private typealias ProgressSUT = SwiftUI_SotkaApp.Progress
+    private typealias PhotoType = ProgressPhotoType
+    private typealias ProgressSUT = UserProgress
 
     // MARK: - PhotoDownloadService Tests
 
-    @Test("Проверка начального состояния модели Progress")
+    @Test("Проверка начального состояния модели UserProgress")
     func initialProgressState() {
         let progress = ProgressSUT(id: 1, pullUps: 10, pushUps: 20, squats: 30, weight: 70.0)
 
@@ -26,7 +26,7 @@ struct PhotoDownloadServiceTests {
         progress.urlPhotoFront = "https://example.com/front.jpg"
         progress.urlPhotoBack = "https://example.com/back.jpg"
         progress.urlPhotoSide = "https://example.com/side.jpg"
-        let service = SwiftUI_SotkaApp.PhotoDownloadService()
+        let service = PhotoDownloadService()
 
         await service.downloadAllPhotos(for: progress)
 
@@ -43,7 +43,7 @@ struct PhotoDownloadServiceTests {
         progress.urlPhotoSide = "https://example.com/side.jpg"
 
         let task = Task {
-            await SwiftUI_SotkaApp.PhotoDownloadService().downloadAllPhotos(for: progress)
+            await PhotoDownloadService().downloadAllPhotos(for: progress)
         }
 
         await task.value

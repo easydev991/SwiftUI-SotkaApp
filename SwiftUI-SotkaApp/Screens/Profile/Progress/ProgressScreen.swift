@@ -4,9 +4,9 @@ import SwiftUI
 
 struct ProgressScreen: View {
     private let logger = Logger(subsystem: "SwiftUI-SotkaApp", category: "ProgressScreen")
-    @Query(filter: #Predicate<Progress> { progress in
+    @Query(filter: #Predicate<UserProgress> { progress in
         progress.shouldDelete == false
-    }) var items: [Progress]
+    }) var items: [UserProgress]
     @Environment(StatusManager.self) private var statusManager
     @State private var navigationDestination: ProgressDestination?
     let user: User
@@ -52,7 +52,7 @@ private extension ProgressScreen {
     }
 
     /// Возвращает модель прогресса для указанной секции или заглушку
-    func makeModel(for section: Progress.Section) -> Progress {
+    func makeModel(for section: UserProgress.Section) -> UserProgress {
         user.progressResults.first { $0.id == section.rawValue } ?? .init(id: section.rawValue)
     }
 }

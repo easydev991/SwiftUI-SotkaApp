@@ -12,7 +12,7 @@ struct ProgressSyncServiceTests {
         let mockClient = MockProgressClient()
         let service = ProgressSyncService(client: mockClient)
         let container = try ModelContainer(
-            for: Progress.self,
+            for: UserProgress.self,
             User.self,
             configurations: ModelConfiguration(isStoredInMemoryOnly: true)
         )
@@ -24,7 +24,7 @@ struct ProgressSyncServiceTests {
         try context.save()
 
         // Создаем локальный прогресс (несинхронизированный)
-        let progress = Progress(id: 1, pullUps: 10, pushUps: 20, squats: 30, weight: 70.0)
+        let progress = UserProgress(id: 1, pullUps: 10, pushUps: 20, squats: 30, weight: 70.0)
         progress.user = user
         progress.isSynced = false
         progress.lastModified = Date()
@@ -47,7 +47,7 @@ struct ProgressSyncServiceTests {
         await service.syncProgress(context: context)
 
         // Assert
-        let allProgress = try context.fetch(FetchDescriptor<SwiftUI_SotkaApp.Progress>())
+        let allProgress = try context.fetch(FetchDescriptor<UserProgress>())
         #expect(allProgress.count == 1)
 
         let syncedProgress = try #require(allProgress.first)
@@ -65,7 +65,7 @@ struct ProgressSyncServiceTests {
         let mockClient = MockProgressClient()
         let service = ProgressSyncService(client: mockClient)
         let container = try ModelContainer(
-            for: Progress.self,
+            for: UserProgress.self,
             User.self,
             configurations: ModelConfiguration(isStoredInMemoryOnly: true)
         )
@@ -77,7 +77,7 @@ struct ProgressSyncServiceTests {
         try context.save()
 
         // Создаем локальный синхронизированный прогресс
-        let progress = Progress(id: 1, pullUps: 10, pushUps: 20, squats: 30, weight: 70.0)
+        let progress = UserProgress(id: 1, pullUps: 10, pushUps: 20, squats: 30, weight: 70.0)
         progress.user = user
         progress.isSynced = true
         progress.lastModified = Date().addingTimeInterval(-3600) // 1 час назад
@@ -100,7 +100,7 @@ struct ProgressSyncServiceTests {
         await service.syncProgress(context: context)
 
         // Assert
-        let allProgress = try context.fetch(FetchDescriptor<SwiftUI_SotkaApp.Progress>())
+        let allProgress = try context.fetch(FetchDescriptor<UserProgress>())
         #expect(allProgress.count == 1)
 
         let updatedProgress = try #require(allProgress.first)
@@ -117,7 +117,7 @@ struct ProgressSyncServiceTests {
         let mockClient = MockProgressClient()
         let service = ProgressSyncService(client: mockClient)
         let container = try ModelContainer(
-            for: Progress.self,
+            for: UserProgress.self,
             User.self,
             configurations: ModelConfiguration(isStoredInMemoryOnly: true)
         )
@@ -130,7 +130,7 @@ struct ProgressSyncServiceTests {
 
         // Создаем локальный прогресс с более новой датой
         let localModifyDate = Date()
-        let progress = Progress(id: 1, pullUps: 10, pushUps: 20, squats: 30, weight: 70.0)
+        let progress = UserProgress(id: 1, pullUps: 10, pushUps: 20, squats: 30, weight: 70.0)
         progress.user = user
         progress.isSynced = true // Синхронизированный прогресс (не отправляется на сервер)
         progress.lastModified = localModifyDate
@@ -154,7 +154,7 @@ struct ProgressSyncServiceTests {
         await service.syncProgress(context: context)
 
         // Assert - локальные данные должны сохраниться
-        let allProgress = try context.fetch(FetchDescriptor<SwiftUI_SotkaApp.Progress>())
+        let allProgress = try context.fetch(FetchDescriptor<UserProgress>())
         #expect(allProgress.count == 1)
 
         let updatedProgress = try #require(allProgress.first)
@@ -170,7 +170,7 @@ struct ProgressSyncServiceTests {
         let mockClient = MockProgressClient()
         let service = ProgressSyncService(client: mockClient)
         let container = try ModelContainer(
-            for: Progress.self,
+            for: UserProgress.self,
             User.self,
             configurations: ModelConfiguration(isStoredInMemoryOnly: true)
         )
@@ -182,7 +182,7 @@ struct ProgressSyncServiceTests {
         try context.save()
 
         // Создаем локальный прогресс со старой датой
-        let progress = Progress(id: 1, pullUps: 10, pushUps: 20, squats: 30, weight: 70.0)
+        let progress = UserProgress(id: 1, pullUps: 10, pushUps: 20, squats: 30, weight: 70.0)
         progress.user = user
         progress.isSynced = true
         progress.lastModified = Date().addingTimeInterval(-3600) // 1 час назад
@@ -206,7 +206,7 @@ struct ProgressSyncServiceTests {
         await service.syncProgress(context: context)
 
         // Assert - серверные данные должны быть применены
-        let allProgress = try context.fetch(FetchDescriptor<SwiftUI_SotkaApp.Progress>())
+        let allProgress = try context.fetch(FetchDescriptor<UserProgress>())
         #expect(allProgress.count == 1)
 
         let updatedProgress = try #require(allProgress.first)
@@ -222,7 +222,7 @@ struct ProgressSyncServiceTests {
         let mockClient = MockProgressClient()
         let service = ProgressSyncService(client: mockClient)
         let container = try ModelContainer(
-            for: Progress.self,
+            for: UserProgress.self,
             User.self,
             configurations: ModelConfiguration(isStoredInMemoryOnly: true)
         )
@@ -234,7 +234,7 @@ struct ProgressSyncServiceTests {
         try context.save()
 
         // Создаем локальный прогресс, помеченный для удаления
-        let progress = Progress(id: 1, pullUps: 10, pushUps: 20, squats: 30, weight: 70.0)
+        let progress = UserProgress(id: 1, pullUps: 10, pushUps: 20, squats: 30, weight: 70.0)
         progress.user = user
         progress.shouldDelete = true
         progress.isSynced = false
@@ -245,7 +245,7 @@ struct ProgressSyncServiceTests {
         await service.syncProgress(context: context)
 
         // Assert
-        let allProgress = try context.fetch(FetchDescriptor<SwiftUI_SotkaApp.Progress>())
+        let allProgress = try context.fetch(FetchDescriptor<UserProgress>())
         #expect(allProgress.isEmpty, "Прогресс должен быть удален")
     }
 
@@ -255,7 +255,7 @@ struct ProgressSyncServiceTests {
         let mockClient = MockProgressClient()
         let service = ProgressSyncService(client: mockClient)
         let container = try ModelContainer(
-            for: Progress.self,
+            for: UserProgress.self,
             User.self,
             configurations: ModelConfiguration(isStoredInMemoryOnly: true)
         )
@@ -282,7 +282,7 @@ struct ProgressSyncServiceTests {
         await service.syncProgress(context: context)
 
         // Assert
-        let allProgress = try context.fetch(FetchDescriptor<SwiftUI_SotkaApp.Progress>())
+        let allProgress = try context.fetch(FetchDescriptor<UserProgress>())
         #expect(allProgress.count == 1)
 
         let newProgress = try #require(allProgress.first)
@@ -301,7 +301,7 @@ struct ProgressSyncServiceTests {
         let mockClient = MockProgressClient()
         let service = ProgressSyncService(client: mockClient)
         let container = try ModelContainer(
-            for: Progress.self,
+            for: UserProgress.self,
             User.self,
             configurations: ModelConfiguration(isStoredInMemoryOnly: true)
         )
@@ -313,7 +313,7 @@ struct ProgressSyncServiceTests {
         try context.save()
 
         // Создаем локальный синхронизированный прогресс с старой датой
-        let progress = Progress(id: 1, pullUps: 10, pushUps: 20, squats: 30, weight: 70.0)
+        let progress = UserProgress(id: 1, pullUps: 10, pushUps: 20, squats: 30, weight: 70.0)
         progress.user = user
         progress.isSynced = true
         progress.lastModified = Date().addingTimeInterval(-3600) // 1 час назад, чтобы не попасть под проверку "недавно синхронизирован"
@@ -327,7 +327,7 @@ struct ProgressSyncServiceTests {
         await service.syncProgress(context: context)
 
         // Assert
-        let allProgress = try context.fetch(FetchDescriptor<SwiftUI_SotkaApp.Progress>())
+        let allProgress = try context.fetch(FetchDescriptor<UserProgress>())
         #expect(allProgress.count == 1)
         let updatedProgress = try #require(allProgress.first)
         #expect(updatedProgress.shouldDelete, "Должен быть помечен для удаления")
@@ -340,7 +340,7 @@ struct ProgressSyncServiceTests {
         let mockClient = MockProgressClient()
         let service = ProgressSyncService(client: mockClient)
         let container = try ModelContainer(
-            for: Progress.self,
+            for: UserProgress.self,
             User.self,
             configurations: ModelConfiguration(isStoredInMemoryOnly: true)
         )
@@ -352,7 +352,7 @@ struct ProgressSyncServiceTests {
         try context.save()
 
         // Создаем локальный несинхронизированный прогресс
-        let progress = Progress(id: 1, pullUps: 10, pushUps: 20, squats: 30, weight: 70.0)
+        let progress = UserProgress(id: 1, pullUps: 10, pushUps: 20, squats: 30, weight: 70.0)
         progress.user = user
         progress.isSynced = false
         context.insert(progress)
@@ -365,7 +365,7 @@ struct ProgressSyncServiceTests {
         await service.syncProgress(context: context)
 
         // Assert - локальный прогресс должен остаться без изменений
-        let unchangedProgress = try #require(context.fetch(FetchDescriptor<SwiftUI_SotkaApp.Progress>()).first)
+        let unchangedProgress = try #require(context.fetch(FetchDescriptor<UserProgress>()).first)
         #expect(!unchangedProgress.isSynced, "Должен остаться несинхронизированным")
         #expect(!unchangedProgress.shouldDelete)
         #expect(unchangedProgress.pullUps == 10)
@@ -377,7 +377,7 @@ struct ProgressSyncServiceTests {
         let mockClient = MockProgressClient()
         let service = ProgressSyncService(client: mockClient)
         let container = try ModelContainer(
-            for: Progress.self,
+            for: UserProgress.self,
             User.self,
             configurations: ModelConfiguration(isStoredInMemoryOnly: true)
         )
@@ -389,13 +389,13 @@ struct ProgressSyncServiceTests {
         try context.save()
 
         // Создаем дубликаты прогресса для одного дня
-        let progress1 = Progress(id: 1, pullUps: 10, pushUps: 20, squats: 30, weight: 70.0)
+        let progress1 = UserProgress(id: 1, pullUps: 10, pushUps: 20, squats: 30, weight: 70.0)
         progress1.user = user
         progress1.isSynced = false
         progress1.lastModified = Date().addingTimeInterval(-3600) // 1 час назад
         context.insert(progress1)
 
-        let progress2 = Progress(id: 1, pullUps: 15, pushUps: 25, squats: 35, weight: 72.0) // Дубликат с другими данными
+        let progress2 = UserProgress(id: 1, pullUps: 15, pushUps: 25, squats: 35, weight: 72.0) // Дубликат с другими данными
         progress2.user = user
         progress2.isSynced = false
         progress2.lastModified = Date() // Более новая дата
@@ -407,7 +407,7 @@ struct ProgressSyncServiceTests {
         await service.syncProgress(context: context)
 
         // Assert - должен остаться только один прогресс (более новый)
-        let allProgress = try context.fetch(FetchDescriptor<SwiftUI_SotkaApp.Progress>())
+        let allProgress = try context.fetch(FetchDescriptor<UserProgress>())
         #expect(allProgress.count == 1, "Должен остаться только один прогресс после очистки дубликатов")
 
         let remainingProgress = try #require(allProgress.first)
@@ -423,7 +423,7 @@ struct ProgressSyncServiceTests {
         let mockClient = MockProgressClient()
         let service = ProgressSyncService(client: mockClient)
         let container = try ModelContainer(
-            for: Progress.self,
+            for: UserProgress.self,
             User.self,
             configurations: ModelConfiguration(isStoredInMemoryOnly: true)
         )
@@ -435,17 +435,17 @@ struct ProgressSyncServiceTests {
         try context.save()
 
         // Создаем различные типы записей прогресса
-        let syncedProgress = Progress(id: 1, pullUps: 10, pushUps: 20, squats: 30, weight: 70.0)
+        let syncedProgress = UserProgress(id: 1, pullUps: 10, pushUps: 20, squats: 30, weight: 70.0)
         syncedProgress.user = user
         syncedProgress.isSynced = true // Синхронизированный - не должен попасть в snapshots
         context.insert(syncedProgress)
 
-        let unsyncedProgress = Progress(id: 2, pullUps: 15, pushUps: 25, squats: 35, weight: 72.0)
+        let unsyncedProgress = UserProgress(id: 2, pullUps: 15, pushUps: 25, squats: 35, weight: 72.0)
         unsyncedProgress.user = user
         unsyncedProgress.isSynced = false // Несинхронизированный - должен попасть в snapshots
         context.insert(unsyncedProgress)
 
-        let progressForDeletion = Progress(id: 3, pullUps: 0, pushUps: 0, squats: 0, weight: 0.0)
+        let progressForDeletion = UserProgress(id: 3, pullUps: 0, pushUps: 0, squats: 0, weight: 0.0)
         progressForDeletion.user = user
         progressForDeletion.shouldDelete = true
         progressForDeletion.isSynced = false // Помеченный для удаления - должен попасть в snapshots
@@ -457,7 +457,7 @@ struct ProgressSyncServiceTests {
         await service.syncProgress(context: context)
 
         // Проверяем, что записи обработаны корректно
-        let allProgress = try context.fetch(FetchDescriptor<SwiftUI_SotkaApp.Progress>())
+        let allProgress = try context.fetch(FetchDescriptor<UserProgress>())
         #expect(allProgress.count == 2, "Должно остаться 2 записи (синхронизированная и несинхронизированная)")
 
         // Проверяем финальные состояния
@@ -476,7 +476,7 @@ struct ProgressSyncServiceTests {
         let mockClient = MockProgressClient()
         let service = ProgressSyncService(client: mockClient)
         let container = try ModelContainer(
-            for: Progress.self,
+            for: UserProgress.self,
             User.self,
             configurations: ModelConfiguration(isStoredInMemoryOnly: true)
         )
@@ -488,7 +488,7 @@ struct ProgressSyncServiceTests {
         try context.save()
 
         // Создаем локальный прогресс с более новыми данными
-        let progress = Progress(id: 1, pullUps: 10, pushUps: 20, squats: 30, weight: 70.0)
+        let progress = UserProgress(id: 1, pullUps: 10, pushUps: 20, squats: 30, weight: 70.0)
         progress.user = user
         progress.isSynced = true
         progress.lastModified = Date().addingTimeInterval(3600) // Локальная дата новее (на 1 час)
@@ -512,7 +512,7 @@ struct ProgressSyncServiceTests {
         await service.syncProgress(context: context)
 
         // Assert - локальные данные должны сохраниться (локальная версия новее)
-        let updatedProgress = try #require(context.fetch(FetchDescriptor<SwiftUI_SotkaApp.Progress>()).first)
+        let updatedProgress = try #require(context.fetch(FetchDescriptor<UserProgress>()).first)
         #expect(updatedProgress.pullUps == 10, "Локальные данные должны сохраниться")
         #expect(updatedProgress.pushUps == 20)
         #expect(updatedProgress.squats == 30)
@@ -526,7 +526,7 @@ struct ProgressSyncServiceTests {
         let mockClient = MockProgressClient()
         let service = ProgressSyncService(client: mockClient)
         let container = try ModelContainer(
-            for: Progress.self,
+            for: UserProgress.self,
             User.self,
             configurations: ModelConfiguration(isStoredInMemoryOnly: true)
         )
@@ -538,7 +538,7 @@ struct ProgressSyncServiceTests {
         try context.save()
 
         // Создаем прогресс с фотографиями помеченными для удаления
-        let progress = Progress(id: 1, pullUps: 10, pushUps: 20, squats: 30, weight: 70.0)
+        let progress = UserProgress(id: 1, pullUps: 10, pushUps: 20, squats: 30, weight: 70.0)
         progress.user = user
         progress.deletePhotoData(.front)
         progress.deletePhotoData(.back)
@@ -549,7 +549,7 @@ struct ProgressSyncServiceTests {
         await service.syncProgress(context: context)
 
         // Assert - фотографии должны быть очищены после успешного удаления
-        let updatedProgress = try #require(context.fetch(FetchDescriptor<SwiftUI_SotkaApp.Progress>()).first)
+        let updatedProgress = try #require(context.fetch(FetchDescriptor<UserProgress>()).first)
         #expect(!updatedProgress.shouldDeletePhoto(.front), "Фронтальная фотография не должна быть помечена для удаления")
         #expect(!updatedProgress.shouldDeletePhoto(.back), "Задняя фотография не должна быть помечена для удаления")
         #expect(updatedProgress.isSynced, "Прогресс должен быть синхронизирован")
@@ -562,7 +562,7 @@ struct ProgressSyncServiceTests {
         mockClient.shouldThrowError = true // Имитируем ошибки сети
         let service = ProgressSyncService(client: mockClient)
         let container = try ModelContainer(
-            for: Progress.self,
+            for: UserProgress.self,
             User.self,
             configurations: ModelConfiguration(isStoredInMemoryOnly: true)
         )
@@ -574,7 +574,7 @@ struct ProgressSyncServiceTests {
         try context.save()
 
         // Создаем прогресс с фотографиями помеченными для удаления
-        let progress = Progress(id: 1, pullUps: 10, pushUps: 20, squats: 30, weight: 70.0)
+        let progress = UserProgress(id: 1, pullUps: 10, pushUps: 20, squats: 30, weight: 70.0)
         progress.user = user
         progress.deletePhotoData(.front)
         context.insert(progress)
@@ -584,7 +584,7 @@ struct ProgressSyncServiceTests {
         await service.syncProgress(context: context)
 
         // Assert - при ошибках фотографии должны остаться помеченными для удаления
-        let updatedProgress = try #require(context.fetch(FetchDescriptor<SwiftUI_SotkaApp.Progress>()).first)
+        let updatedProgress = try #require(context.fetch(FetchDescriptor<UserProgress>()).first)
         #expect(updatedProgress.shouldDeletePhoto(.front), "Фотография должна остаться помеченной для удаления при ошибке")
         #expect(!updatedProgress.isSynced, "Прогресс не должен быть синхронизирован при ошибке")
     }
@@ -595,7 +595,7 @@ struct ProgressSyncServiceTests {
         let mockClient = MockProgressClient()
         let service = ProgressSyncService(client: mockClient)
         let container = try ModelContainer(
-            for: Progress.self,
+            for: UserProgress.self,
             User.self,
             configurations: ModelConfiguration(isStoredInMemoryOnly: true)
         )
@@ -607,7 +607,7 @@ struct ProgressSyncServiceTests {
         try context.save()
 
         // Создаем прогресс для синхронизации
-        let progress = Progress(id: 1, pullUps: 10, pushUps: 20, squats: 30, weight: 70.0)
+        let progress = UserProgress(id: 1, pullUps: 10, pushUps: 20, squats: 30, weight: 70.0)
         progress.user = user
         progress.isSynced = false
         context.insert(progress)
@@ -629,7 +629,7 @@ struct ProgressSyncServiceTests {
         await service.syncProgress(context: context)
 
         // Assert - проверяем финальное состояние
-        let updatedProgress = try #require(context.fetch(FetchDescriptor<SwiftUI_SotkaApp.Progress>()).first)
+        let updatedProgress = try #require(context.fetch(FetchDescriptor<UserProgress>()).first)
         #expect(updatedProgress.isSynced, "Прогресс должен быть синхронизирован")
         #expect(!updatedProgress.shouldDelete, "Прогресс не должен быть помечен для удаления")
         #expect(updatedProgress.pullUps == 10, "Данные должны соответствовать серверным")
@@ -644,7 +644,7 @@ struct ProgressSyncServiceTests {
         let mockClient = MockProgressClient()
         let service = ProgressSyncService(client: mockClient)
         let container = try ModelContainer(
-            for: Progress.self,
+            for: UserProgress.self,
             User.self,
             configurations: ModelConfiguration(isStoredInMemoryOnly: true)
         )
@@ -659,7 +659,7 @@ struct ProgressSyncServiceTests {
         await service.syncProgress(context: context)
 
         // Assert - синхронизация должна пройти без ошибок
-        let allProgress = try context.fetch(FetchDescriptor<SwiftUI_SotkaApp.Progress>())
+        let allProgress = try context.fetch(FetchDescriptor<UserProgress>())
         #expect(allProgress.isEmpty, "Не должно быть записей прогресса")
     }
 
@@ -669,7 +669,7 @@ struct ProgressSyncServiceTests {
         let mockClient = MockProgressClient()
         let service = ProgressSyncService(client: mockClient)
         let container = try ModelContainer(
-            for: Progress.self,
+            for: UserProgress.self,
             User.self,
             configurations: ModelConfiguration(isStoredInMemoryOnly: true)
         )
@@ -681,7 +681,7 @@ struct ProgressSyncServiceTests {
         try context.save()
 
         // Создаем прогресс
-        let progress = Progress(id: 1, pullUps: 10, pushUps: 20, squats: 30, weight: 70.0)
+        let progress = UserProgress(id: 1, pullUps: 10, pushUps: 20, squats: 30, weight: 70.0)
         progress.user = user
         progress.isSynced = false
         context.insert(progress)
@@ -691,7 +691,7 @@ struct ProgressSyncServiceTests {
         await service.syncProgress(context: context)
 
         // Проверяем состояние после первой синхронизации
-        let progressAfterFirst = try context.fetch(FetchDescriptor<SwiftUI_SotkaApp.Progress>())
+        let progressAfterFirst = try context.fetch(FetchDescriptor<UserProgress>())
         #expect(progressAfterFirst.count == 1, "Должен быть только один прогресс после первой синхронизации")
         let firstProgress = try #require(progressAfterFirst.first)
         #expect(firstProgress.isSynced, "Прогресс должен быть синхронизирован после первой синхронизации")
@@ -700,11 +700,149 @@ struct ProgressSyncServiceTests {
         await service.syncProgress(context: context)
 
         // Assert - синхронизация должна пройти корректно без дублирования
-        let allProgress = try context.fetch(FetchDescriptor<SwiftUI_SotkaApp.Progress>())
+        let allProgress = try context.fetch(FetchDescriptor<UserProgress>())
         #expect(allProgress.count == 1, "Должен быть только один прогресс")
 
         let updatedProgress = try #require(allProgress.first)
         #expect(updatedProgress.isSynced, "Прогресс должен быть синхронизирован")
+    }
+
+    @Test("Должен корректно обрабатывать серверные данные и создавать локальные записи")
+    func serverDataProcessing() async throws {
+        // Arrange
+        let container = try ModelContainer(
+            for: UserProgress.self,
+            User.self,
+            configurations: ModelConfiguration(isStoredInMemoryOnly: true)
+        )
+        let context = container.mainContext
+
+        // Создаем пользователя
+        let user = User(id: 10367, userName: "Test User", email: "test@example.com")
+        context.insert(user)
+        try context.save()
+
+        // Создаем мок клиента
+        let mockClient = MockProgressClient()
+
+        // Настраиваем мок для возврата серверных данных
+        let serverResponse = ProgressResponse(
+            id: 1,
+            pullups: 1,
+            pushups: 1,
+            squats: 1,
+            weight: 10.0,
+            createDate: "2025-10-24T10:39:51+03:00",
+            modifyDate: "2025-10-24T10:40:08+03:00",
+            photoFront: "https://workout.su/uploads/userfiles/2025/10/2025-10-24-10-10-34-vsw.jpg",
+            photoBack: "https://workout.su/uploads/userfiles/2025/10/2025-10-24-10-10-34-fbr.jpg"
+        )
+        mockClient.mockedProgressResponses = [serverResponse]
+
+        let syncService = ProgressSyncService(client: mockClient)
+
+        // Act
+        await syncService.syncProgress(context: context)
+
+        // Assert
+        let allProgress = try context.fetch(FetchDescriptor<UserProgress>())
+        let userProgress = allProgress.filter { $0.user?.id == user.id }
+
+        #expect(userProgress.count == 1)
+
+        let progress = try #require(userProgress.first)
+        #expect(progress.id == 1)
+        #expect(progress.pullUps == 1)
+        #expect(progress.pushUps == 1)
+        #expect(progress.squats == 1)
+        #expect(progress.weight == 10.0)
+        #expect(progress.isSynced)
+        #expect(!progress.shouldDelete)
+        #expect(progress.urlPhotoFront == "https://workout.su/uploads/userfiles/2025/10/2025-10-24-10-10-34-vsw.jpg")
+        #expect(progress.urlPhotoBack == "https://workout.su/uploads/userfiles/2025/10/2025-10-24-10-10-34-fbr.jpg")
+    }
+
+    @Test("Должен корректно маппить внешние дни сервера во внутренние дни приложения")
+    func dayMapping() {
+        // Тестируем маппинг внешних дней во внутренние
+        #expect(UserProgress.getInternalDayFromExternalDay(1) == 1)
+        #expect(UserProgress.getInternalDayFromExternalDay(49) == 49)
+        #expect(UserProgress.getInternalDayFromExternalDay(99) == 100)
+        #expect(UserProgress.getInternalDayFromExternalDay(50) == 50)
+
+        // Тестируем обратный маппинг
+        #expect(UserProgress.getExternalDayFromProgressId(1) == 1)
+        #expect(UserProgress.getExternalDayFromProgressId(49) == 49)
+        #expect(UserProgress.getExternalDayFromProgressId(100) == 99)
+        #expect(UserProgress.getExternalDayFromProgressId(50) == 50)
+    }
+
+    @Test("Должен корректно обновлять существующие записи данными с сервера")
+    func updateExistingProgressFromServer() async throws {
+        // Arrange
+        let container = try ModelContainer(
+            for: UserProgress.self,
+            User.self,
+            configurations: ModelConfiguration(isStoredInMemoryOnly: true)
+        )
+        let context = container.mainContext
+
+        // Создаем пользователя
+        let user = User(id: 10367, userName: "Test User", email: "test@example.com")
+        context.insert(user)
+
+        // Создаем существующую локальную запись
+        let existingProgress = UserProgress(
+            id: 1,
+            pullUps: 5,
+            pushUps: 10,
+            squats: 15,
+            weight: 80.0
+        )
+        existingProgress.user = user
+        existingProgress.isSynced = true
+        existingProgress.shouldDelete = false
+        context.insert(existingProgress)
+        try context.save()
+
+        // Создаем мок клиента
+        let mockClient = MockProgressClient()
+
+        // Настраиваем мок для возврата обновленных серверных данных
+        let serverResponse = ProgressResponse(
+            id: 1,
+            pullups: 1,
+            pushups: 1,
+            squats: 1,
+            weight: 10.0,
+            createDate: "2025-10-24T10:39:51+03:00",
+            modifyDate: "2025-10-24T10:40:08+03:00",
+            photoFront: "https://workout.su/uploads/userfiles/2025/10/2025-10-24-10-10-34-vsw.jpg",
+            photoBack: "https://workout.su/uploads/userfiles/2025/10/2025-10-24-10-10-34-fbr.jpg"
+        )
+        mockClient.mockedProgressResponses = [serverResponse]
+
+        let syncService = ProgressSyncService(client: mockClient)
+
+        // Act
+        await syncService.syncProgress(context: context)
+
+        // Assert
+        let allProgress = try context.fetch(FetchDescriptor<UserProgress>())
+        let userProgress = allProgress.filter { $0.user?.id == user.id }
+
+        #expect(userProgress.count == 1)
+
+        let progress = try #require(userProgress.first)
+        #expect(progress.id == 1)
+        #expect(progress.pullUps == 1)
+        #expect(progress.pushUps == 1)
+        #expect(progress.squats == 1)
+        #expect(progress.weight == 10.0)
+        #expect(progress.isSynced)
+        #expect(!progress.shouldDelete)
+        #expect(progress.urlPhotoFront == "https://workout.su/uploads/userfiles/2025/10/2025-10-24-10-10-34-vsw.jpg")
+        #expect(progress.urlPhotoBack == "https://workout.su/uploads/userfiles/2025/10/2025-10-24-10-10-34-fbr.jpg")
     }
 }
 

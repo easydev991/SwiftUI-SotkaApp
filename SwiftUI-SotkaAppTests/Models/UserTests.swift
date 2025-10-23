@@ -221,7 +221,7 @@ struct UserTests {
     @Test("isMaximumsFilled для дня 1-48 с заполненными результатами")
     func isMaximumsFilledForDay1To48WithFilledResults() {
         let user = User(id: 1)
-        let progress = Progress(id: 1)
+        let progress = UserProgress(id: 1)
         progress.pullUps = 10
         progress.pushUps = 20
         progress.squats = 30
@@ -234,7 +234,7 @@ struct UserTests {
     @Test("isMaximumsFilled для дня 49 с заполненными результатами")
     func isMaximumsFilledForDay49WithFilledResults() {
         let user = User(id: 1)
-        let progress = Progress(id: 49)
+        let progress = UserProgress(id: 49)
         progress.pullUps = 10
         progress.pushUps = 20
         progress.squats = 30
@@ -247,7 +247,7 @@ struct UserTests {
     @Test("isMaximumsFilled для дня 50-99 с заполненными результатами")
     func isMaximumsFilledForDay50To99WithFilledResults() {
         let user = User(id: 1)
-        let progress = Progress(id: 49)
+        let progress = UserProgress(id: 49)
         progress.pullUps = 15
         progress.pushUps = 25
         progress.squats = 35
@@ -260,7 +260,7 @@ struct UserTests {
     @Test("isMaximumsFilled для дня 100+ с заполненными результатами")
     func isMaximumsFilledForDay100PlusWithFilledResults() {
         let user = User(id: 1)
-        let progress = Progress(id: 100)
+        let progress = UserProgress(id: 100)
         progress.pullUps = 20
         progress.pushUps = 30
         progress.squats = 40
@@ -280,7 +280,7 @@ struct UserTests {
     @Test("isMaximumsFilled с незаполненными результатами")
     func isMaximumsFilledWithUnfilledResults() {
         let user = User(id: 1)
-        let progress = Progress(id: 1)
+        let progress = UserProgress(id: 1)
         progress.pullUps = 10
         progress.pushUps = nil
         progress.squats = 30
@@ -314,7 +314,7 @@ struct UserTests {
         expected: Bool
     ) {
         let user = User(id: 1)
-        let progress = Progress(id: progressDay)
+        let progress = UserProgress(id: progressDay)
         progress.pullUps = 10
         progress.pushUps = 20
         progress.squats = 30

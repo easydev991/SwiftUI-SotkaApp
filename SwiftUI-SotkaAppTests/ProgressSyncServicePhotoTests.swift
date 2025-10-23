@@ -110,7 +110,7 @@ struct ProgressSyncServicePhotoTests {
             photoSide: "https://example.com/photo_side.jpg"
         )
 
-        let progress = Progress(from: serverResponse, user: user)
+        let progress = UserProgress(from: serverResponse, user: user)
 
         #expect(progress.urlPhotoFront == "https://example.com/photo_front.jpg")
         #expect(progress.urlPhotoBack == "https://example.com/photo_back.jpg")
@@ -133,7 +133,7 @@ struct ProgressSyncServicePhotoTests {
             photoFront: "https://example.com/photo_front.jpg"
         )
 
-        let progress = Progress(from: serverResponse, user: user)
+        let progress = UserProgress(from: serverResponse, user: user)
 
         #expect(progress.urlPhotoFront == "https://example.com/photo_front.jpg")
         #expect(progress.urlPhotoBack == nil)
@@ -155,7 +155,7 @@ struct ProgressSyncServicePhotoTests {
             modifyDate: DateFormatterService.stringFromFullDate(Date(), format: .serverDateTimeSec)
         )
 
-        let progress = Progress(from: serverResponse, user: user)
+        let progress = UserProgress(from: serverResponse, user: user)
 
         #expect(progress.urlPhotoFront == nil)
         #expect(progress.urlPhotoBack == nil)
@@ -179,7 +179,7 @@ struct ProgressSyncServicePhotoTests {
             photoFront: "https://example.com/photo_front.jpg"
         )
 
-        let progress = Progress(from: serverResponse, user: user)
+        let progress = UserProgress(from: serverResponse, user: user)
 
         #expect(progress.lastModified >= originalDate)
         #expect(progress.isSynced)
@@ -189,7 +189,7 @@ struct ProgressSyncServicePhotoTests {
 
     @Test("Проверка работы с локальными данными фотографий")
     func progressPhotoDataHandling() {
-        let progress = Progress(id: 1, pullUps: 10, pushUps: 20, squats: 30, weight: 70.0)
+        let progress = UserProgress(id: 1, pullUps: 10, pushUps: 20, squats: 30, weight: 70.0)
         progress.setPhotoData(testImageData, type: .front)
         progress.setPhotoData(testImageData, type: .back)
         progress.setPhotoData(testImageData, type: .side)
@@ -215,7 +215,7 @@ struct ProgressSyncServicePhotoTests {
             photoSide: "https://example.com/photo_side.jpg"
         )
 
-        let progress = Progress(from: serverResponse, user: user)
+        let progress = UserProgress(from: serverResponse, user: user)
 
         #expect(progress.urlPhotoFront == "https://example.com/photo_front.jpg")
         #expect(progress.urlPhotoBack == "https://example.com/photo_back.jpg")
@@ -238,7 +238,7 @@ struct ProgressSyncServicePhotoTests {
             photoFront: "https://example.com/photo_front.jpg"
         )
 
-        let progress = Progress(from: serverResponse, user: user, internalDay: 100)
+        let progress = UserProgress(from: serverResponse, user: user, internalDay: 100)
 
         #expect(progress.id == 100)
         #expect(progress.urlPhotoFront == "https://example.com/photo_front.jpg")
@@ -260,7 +260,7 @@ struct ProgressSyncServicePhotoTests {
             photoFront: "https://example.com/photo_front.jpg"
         )
 
-        let progress = Progress(from: serverResponse, user: user)
+        let progress = UserProgress(from: serverResponse, user: user)
 
         #expect(progress.id == dayId)
         #expect(progress.isSynced)
@@ -275,7 +275,7 @@ struct ProgressSyncServicePhotoTests {
         let mockClient = MockProgressClient()
         let service = ProgressSyncService(client: mockClient)
         let container = try ModelContainer(
-            for: Progress.self,
+            for: UserProgress.self,
             User.self,
             configurations: ModelConfiguration(isStoredInMemoryOnly: true)
         )
@@ -287,7 +287,7 @@ struct ProgressSyncServicePhotoTests {
         try context.save()
 
         // Создаем прогресс с фотографиями помеченными для удаления
-        let progress = Progress(id: 1, pullUps: 10, pushUps: 20, squats: 30, weight: 70.0)
+        let progress = UserProgress(id: 1, pullUps: 10, pushUps: 20, squats: 30, weight: 70.0)
         progress.user = user
         progress.isSynced = false
         progress.deletePhotoData(.front) // Помечаем фронтальную фотографию для удаления
@@ -298,7 +298,7 @@ struct ProgressSyncServicePhotoTests {
         await service.syncProgress(context: context)
 
         // Assert - проверяем, что фотография была обработана
-        let updatedProgress = try #require(context.fetch(FetchDescriptor<SwiftUI_SotkaApp.Progress>()).first)
+        let updatedProgress = try #require(context.fetch(FetchDescriptor<UserProgress>()).first)
         // После синхронизации фотография должна быть очищена (если удаление прошло успешно)
         // или остаться помеченной для удаления (если была ошибка)
         // В данном случае mock не выбрасывает ошибку, поэтому фотография должна быть очищена
@@ -324,7 +324,7 @@ struct ProgressSyncServicePhotoTests {
         let mockClient = MockProgressClient(mockedProgressResponses: [mockProgressResponse])
         let service = ProgressSyncService(client: mockClient)
         let container = try ModelContainer(
-            for: Progress.self,
+            for: UserProgress.self,
             User.self,
             configurations: ModelConfiguration(isStoredInMemoryOnly: true)
         )
@@ -336,7 +336,7 @@ struct ProgressSyncServicePhotoTests {
         try context.save()
 
         // Создаем прогресс с фотографиями помеченными для удаления
-        let progress = Progress(id: 1, pullUps: 10, pushUps: 20, squats: 30, weight: 70.0)
+        let progress = UserProgress(id: 1, pullUps: 10, pushUps: 20, squats: 30, weight: 70.0)
         progress.user = user
         progress.deletePhotoData(.front)
         progress.deletePhotoData(.back)
@@ -347,7 +347,7 @@ struct ProgressSyncServicePhotoTests {
         await service.syncProgress(context: context)
 
         // Assert
-        let updatedProgress = try #require(context.fetch(FetchDescriptor<SwiftUI_SotkaApp.Progress>()).first)
+        let updatedProgress = try #require(context.fetch(FetchDescriptor<UserProgress>()).first)
         #expect(!updatedProgress.shouldDeletePhoto(.front))
         #expect(!updatedProgress.shouldDeletePhoto(.back))
         #expect(updatedProgress.isSynced)
@@ -360,7 +360,7 @@ struct ProgressSyncServicePhotoTests {
         mockClient.shouldThrowError = true
         let service = ProgressSyncService(client: mockClient)
         let container = try ModelContainer(
-            for: Progress.self,
+            for: UserProgress.self,
             User.self,
             configurations: ModelConfiguration(isStoredInMemoryOnly: true)
         )
@@ -372,7 +372,7 @@ struct ProgressSyncServicePhotoTests {
         try context.save()
 
         // Создаем прогресс с фотографиями помеченными для удаления
-        let progress = Progress(id: 1, pullUps: 10, pushUps: 20, squats: 30, weight: 70.0)
+        let progress = UserProgress(id: 1, pullUps: 10, pushUps: 20, squats: 30, weight: 70.0)
         progress.user = user
         progress.deletePhotoData(.front)
         context.insert(progress)
@@ -382,7 +382,7 @@ struct ProgressSyncServicePhotoTests {
         await service.syncProgress(context: context)
 
         // Assert - прогресс должен остаться с помеченными фотографиями при ошибке
-        let updatedProgress = try #require(context.fetch(FetchDescriptor<SwiftUI_SotkaApp.Progress>()).first)
+        let updatedProgress = try #require(context.fetch(FetchDescriptor<UserProgress>()).first)
         #expect(updatedProgress.shouldDeletePhoto(.front))
         #expect(!updatedProgress.isSynced)
     }
@@ -406,7 +406,7 @@ struct ProgressSyncServicePhotoTests {
         let mockClient = MockProgressClient(mockedProgressResponses: [mockProgressResponse])
         let service = ProgressSyncService(client: mockClient)
         let container = try ModelContainer(
-            for: Progress.self,
+            for: UserProgress.self,
             User.self,
             configurations: ModelConfiguration(isStoredInMemoryOnly: true)
         )
@@ -418,7 +418,7 @@ struct ProgressSyncServicePhotoTests {
         try context.save()
 
         // Создаем прогресс с всеми фотографиями помеченными для удаления
-        let progress = Progress(id: 1, pullUps: 10, pushUps: 20, squats: 30, weight: 70.0)
+        let progress = UserProgress(id: 1, pullUps: 10, pushUps: 20, squats: 30, weight: 70.0)
         progress.user = user
         progress.deletePhotoData(.front)
         progress.deletePhotoData(.back)
@@ -430,7 +430,7 @@ struct ProgressSyncServicePhotoTests {
         await service.syncProgress(context: context)
 
         // Assert
-        let updatedProgress = try #require(context.fetch(FetchDescriptor<SwiftUI_SotkaApp.Progress>()).first)
+        let updatedProgress = try #require(context.fetch(FetchDescriptor<UserProgress>()).first)
         #expect(!updatedProgress.shouldDeletePhoto(.front))
         #expect(!updatedProgress.shouldDeletePhoto(.back))
         #expect(!updatedProgress.shouldDeletePhoto(.side))
@@ -456,7 +456,7 @@ struct ProgressSyncServicePhotoTests {
         let mockClient = MockProgressClient(mockedProgressResponses: [mockProgressResponse])
         let service = ProgressSyncService(client: mockClient)
         let container = try ModelContainer(
-            for: Progress.self,
+            for: UserProgress.self,
             User.self,
             configurations: ModelConfiguration(isStoredInMemoryOnly: true)
         )
@@ -468,7 +468,7 @@ struct ProgressSyncServicePhotoTests {
         try context.save()
 
         // Создаем прогресс с данными и фотографиями
-        let progress = Progress(id: 1, pullUps: 10, pushUps: 20, squats: 30, weight: 70.0)
+        let progress = UserProgress(id: 1, pullUps: 10, pushUps: 20, squats: 30, weight: 70.0)
         progress.user = user
         progress.setPhotoData(testImageData, type: .front)
         progress.setPhotoData(testImageData, type: .back)
@@ -484,7 +484,7 @@ struct ProgressSyncServicePhotoTests {
         await service.syncProgress(context: context)
 
         // Assert
-        let updatedProgress = try #require(context.fetch(FetchDescriptor<SwiftUI_SotkaApp.Progress>()).first)
+        let updatedProgress = try #require(context.fetch(FetchDescriptor<UserProgress>()).first)
         #expect(!updatedProgress.shouldDeletePhoto(.front))
         #expect(!updatedProgress.shouldDeletePhoto(.back))
         #expect(!updatedProgress.shouldDeletePhoto(.side)) // Не была помечена для удаления
@@ -494,7 +494,7 @@ struct ProgressSyncServicePhotoTests {
 
     @Test("Тест ProgressSnapshot логики фильтрации фотографий")
     func progressSnapshotPhotoFiltering() {
-        let progress = Progress(id: 1, pullUps: 10, pushUps: 20, squats: 30, weight: 70.0)
+        let progress = UserProgress(id: 1, pullUps: 10, pushUps: 20, squats: 30, weight: 70.0)
 
         // Устанавливаем данные фотографий
         let frontData = Data("front_photo".utf8)
@@ -508,7 +508,7 @@ struct ProgressSyncServicePhotoTests {
         // Помечаем заднюю фотографию для удаления
         progress.deletePhotoData(.back)
 
-        let snapshot = SwiftUI_SotkaApp.ProgressSnapshot(from: progress)
+        let snapshot = ProgressSnapshot(from: progress)
 
         #expect(snapshot.shouldDeletePhoto, "shouldDeletePhoto должен быть true (есть фото для удаления)")
         #expect(!snapshot.isSynced, "Прогресс не синхронизирован")
@@ -524,13 +524,13 @@ struct ProgressSyncServicePhotoTests {
 
     @Test("Тест ProgressSnapshot с несколькими типами данных")
     func progressSnapshotMultipleDataTypes() {
-        let progress = Progress(id: 1, pullUps: 10, pushUps: 20, squats: 30, weight: 70.0)
+        let progress = UserProgress(id: 1, pullUps: 10, pushUps: 20, squats: 30, weight: 70.0)
 
         // Устанавливаем только некоторые данные
         progress.setPhotoData(Data("front_photo".utf8), type: .front)
         progress.deletePhotoData(.side) // Помечаем для удаления без данных
 
-        let snapshot = SwiftUI_SotkaApp.ProgressSnapshot(from: progress)
+        let snapshot = ProgressSnapshot(from: progress)
 
         #expect(snapshot.pullups == 10, "pullups должен соответствовать")
         #expect(snapshot.pushups == 20, "pushups должен соответствовать")
@@ -545,11 +545,11 @@ struct ProgressSyncServicePhotoTests {
 
     @Test("Тест ProgressSnapshot без фотографий для удаления")
     func progressSnapshotNoPhotosToDelete() {
-        let progress = Progress(id: 1, pullUps: 10, pushUps: 20, squats: 30, weight: 70.0)
+        let progress = UserProgress(id: 1, pullUps: 10, pushUps: 20, squats: 30, weight: 70.0)
         progress.setPhotoData(Data("front_photo".utf8), type: .front)
         progress.setPhotoData(Data("back_photo".utf8), type: .back)
 
-        let snapshot = SwiftUI_SotkaApp.ProgressSnapshot(from: progress)
+        let snapshot = ProgressSnapshot(from: progress)
 
         #expect(!snapshot.shouldDeletePhoto, "shouldDeletePhoto должен быть false")
         #expect(snapshot.photosForUpload.count == 2, "Должно быть 2 фото для загрузки")
@@ -559,9 +559,9 @@ struct ProgressSyncServicePhotoTests {
 
     @Test("Тест ProgressSnapshot с пустыми данными")
     func progressSnapshotEmptyData() {
-        let progress = Progress(id: 1, pullUps: 0, pushUps: 0, squats: 0, weight: 0.0)
+        let progress = UserProgress(id: 1, pullUps: 0, pushUps: 0, squats: 0, weight: 0.0)
 
-        let snapshot = SwiftUI_SotkaApp.ProgressSnapshot(from: progress)
+        let snapshot = ProgressSnapshot(from: progress)
 
         #expect(!snapshot.shouldDeletePhoto, "shouldDeletePhoto должен быть false")
         #expect(snapshot.photosForUpload.isEmpty, "photosForUpload должен быть пустым")
@@ -573,13 +573,13 @@ struct ProgressSyncServicePhotoTests {
 
     @Test("Тест isDeletedPhoto логики")
     func isDeletedPhotoLogic() {
-        let progress = Progress(id: 1, pullUps: 10, pushUps: 20, squats: 30, weight: 70.0)
+        let progress = UserProgress(id: 1, pullUps: 10, pushUps: 20, squats: 30, weight: 70.0)
 
         // Тестируем с DELETED_DATA
-        progress.setPhotoData(Progress.DELETED_DATA, type: .front)
+        progress.setPhotoData(UserProgress.DELETED_DATA, type: .front)
         progress.setPhotoData(Data("normal_photo".utf8), type: .back)
 
-        let snapshot = SwiftUI_SotkaApp.ProgressSnapshot(from: progress)
+        let snapshot = ProgressSnapshot(from: progress)
 
         #expect(snapshot.shouldDeletePhoto, "shouldDeletePhoto должен быть true")
         #expect(snapshot.photosForUpload.count == 1, "Должно быть 1 фото для загрузки")

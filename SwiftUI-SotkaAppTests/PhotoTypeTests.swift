@@ -7,17 +7,17 @@ struct PhotoTypeTests {
 
     @Test("deleteRequestName возвращает правильные названия для DELETE запросов")
     func deleteRequestNameReturnsCorrectNamesForDeleteRequests() {
-        #expect(PhotoType.front.requestName == "front")
-        #expect(PhotoType.back.requestName == "back")
-        #expect(PhotoType.side.requestName == "side")
+        #expect(ProgressPhotoType.front.requestName == "front")
+        #expect(ProgressPhotoType.back.requestName == "back")
+        #expect(ProgressPhotoType.side.requestName == "side")
     }
 
     @Test("Параметризированный тест deleteRequestName", arguments: [
-        (PhotoType.front, "front"),
-        (PhotoType.back, "back"),
-        (PhotoType.side, "side")
+        (ProgressPhotoType.front, "front"),
+        (ProgressPhotoType.back, "back"),
+        (ProgressPhotoType.side, "side")
     ])
-    func deleteRequestNameParameterized(photoType: PhotoType, expectedName: String) {
+    func deleteRequestNameParameterized(photoType: ProgressPhotoType, expectedName: String) {
         #expect(photoType.requestName == expectedName)
     }
 
@@ -25,17 +25,17 @@ struct PhotoTypeTests {
 
     @Test("localizedTitle возвращает правильные названия")
     func localizedTitleReturnsCorrectNames() {
-        #expect(PhotoType.front.localizedTitle == "Фото спереди")
-        #expect(PhotoType.back.localizedTitle == "Фото сзади")
-        #expect(PhotoType.side.localizedTitle == "Фото сбоку")
+        #expect(ProgressPhotoType.front.localizedTitle == "Фото спереди")
+        #expect(ProgressPhotoType.back.localizedTitle == "Фото сзади")
+        #expect(ProgressPhotoType.side.localizedTitle == "Фото сбоку")
     }
 
     @Test("Параметризированный тест localizedTitle", arguments: [
-        (PhotoType.front, "Фото спереди"),
-        (PhotoType.back, "Фото сзади"),
-        (PhotoType.side, "Фото сбоку")
+        (ProgressPhotoType.front, "Фото спереди"),
+        (ProgressPhotoType.back, "Фото сзади"),
+        (ProgressPhotoType.side, "Фото сбоку")
     ])
-    func localizedTitleParameterized(photoType: PhotoType, expectedTitle: String) {
+    func localizedTitleParameterized(photoType: ProgressPhotoType, expectedTitle: String) {
         #expect(photoType.localizedTitle == expectedTitle)
     }
 
@@ -43,7 +43,7 @@ struct PhotoTypeTests {
 
     @Test("allCases содержит все типы фотографий")
     func allCasesContainsAllPhotoTypes() {
-        let allCases = PhotoType.allCases
+        let allCases = ProgressPhotoType.allCases
         #expect(allCases.count == 3)
         #expect(allCases.contains(.front))
         #expect(allCases.contains(.back))
@@ -52,7 +52,7 @@ struct PhotoTypeTests {
 
     @Test("allCases содержит типы в правильном порядке")
     func allCasesContainsTypesInCorrectOrder() {
-        let allCases = PhotoType.allCases
+        let allCases = ProgressPhotoType.allCases
         #expect(allCases[0] == .front)
         #expect(allCases[1] == .back)
         #expect(allCases[2] == .side)

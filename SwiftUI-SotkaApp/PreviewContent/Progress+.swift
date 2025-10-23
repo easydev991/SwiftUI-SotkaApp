@@ -1,10 +1,10 @@
 #if DEBUG
 import Foundation
 
-extension Progress {
+extension UserProgress {
     /// Превью для первого дня (начальные результаты)
-    static var previewDay1: Progress {
-        Progress(
+    static var previewDay1: UserProgress {
+        UserProgress(
             id: 1,
             pullUps: nil,
             pushUps: 15,
@@ -14,8 +14,8 @@ extension Progress {
     }
 
     /// Превью для 49-го дня (средние результаты)
-    static var previewDay49: Progress {
-        Progress(
+    static var previewDay49: UserProgress {
+        UserProgress(
             id: 49,
             pullUps: 12,
             pushUps: 35,
@@ -25,8 +25,8 @@ extension Progress {
     }
 
     /// Превью для 100-го дня (финальные результаты)
-    static var previewDay100: Progress {
-        Progress(
+    static var previewDay100: UserProgress {
+        UserProgress(
             id: 100,
             pullUps: 20,
             pushUps: 60,

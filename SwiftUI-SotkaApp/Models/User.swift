@@ -19,7 +19,7 @@ final class User {
     @Relationship(deleteRule: .cascade) var customExercises: [CustomExercise] = []
 
     /// Результаты прогресса пользователя
-    @Relationship(deleteRule: .cascade) var progressResults: [Progress] = []
+    @Relationship(deleteRule: .cascade) var progressResults: [UserProgress] = []
 
     /// ID избранных инфопостов
     var favoriteInfopostIds: [String] = []
@@ -100,8 +100,8 @@ extension User {
     func isMaximumsFilled(for currentDay: Int) -> Bool {
         let logger = Logger(subsystem: "SwiftUI-SotkaApp", category: "User.isMaximumsFilled")
 
-        // Используем Progress.Section для определения дня прогресса
-        let progressSection = Progress.Section(day: currentDay)
+        // Используем UserProgress.Section для определения дня прогресса
+        let progressSection = UserProgress.Section(day: currentDay)
         let progressDay = progressSection.rawValue
 
         // Получаем все результаты для нужного дня

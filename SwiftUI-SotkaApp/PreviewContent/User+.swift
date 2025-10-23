@@ -18,7 +18,7 @@ extension User {
 
     static var previewWithProgress: User {
         let user = preview
-        let progress = Progress(id: 1)
+        let progress = UserProgress(id: 1)
         progress.pullUps = 10
         progress.pushUps = 20
         progress.squats = 30
@@ -27,52 +27,52 @@ extension User {
         return user
     }
 
-    // MARK: - Progress Combinations
+    // MARK: - UserProgress Combinations
 
     static var previewWithDay1Progress: User {
         let user = preview
-        user.progressResults.append(Progress.previewDay1)
+        user.progressResults.append(UserProgress.previewDay1)
         return user
     }
 
     static var previewWithDay49Progress: User {
         let user = preview
-        user.progressResults.append(Progress.previewDay49)
+        user.progressResults.append(UserProgress.previewDay49)
         return user
     }
 
     static var previewWithDay100Progress: User {
         let user = preview
-        user.progressResults.append(Progress.previewDay100)
+        user.progressResults.append(UserProgress.previewDay100)
         return user
     }
 
     static var previewWithDay1And49Progress: User {
         let user = preview
-        user.progressResults.append(Progress.previewDay1)
-        user.progressResults.append(Progress.previewDay49)
+        user.progressResults.append(UserProgress.previewDay1)
+        user.progressResults.append(UserProgress.previewDay49)
         return user
     }
 
     static var previewWithDay49And100Progress: User {
         let user = preview
-        user.progressResults.append(Progress.previewDay49)
-        user.progressResults.append(Progress.previewDay100)
+        user.progressResults.append(UserProgress.previewDay49)
+        user.progressResults.append(UserProgress.previewDay100)
         return user
     }
 
     static var previewWithDay1And100Progress: User {
         let user = preview
-        user.progressResults.append(Progress.previewDay1)
-        user.progressResults.append(Progress.previewDay100)
+        user.progressResults.append(UserProgress.previewDay1)
+        user.progressResults.append(UserProgress.previewDay100)
         return user
     }
 
     static var previewWithAllProgress: User {
         let user = preview
-        user.progressResults.append(Progress.previewDay1)
-        user.progressResults.append(Progress.previewDay49)
-        user.progressResults.append(Progress.previewDay100)
+        user.progressResults.append(UserProgress.previewDay1)
+        user.progressResults.append(UserProgress.previewDay49)
+        user.progressResults.append(UserProgress.previewDay100)
         return user
     }
 }

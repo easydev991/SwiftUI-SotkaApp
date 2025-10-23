@@ -12,7 +12,7 @@ final class ProgressService {
         subsystem: Bundle.main.bundleIdentifier!,
         category: String(describing: ProgressService.self)
     )
-    private let progressModel: Progress
+    private let progressModel: UserProgress
     private let initialPhotoModels: [TempPhotoModel]
     var displayMode: ProgressDisplayMode
     var metricsModel = TempMetricsModel()
@@ -22,7 +22,7 @@ final class ProgressService {
     /// - Parameters:
     ///   - progress: Модель прогресса для изменения
     ///   - mode: Режим отображения
-    init(progress: Progress, mode: ProgressDisplayMode) {
+    init(progress: UserProgress, mode: ProgressDisplayMode) {
         self.progressModel = progress
         self.initialPhotoModels = progress.tempPhotoItems
         self.displayMode = mode
@@ -91,7 +91,7 @@ final class ProgressService {
 
 extension ProgressService {
     /// Доступ к прогрессу (для использования в других экранах)
-    var progress: Progress {
+    var progress: UserProgress {
         progressModel
     }
 
@@ -163,7 +163,7 @@ private extension ProgressService {
 // MARK: - Управление фотографиями
 
 extension ProgressService {
-    func deleteTempPhoto(type: PhotoType) {
+    func deleteTempPhoto(type: ProgressPhotoType) {
         let logId = progress.id
         logger.info(
             "Начинаем удалять временное фото \(type) для прогресса дня \(logId)"
@@ -175,7 +175,7 @@ extension ProgressService {
             let updatedPhotoModel = TempPhotoModel(
                 type: type,
                 urlString: nil,
-                data: Progress.DELETED_DATA
+                data: UserProgress.DELETED_DATA
             )
             photoModels[index] = updatedPhotoModel
             logger.info("Удалили временное фото \(type) для прогресса дня \(logId)")
@@ -184,7 +184,7 @@ extension ProgressService {
         }
     }
 
-    func pickTempPhoto(_ data: Data?, type: PhotoType) {
+    func pickTempPhoto(_ data: Data?, type: ProgressPhotoType) {
         let logId = progress.id
         logger.info("Обновляем фотографию типа \(type) для прогресса дня \(logId)")
         do {

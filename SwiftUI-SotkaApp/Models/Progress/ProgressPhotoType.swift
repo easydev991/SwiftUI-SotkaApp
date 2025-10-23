@@ -1,6 +1,6 @@
 import Foundation
 
-enum PhotoType: Int, Codable, CaseIterable {
+enum ProgressPhotoType: Int, Codable, CaseIterable {
     /// Фото спереди
     case front = 1
     /// Фото сзади
@@ -30,7 +30,7 @@ enum PhotoType: Int, Codable, CaseIterable {
     }
 }
 
-extension PhotoType: CustomStringConvertible {
+extension ProgressPhotoType: CustomStringConvertible {
     var description: String {
         "Тип фотографии: photo_\(requestName)"
     }

@@ -44,7 +44,7 @@ extension ProgressPhotoRow {
     enum Action {
         case camera
         case library
-        case delete(PhotoType)
+        case delete(ProgressPhotoType)
     }
 }
 
@@ -90,7 +90,7 @@ private extension ProgressPhotoRow {
             onPhotoTap: { _ in }
         )
         ProgressPhotoRow(
-            model: .init(type: .front, urlString: nil, data: Progress.DELETED_DATA),
+            model: .init(type: .front, urlString: nil, data: UserProgress.DELETED_DATA),
             onPhotoTap: { _ in }
         )
     }

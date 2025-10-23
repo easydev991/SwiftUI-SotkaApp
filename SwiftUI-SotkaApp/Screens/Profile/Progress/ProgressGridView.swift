@@ -2,10 +2,10 @@ import SwiftUI
 
 struct ProgressGridView: View {
     let user: User
-    let progressItems: [Progress]
+    let progressItems: [UserProgress]
     let currentDay: Int
-    let onProgressTap: (Progress) -> Void
-    let onPhotoTap: (Progress, PhotoType) -> Void
+    let onProgressTap: (UserProgress) -> Void
+    let onPhotoTap: (UserProgress, ProgressPhotoType) -> Void
 
     var body: some View {
         gridView
@@ -21,7 +21,7 @@ private extension ProgressGridView {
                 Color.clear
                     .frame(width: 10, height: 10)
                 // Заголовки для каждой секции
-                ForEach(Progress.Section.allCases, id: \.self) { section in
+                ForEach(UserProgress.Section.allCases, id: \.self) { section in
                     dayHeaderView(for: section)
                 }
             }
@@ -36,13 +36,13 @@ private extension ProgressGridView {
             .background(Color.gray.opacity(0.3))
 
             // Данные для каждого типа упражнения
-            ForEach(Progress.DataType.allCases, id: \.self) { dataType in
+            ForEach(UserProgress.DataType.allCases, id: \.self) { dataType in
                 GridRow {
                     // Иконка типа упражнения
                     exerciseIconView(for: dataType)
 
                     // Данные прогресса для каждого дня
-                    ForEach(Progress.Section.allCases, id: \.self) { section in
+                    ForEach(UserProgress.Section.allCases, id: \.self) { section in
                         let (progress, isDisabled) = makeModel(for: section)
                         Button {
                             onProgressTap(progress)
@@ -56,7 +56,7 @@ private extension ProgressGridView {
             }
 
             // Фотографии для каждого типа
-            ForEach(PhotoType.allCases, id: \.self) { photoType in
+            ForEach(ProgressPhotoType.allCases, id: \.self) { photoType in
                 GridRow {
                     // Локализованный текст типа фотографии
                     Text(photoType.localizedTitle)
@@ -66,7 +66,7 @@ private extension ProgressGridView {
                         .frame(maxWidth: .infinity, alignment: .leading)
 
                     // Фотографии для каждого дня
-                    ForEach(Progress.Section.allCases, id: \.self) { section in
+                    ForEach(UserProgress.Section.allCases, id: \.self) { section in
                         let (progress, isDisabled) = makeModel(for: section)
                         Button {
                             onPhotoTap(progress, photoType)
@@ -81,7 +81,7 @@ private extension ProgressGridView {
         }
     }
 
-    func dayHeaderView(for section: Progress.Section) -> some View {
+    func dayHeaderView(for section: UserProgress.Section) -> some View {
         VStack(spacing: 4) {
             Text(.day)
                 .font(.footnote)
@@ -92,7 +92,7 @@ private extension ProgressGridView {
         }
     }
 
-    func exerciseIconView(for dataType: Progress.DataType) -> some View {
+    func exerciseIconView(for dataType: UserProgress.DataType) -> some View {
         VStack(spacing: 4) {
             dataType.icon
                 .resizable()
@@ -107,8 +107,8 @@ private extension ProgressGridView {
     }
 
     func progressDataView(
-        progress: Progress,
-        type: Progress.DataType
+        progress: UserProgress,
+        type: UserProgress.DataType
     ) -> some View {
         Text(progress.displayedValue(for: type))
             .lineLimit(1)
@@ -116,8 +116,8 @@ private extension ProgressGridView {
     }
 
     func progressPhotoView(
-        progress: Progress,
-        type: PhotoType
+        progress: UserProgress,
+        type: ProgressPhotoType
     ) -> some View {
         ZStack {
             // Приоритет локальным данным, fallback на URL
@@ -147,7 +147,7 @@ private extension ProgressGridView {
     }
 
     /// Возвращает модель прогресса для указанной секции или заглушку
-    func makeModel(for section: Progress.Section) -> (progress: Progress, isDisabled: Bool) {
+    func makeModel(for section: UserProgress.Section) -> (progress: UserProgress, isDisabled: Bool) {
         let progress = progressItems.first { $0.id == section.rawValue } ?? .init(id: section.rawValue)
         let isDisabled = currentDay < section.rawValue
         return (progress, isDisabled)

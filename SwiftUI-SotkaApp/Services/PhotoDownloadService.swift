@@ -11,15 +11,15 @@ struct PhotoDownloadService {
     /// на этот случай нужно предусмотреть повторную загрузку
     /// при следующей синхронизации
     @MainActor
-    func downloadAllPhotos(for progress: Progress) async {
-        let photosToDownload: [(String?, PhotoType)] = [
+    func downloadAllPhotos(for progress: UserProgress) async {
+        let photosToDownload: [(String?, ProgressPhotoType)] = [
             (progress.urlPhotoFront, .front),
             (progress.urlPhotoBack, .back),
             (progress.urlPhotoSide, .side)
         ]
 
-        let array: [(Data?, PhotoType)] = await withTaskGroup(of: (Data?, PhotoType).self) { group in
-            var results: [(Data?, PhotoType)] = []
+        let array: [(Data?, ProgressPhotoType)] = await withTaskGroup(of: (Data?, ProgressPhotoType).self) { group in
+            var results: [(Data?, ProgressPhotoType)] = []
             for (urlString, type) in photosToDownload {
                 guard let urlString, let url = URL(string: urlString) else {
                     continue

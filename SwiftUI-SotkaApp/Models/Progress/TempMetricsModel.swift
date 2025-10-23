@@ -21,7 +21,7 @@ struct TempMetricsModel {
         self.weight = weight
     }
 
-    init(progress: Progress) {
+    init(progress: UserProgress) {
         self.init(
             pullUps: progress.pullUps.stringFromInt(),
             pushUps: progress.pushUps.stringFromInt(),
@@ -42,7 +42,7 @@ struct TempMetricsModel {
         !pullUps.isEmpty || !pushUps.isEmpty || !squats.isEmpty || !weight.isEmpty
     }
 
-    func hasChanges(to progress: Progress) -> Bool {
+    func hasChanges(to progress: UserProgress) -> Bool {
         let initialPullUps = progress.pullUps.stringFromInt()
         let initialPushUps = progress.pushUps.stringFromInt()
         let initialSquats = progress.squats.stringFromInt()
