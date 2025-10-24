@@ -1,4 +1,5 @@
 import OSLog
+import SWDesignSystem
 import SwiftUI
 
 struct ProgressPhotoRow: View {
@@ -59,14 +60,7 @@ private extension ProgressPhotoRow {
                     .resizable()
                     .scaledToFill()
             } else if let urlString = model.urlString {
-                AsyncImage(url: URL(string: urlString)) { image in
-                    image
-                        .resizable()
-                        .scaledToFill()
-                } placeholder: {
-                    ProgressView()
-                        .frame(maxWidth: .infinity, maxHeight: .infinity)
-                }
+                CachedImage(url: URL(string: urlString), mode: .clean)
             } else {
                 Image(systemName: "photo")
                     .font(.title)

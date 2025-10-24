@@ -9,7 +9,7 @@ public struct CachedImage: View {
 
     public init(
         url: URL?,
-        mode: Mode = .userListItem,
+        mode: Mode,
         cornerRadius: CGFloat = 12,
         didTapImage: ((UIImage) -> Void)? = nil
     ) {
@@ -30,7 +30,7 @@ public struct CachedImage: View {
         } placeholder: {
             DefaultWorkoutImage(size: mode.size)
         }
-        .frame(width: mode.size.width, height: mode.size.height)
+        .frame(width: mode.size?.width, height: mode.size?.height)
         .clipped()
         .clipShape(.rect(cornerRadius: cornerRadius))
     }
@@ -44,6 +44,7 @@ public struct CachedImage: View {
 
 public extension CachedImage {
     enum Mode: CaseIterable {
+        case clean
         /// Фото в списке площадок
         case parkListItem
         /// Фото в списке мероприятий
@@ -59,8 +60,9 @@ public extension CachedImage {
         /// Аватар пользователя в профиле
         case profileAvatar
 
-        var size: CGSize {
+        var size: CGSize? {
             switch self {
+            case .clean: nil
             case .userListItem, .journalAvatar:
                 .init(width: 42, height: 42)
             case .parkListItem, .eventListItem:

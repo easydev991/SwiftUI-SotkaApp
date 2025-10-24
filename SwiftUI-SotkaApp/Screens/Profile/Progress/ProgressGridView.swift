@@ -1,3 +1,4 @@
+import SWDesignSystem
 import SwiftUI
 
 struct ProgressGridView: View {
@@ -126,16 +127,8 @@ private extension ProgressGridView {
                 Image(uiImage: uiImage)
                     .resizable()
                     .scaledToFill()
-            } else if let urlString = progress.getPhotoURL(type),
-                      let url = URL(string: urlString) {
-                AsyncImage(url: url) { image in
-                    image
-                        .resizable()
-                        .scaledToFill()
-                } placeholder: {
-                    ProgressView()
-                        .frame(maxWidth: .infinity, maxHeight: .infinity)
-                }
+            } else if let urlString = progress.getPhotoURL(type) {
+                CachedImage(url: URL(string: urlString), mode: .clean)
             } else {
                 Image(systemName: "photo")
                     .font(.title2)
