@@ -187,7 +187,7 @@ extension AllProgressTests {
         func syncProgressWithPhotosToDeleteReturnsNeedsPhotoDeletion() async throws {
             // Arrange
             let mockClient = MockProgressClient()
-            let service = ProgressSyncService(client: mockClient)
+            let service = ProgressSyncService.makeMock(client: mockClient)
             let container = try ModelContainer(
                 for: UserProgress.self,
                 User.self,
@@ -236,7 +236,7 @@ extension AllProgressTests {
                 photoSide: nil
             )
             let mockClient = MockProgressClient(mockedProgressResponses: [mockProgressResponse])
-            let service = ProgressSyncService(client: mockClient)
+            let service = ProgressSyncService.makeMock(client: mockClient)
             let container = try ModelContainer(
                 for: UserProgress.self,
                 User.self,
@@ -272,7 +272,7 @@ extension AllProgressTests {
             // Arrange
             let mockClient = MockProgressClient()
             mockClient.shouldThrowError = true
-            let service = ProgressSyncService(client: mockClient)
+            let service = ProgressSyncService.makeMock(client: mockClient)
             let container = try ModelContainer(
                 for: UserProgress.self,
                 User.self,
@@ -318,7 +318,7 @@ extension AllProgressTests {
                 photoSide: nil
             )
             let mockClient = MockProgressClient(mockedProgressResponses: [mockProgressResponse])
-            let service = ProgressSyncService(client: mockClient)
+            let service = ProgressSyncService.makeMock(client: mockClient)
             let container = try ModelContainer(
                 for: UserProgress.self,
                 User.self,
@@ -368,7 +368,7 @@ extension AllProgressTests {
                 photoSide: nil
             )
             let mockClient = MockProgressClient(mockedProgressResponses: [mockProgressResponse])
-            let service = ProgressSyncService(client: mockClient)
+            let service = ProgressSyncService.makeMock(client: mockClient)
             let container = try ModelContainer(
                 for: UserProgress.self,
                 User.self,

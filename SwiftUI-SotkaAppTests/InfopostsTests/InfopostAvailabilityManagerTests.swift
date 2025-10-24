@@ -3,7 +3,7 @@ import Testing
 
 extension AllInfopostsTests {
     struct InfopostAvailabilityManagerTests {
-        @Test
+        @Test("Подготовительные посты всегда доступны")
         func preparationPostsAlwaysAvailable() {
             let manager = InfopostAvailabilityManager(currentDay: 1, maxReadInfoPostDay: 0)
             let preparationPost = createInfopost(section: .preparation, dayNumber: nil)
@@ -11,7 +11,7 @@ extension AllInfopostsTests {
             #expect(manager.isInfopostAvailable(preparationPost))
         }
 
-        @Test
+        @Test("Текущий день ограничивает доступность")
         func currentDayLimitsAvailability() {
             let manager = InfopostAvailabilityManager(currentDay: 10, maxReadInfoPostDay: 0)
             let day5Post = createInfopost(section: .base, dayNumber: 5)
@@ -21,7 +21,7 @@ extension AllInfopostsTests {
             #expect(!manager.isInfopostAvailable(day15Post))
         }
 
-        @Test
+        @Test("Максимальный прочитанный день переопределяет текущий")
         func maxReadInfoPostDayOverridesCurrentDay() {
             let manager = InfopostAvailabilityManager(currentDay: 5, maxReadInfoPostDay: 20)
             let day15Post = createInfopost(section: .base, dayNumber: 15)
@@ -31,7 +31,7 @@ extension AllInfopostsTests {
             #expect(!manager.isInfopostAvailable(day25Post))
         }
 
-        @Test
+        @Test("Расчет максимального доступного дня")
         func maxAvailableDayCalculation() {
             let manager1 = InfopostAvailabilityManager(currentDay: 10, maxReadInfoPostDay: 5)
             #expect(manager1.maxAvailableDay == 10)
@@ -40,7 +40,7 @@ extension AllInfopostsTests {
             #expect(manager2.maxAvailableDay == 15)
         }
 
-        @Test
+        @Test("Инфопост без номера дня")
         func infopostWithoutDayNumber() {
             let manager = InfopostAvailabilityManager(currentDay: 10, maxReadInfoPostDay: 0)
             let postWithoutDay = createInfopost(section: .preparation, dayNumber: nil)

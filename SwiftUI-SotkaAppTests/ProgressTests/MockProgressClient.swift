@@ -2,8 +2,6 @@ import Foundation
 @testable import SwiftUI_SotkaApp
 import SWUtils
 
-/// Единая версия MockProgressClient для всех тестов прогресса
-/// Объединяет лучшие функции из трех разных версий MockProgressClient
 final class MockProgressClient: ProgressClient, @unchecked Sendable {
     // MARK: - Properties
 
@@ -159,5 +157,14 @@ final class MockProgressClient: ProgressClient, @unchecked Sendable {
         deletePhotoError = nil
         deletePhotoCalls.removeAll()
         updateProgressCalls.removeAll()
+    }
+}
+
+extension ProgressSyncService {
+    static func makeMock(
+        client: ProgressClient = MockProgressClient(),
+        photoDownloadService: PhotoDownloadServiceProtocol = MockPhotoDownloadService()
+    ) -> ProgressSyncService {
+        ProgressSyncService(client: client, photoDownloadService: photoDownloadService)
     }
 }

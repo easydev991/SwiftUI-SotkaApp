@@ -6,7 +6,7 @@ import Testing
 extension AllProgressTests {
     @MainActor
     struct PhotoDownloadServiceTests {
-        private let service = PhotoDownloadService()
+        private let service: PhotoDownloadServiceProtocol = MockPhotoDownloadService()
 
         @Test("Проверка начального состояния модели UserProgress")
         func initialProgressState() {

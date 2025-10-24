@@ -916,7 +916,7 @@ extension AllProgressTests {
         }
 
         @Test("tempPhotoItems создает массив TempPhotoModel")
-        func tempPhotoItemsCreatesTempPhotoModelArray() {
+        func tempPhotoItemsCreatesTempPhotoModelArray() throws {
             let progress = UserProgress(id: 1)
             progress.dataPhotoFront = Data("test front".utf8)
             progress.urlPhotoBack = "https://example.com/back.jpg"
@@ -930,14 +930,18 @@ extension AllProgressTests {
             let backPhoto = photoItems.first { $0.type == .back }
             let sidePhoto = photoItems.first { $0.type == .side }
 
-            #expect(frontPhoto?.data == Data("test front".utf8))
-            #expect(backPhoto?.urlString == "https://example.com/back.jpg")
+            let frontPhotoValue = try #require(frontPhoto)
+            let backPhotoValue = try #require(backPhoto)
+            let sidePhotoValue = try #require(sidePhoto)
+
+            #expect(frontPhotoValue.data == Data("test front".utf8))
+            #expect(backPhotoValue.urlString == "https://example.com/back.jpg")
             // sidePhoto.data будет nil из-за getPhotoData(), который фильтрует DELETED_DATA
             // но isMarkedForDeletion определяется в конструкторе TempPhotoModel по исходному data
-            #expect(sidePhoto?.data == nil)
+            #expect(sidePhotoValue.data == nil)
             // Поскольку getPhotoData возвращает nil для DELETED_DATA,
             // в конструктор TempPhotoModel передается nil, поэтому isMarkedForDeletion = false
-            #expect(sidePhoto?.isMarkedForDeletion == false)
+            #expect(!sidePhotoValue.isMarkedForDeletion)
         }
 
         @Test("setPhotosData устанавливает данные для всех фото")

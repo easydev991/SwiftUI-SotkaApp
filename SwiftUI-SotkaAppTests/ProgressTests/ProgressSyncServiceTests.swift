@@ -11,7 +11,7 @@ extension AllProgressTests {
         func syncNewProgressCreation() async throws {
             // Arrange
             let mockClient = MockProgressClient()
-            let service = ProgressSyncService(client: mockClient)
+            let service = ProgressSyncService.makeMock(client: mockClient)
             let container = try ModelContainer(
                 for: UserProgress.self,
                 User.self,
@@ -64,7 +64,7 @@ extension AllProgressTests {
         func syncExistingProgressUpdate() async throws {
             // Arrange
             let mockClient = MockProgressClient()
-            let service = ProgressSyncService(client: mockClient)
+            let service = ProgressSyncService.makeMock(client: mockClient)
             let container = try ModelContainer(
                 for: UserProgress.self,
                 User.self,
@@ -116,7 +116,7 @@ extension AllProgressTests {
         func conflictResolutionLocalNewer() async throws {
             // Arrange
             let mockClient = MockProgressClient()
-            let service = ProgressSyncService(client: mockClient)
+            let service = ProgressSyncService.makeMock(client: mockClient)
             let container = try ModelContainer(
                 for: UserProgress.self,
                 User.self,
@@ -173,7 +173,7 @@ extension AllProgressTests {
         func conflictResolutionServerNewer() async throws {
             // Arrange
             let mockClient = MockProgressClient()
-            let service = ProgressSyncService(client: mockClient)
+            let service = ProgressSyncService.makeMock(client: mockClient)
             let container = try ModelContainer(
                 for: UserProgress.self,
                 User.self,
@@ -225,7 +225,7 @@ extension AllProgressTests {
         func deleteMarkedForDeletionProgress() async throws {
             // Arrange
             let mockClient = MockProgressClient()
-            let service = ProgressSyncService(client: mockClient)
+            let service = ProgressSyncService.makeMock(client: mockClient)
             let container = try ModelContainer(
                 for: UserProgress.self,
                 User.self,
@@ -258,7 +258,7 @@ extension AllProgressTests {
         func createNewProgressFromServer() async throws {
             // Arrange
             let mockClient = MockProgressClient()
-            let service = ProgressSyncService(client: mockClient)
+            let service = ProgressSyncService.makeMock(client: mockClient)
             let container = try ModelContainer(
                 for: UserProgress.self,
                 User.self,
@@ -304,7 +304,7 @@ extension AllProgressTests {
         func handleServerDeletedProgress() async throws {
             // Arrange
             let mockClient = MockProgressClient()
-            let service = ProgressSyncService(client: mockClient)
+            let service = ProgressSyncService.makeMock(client: mockClient)
             let container = try ModelContainer(
                 for: UserProgress.self,
                 User.self,
@@ -343,7 +343,7 @@ extension AllProgressTests {
         func handleNetworkErrors() async throws {
             // Arrange
             let mockClient = MockProgressClient()
-            let service = ProgressSyncService(client: mockClient)
+            let service = ProgressSyncService.makeMock(client: mockClient)
             let container = try ModelContainer(
                 for: UserProgress.self,
                 User.self,
@@ -380,7 +380,7 @@ extension AllProgressTests {
         func cleanupDuplicateProgress() async throws {
             // Arrange
             let mockClient = MockProgressClient()
-            let service = ProgressSyncService(client: mockClient)
+            let service = ProgressSyncService.makeMock(client: mockClient)
             let container = try ModelContainer(
                 for: UserProgress.self,
                 User.self,
@@ -426,7 +426,7 @@ extension AllProgressTests {
         func makeProgressSnapshotsForSync() async throws {
             // Arrange
             let mockClient = MockProgressClient()
-            let service = ProgressSyncService(client: mockClient)
+            let service = ProgressSyncService.makeMock(client: mockClient)
             let container = try ModelContainer(
                 for: UserProgress.self,
                 User.self,
@@ -470,8 +470,11 @@ extension AllProgressTests {
             let finalUnsyncedProgress = allProgress.first { $0.id == 2 }
             let finalDeletedProgress = allProgress.first { $0.id == 3 }
 
-            #expect(finalSyncedProgress?.isSynced == true, "Синхронизированный прогресс должен остаться синхронизированным")
-            #expect(finalUnsyncedProgress?.isSynced == true, "Несинхронизированный прогресс должен стать синхронизированным")
+            let syncedProgressValue = try #require(finalSyncedProgress)
+            let unsyncedProgressValue = try #require(finalUnsyncedProgress)
+
+            #expect(syncedProgressValue.isSynced, "Синхронизированный прогресс должен остаться синхронизированным")
+            #expect(unsyncedProgressValue.isSynced, "Несинхронизированный прогресс должен стать синхронизированным")
             #expect(finalDeletedProgress == nil, "Прогресс помеченный для удаления должен быть удален")
         }
 
@@ -479,7 +482,7 @@ extension AllProgressTests {
         func applyLWWLogicWithLogging() async throws {
             // Arrange
             let mockClient = MockProgressClient()
-            let service = ProgressSyncService(client: mockClient)
+            let service = ProgressSyncService.makeMock(client: mockClient)
             let container = try ModelContainer(
                 for: UserProgress.self,
                 User.self,
@@ -529,7 +532,7 @@ extension AllProgressTests {
         func handlePhotoDeletion() async throws {
             // Arrange
             let mockClient = MockProgressClient()
-            let service = ProgressSyncService(client: mockClient)
+            let service = ProgressSyncService.makeMock(client: mockClient)
             let container = try ModelContainer(
                 for: UserProgress.self,
                 User.self,
@@ -565,7 +568,7 @@ extension AllProgressTests {
             // Arrange
             let mockClient = MockProgressClient()
             mockClient.shouldThrowError = true // Имитируем ошибки сети
-            let service = ProgressSyncService(client: mockClient)
+            let service = ProgressSyncService.makeMock(client: mockClient)
             let container = try ModelContainer(
                 for: UserProgress.self,
                 User.self,
@@ -598,7 +601,7 @@ extension AllProgressTests {
         func loggingAllSyncStages() async throws {
             // Arrange
             let mockClient = MockProgressClient()
-            let service = ProgressSyncService(client: mockClient)
+            let service = ProgressSyncService.makeMock(client: mockClient)
             let container = try ModelContainer(
                 for: UserProgress.self,
                 User.self,
@@ -647,7 +650,7 @@ extension AllProgressTests {
         func emptyStateNoRecordsToSync() async throws {
             // Arrange
             let mockClient = MockProgressClient()
-            let service = ProgressSyncService(client: mockClient)
+            let service = ProgressSyncService.makeMock(client: mockClient)
             let container = try ModelContainer(
                 for: UserProgress.self,
                 User.self,
@@ -672,7 +675,7 @@ extension AllProgressTests {
         func alreadySyncingProtection() async throws {
             // Arrange
             let mockClient = MockProgressClient()
-            let service = ProgressSyncService(client: mockClient)
+            let service = ProgressSyncService.makeMock(client: mockClient)
             let container = try ModelContainer(
                 for: UserProgress.self,
                 User.self,
@@ -740,12 +743,12 @@ extension AllProgressTests {
                 weight: 10.0,
                 createDate: "2025-10-24T10:39:51+03:00",
                 modifyDate: "2025-10-24T10:40:08+03:00",
-                photoFront: "file:///test/front.jpg",
-                photoBack: "file:///test/back.jpg"
+                photoFront: "https://example.com/front.jpg",
+                photoBack: "https://example.com/back.jpg"
             )
             mockClient.mockedProgressResponses = [serverResponse]
 
-            let syncService = ProgressSyncService(client: mockClient)
+            let syncService = ProgressSyncService.makeMock(client: mockClient)
 
             // Act
             await syncService.syncProgress(context: context)
@@ -764,8 +767,8 @@ extension AllProgressTests {
             #expect(progress.weight == 10.0)
             #expect(progress.isSynced)
             #expect(!progress.shouldDelete)
-            #expect(progress.urlPhotoFront == "file:///test/front.jpg")
-            #expect(progress.urlPhotoBack == "file:///test/back.jpg")
+            #expect(progress.urlPhotoFront == "https://example.com/front.jpg")
+            #expect(progress.urlPhotoBack == "https://example.com/back.jpg")
         }
 
         @Test("Должен корректно маппить внешние дни сервера во внутренние дни приложения")
@@ -824,12 +827,12 @@ extension AllProgressTests {
                 weight: 10.0,
                 createDate: "2025-10-24T10:39:51+03:00",
                 modifyDate: "2025-10-24T10:40:08+03:00",
-                photoFront: "file:///test/front.jpg",
-                photoBack: "file:///test/back.jpg"
+                photoFront: "https://example.com/front.jpg",
+                photoBack: "https://example.com/back.jpg"
             )
             mockClient.mockedProgressResponses = [serverResponse]
 
-            let syncService = ProgressSyncService(client: mockClient)
+            let syncService = ProgressSyncService.makeMock(client: mockClient)
 
             // Act
             await syncService.syncProgress(context: context)
@@ -848,8 +851,8 @@ extension AllProgressTests {
             #expect(progress.weight == 10.0)
             #expect(progress.isSynced)
             #expect(!progress.shouldDelete)
-            #expect(progress.urlPhotoFront == "file:///test/front.jpg")
-            #expect(progress.urlPhotoBack == "file:///test/back.jpg")
+            #expect(progress.urlPhotoFront == "https://example.com/front.jpg")
+            #expect(progress.urlPhotoBack == "https://example.com/back.jpg")
         }
     }
 }

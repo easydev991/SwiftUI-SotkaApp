@@ -1,8 +1,14 @@
 import Foundation
 import OSLog
 
+/// Протокол для загрузки фотографий прогресса
+protocol PhotoDownloadServiceProtocol {
+    @MainActor
+    func downloadAllPhotos(for progress: UserProgress) async
+}
+
 /// Сервис для загрузки фотографий прогресса
-struct PhotoDownloadService {
+struct PhotoDownloadService: PhotoDownloadServiceProtocol {
     private let logger = Logger(subsystem: "SotkaApp", category: "PhotoDownload")
 
     /// Загружает все новые фотографии для прогресса

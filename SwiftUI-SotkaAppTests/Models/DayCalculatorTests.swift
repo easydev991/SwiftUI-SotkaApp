@@ -6,7 +6,7 @@ struct DayCalculatorTests {
     private let calendar = Calendar.current
     private let now = Date.now
 
-    @Test
+    @Test("Инициализация с валидными датами")
     func initializesWithValidDates() throws {
         let startDate = calendar.date(byAdding: .day, value: -5, to: now)
         let endDate = now
@@ -16,12 +16,12 @@ struct DayCalculatorTests {
         #expect(!calculator.isOver)
     }
 
-    @Test
+    @Test("Обработка nil стартовой даты")
     func handlesNilStartDate() {
         #expect(DayCalculator(nil, now) == nil)
     }
 
-    @Test
+    @Test("Расчет максимального текущего дня")
     func calculatesMaxCurrentDay() throws {
         let startDate = calendar.date(byAdding: .day, value: -150, to: now)
         let endDate = now
@@ -32,7 +32,7 @@ struct DayCalculatorTests {
         #expect(calculator.isOver)
     }
 
-    @Test
+    @Test("Расчет граничных дней")
     func calculatesEdgeDays() throws {
         // Case 1: 0 days between
         let date = now
@@ -45,7 +45,7 @@ struct DayCalculatorTests {
         #expect(calculator2.daysLeft == 0)
     }
 
-    @Test
+    @Test("Проверка завершения программы")
     func verifiesProgramCompletion() throws {
         let startDate = calendar.date(byAdding: .day, value: -99, to: now)
         let endDate = now
@@ -53,7 +53,7 @@ struct DayCalculatorTests {
         #expect(calculator.isOver)
     }
 
-    @Test
+    @Test("Инициализация с будущей стартовой датой")
     func initializesWithFutureStartDate() throws {
         // Стартовая дата в будущем относительно endDate
         let startDate = try #require(calendar.date(byAdding: .day, value: 5, to: now))

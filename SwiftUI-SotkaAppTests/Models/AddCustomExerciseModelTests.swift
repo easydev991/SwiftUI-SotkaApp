@@ -4,7 +4,7 @@ import Testing
 struct AddCustomExerciseModelTests {
     typealias SUT = EditCustomExerciseScreen.Model
 
-    @Test(arguments: ["", "   ", "  \n  "])
+    @Test("Нельзя сохранить с пустым именем", arguments: ["", "   ", "  \n  "])
     func cannotSaveWhenNameIsEmpty(name: String) {
         var model = SUT()
         model.exerciseName = name
@@ -12,7 +12,7 @@ struct AddCustomExerciseModelTests {
         #expect(!model.canSaveExercise)
     }
 
-    @Test
+    @Test("Нельзя сохранить без выбранной иконки")
     func cannotSaveWhenIconNotSelected() {
         var model = SUT()
         model.exerciseName = "Отжимания"
@@ -20,7 +20,7 @@ struct AddCustomExerciseModelTests {
         #expect(!model.canSaveExercise)
     }
 
-    @Test
+    @Test("Можно сохранить с валидными данными")
     func canSaveWhenValidData() {
         var model = SUT()
         model.exerciseName = "Отжимания"

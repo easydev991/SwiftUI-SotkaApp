@@ -33,14 +33,14 @@ struct UserTests {
 
     // MARK: - avatarUrl Tests
 
-    @Test("avatarUrl with valid URL")
+    @Test("avatarUrl с валидным URL")
     func avatarUrlWithValidUrl() throws {
         let user = User(id: 1, imageStringURL: "https://example.com/avatar.jpg")
         let avatarUrl = try #require(user.avatarUrl)
         #expect(avatarUrl.absoluteString == "https://example.com/avatar.jpg")
     }
 
-    @Test("avatarUrl with cyrillic characters")
+    @Test("avatarUrl с кириллическими символами")
     func avatarUrlWithCyrillic() throws {
         let user = User(id: 1, imageStringURL: "https://example.com/аватар.jpg")
         let avatarUrl = try #require(user.avatarUrl)
@@ -48,13 +48,13 @@ struct UserTests {
         #expect(avatarUrl.absoluteString.contains("%D0%B0%D0%B2%D0%B0%D1%82%D0%B0%D1%80"))
     }
 
-    @Test("avatarUrl with empty string")
+    @Test("avatarUrl с пустой строкой")
     func avatarUrlWithEmptyString() {
         let user = User(id: 1, imageStringURL: "")
         #expect(user.avatarUrl == nil)
     }
 
-    @Test("avatarUrl with nil value")
+    @Test("avatarUrl с nil значением")
     func avatarUrlWithNil() {
         let user = User(id: 1, imageStringURL: nil)
         #expect(user.avatarUrl == nil)
@@ -62,34 +62,34 @@ struct UserTests {
 
     // MARK: - gender Tests
 
-    @Test("gender with unspecified code")
+    @Test("gender с неопределенным кодом")
     func genderWithUnspecifiedCode() throws {
         let user = User(id: 1, genderCode: -1)
         let gender = try #require(user.gender)
         #expect(gender == .unspecified)
     }
 
-    @Test("gender with male code")
+    @Test("gender с мужским кодом")
     func genderWithMaleCode() throws {
         let user = User(id: 1, genderCode: 0)
         let gender = try #require(user.gender)
         #expect(gender == .male)
     }
 
-    @Test("gender with female code")
+    @Test("gender с женским кодом")
     func genderWithFemaleCode() throws {
         let user = User(id: 1, genderCode: 1)
         let gender = try #require(user.gender)
         #expect(gender == .female)
     }
 
-    @Test("gender with nil code")
+    @Test("gender с nil кодом")
     func genderWithNilCode() {
         let user = User(id: 1, genderCode: nil)
         #expect(user.gender == nil)
     }
 
-    @Test("gender with invalid code")
+    @Test("gender с невалидным кодом")
     func genderWithInvalidCode() {
         let user = User(id: 1, genderCode: 999)
         #expect(user.gender == nil)
@@ -97,7 +97,7 @@ struct UserTests {
 
     // MARK: - birthDate Tests
 
-    @Test("birthDate with valid ISO date")
+    @Test("birthDate с валидной ISO датой")
     func birthDateWithValidIsoDate() {
         let user = User(id: 1, birthDateIsoString: "1990-01-15")
         let birthDate = user.birthDate
@@ -110,7 +110,7 @@ struct UserTests {
         #expect(components.day == 15)
     }
 
-    @Test("birthDate with empty string")
+    @Test("birthDate с пустой строкой")
     func birthDateWithEmptyString() {
         let user = User(id: 1, birthDateIsoString: "")
         let birthDate = user.birthDate
@@ -121,7 +121,7 @@ struct UserTests {
         #expect(timeInterval < 1.0) // Разница должна быть меньше секунды
     }
 
-    @Test("birthDate with nil value")
+    @Test("birthDate с nil значением")
     func birthDateWithNil() {
         let user = User(id: 1, birthDateIsoString: nil)
         let birthDate = user.birthDate
@@ -134,7 +134,7 @@ struct UserTests {
 
     // MARK: - genderWithAge Tests
 
-    @Test("genderWithAge with male gender")
+    @Test("genderWithAge с мужским полом")
     func genderWithAgeWithMale() {
         let user = User(id: 1, genderCode: 0, birthDateIsoString: "1990-01-01")
         let genderWithAge = user.genderWithAge
@@ -144,7 +144,7 @@ struct UserTests {
         #expect(genderWithAge.contains(ageString(from: "1990-01-01")))
     }
 
-    @Test("genderWithAge with female gender")
+    @Test("genderWithAge с женским полом")
     func genderWithAgeWithFemale() {
         let user = User(id: 1, genderCode: 1, birthDateIsoString: "1990-01-01")
         let genderWithAge = user.genderWithAge
@@ -154,7 +154,7 @@ struct UserTests {
         #expect(genderWithAge.contains(ageString(from: "1990-01-01")))
     }
 
-    @Test("genderWithAge with unspecified gender")
+    @Test("genderWithAge с неопределенным полом")
     func genderWithAgeWithUnspecified() {
         let user = User(id: 1, genderCode: -1, birthDateIsoString: "1990-01-01")
         let genderWithAge = user.genderWithAge
@@ -167,7 +167,7 @@ struct UserTests {
         #expect(genderWithAge.contains(ageString(from: "1990-01-01")))
     }
 
-    @Test("genderWithAge with nil gender")
+    @Test("genderWithAge с nil полом")
     func genderWithAgeWithNilGender() {
         let user = User(id: 1, genderCode: nil, birthDateIsoString: "1990-01-01")
         let genderWithAge = user.genderWithAge
@@ -182,7 +182,7 @@ struct UserTests {
 
     // MARK: - customExerciseCountText Tests
 
-    @Test("customExerciseCountText with empty exercises")
+    @Test("customExerciseCountText с пустыми упражнениями")
     func customExerciseCountTextWithEmptyExercises() {
         let user = User(id: 1)
         // По умолчанию customExercises пустой массив
@@ -190,7 +190,7 @@ struct UserTests {
         #expect(countText == "")
     }
 
-    @Test("customExerciseCountText with one exercise")
+    @Test("customExerciseCountText с одним упражнением")
     func customExerciseCountTextWithOneExercise() {
         let user = User(id: 1)
         let exercise = createCustomExercise(id: "test-1", name: "Test Exercise", imageId: 1, user: user)
@@ -200,7 +200,7 @@ struct UserTests {
         #expect(countText == "1")
     }
 
-    @Test("customExerciseCountText with multiple exercises")
+    @Test("customExerciseCountText с несколькими упражнениями")
     func customExerciseCountTextWithMultipleExercises() {
         let user = User(id: 1)
         // Создаем несколько упражнений и добавляем в массив

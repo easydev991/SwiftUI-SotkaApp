@@ -55,7 +55,7 @@ extension AllProgressTests {
 
             try context.save()
 
-            let syncService = ProgressSyncService(client: mockClient)
+            let syncService = ProgressSyncService.makeMock(client: mockClient)
             await syncService.syncProgress(context: context)
 
             // Проверяем, что deletePhoto был вызван для удаления photo_back
@@ -106,7 +106,7 @@ extension AllProgressTests {
                 createDate: "2024-01-01 12:00:00",
                 modifyDate: "2024-01-01 12:01:00",
                 photoFront: nil,
-                photoBack: "file:///test/new_back_photo.jpg",
+                photoBack: "https://example.com/new_back_photo.jpg",
                 photoSide: nil
             )
             mockClient.mockedProgressResponses = [serverResponse]
@@ -116,7 +116,7 @@ extension AllProgressTests {
 
             try context.save()
 
-            let syncService = ProgressSyncService(client: mockClient)
+            let syncService = ProgressSyncService.makeMock(client: mockClient)
             await syncService.syncProgress(context: context)
 
             // Проверяем, что updateProgress был вызван для обновления прогресса
@@ -223,36 +223,30 @@ extension AllProgressTests {
                 createDate: "2024-01-01 12:00:00",
                 modifyDate: "2024-01-01 12:01:00",
                 photoFront: nil,
-                photoBack: "file:///test/photo.jpg",
+                photoBack: "https://example.com/photo.jpg",
                 photoSide: nil
             )
 
             mockClient.mockedProgressResponses = [serverResponseA, serverResponseB]
 
-            let syncService = ProgressSyncService(client: mockClient)
+            let syncService = ProgressSyncService.makeMock(client: mockClient)
             await syncService.syncProgress(context: context)
 
             // Проверяем, что оба слота обработаны корректно
             let allProgress = try context.fetch(FetchDescriptor<UserProgress>())
             #expect(allProgress.count == 2)
 
-            let updatedProgressA = allProgress.first { $0.id == 1 }
-            let updatedProgressB = allProgress.first { $0.id == 2 }
+            // Проверяем, что оба слота синхронизированы
+            let updatedProgressA = try #require(allProgress.first { $0.id == 1 }, "Слот A должен существовать")
+            let updatedProgressB = try #require(allProgress.first { $0.id == 2 }, "Слот B должен существовать")
+            #expect(updatedProgressA.isSynced, "Слот A должен быть синхронизирован")
+            #expect(updatedProgressB.isSynced, "Слот B должен быть синхронизирован")
+            #expect(!updatedProgressA.shouldDelete, "Слот A не должен быть помечен для удаления")
+            #expect(!updatedProgressB.shouldDelete, "Слот B не должен быть помечен для удаления")
 
-            #expect(updatedProgressA != nil, "Слот A должен существовать")
-            #expect(updatedProgressB != nil, "Слот B должен существовать")
-
-            // Проверяем, что слоты были обработаны (могут быть синхронизированы или помечены для удаления)
-            #expect(updatedProgressA?.isSynced == true || updatedProgressA?.shouldDelete == true, "Слот A должен быть обработан")
-            #expect(updatedProgressB?.isSynced == true || updatedProgressB?.shouldDelete == true, "Слот B должен быть обработан")
-
-            // Проверяем состояние фотографий
-            if let progressA = updatedProgressA, progressA.isSynced {
-                #expect(!progressA.shouldDeletePhoto(.front), "Фото front в слоте A не должно быть помечено для удаления")
-            }
-            if let progressB = updatedProgressB, progressB.isSynced {
-                #expect(progressB.urlPhotoBack == "file:///test/photo.jpg", "Фото back в слоте B должно быть обновлено с сервера")
-            }
+            // Проверяем состояние фотографий после синхронизации
+            #expect(!updatedProgressA.shouldDeletePhoto(.front), "Фото front в слоте A не должно быть помечено для удаления")
+            #expect(updatedProgressB.urlPhotoBack == "https://example.com/photo.jpg", "Фото back в слоте B должно быть обновлено с сервера")
         }
 
         @Test("Конфликт состояний флагов синхронизации - запись синхронизируется")
@@ -285,7 +279,7 @@ extension AllProgressTests {
             )
             mockClient.mockedProgressResponses = [serverResponse]
 
-            let syncService = ProgressSyncService(client: mockClient)
+            let syncService = ProgressSyncService.makeMock(client: mockClient)
             await syncService.syncProgress(context: context)
 
             let allProgress = try context.fetch(FetchDescriptor<UserProgress>())
@@ -315,7 +309,7 @@ extension AllProgressTests {
             let mockClient = MockProgressClient()
             mockClient.shouldThrowError = true
 
-            let syncService = ProgressSyncService(client: mockClient)
+            let syncService = ProgressSyncService.makeMock(client: mockClient)
             await syncService.syncProgress(context: context)
 
             let allProgress = try context.fetch(FetchDescriptor<UserProgress>())
@@ -350,18 +344,18 @@ extension AllProgressTests {
                 weight: 70.0,
                 createDate: "2024-01-01 12:00:00",
                 modifyDate: "2024-01-01 12:01:00",
-                photoFront: "file:///test/photo.jpg"
+                photoFront: "https://example.com/photo.jpg"
             )
             mockClient.mockedProgressResponses = [serverResponse]
 
-            let syncService = ProgressSyncService(client: mockClient)
+            let syncService = ProgressSyncService.makeMock(client: mockClient)
             await syncService.syncProgress(context: context)
 
             // Проверяем финальное состояние
             let updatedProgress = try #require(context.fetch(FetchDescriptor<UserProgress>()).first)
             #expect(updatedProgress.isSynced, "Должен быть синхронизирован")
             #expect(!updatedProgress.shouldDelete, "Не должен быть помечен для удаления")
-            #expect(updatedProgress.urlPhotoFront == "file:///test/photo.jpg", "URL фото должен быть обновлен")
+            #expect(updatedProgress.urlPhotoFront == "https://example.com/photo.jpg", "URL фото должен быть обновлен")
         }
 
         @Test("Тест обработки пустого прогресса")
@@ -395,7 +389,7 @@ extension AllProgressTests {
             )
             mockClient.mockedProgressResponses = [serverResponse]
 
-            let syncService = ProgressSyncService(client: mockClient)
+            let syncService = ProgressSyncService.makeMock(client: mockClient)
             await syncService.syncProgress(context: context)
 
             // Пустой прогресс должен быть обработан корректно
@@ -445,7 +439,7 @@ extension AllProgressTests {
             }
             mockClient.mockedProgressResponses = serverResponses
 
-            let syncService = ProgressSyncService(client: mockClient)
+            let syncService = ProgressSyncService.makeMock(client: mockClient)
             await syncService.syncProgress(context: context)
 
             // Все слоты должны быть синхронизированы
@@ -464,7 +458,7 @@ extension AllProgressTests {
         func photoDeletionAndAdditionInSameIteration() async throws {
             // Arrange
             let mockClient = MockProgressClient()
-            let service = ProgressSyncService(client: mockClient)
+            let service = ProgressSyncService.makeMock(client: mockClient)
 
             // Создаем контейнер для тестов
             let container = try ModelContainer(
@@ -522,17 +516,18 @@ extension AllProgressTests {
             // Проверяем параметры вызова updateProgress
             let updateProgressCall = try #require(mockClient.updateProgressCalls.first)
             #expect(updateProgressCall.day == 49, "День должен быть 49")
-            #expect(updateProgressCall.progress.photos?.count == 1, "Должна быть отправлена 1 фотография")
+            let photos = try #require(updateProgressCall.progress.photos)
+            #expect(photos.count == 1, "Должна быть отправлена 1 фотография")
 
             // Проверяем, что отправлена фотография сзади
-            let sentPhoto = try #require(updateProgressCall.progress.photos?.first)
+            let sentPhoto = try #require(photos.first)
             #expect(sentPhoto.key == "photo_back", "Тип отправленной фотографии должен быть photo_back")
             #expect(sentPhoto.value == Data("back_photo_data".utf8), "Данные фотографии должны совпадать")
 
             // Проверяем финальное состояние прогресса
-            let finalProgress = try context.fetch(FetchDescriptor<UserProgress>()).first
-            #expect(finalProgress?.isSynced == true, "Прогресс должен быть помечен как синхронизированный")
-            #expect(finalProgress?.shouldDelete == false, "Прогресс не должен быть помечен на удаление")
+            let finalProgress = try #require(try context.fetch(FetchDescriptor<UserProgress>()).first)
+            #expect(finalProgress.isSynced, "Прогресс должен быть помечен как синхронизированный")
+            #expect(!finalProgress.shouldDelete, "Прогресс не должен быть помечен на удаление")
         }
 
         /// Тест проверяет, что при отсутствии фотографий для удаления новые фотографии отправляются корректно
@@ -540,7 +535,7 @@ extension AllProgressTests {
         func onlyPhotoAddition() async throws {
             // Arrange
             let mockClient = MockProgressClient()
-            let service = ProgressSyncService(client: mockClient)
+            let service = ProgressSyncService.makeMock(client: mockClient)
 
             let container = try ModelContainer(
                 for: User.self, UserProgress.self,
@@ -577,9 +572,10 @@ extension AllProgressTests {
             #expect(mockClient.updateProgressCallCount == 1, "updateProgress должен быть вызван")
 
             let updateProgressCall = try #require(mockClient.updateProgressCalls.first)
-            #expect(updateProgressCall.progress.photos?.count == 1, "Должна быть отправлена 1 фотография")
+            let photos = try #require(updateProgressCall.progress.photos)
+            #expect(photos.count == 1, "Должна быть отправлена 1 фотография")
 
-            let sentPhoto = try #require(updateProgressCall.progress.photos?.first)
+            let sentPhoto = try #require(photos.first)
             #expect(sentPhoto.key == "photo_back", "Тип отправленной фотографии должен быть photo_back")
         }
 
@@ -588,7 +584,7 @@ extension AllProgressTests {
         func onlyPhotoDeletion() async throws {
             // Arrange
             let mockClient = MockProgressClient()
-            let service = ProgressSyncService(client: mockClient)
+            let service = ProgressSyncService.makeMock(client: mockClient)
 
             let container = try ModelContainer(
                 for: User.self, UserProgress.self,

@@ -10,13 +10,18 @@ import SWUtils
 @Observable
 final class ProgressSyncService {
     private let client: ProgressClient
+    private let photoDownloadService: PhotoDownloadServiceProtocol
     private let logger = Logger(subsystem: "SotkaApp", category: "ProgressSync")
 
     /// Флаг загрузки синхронизации
     private(set) var isSyncing = false
 
-    init(client: ProgressClient) {
+    init(
+        client: ProgressClient,
+        photoDownloadService: PhotoDownloadServiceProtocol = PhotoDownloadService()
+    ) {
         self.client = client
+        self.photoDownloadService = photoDownloadService
     }
 
     /// Основной метод синхронизации
@@ -874,7 +879,7 @@ private extension ProgressSyncService {
 
         // Загружаем фотографии синхронно
         logger.info("📸 [TRACE] updateProgressFromServerResponse() - начинаем загрузку фотографий")
-        await PhotoDownloadService().downloadAllPhotos(for: progress)
+        await photoDownloadService.downloadAllPhotos(for: progress)
 
         logger
             .info(
