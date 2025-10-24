@@ -2,7 +2,6 @@ import Foundation
 import Observation
 import OSLog
 import SwiftData
-import SWNetwork
 import SWUtils
 
 /// Сервис синхронизации прогресса пользователя
@@ -573,9 +572,6 @@ private extension ProgressSyncService {
                 )
             if let decodingError = error as? DecodingError {
                 logger.error("❌ [TRACE] performNetworkSync() - детали ошибки декодирования: \(decodingError)")
-            }
-            if let apiError = error as? APIError {
-                logger.error("❌ [TRACE] performNetworkSync() - API ошибка: \(apiError)")
             }
             return .failed(id: snapshot.id, errorDescription: error.localizedDescription)
         }
