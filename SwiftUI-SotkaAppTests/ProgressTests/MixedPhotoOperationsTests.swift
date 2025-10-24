@@ -8,8 +8,8 @@ import UIKit
 extension AllProgressTests {
     @MainActor
     @Suite("ProgressSyncService - Смешанные операции с фотографиями")
-    struct ProgressSyncServiceMixedPhotoOperationsTests {
-        @Test("Баг: удаление photo_back и добавление photo_front - новое фото не загружается")
+    struct MixedPhotoOperationsTests {
+        @Test("Исправление: удаление photo_back и добавление photo_front - новое фото загружается корректно")
         func bugDeleteBackAddFrontPhoto() async throws {
             let container = try ModelContainer(
                 for: UserProgress.self,
@@ -61,13 +61,13 @@ extension AllProgressTests {
             // Проверяем, что deletePhoto был вызван для удаления photo_back
             #expect(mockClient.deletePhotoCallCount == 1, "Должен быть вызван deletePhoto для photo_back")
 
-            // Проверяем, что updateProgress НЕ был вызван, так как есть shouldDeletePhoto
-            #expect(mockClient.updateProgressCallCount == 0, "updateProgress НЕ должен быть вызван из-за shouldDeletePhoto")
+            // Проверяем, что updateProgress БЫЛ вызван для отправки нового фото, несмотря на shouldDeletePhoto
+            #expect(mockClient.updateProgressCallCount == 1, "updateProgress должен быть вызван для отправки нового фото")
 
             // Проверяем состояние после синхронизации
             #expect(!progress.shouldDeletePhoto(.back), "photo_back должна быть очищена после удаления")
-            // Прогресс может быть синхронизирован или не синхронизирован в зависимости от логики
-            // Главное, что deletePhoto был вызван и shouldDeletePhoto сброшен
+            // Теперь прогресс должен быть синхронизирован, так как и удаление, и добавление обработаны
+            #expect(progress.isSynced, "Прогресс должен быть помечен как синхронизированный")
         }
 
         @Test("Корректный сценарий: удаление и добавление в тот же слот")
@@ -106,7 +106,7 @@ extension AllProgressTests {
                 createDate: "2024-01-01 12:00:00",
                 modifyDate: "2024-01-01 12:01:00",
                 photoFront: nil,
-                photoBack: "https://server.com/new_back_photo.jpg",
+                photoBack: "file:///test/new_back_photo.jpg",
                 photoSide: nil
             )
             mockClient.mockedProgressResponses = [serverResponse]
@@ -223,7 +223,7 @@ extension AllProgressTests {
                 createDate: "2024-01-01 12:00:00",
                 modifyDate: "2024-01-01 12:01:00",
                 photoFront: nil,
-                photoBack: "https://server.com/photo.jpg",
+                photoBack: "file:///test/photo.jpg",
                 photoSide: nil
             )
 
@@ -251,7 +251,7 @@ extension AllProgressTests {
                 #expect(!progressA.shouldDeletePhoto(.front), "Фото front в слоте A не должно быть помечено для удаления")
             }
             if let progressB = updatedProgressB, progressB.isSynced {
-                #expect(progressB.urlPhotoBack == "https://server.com/photo.jpg", "Фото back в слоте B должно быть обновлено с сервера")
+                #expect(progressB.urlPhotoBack == "file:///test/photo.jpg", "Фото back в слоте B должно быть обновлено с сервера")
             }
         }
 
@@ -350,7 +350,7 @@ extension AllProgressTests {
                 weight: 70.0,
                 createDate: "2024-01-01 12:00:00",
                 modifyDate: "2024-01-01 12:01:00",
-                photoFront: "https://server.com/photo.jpg"
+                photoFront: "file:///test/photo.jpg"
             )
             mockClient.mockedProgressResponses = [serverResponse]
 
@@ -361,7 +361,7 @@ extension AllProgressTests {
             let updatedProgress = try #require(context.fetch(FetchDescriptor<UserProgress>()).first)
             #expect(updatedProgress.isSynced, "Должен быть синхронизирован")
             #expect(!updatedProgress.shouldDelete, "Не должен быть помечен для удаления")
-            #expect(updatedProgress.urlPhotoFront == "https://server.com/photo.jpg", "URL фото должен быть обновлен")
+            #expect(updatedProgress.urlPhotoFront == "file:///test/photo.jpg", "URL фото должен быть обновлен")
         }
 
         @Test("Тест обработки пустого прогресса")
@@ -457,107 +457,178 @@ extension AllProgressTests {
                 #expect(!progress.shouldDelete, "Слот \(progress.id) не должен быть помечен для удаления")
             }
         }
-    }
 
-    /// Mock клиент для тестирования
-    private final class MockProgressClient: ProgressClient, @unchecked Sendable {
-        var updateProgressCallCount = 0
-        var deletePhotoCallCount = 0
-        var createProgressCallCount = 0
-        var getProgressCallCount = 0
-        var mockedProgressResponses: [ProgressResponse] = []
-        var deletePhotoError: Error?
-        var shouldThrowError = false
-        private var responseIndex = 0
+        /// Тест воспроизводит проблему: при удалении фото спереди и добавлении фото сзади в одной итерации,
+        /// фото сзади не отправляется на сервер до следующего изменения
+        @Test("Должен корректно синхронизировать удаление и добавление фотографий в одной итерации")
+        func photoDeletionAndAdditionInSameIteration() async throws {
+            // Arrange
+            let mockClient = MockProgressClient()
+            let service = ProgressSyncService(client: mockClient)
 
-        func updateProgress(day _: Int, progress: ProgressRequest) async throws -> ProgressResponse {
-            updateProgressCallCount += 1
-            if shouldThrowError {
-                throw NSError(domain: "MockError", code: 1, userInfo: [NSLocalizedDescriptionKey: "Mock error"])
-            }
-            if responseIndex < mockedProgressResponses.count {
-                let response = mockedProgressResponses[responseIndex]
-                responseIndex += 1
-                return response
-            }
-            // Возвращаем ответ на основе переданного прогресса
-            return ProgressResponse(
-                id: progress.id,
-                pullups: progress.pullups,
-                pushups: progress.pushups,
-                squats: progress.squats,
-                weight: progress.weight,
-                createDate: DateFormatterService.stringFromFullDate(Date(), format: .serverDateTimeSec),
-                modifyDate: progress.modifyDate
+            // Создаем контейнер для тестов
+            let container = try ModelContainer(
+                for: User.self, UserProgress.self,
+                configurations: ModelConfiguration(isStoredInMemoryOnly: true)
             )
-        }
+            let context = ModelContext(container)
 
-        func deletePhoto(day _: Int, type _: String) async throws {
-            deletePhotoCallCount += 1
-            if shouldThrowError {
-                throw NSError(domain: "MockError", code: 1, userInfo: [NSLocalizedDescriptionKey: "Mock error"])
-            }
-            if let error = deletePhotoError {
-                throw error
-            }
-        }
+            // Создаем пользователя
+            let user = User(id: 1, userName: "Test User", email: "test@example.com")
+            context.insert(user)
 
-        func getProgress() async throws -> [ProgressResponse] {
-            getProgressCallCount += 1
-            if shouldThrowError {
-                throw NSError(domain: "MockError", code: 1, userInfo: [NSLocalizedDescriptionKey: "Mock error"])
-            }
-            return mockedProgressResponses
-        }
-
-        func getProgress(day: Int) async throws -> ProgressResponse {
-            getProgressCallCount += 1
-            if shouldThrowError {
-                throw NSError(domain: "MockError", code: 1, userInfo: [NSLocalizedDescriptionKey: "Mock error"])
-            }
-            if responseIndex < mockedProgressResponses.count {
-                let response = mockedProgressResponses[responseIndex]
-                responseIndex += 1
-                return response
-            }
-            // Возвращаем дефолтный ответ для дня
-            return ProgressResponse(
-                id: day,
-                pullups: nil,
-                pushups: nil,
-                squats: nil,
-                weight: nil,
-                createDate: DateFormatterService.stringFromFullDate(Date(), format: .serverDateTimeSec),
-                modifyDate: nil
+            // Создаем прогресс с фото спереди (которое будем удалять) и фото сзади (которое будем добавлять)
+            let progress = UserProgress(
+                id: 49,
+                pullUps: 2,
+                pushUps: 2,
+                squats: 2,
+                weight: 20.0,
+                lastModified: Date.now
             )
+            progress.user = user
+
+            // Устанавливаем фото спереди (будет удалено)
+            progress.setPhotoData(Data("front_photo_data".utf8), type: .front)
+            progress.urlPhotoFront = "https://example.com/front.jpg"
+
+            // Устанавливаем фото сзади (будет добавлено)
+            progress.setPhotoData(Data("back_photo_data".utf8), type: .back)
+            // urlPhotoBack остается nil - это новая фотография
+
+            // Помечаем фото спереди на удаление
+            progress.deletePhotoData(.front)
+
+            // Помечаем как несинхронизированный
+            progress.isSynced = false
+            progress.shouldDelete = false
+
+            context.insert(progress)
+            try context.save()
+
+            // Act
+            await service.syncProgress(context: context)
+
+            // Assert
+            // Проверяем, что были вызваны правильные методы клиента
+            #expect(mockClient.deletePhotoCallCount == 1, "Должен быть вызван deletePhoto для удаления фото спереди")
+            #expect(mockClient.updateProgressCallCount == 1, "Должен быть вызван updateProgress для отправки новых фотографий")
+
+            // Проверяем параметры вызова deletePhoto
+            let deletePhotoCall = try #require(mockClient.deletePhotoCalls.first)
+            #expect(deletePhotoCall.day == 49, "День должен быть 49")
+            #expect(deletePhotoCall.type == "front", "Тип должен быть front")
+
+            // Проверяем параметры вызова updateProgress
+            let updateProgressCall = try #require(mockClient.updateProgressCalls.first)
+            #expect(updateProgressCall.day == 49, "День должен быть 49")
+            #expect(updateProgressCall.progress.photos?.count == 1, "Должна быть отправлена 1 фотография")
+
+            // Проверяем, что отправлена фотография сзади
+            let sentPhoto = try #require(updateProgressCall.progress.photos?.first)
+            #expect(sentPhoto.key == "photo_back", "Тип отправленной фотографии должен быть photo_back")
+            #expect(sentPhoto.value == Data("back_photo_data".utf8), "Данные фотографии должны совпадать")
+
+            // Проверяем финальное состояние прогресса
+            let finalProgress = try context.fetch(FetchDescriptor<UserProgress>()).first
+            #expect(finalProgress?.isSynced == true, "Прогресс должен быть помечен как синхронизированный")
+            #expect(finalProgress?.shouldDelete == false, "Прогресс не должен быть помечен на удаление")
         }
 
-        func createProgress(progress: ProgressRequest) async throws -> ProgressResponse {
-            createProgressCallCount += 1
-            if shouldThrowError {
-                throw NSError(domain: "MockError", code: 1, userInfo: [NSLocalizedDescriptionKey: "Mock error"])
-            }
-            if responseIndex < mockedProgressResponses.count {
-                let response = mockedProgressResponses[responseIndex]
-                responseIndex += 1
-                return response
-            }
-            // Возвращаем ответ на основе переданного прогресса
-            return ProgressResponse(
-                id: progress.id,
-                pullups: progress.pullups,
-                pushups: progress.pushups,
-                squats: progress.squats,
-                weight: progress.weight,
-                createDate: DateFormatterService.stringFromFullDate(Date(), format: .serverDateTimeSec),
-                modifyDate: progress.modifyDate
+        /// Тест проверяет, что при отсутствии фотографий для удаления новые фотографии отправляются корректно
+        @Test("Должен корректно синхронизировать только добавление новых фотографий")
+        func onlyPhotoAddition() async throws {
+            // Arrange
+            let mockClient = MockProgressClient()
+            let service = ProgressSyncService(client: mockClient)
+
+            let container = try ModelContainer(
+                for: User.self, UserProgress.self,
+                configurations: ModelConfiguration(isStoredInMemoryOnly: true)
             )
+            let context = ModelContext(container)
+
+            let user = User(id: 1, userName: "Test User", email: "test@example.com")
+            context.insert(user)
+
+            let progress = UserProgress(
+                id: 49,
+                pullUps: 2,
+                pushUps: 2,
+                squats: 2,
+                weight: 20.0,
+                lastModified: Date.now
+            )
+            progress.user = user
+
+            // Добавляем только новую фотографию (без удаления)
+            progress.setPhotoData(Data("back_photo_data".utf8), type: .back)
+            progress.isSynced = false
+            progress.shouldDelete = false
+
+            context.insert(progress)
+            try context.save()
+
+            // Act
+            await service.syncProgress(context: context)
+
+            // Assert
+            #expect(mockClient.deletePhotoCallCount == 0, "deletePhoto не должен вызываться")
+            #expect(mockClient.updateProgressCallCount == 1, "updateProgress должен быть вызван")
+
+            let updateProgressCall = try #require(mockClient.updateProgressCalls.first)
+            #expect(updateProgressCall.progress.photos?.count == 1, "Должна быть отправлена 1 фотография")
+
+            let sentPhoto = try #require(updateProgressCall.progress.photos?.first)
+            #expect(sentPhoto.key == "photo_back", "Тип отправленной фотографии должен быть photo_back")
         }
 
-        func deleteProgress(day _: Int) async throws {
-            if shouldThrowError {
-                throw NSError(domain: "MockError", code: 1, userInfo: [NSLocalizedDescriptionKey: "Mock error"])
-            }
+        /// Тест проверяет, что при отсутствии новых фотографий удаление происходит корректно
+        @Test("Должен корректно синхронизировать только удаление фотографий")
+        func onlyPhotoDeletion() async throws {
+            // Arrange
+            let mockClient = MockProgressClient()
+            let service = ProgressSyncService(client: mockClient)
+
+            let container = try ModelContainer(
+                for: User.self, UserProgress.self,
+                configurations: ModelConfiguration(isStoredInMemoryOnly: true)
+            )
+            let context = ModelContext(container)
+
+            let user = User(id: 1, userName: "Test User", email: "test@example.com")
+            context.insert(user)
+
+            let progress = UserProgress(
+                id: 49,
+                pullUps: 2,
+                pushUps: 2,
+                squats: 2,
+                weight: 20.0,
+                lastModified: Date.now
+            )
+            progress.user = user
+
+            // Устанавливаем фото спереди и помечаем на удаление
+            progress.setPhotoData(Data("front_photo_data".utf8), type: .front)
+            progress.urlPhotoFront = "https://example.com/front.jpg"
+            progress.deletePhotoData(.front)
+            progress.isSynced = false
+            progress.shouldDelete = false
+
+            context.insert(progress)
+            try context.save()
+
+            // Act
+            await service.syncProgress(context: context)
+
+            // Assert
+            #expect(mockClient.deletePhotoCallCount == 1, "deletePhoto должен быть вызван")
+            #expect(mockClient.updateProgressCallCount == 0, "updateProgress не должен вызываться при отсутствии новых фотографий")
+
+            let deletePhotoCall = try #require(mockClient.deletePhotoCalls.first)
+            #expect(deletePhotoCall.day == 49, "День должен быть 49")
+            #expect(deletePhotoCall.type == "front", "Тип должен быть front")
         }
     }
 }

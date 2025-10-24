@@ -1,6 +1,5 @@
 import Foundation
 
-#warning("TODO: написать тесты для TempPhotoModel")
 /// Модель для временной фотографии, пока ее не сохранят в `SwiftData`
 struct TempPhotoModel: Identifiable, Equatable {
     let id: String

@@ -4,8 +4,6 @@ import SwiftData
 import SwiftUI
 import SWUtils
 
-#warning("TODO: обновить тесты для UserProgress")
-
 private let logger = Logger(subsystem: "SotkaApp", category: "UserProgress")
 
 /// Прогресс пользователя

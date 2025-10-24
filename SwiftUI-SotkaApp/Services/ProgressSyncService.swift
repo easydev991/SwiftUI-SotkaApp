@@ -5,10 +5,6 @@ import SwiftData
 import SWNetwork
 import SWUtils
 
-#warning(
-    "TODO: починить синхронизацию при добавлении фото после удаления в другом слоте за одну итерацию; при следующем добавлении нового фото все фотографии разом отправляются на сервер исправно"
-)
-
 /// Сервис синхронизации прогресса пользователя
 @MainActor
 @Observable
@@ -515,15 +511,24 @@ private extension ProgressSyncService {
                     return .alreadyExists(id: snapshot.id)
                 }
             } else {
-                if snapshot.shouldDeletePhoto {
-                    logger.info("📸 [TRACE] performNetworkSync() - требуется удаление фотографий для дня \(snapshot.id)")
-                    // Есть фотографии для удаления - возвращаем специальный статус для последовательной обработки
-                    return .needsPhotoDeletion(id: snapshot.id)
-                }
-
                 // Собираем данные фотографий для отправки на сервер (только не удаленные)
                 let photos = snapshot.photosForUpload
                 logger.info("📸 [TRACE] performNetworkSync() - подготовка фотографий для отправки: \(photos.count) файлов")
+
+                // Проверяем, есть ли фотографии для удаления
+                if snapshot.shouldDeletePhoto {
+                    logger.info("📸 [TRACE] performNetworkSync() - требуется удаление фотографий для дня \(snapshot.id)")
+
+                    // Если есть только фотографии для удаления (нет новых для отправки), обрабатываем отдельно
+                    if photos.isEmpty {
+                        logger.info("📸 [TRACE] performNetworkSync() - только удаление фотографий, без новых для отправки")
+                        return .needsPhotoDeletion(id: snapshot.id)
+                    }
+
+                    // Если есть и удаление, и новые фотографии - сначала удаляем, потом отправляем новые
+                    logger.info("📸 [TRACE] performNetworkSync() - есть и удаление, и новые фотографии - обрабатываем последовательно")
+                    return .needsPhotoDeletion(id: snapshot.id)
+                }
 
                 // Создаем запрос с данными фотографий (без photosToDelete)
                 let request = ProgressRequest(
@@ -932,6 +937,47 @@ private extension ProgressSyncService {
         }
 
         logger.info("🔄 [TRACE] handlePhotoDeletion() - завершение обработки всех фотографий, hasErrors=\(hasErrors)")
+
+        // После удаления фотографий проверяем, есть ли новые фотографии для отправки
+        if !hasErrors {
+            let snapshot = ProgressSnapshot(from: progress)
+            let photos = snapshot.photosForUpload
+
+            if !photos.isEmpty {
+                logger
+                    .info("📸 [TRACE] handlePhotoDeletion() - после удаления найдены новые фотографии для отправки: \(photos.count) файлов")
+
+                do {
+                    let externalDay = UserProgress.getExternalDayFromProgressId(progress.id)
+                    let request = ProgressRequest(
+                        id: externalDay,
+                        pullups: snapshot.pullups,
+                        pushups: snapshot.pushups,
+                        squats: snapshot.squats,
+                        weight: snapshot.weight,
+                        modifyDate: DateFormatterService.stringFromFullDate(snapshot.lastModified, format: .isoDateTimeSec),
+                        photos: photos,
+                        photosToDelete: nil
+                    )
+
+                    logger.info("📤 [TRACE] handlePhotoDeletion() - отправляем новые фотографии после удаления")
+                    let response = try await client.updateProgress(day: externalDay, progress: request)
+                    logger.info("✅ [TRACE] handlePhotoDeletion() - новые фотографии успешно отправлены")
+
+                    // Обновляем URL фотографий из ответа сервера
+                    progress.urlPhotoFront = response.photoFront
+                    progress.urlPhotoBack = response.photoBack
+                    progress.urlPhotoSide = response.photoSide
+                    progress.updateLastModified(from: response)
+
+                } catch {
+                    logger.error("❌ [TRACE] handlePhotoDeletion() - ошибка отправки новых фотографий: \(error.localizedDescription)")
+                    hasErrors = true
+                }
+            } else {
+                logger.info("📸 [TRACE] handlePhotoDeletion() - новых фотографий для отправки не найдено")
+            }
+        }
 
         // После обработки всех фотографий
         logger.info("🔄 [TRACE] handlePhotoDeletion() - до изменения: shouldDelete=\(progress.shouldDelete), isSynced=\(progress.isSynced)")

@@ -731,6 +731,7 @@ extension AllProgressTests {
             let mockClient = MockProgressClient()
 
             // Настраиваем мок для возврата серверных данных
+            // Используем локальные URL вместо реальных серверных, чтобы избежать сетевых запросов
             let serverResponse = ProgressResponse(
                 id: 1,
                 pullups: 1,
@@ -739,8 +740,8 @@ extension AllProgressTests {
                 weight: 10.0,
                 createDate: "2025-10-24T10:39:51+03:00",
                 modifyDate: "2025-10-24T10:40:08+03:00",
-                photoFront: "https://workout.su/uploads/userfiles/2025/10/2025-10-24-10-10-34-vsw.jpg",
-                photoBack: "https://workout.su/uploads/userfiles/2025/10/2025-10-24-10-10-34-fbr.jpg"
+                photoFront: "file:///test/front.jpg",
+                photoBack: "file:///test/back.jpg"
             )
             mockClient.mockedProgressResponses = [serverResponse]
 
@@ -763,8 +764,8 @@ extension AllProgressTests {
             #expect(progress.weight == 10.0)
             #expect(progress.isSynced)
             #expect(!progress.shouldDelete)
-            #expect(progress.urlPhotoFront == "https://workout.su/uploads/userfiles/2025/10/2025-10-24-10-10-34-vsw.jpg")
-            #expect(progress.urlPhotoBack == "https://workout.su/uploads/userfiles/2025/10/2025-10-24-10-10-34-fbr.jpg")
+            #expect(progress.urlPhotoFront == "file:///test/front.jpg")
+            #expect(progress.urlPhotoBack == "file:///test/back.jpg")
         }
 
         @Test("Должен корректно маппить внешние дни сервера во внутренние дни приложения")
@@ -814,6 +815,7 @@ extension AllProgressTests {
             let mockClient = MockProgressClient()
 
             // Настраиваем мок для возврата обновленных серверных данных
+            // Используем локальные URL вместо реальных серверных, чтобы избежать сетевых запросов
             let serverResponse = ProgressResponse(
                 id: 1,
                 pullups: 1,
@@ -822,8 +824,8 @@ extension AllProgressTests {
                 weight: 10.0,
                 createDate: "2025-10-24T10:39:51+03:00",
                 modifyDate: "2025-10-24T10:40:08+03:00",
-                photoFront: "https://workout.su/uploads/userfiles/2025/10/2025-10-24-10-10-34-vsw.jpg",
-                photoBack: "https://workout.su/uploads/userfiles/2025/10/2025-10-24-10-10-34-fbr.jpg"
+                photoFront: "file:///test/front.jpg",
+                photoBack: "file:///test/back.jpg"
             )
             mockClient.mockedProgressResponses = [serverResponse]
 
@@ -846,78 +848,8 @@ extension AllProgressTests {
             #expect(progress.weight == 10.0)
             #expect(progress.isSynced)
             #expect(!progress.shouldDelete)
-            #expect(progress.urlPhotoFront == "https://workout.su/uploads/userfiles/2025/10/2025-10-24-10-10-34-vsw.jpg")
-            #expect(progress.urlPhotoBack == "https://workout.su/uploads/userfiles/2025/10/2025-10-24-10-10-34-fbr.jpg")
-        }
-    }
-
-    @MainActor
-    private class MockProgressClient: ProgressClient {
-        var mockedProgressResponses: [ProgressResponse] = []
-        var shouldThrowError = false
-
-        func getProgress() async throws -> [ProgressResponse] {
-            if shouldThrowError {
-                throw NSError(domain: "TestError", code: 1, userInfo: [NSLocalizedDescriptionKey: "Test error"])
-            }
-            return mockedProgressResponses
-        }
-
-        func getProgress(day: Int) async throws -> ProgressResponse {
-            if shouldThrowError {
-                throw NSError(domain: "TestError", code: 1, userInfo: [NSLocalizedDescriptionKey: "Test error"])
-            }
-            return ProgressResponse(
-                id: day,
-                pullups: nil,
-                pushups: nil,
-                squats: nil,
-                weight: nil,
-                createDate: DateFormatterService.stringFromFullDate(Date(), format: .serverDateTimeSec),
-                modifyDate: nil
-            )
-        }
-
-        func createProgress(progress: ProgressRequest) async throws -> ProgressResponse {
-            if shouldThrowError {
-                throw NSError(domain: "TestError", code: 1, userInfo: [NSLocalizedDescriptionKey: "Test error"])
-            }
-            return ProgressResponse(
-                id: progress.id,
-                pullups: progress.pullups,
-                pushups: progress.pushups,
-                squats: progress.squats,
-                weight: progress.weight,
-                createDate: DateFormatterService.stringFromFullDate(Date(), format: .serverDateTimeSec),
-                modifyDate: progress.modifyDate
-            )
-        }
-
-        func updateProgress(day _: Int, progress: ProgressRequest) async throws -> ProgressResponse {
-            if shouldThrowError {
-                throw NSError(domain: "TestError", code: 1, userInfo: [NSLocalizedDescriptionKey: "Test error"])
-            }
-            return ProgressResponse(
-                id: progress.id,
-                pullups: progress.pullups,
-                pushups: progress.pushups,
-                squats: progress.squats,
-                weight: progress.weight,
-                createDate: DateFormatterService.stringFromFullDate(Date(), format: .serverDateTimeSec),
-                modifyDate: progress.modifyDate
-            )
-        }
-
-        func deleteProgress(day _: Int) async throws {
-            if shouldThrowError {
-                throw NSError(domain: "TestError", code: 1, userInfo: [NSLocalizedDescriptionKey: "Test error"])
-            }
-        }
-
-        func deletePhoto(day _: Int, type _: String) async throws {
-            if shouldThrowError {
-                throw NSError(domain: "TestError", code: 1, userInfo: [NSLocalizedDescriptionKey: "Test error"])
-            }
+            #expect(progress.urlPhotoFront == "file:///test/front.jpg")
+            #expect(progress.urlPhotoBack == "file:///test/back.jpg")
         }
     }
 }

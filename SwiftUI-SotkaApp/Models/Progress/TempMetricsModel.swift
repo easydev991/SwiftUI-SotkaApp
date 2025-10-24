@@ -1,7 +1,6 @@
 import Foundation
 import SWUtils
 
-#warning("TODO: написать тесты для TempMetricsModel")
 /// Модель для временных показателей прогресса, пока их не сохранят в `SwiftData`
 struct TempMetricsModel {
     var pullUps = ""
