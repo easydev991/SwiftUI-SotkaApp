@@ -70,6 +70,12 @@ private extension InfopostsListScreen {
                 Text(infopost.title)
             }
         }
+        .swipeActions(edge: .leading, allowsFullSwipe: false) {
+            makeReadAction(for: infopost)
+        }
+        .swipeActions(edge: .trailing, allowsFullSwipe: true) {
+            makeFavoriteAction(for: infopost)
+        }
     }
 
     @ViewBuilder
@@ -80,6 +86,36 @@ private extension InfopostsListScreen {
             Circle()
                 .fill(.blue)
                 .frame(width: 8, height: 8)
+        }
+    }
+
+    @ViewBuilder
+    func makeReadAction(for infopost: Infopost) -> some View {
+        if let dayNumber = infopost.dayNumber,
+           let isRead = try? infopostsService.isPostRead(day: dayNumber, modelContext: modelContext),
+           !isRead {
+            Button {
+                Task {
+                    try? await infopostsService.markPostAsRead(day: dayNumber, modelContext: modelContext)
+                }
+            } label: {
+                Image(systemName: "checkmark.circle.fill")
+            }
+            .tint(.blue)
+        }
+    }
+
+    @ViewBuilder
+    func makeFavoriteAction(for infopost: Infopost) -> some View {
+        if infopost.isFavoriteAvailable {
+            let isFavorite = infopostsService.isFavorite(infopost, modelContext: modelContext)
+            Button {
+                withAnimation {
+                    try? infopostsService.changeFavorite(id: infopost.id, modelContext: modelContext)
+                }
+            } label: {
+                Image(systemName: isFavorite ? "star.slash.fill" : "star.fill")
+            }
         }
     }
 }
