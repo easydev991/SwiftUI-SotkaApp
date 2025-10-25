@@ -15,10 +15,10 @@ final class CountriesUpdateService {
 
     /// Нужно ли обновлять справочник
     ///
-    /// По статистике Антона справочник на сервере обновляется в среднем раз в месяц
+    /// Обновляем, если прошло больше дня с момента предыдущего обновления
     private var shouldUpdate: Bool {
         if let lastCountriesUpdateDate {
-            DateFormatterService.days(from: lastCountriesUpdateDate, to: .now) > 30
+            DateFormatterService.days(from: lastCountriesUpdateDate, to: .now) > 1
         } else {
             true
         }

@@ -80,8 +80,7 @@ private extension InfopostsListScreen {
 
     @ViewBuilder
     func makeIndicator(for infopost: Infopost) -> some View {
-        if let dayNumder = infopost.dayNumber,
-           let isRead = try? infopostsService.isPostRead(day: dayNumder, modelContext: modelContext),
+        if let isRead = try? infopostsService.isPostRead(infopost, modelContext: modelContext),
            !isRead {
             Circle()
                 .fill(.blue)
@@ -91,12 +90,11 @@ private extension InfopostsListScreen {
 
     @ViewBuilder
     func makeReadAction(for infopost: Infopost) -> some View {
-        if let dayNumber = infopost.dayNumber,
-           let isRead = try? infopostsService.isPostRead(day: dayNumber, modelContext: modelContext),
+        if let isRead = try? infopostsService.isPostRead(infopost, modelContext: modelContext),
            !isRead {
             Button {
                 Task {
-                    try? await infopostsService.markPostAsRead(day: dayNumber, modelContext: modelContext)
+                    try? await infopostsService.markPostAsRead(day: infopost.dayNumber, modelContext: modelContext)
                 }
             } label: {
                 Image(systemName: "checkmark.circle.fill")

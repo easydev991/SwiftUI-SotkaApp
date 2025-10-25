@@ -269,14 +269,19 @@ extension AllInfopostsTests {
             )
             try modelContext.save()
 
+            // Создаем тестовые инфопосты
+            let infopost1 = Infopost(filename: "d1", title: "Test 1", content: "Content 1", language: "ru")
+            let infopost2 = Infopost(filename: "d2", title: "Test 2", content: "Content 2", language: "ru")
+            let infopost3 = Infopost(filename: "d3", title: "Test 3", content: "Content 3", language: "ru")
+
             // Act & Assert
-            let isRead1 = try service.isPostRead(day: 1, modelContext: modelContext)
+            let isRead1 = try service.isPostRead(infopost1, modelContext: modelContext)
             #expect(isRead1, "День 1 должен быть отмечен как прочитанный")
 
-            let isRead2 = try service.isPostRead(day: 2, modelContext: modelContext)
+            let isRead2 = try service.isPostRead(infopost2, modelContext: modelContext)
             #expect(isRead2, "День 2 должен быть отмечен как прочитанный")
 
-            let isRead3 = try service.isPostRead(day: 3, modelContext: modelContext)
+            let isRead3 = try service.isPostRead(infopost3, modelContext: modelContext)
             #expect(isRead3, "День 3 должен быть отмечен как прочитанный")
         }
 
@@ -296,14 +301,19 @@ extension AllInfopostsTests {
             )
             try modelContext.save()
 
+            // Создаем тестовые инфопосты
+            let infopost4 = Infopost(filename: "d4", title: "Test 4", content: "Content 4", language: "ru")
+            let infopost5 = Infopost(filename: "d5", title: "Test 5", content: "Content 5", language: "ru")
+            let infopost6 = Infopost(filename: "d6", title: "Test 6", content: "Content 6", language: "ru")
+
             // Act & Assert
-            let isRead4 = try service.isPostRead(day: 4, modelContext: modelContext)
+            let isRead4 = try service.isPostRead(infopost4, modelContext: modelContext)
             #expect(isRead4, "День 4 должен быть отмечен как прочитанный (несинхронизированный)")
 
-            let isRead5 = try service.isPostRead(day: 5, modelContext: modelContext)
+            let isRead5 = try service.isPostRead(infopost5, modelContext: modelContext)
             #expect(isRead5, "День 5 должен быть отмечен как прочитанный (несинхронизированный)")
 
-            let isRead6 = try service.isPostRead(day: 6, modelContext: modelContext)
+            let isRead6 = try service.isPostRead(infopost6, modelContext: modelContext)
             #expect(isRead6, "День 6 должен быть отмечен как прочитанный (несинхронизированный)")
         }
 
@@ -324,11 +334,15 @@ extension AllInfopostsTests {
             )
             try modelContext.save()
 
+            // Создаем тестовые инфопосты
+            let infopost5 = Infopost(filename: "d5", title: "Test 5", content: "Content 5", language: "ru")
+            let infopost6 = Infopost(filename: "d6", title: "Test 6", content: "Content 6", language: "ru")
+
             // Act & Assert
-            let isRead5 = try service.isPostRead(day: 5, modelContext: modelContext)
+            let isRead5 = try service.isPostRead(infopost5, modelContext: modelContext)
             #expect(!isRead5, "День 5 не должен быть отмечен как прочитанный")
 
-            let isRead6 = try service.isPostRead(day: 6, modelContext: modelContext)
+            let isRead6 = try service.isPostRead(infopost6, modelContext: modelContext)
             #expect(!isRead6, "День 6 не должен быть отмечен как прочитанный")
         }
 
@@ -342,11 +356,46 @@ extension AllInfopostsTests {
             let modelContainer = try ModelContainer(for: User.self, configurations: ModelConfiguration(isStoredInMemoryOnly: true))
             let modelContext = modelContainer.mainContext
 
+            // Создаем тестовый инфопост
+            let infopost1 = Infopost(filename: "d1", title: "Test 1", content: "Content 1", language: "ru")
+
             // Act
-            let isRead = try service.isPostRead(day: 1, modelContext: modelContext)
+            let isRead = try service.isPostRead(infopost1, modelContext: modelContext)
 
             // Assert
             #expect(!isRead, "День 1 не должен быть отмечен как прочитанный, когда пользователь не найден")
+        }
+
+        @Test
+        @MainActor
+        func isPostReadWhenInfopostHasNoDayNumber() throws {
+            // Arrange
+            let mockClient = MockInfopostsClient()
+            let service = createService(mockClient: mockClient)
+
+            let modelContainer = try ModelContainer(for: User.self, configurations: ModelConfiguration(isStoredInMemoryOnly: true))
+            let modelContext = modelContainer.mainContext
+
+            _ = createTestUser(
+                modelContext: modelContext,
+                readDays: [1, 2, 3]
+            )
+            try modelContext.save()
+
+            // Создаем инфопост без номера дня (например, "about")
+            let infopost = Infopost(
+                id: "about",
+                title: "About",
+                content: "About content",
+                section: .preparation,
+                language: "ru",
+                isFavoriteAvailable: false
+            )
+
+            // Act & Assert
+            #expect(throws: InfopostsService.ServiceError.infopostCannotBeMarkedAsRead) {
+                try service.isPostRead(infopost, modelContext: modelContext)
+            }
         }
 
         // MARK: - Тесты обработки ошибок синхронизации

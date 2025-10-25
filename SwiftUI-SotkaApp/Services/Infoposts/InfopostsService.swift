@@ -356,15 +356,19 @@ extension InfopostsService {
 
     /// Проверяет, прочитан ли инфопост
     /// - Parameters:
-    ///   - day: День инфопоста
+    ///   - infopost: Инфопост для проверки
     ///   - modelContext: Контекст модели данных
     /// - Returns: true, если инфопост прочитан
-    /// - Throws: Ошибка при работе с базой данных
-    func isPostRead(day: Int, modelContext: ModelContext) throws -> Bool {
+    /// - Throws: Ошибка при работе с базой данных или если инфопост не может быть отмечен как прочитанный
+    func isPostRead(_ infopost: Infopost, modelContext: ModelContext) throws -> Bool {
+        guard let dayNumber = infopost.dayNumber else {
+            logger.error("Инфопост \(infopost.id) не имеет номера дня, его нельзя отметить как прочитанный")
+            throw ServiceError.infopostCannotBeMarkedAsRead
+        }
         do {
             let user = try getCurrentUser(modelContext: modelContext)
-            let isRead = user.readInfopostDays.contains(day) || user.unsyncedReadInfopostDays.contains(day)
-            logger.debug("Инфопост дня \(day) прочитан: \(isRead)")
+            let isRead = user.readInfopostDays.contains(dayNumber) || user.unsyncedReadInfopostDays.contains(dayNumber)
+            logger.debug("Инфопост \(infopost.id) (день \(dayNumber)) прочитан: \(isRead)")
             return isRead
         } catch {
             logger.error("Пользователь не найден для проверки статуса прочитанного")
@@ -388,6 +392,7 @@ extension InfopostsService {
         case userNotFound
         case infopostNotFound
         case parsingError
+        case infopostCannotBeMarkedAsRead
 
         var errorDescription: String? {
             switch self {
@@ -397,6 +402,8 @@ extension InfopostsService {
                 "Инфопост не найден"
             case .parsingError:
                 "Ошибка парсинга инфопоста"
+            case .infopostCannotBeMarkedAsRead:
+                "Инфопост не может быть отмечен как прочитанный"
             }
         }
     }

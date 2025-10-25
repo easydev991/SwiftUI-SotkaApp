@@ -372,8 +372,16 @@ private extension ProgressSyncService {
 
         logger.info("🔍 [TRACE] makeProgressSnapshotsForSync() - проверка записей на пустоту")
         // Проверяем каждую запись на "пустоту" и помечаем для удаления при необходимости
+        // ВАЖНО: проверяем только несинхронизированные записи, чтобы избежать изменения уже синхронизированных
         for progress in toSync {
             logger.info("🔍 [TRACE] makeProgressSnapshotsForSync() - проверка дня \(progress.id) на пустоту: isEmpty=\(progress.isEmpty)")
+
+            // Дополнительная защита от race condition: не изменяем уже синхронизированные записи
+            if progress.isSynced, !progress.shouldDelete {
+                logger.info("⏭️ [TRACE] makeProgressSnapshotsForSync() - пропускаем уже синхронизированную запись дня \(progress.id)")
+                continue
+            }
+
             checkAndMarkForDeletionIfEmpty(progress)
 
             // Логируем изменения после проверки
@@ -814,8 +822,16 @@ private extension ProgressSyncService {
                 "🔍 [TRACE] checkAndMarkForDeletionIfEmpty() - текущее состояние: isSynced=\(progress.isSynced), shouldDelete=\(progress.shouldDelete), isEmpty=\(progress.isEmpty)"
             )
 
+        // Дополнительная защита от race condition: не изменяем уже синхронизированные записи
+        if progress.isSynced, !progress.shouldDelete {
+            logger
+                .info(
+                    "⏭️ [TRACE] checkAndMarkForDeletionIfEmpty() - пропускаем уже синхронизированную запись дня \(progress.id) (isSynced=\(progress.isSynced), shouldDelete=\(progress.shouldDelete))"
+                )
+            return
+        }
+
         // Проверяем только несинхронизированные записи, которые не помечены для удаления
-        // НО не помечаем для удаления записи, которые уже были синхронизированы ранее
         guard !progress.isSynced, !progress.shouldDelete else {
             logger
                 .info(
