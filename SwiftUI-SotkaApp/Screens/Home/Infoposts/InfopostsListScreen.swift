@@ -14,9 +14,7 @@ struct InfopostsListScreen: View {
                 Section(header: makeHeader(for: sectionDisplay)) {
                     if !sectionDisplay.isCollapsed {
                         ForEach(sectionDisplay.infoposts) { infopost in
-                            NavigationLink(destination: InfopostDetailScreen(infopost: infopost)) {
-                                makeView(for: infopost)
-                            }
+                            makeView(for: infopost)
                         }
                     }
                 }
@@ -66,9 +64,11 @@ private extension InfopostsListScreen {
     }
 
     func makeView(for infopost: Infopost) -> some View {
-        HStack(spacing: 12) {
-            makeIndicator(for: infopost)
-            Text(infopost.title)
+        NavigationLink(destination: InfopostDetailScreen(infopost: infopost)) {
+            HStack(spacing: 12) {
+                makeIndicator(for: infopost)
+                Text(infopost.title)
+            }
         }
     }
 
