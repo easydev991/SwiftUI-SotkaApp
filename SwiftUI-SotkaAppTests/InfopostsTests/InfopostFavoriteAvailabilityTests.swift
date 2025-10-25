@@ -278,7 +278,7 @@ extension AllInfopostsTests {
             // Arrange
             let service = InfopostsService(
                 language: language,
-                infopostsClient: MockInfopostsClient(result: .success)
+                infopostsClient: MockInfopostsClient()
             )
 
             // Act

@@ -12,7 +12,7 @@ extension AllInfopostsTests {
         /// - Returns: Настроенный сервис для тестов
         @MainActor
         private func createService(language: String) -> InfopostsService {
-            let mockClient = MockInfopostsClient(result: .success)
+            let mockClient = MockInfopostsClient()
             return InfopostsService(language: language, infopostsClient: mockClient)
         }
 

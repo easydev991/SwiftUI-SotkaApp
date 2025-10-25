@@ -15,7 +15,7 @@ struct InfopostsListScreen: View {
                     if !sectionDisplay.isCollapsed {
                         ForEach(sectionDisplay.infoposts) { infopost in
                             NavigationLink(destination: InfopostDetailScreen(infopost: infopost)) {
-                                Text(infopost.title)
+                                makeView(for: infopost)
                             }
                         }
                     }
@@ -63,5 +63,23 @@ private extension InfopostsListScreen {
             }
         }
         .buttonStyle(.plain)
+    }
+
+    func makeView(for infopost: Infopost) -> some View {
+        HStack(spacing: 12) {
+            makeIndicator(for: infopost)
+            Text(infopost.title)
+        }
+    }
+
+    @ViewBuilder
+    func makeIndicator(for infopost: Infopost) -> some View {
+        if let dayNumder = infopost.dayNumber,
+           let isRead = try? infopostsService.isPostRead(day: dayNumder, modelContext: modelContext),
+           !isRead {
+            Circle()
+                .fill(.blue)
+                .frame(width: 8, height: 8)
+        }
     }
 }
