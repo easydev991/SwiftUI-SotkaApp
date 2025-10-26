@@ -152,6 +152,14 @@ extension UserProgress {
                 self = .one
             }
         }
+
+        var localizedTitle: String {
+            switch self {
+            case .one: String(localized: .progressSectionStart)
+            case .two: String(localized: .progressSectionMiddle)
+            case .three: String(localized: .progressSectionEnd)
+            }
+        }
     }
 
     /// Маппинг внутренних дней приложения в внешние дни сервера

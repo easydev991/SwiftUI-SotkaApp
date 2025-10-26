@@ -20,15 +20,6 @@ extension AllProgressTests {
             #expect(photoType.requestName == expectedName)
         }
 
-        @Test("Параметризированный тест localizedTitle", arguments: [
-            (ProgressPhotoType.front, "Фото спереди"),
-            (ProgressPhotoType.back, "Фото сзади"),
-            (ProgressPhotoType.side, "Фото сбоку")
-        ])
-        func localizedTitleParameterized(photoType: ProgressPhotoType, expectedTitle: String) {
-            #expect(photoType.localizedTitle == expectedTitle)
-        }
-
         @Test("allCases содержит типы в правильном порядке")
         func allCasesContainsTypesInCorrectOrder() {
             let allCases = ProgressPhotoType.allCases

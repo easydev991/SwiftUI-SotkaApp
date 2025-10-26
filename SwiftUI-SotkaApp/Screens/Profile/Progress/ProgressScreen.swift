@@ -13,7 +13,12 @@ struct ProgressScreen: View {
 
     var body: some View {
         ScrollView {
-            gridView.padding()
+            VStack(spacing: 16) {
+                ProgressStatsView()
+                Divider()
+                gridView
+            }
+            .padding()
         }
         .navigationTitle(.progress)
         .navigationDestination(item: $navigationDestination) { destination in

@@ -83,14 +83,9 @@ private extension ProgressGridView {
     }
 
     func dayHeaderView(for section: UserProgress.Section) -> some View {
-        VStack(spacing: 4) {
-            Text(.day)
-                .font(.footnote)
-                .foregroundColor(.secondary)
-            Text("\(section.rawValue)")
-                .font(.headline)
-                .fontWeight(.semibold)
-        }
+        Text(section.localizedTitle)
+            .fontWeight(.semibold)
+            .fixedSize()
     }
 
     func exerciseIconView(for dataType: UserProgress.DataType) -> some View {
