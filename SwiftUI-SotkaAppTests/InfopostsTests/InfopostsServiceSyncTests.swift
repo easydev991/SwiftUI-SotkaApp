@@ -61,7 +61,7 @@ extension AllInfopostsTests {
             try modelContext.save()
 
             // Act
-            try await service.syncReadPosts(modelContext: modelContext)
+            try await service.syncReadPosts(context: modelContext)
 
             // Assert
             let expectedReadDays = Set(serverReadDays).union(Set(unsyncedDays)).sorted()
@@ -91,7 +91,7 @@ extension AllInfopostsTests {
             try modelContext.save()
 
             // Act
-            try await service.syncReadPosts(modelContext: modelContext)
+            try await service.syncReadPosts(context: modelContext)
 
             // Assert
             #expect(
@@ -113,7 +113,7 @@ extension AllInfopostsTests {
 
             // Act & Assert
             await #expect(throws: InfopostsService.ServiceError.userNotFound) {
-                try await service.syncReadPosts(modelContext: modelContext)
+                try await service.syncReadPosts(context: modelContext)
             }
         }
 
@@ -137,7 +137,7 @@ extension AllInfopostsTests {
 
             // Act & Assert
             await #expect(throws: NSError.self) {
-                try await service.syncReadPosts(modelContext: modelContext)
+                try await service.syncReadPosts(context: modelContext)
             }
         }
 
@@ -432,7 +432,7 @@ extension AllInfopostsTests {
             try modelContext.save()
 
             // Act
-            try await service.syncReadPosts(modelContext: modelContext)
+            try await service.syncReadPosts(context: modelContext)
 
             // Assert
             // user.readInfopostDays должен содержать серверные данные + успешно синхронизированные дни (4 и 6)
@@ -494,7 +494,7 @@ extension AllInfopostsTests {
             try modelContext.save()
 
             // Act
-            try await service.syncReadPosts(modelContext: modelContext)
+            try await service.syncReadPosts(context: modelContext)
 
             // Assert
             let expectedReadDays = Set(serverReadDays).union(Set(unsyncedDays)).sorted()

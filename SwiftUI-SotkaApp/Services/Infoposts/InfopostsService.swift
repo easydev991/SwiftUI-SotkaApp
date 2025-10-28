@@ -7,7 +7,7 @@ import SwiftData
 @MainActor
 @Observable
 final class InfopostsService {
-    private let logger = Logger(subsystem: "SotkaApp", category: "InfopostsService")
+    @ObservationIgnored private let logger = Logger(subsystem: "SotkaApp", category: "InfopostsService")
     private let currentLanguage: String
     private let infopostsClient: InfopostsClient
     @ObservationIgnored private var userGender: Gender?
@@ -39,6 +39,8 @@ final class InfopostsService {
             return genderMatches && favoriteMatches
         }
     }
+
+    private(set) var todayInfopost: Infopost?
 
     var showDisplayModePicker: Bool {
         !favoriteIds.isEmpty
@@ -168,6 +170,7 @@ final class InfopostsService {
         availableInfoposts = availablePosts
         let count = availableInfoposts.count
         logger.info("Обновлены доступные инфопосты: \(count) штук")
+        try loadTodayInfopost(for: currentDay)
     }
 
     /// Загружает и обновляет список избранных инфопостов
@@ -195,19 +198,6 @@ final class InfopostsService {
             collapsedSections.insert(section)
         }
         logger.debug("Секция \(section.rawValue) \(isCollapsed ? "свернута" : "развернута")")
-    }
-
-    /// Получает инфопост для указанного дня
-    /// - Parameter day: Номер дня
-    /// - Returns: Инфопост для указанного дня
-    /// - Throws: ServiceError.infopostNotFound, если инфопост не найден
-    func getInfopost(forDay day: Int) throws -> Infopost {
-        guard let infopost = availableInfoposts.first(where: { $0.dayNumber == day }) else {
-            logger.error("Инфопост для дня \(day) не найден")
-            throw ServiceError.infopostNotFound
-        }
-        logger.debug("Найден инфопост для дня \(day)")
-        return infopost
     }
 }
 
@@ -259,14 +249,25 @@ private extension InfopostsService {
         logger.info("Успешно распарсено \(infoposts.count) инфопостов для языка \(language)")
         return infoposts
     }
+
+    /// Получает инфопост для текущего дня
+    /// - Parameter day: Номер текущего дня
+    func loadTodayInfopost(for currentDay: Int?) throws {
+        let day = currentDay ?? 1
+        guard let infopost = availableInfoposts.first(where: { $0.dayNumber == day }) else {
+            throw ServiceError.infopostNotFound(day)
+        }
+        logger.debug("Найден инфопост для дня \(day)")
+        todayInfopost = infopost
+    }
 }
 
 extension InfopostsService {
     /// Синхронизирует прочитанные инфопосты с сервером
-    /// - Parameter modelContext: Контекст модели данных
+    /// - Parameter context: Контекст модели данных
     /// - Throws: Ошибка при синхронизации или работе с базой данных
-    func syncReadPosts(modelContext: ModelContext) async throws {
-        let user = try getCurrentUser(modelContext: modelContext)
+    func syncReadPosts(context: ModelContext) async throws {
+        let user = try getCurrentUser(modelContext: context)
 
         logger.info("Начинаем синхронизацию прочитанных инфопостов")
 
@@ -308,7 +309,7 @@ extension InfopostsService {
 
             // Перемещаем успешно синхронизированные дни
             if !successfullySyncedDays.isEmpty {
-                try moveDaysToSynced(successfullySyncedDays, user: user, modelContext: modelContext)
+                try moveDaysToSynced(successfullySyncedDays, user: user, modelContext: context)
             }
 
             logger.info("Синхронизация завершена. Успешно синхронизировано: \(successfullySyncedDays.count) дней")
@@ -388,9 +389,9 @@ extension InfopostsService {
 }
 
 extension InfopostsService {
-    enum ServiceError: LocalizedError {
+    enum ServiceError: LocalizedError, Equatable {
         case userNotFound
-        case infopostNotFound
+        case infopostNotFound(_ day: Int)
         case parsingError
         case infopostCannotBeMarkedAsRead
 
@@ -398,8 +399,8 @@ extension InfopostsService {
             switch self {
             case .userNotFound:
                 "Пользователь не найден"
-            case .infopostNotFound:
-                "Инфопост не найден"
+            case let .infopostNotFound(day):
+                "Инфопост \(day) не найден"
             case .parsingError:
                 "Ошибка парсинга инфопоста"
             case .infopostCannotBeMarkedAsRead:

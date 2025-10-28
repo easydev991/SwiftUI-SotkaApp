@@ -4,7 +4,7 @@ import SwiftUI
 /// Основная вьюха для отображения статистики прогресса
 struct ProgressStatsView: View {
     @Environment(\.modelContext) private var modelContext
-    @Environment(StatusManager.self) private var statusManager
+    @Environment(\.currentDay) private var currentDay
     @State private var viewModel = ProgressStatsViewModel()
     @State private var showInfoSheet = false
 
@@ -21,7 +21,7 @@ struct ProgressStatsView: View {
             viewModel.updateStats(
                 modelContext: modelContext,
                 activities: activities,
-                currentDay: statusManager.currentDayCalculator?.currentDay ?? 1
+                currentDay: currentDay
             )
         }
         .sheet(isPresented: $showInfoSheet) {
@@ -40,7 +40,7 @@ struct ProgressStatsView: View {
         var activities: [DayActivityType] = []
 
         for day in 1 ... 100 {
-            if day <= (statusManager.currentDayCalculator?.currentDay ?? 1) {
+            if day <= currentDay {
                 // Создаем разнообразные активности для дней до текущего
                 if day % 7 == 0 {
                     activities.append(.rest) // Отдых каждую 7-ю день
@@ -61,9 +61,9 @@ struct ProgressStatsView: View {
 }
 
 #if DEBUG
-#Preview {
+#Preview("День 25") {
     ProgressStatsView()
-        .environment(StatusManager.preview)
+        .currentDay(25)
         .modelContainer(for: User.self)
 }
 #endif

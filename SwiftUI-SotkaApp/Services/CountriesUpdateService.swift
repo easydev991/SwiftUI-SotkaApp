@@ -7,11 +7,11 @@ import SWUtils
 @MainActor
 @Observable
 final class CountriesUpdateService {
-    private let logger = Logger(
+    @ObservationIgnored private let logger = Logger(
         subsystem: Bundle.main.bundleIdentifier!,
         category: String(describing: CountriesUpdateService.self)
     )
-    private let defaults = UserDefaults.standard
+    @ObservationIgnored private let defaults = UserDefaults.standard
 
     /// Нужно ли обновлять справочник
     ///
@@ -58,7 +58,7 @@ final class CountriesUpdateService {
         let countries = try? context.fetch(FetchDescriptor<Country>())
         let hasCountries = countries?.isEmpty == false
         guard !hasCountries || shouldUpdate else { return }
-        isLoading = true
+        isLoading = !hasCountries
         do {
             let apiCountries = try await client.getCountries()
             if hasCountries {
@@ -73,6 +73,7 @@ final class CountriesUpdateService {
                 )
                 context.insert(country)
             }
+            try context.save()
             lastCountriesUpdateDate = .now
             logger.info("Успешно синхронизировали страны и города")
         } catch {

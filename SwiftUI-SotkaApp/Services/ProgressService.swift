@@ -8,7 +8,7 @@ import UIKit
 @MainActor
 @Observable
 final class ProgressService {
-    private let logger = Logger(
+    @ObservationIgnored private let logger = Logger(
         subsystem: Bundle.main.bundleIdentifier!,
         category: String(describing: ProgressService.self)
     )

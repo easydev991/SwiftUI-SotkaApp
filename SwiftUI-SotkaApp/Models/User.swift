@@ -3,6 +3,8 @@ import OSLog
 import SwiftData
 import SWUtils
 
+private let logger = Logger(subsystem: "SotkaApp", category: "User")
+
 @Model
 final class User {
     @Attribute(.unique) var id: Int
@@ -98,8 +100,6 @@ extension User {
 
     /// Проверяет, заполнены ли результаты для текущего дня
     func isMaximumsFilled(for currentDay: Int) -> Bool {
-        let logger = Logger(subsystem: "SwiftUI-SotkaApp", category: "User.isMaximumsFilled")
-
         // Используем UserProgress.Section для определения дня прогресса
         let progressSection = UserProgress.Section(day: currentDay)
         let progressDay = progressSection.rawValue

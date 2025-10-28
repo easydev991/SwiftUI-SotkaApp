@@ -22,9 +22,6 @@ struct InfopostsListScreen: View {
         }
         .listStyle(.plain)
         .navigationTitle(.infoposts)
-        .task {
-            try? await infopostsService.syncReadPosts(modelContext: modelContext)
-        }
         .onAppear {
             try? infopostsService.loadFavoriteIds(modelContext: modelContext)
         }

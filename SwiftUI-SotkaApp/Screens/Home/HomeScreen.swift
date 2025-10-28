@@ -4,21 +4,41 @@ import SwiftUI
 
 struct HomeScreen: View {
     @Environment(StatusManager.self) private var statusManager
+    @Environment(\.currentDay) private var currentDay
     @Query private var users: [User]
     private var user: User? { users.first }
+    private var model: Model? {
+        let calculator = statusManager.currentDayCalculator
+        // Важно: во время логаута объекты SwiftData удаляются, поэтому нельзя обращаться к связям пользователя
+        // если калькулятор отсутствует или пользователя нет.
+        let isMaxFilled: Bool = {
+            guard calculator != nil, let user else { return true }
+            return user.isMaximumsFilled(for: currentDay)
+        }()
+        return .init(
+            currentDay: currentDay,
+            dayCalculator: calculator,
+            isMaximumsFilled: isMaxFilled,
+            todayInfopost: statusManager.infopostsService.todayInfopost
+        )
+    }
 
     var body: some View {
         NavigationStack {
             @Bindable var statusManager = statusManager
             ZStack {
                 Color.swBackground.ignoresSafeArea()
-                if let calculator = statusManager.currentDayCalculator, let user {
+                if let model {
                     ScrollView {
                         VStack(spacing: 12) {
-                            HomeDayCountView(calculator: calculator)
-                            makeInfopostView(with: calculator)
-                            HomeActivitySectionView()
-                            makeFillProgressView(with: calculator, user: user)
+                            HomeDayCountView(calculator: model.calculator)
+                            HomeInfopostSectionView(infopost: model.todayInfopost)
+                            if model.showActivitySection {
+                                HomeActivitySectionView()
+                            }
+                            if model.showProgressSection {
+                                HomeFillProgressSectionView()
+                            }
                         }
                         .padding()
                     }
@@ -26,6 +46,7 @@ struct HomeScreen: View {
                     Text(.loading)
                 }
             }
+            .animation(.default, value: model)
             .frame(maxWidth: .infinity)
             .sheet(item: $statusManager.conflictingSyncModel) { model in
                 SyncStartDateView(model: model)
@@ -39,27 +60,48 @@ struct HomeScreen: View {
                     }
                 }
             }
+            .navigationDestination(for: NavigationDestination.self, destination: makeView)
+        }
+    }
+}
+
+extension HomeScreen {
+    enum NavigationDestination: Hashable {
+        case userProgress
+    }
+}
+
+extension HomeScreen {
+    struct Model: Equatable {
+        let calculator: DayCalculator
+        let showActivitySection: Bool
+        let showProgressSection: Bool
+        let todayInfopost: Infopost?
+
+        init?(
+            currentDay: Int,
+            dayCalculator: DayCalculator?,
+            isMaximumsFilled: Bool,
+            todayInfopost: Infopost?
+        ) {
+            guard let dayCalculator else { return nil }
+            self.calculator = dayCalculator
+            self.todayInfopost = todayInfopost
+            self.showActivitySection = currentDay < 100
+            self.showProgressSection = !isMaximumsFilled
         }
     }
 }
 
 private extension HomeScreen {
     @ViewBuilder
-    func makeInfopostView(with calculator: DayCalculator) -> some View {
-        let service = statusManager.infopostsService
-        if let infopost = try? service.getInfopost(forDay: calculator.currentDay) {
-            HomeInfopostSectionView(
-                currentDay: calculator.currentDay,
-                infopost: infopost
-            )
+    func makeView(for destination: NavigationDestination) -> some View {
+        switch destination {
+        case .userProgress:
+            if let user {
+                ProgressScreen(user: user)
+            }
         }
-    }
-
-    func makeFillProgressView(with calculator: DayCalculator, user: User) -> some View {
-        HomeFillProgressSectionView(
-            currentDay: calculator.currentDay,
-            user: user
-        )
     }
 }
 

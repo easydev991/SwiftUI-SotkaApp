@@ -5,28 +5,26 @@ import SwiftUI
 ///
 /// Отображает изображение дня и название статьи с навигацией к инфопосту
 struct HomeInfopostSectionView: View {
-    let currentDay: Int
-    let infopost: Infopost
+    @Environment(\.currentDay) private var currentDay
+    let infopost: Infopost?
 
     var body: some View {
-        HomeSectionView(title: String(localized: .infopost)) {
-            navigationLinkView
+        if let infopost {
+            HomeSectionView(title: String(localized: .infopost)) {
+                NavigationLink {
+                    InfopostDetailScreen(infopost: infopost)
+                } label: {
+                    VStack(alignment: .leading, spacing: 12) {
+                        imageView
+                        makeShortTitleWithChevronView(infopost.shortTitle)
+                    }
+                }
+            }
         }
     }
 }
 
 private extension HomeInfopostSectionView {
-    var navigationLinkView: some View {
-        NavigationLink {
-            InfopostDetailScreen(infopost: infopost)
-        } label: {
-            VStack(alignment: .leading, spacing: 12) {
-                imageView
-                shortTitleWithChevronView
-            }
-        }
-    }
-
     var imageView: some View {
         GeometryReader { geo in
             Image("\(currentDay)-1")
@@ -38,9 +36,9 @@ private extension HomeInfopostSectionView {
         .clipped()
     }
 
-    var shortTitleWithChevronView: some View {
+    func makeShortTitleWithChevronView(_ text: String) -> some View {
         HStack {
-            Text(infopost.shortTitle)
+            Text(text)
                 .multilineTextAlignment(.leading)
                 .frame(maxWidth: .infinity, alignment: .leading)
             ChevronView()
@@ -49,10 +47,8 @@ private extension HomeInfopostSectionView {
     }
 }
 
-#Preview(traits: .sizeThatFitsLayout) {
-    HomeInfopostSectionView(
-        currentDay: 2,
-        infopost: .preview
-    )
-    .padding()
+#Preview("День 2", traits: .sizeThatFitsLayout) {
+    HomeInfopostSectionView(infopost: .preview)
+        .padding()
+        .currentDay(2)
 }

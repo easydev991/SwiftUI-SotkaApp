@@ -1,15 +1,28 @@
+import OSLog
 import SWDesignSystem
 import SwiftUI
 
 struct ProgressGridView: View {
+    private let logger = Logger(subsystem: "SotkaApp", category: "ProgressGridView")
+    @Environment(\.currentDay) private var currentDay
+    private var progressItems: [UserProgress] {
+        user.progressResults.filter { !$0.shouldDelete }
+    }
+
     let user: User
-    let progressItems: [UserProgress]
-    let currentDay: Int
     let onProgressTap: (UserProgress) -> Void
-    let onPhotoTap: (UserProgress, ProgressPhotoType) -> Void
+    let onPhotoTap: (UserProgress) -> Void
 
     var body: some View {
         gridView
+            .onAppear {
+                let logItems = progressItems.map { "\($0.id): shouldDelete=\($0.shouldDelete)" }.joined(separator: ", ")
+                logger.info("onAppear появился, загружено \(logItems.count) элементов: [\(logItems)]")
+            }
+            .onChange(of: progressItems) { _, newItems in
+                let logItems = newItems.map { "\($0.id): shouldDelete=\($0.shouldDelete)" }.joined(separator: ", ")
+                logger.info("onChange: изменились элементы, теперь \(newItems.count) элементов: [\(logItems)]")
+            }
     }
 }
 
@@ -70,7 +83,7 @@ private extension ProgressGridView {
                     ForEach(UserProgress.Section.allCases, id: \.self) { section in
                         let (progress, isDisabled) = makeModel(for: section)
                         Button {
-                            onPhotoTap(progress, photoType)
+                            onPhotoTap(progress)
                         } label: {
                             progressPhotoView(progress: progress, type: photoType)
                         }
@@ -146,168 +159,130 @@ private extension ProgressGridView {
 #Preview("Без прогресса") {
     ProgressGridView(
         user: .preview,
-        progressItems: [],
-        currentDay: 1,
         onProgressTap: { progress in
             print("нажали на день \(progress.id)")
         },
-        onPhotoTap: { progress, photoType in
-            print("нажали на фото \(photoType.localizedTitle) для дня \(progress.id)")
+        onPhotoTap: { progress in
+            print("нажали на фото для дня \(progress.id)")
         }
     )
+    .currentDay(1)
 }
 
 #Preview("День 1") {
     ProgressGridView(
         user: .previewWithDay1Progress,
-        progressItems: [.previewDay1],
-        currentDay: 1,
         onProgressTap: { progress in
             print("нажали на день \(progress.id)")
         },
-        onPhotoTap: { progress, photoType in
-            print("нажали на фото \(photoType.localizedTitle) для дня \(progress.id)")
+        onPhotoTap: { progress in
+            print("нажали на фото для дня \(progress.id)")
         }
     )
+    .currentDay(1)
 }
 
 #Preview("День 49 (продвинутый блок)") {
     ProgressGridView(
         user: .previewWithDay49Progress,
-        progressItems: [.previewDay49],
-        currentDay: 49,
         onProgressTap: { progress in
             print("нажали на день \(progress.id)")
         },
-        onPhotoTap: { progress, photoType in
-            print("нажали на фото \(photoType.localizedTitle) для дня \(progress.id)")
+        onPhotoTap: { progress in
+            print("нажали на фото для дня \(progress.id)")
         }
     )
+    .currentDay(49)
 }
 
 #Preview("День 100") {
     ProgressGridView(
         user: .previewWithDay100Progress,
-        progressItems: [.previewDay100],
-        currentDay: 100,
         onProgressTap: { progress in
             print("нажали на день \(progress.id)")
         },
-        onPhotoTap: { progress, photoType in
-            print("нажали на фото \(photoType.localizedTitle) для дня \(progress.id)")
+        onPhotoTap: { progress in
+            print("нажали на фото для дня \(progress.id)")
         }
     )
+    .currentDay(100)
 }
 
 #Preview("Дни 1 + 49 (продвинутый блок)") {
     ProgressGridView(
         user: .previewWithDay1And49Progress,
-        progressItems: [.previewDay1, .previewDay49],
-        currentDay: 49,
         onProgressTap: { progress in
             print("нажали на день \(progress.id)")
         },
-        onPhotoTap: { progress, photoType in
-            print("нажали на фото \(photoType.localizedTitle) для дня \(progress.id)")
+        onPhotoTap: { progress in
+            print("нажали на фото для дня \(progress.id)")
         }
     )
+    .currentDay(49)
 }
 
 #Preview("Дни 49 + 100") {
     ProgressGridView(
         user: .previewWithDay49And100Progress,
-        progressItems: [.previewDay49, .previewDay100],
-        currentDay: 100,
         onProgressTap: { progress in
             print("нажали на день \(progress.id)")
         },
-        onPhotoTap: { progress, photoType in
-            print("нажали на фото \(photoType.localizedTitle) для дня \(progress.id)")
+        onPhotoTap: { progress in
+            print("нажали на фото для дня \(progress.id)")
         }
     )
+    .currentDay(100)
 }
 
 #Preview("Дни 1 + 100") {
     ProgressGridView(
         user: .previewWithDay1And100Progress,
-        progressItems: [.previewDay1, .previewDay100],
-        currentDay: 100,
         onProgressTap: { progress in
             print("нажали на день \(progress.id)")
         },
-        onPhotoTap: { progress, photoType in
-            print("нажали на фото \(photoType.localizedTitle) для дня \(progress.id)")
+        onPhotoTap: { progress in
+            print("нажали на фото для дня \(progress.id)")
         }
     )
+    .currentDay(100)
 }
 
 #Preview("Все дни") {
     ProgressGridView(
         user: .previewWithAllProgress,
-        progressItems: [.previewDay1, .previewDay49, .previewDay100],
-        currentDay: 100,
         onProgressTap: { progress in
             print("нажали на день \(progress.id)")
         },
-        onPhotoTap: { progress, photoType in
-            print("нажали на фото \(photoType.localizedTitle) для дня \(progress.id)")
+        onPhotoTap: { progress in
+            print("нажали на фото для дня \(progress.id)")
         }
     )
+    .currentDay(100)
 }
 
 #Preview("Доступность кнопок - день 1") {
     ProgressGridView(
         user: .preview,
-        progressItems: [],
-        currentDay: 1,
         onProgressTap: { progress in
             print("нажали на день \(progress.id)")
         },
-        onPhotoTap: { progress, photoType in
-            print("нажали на фото \(photoType.localizedTitle) для дня \(progress.id)")
+        onPhotoTap: { progress in
+            print("нажали на фото для дня \(progress.id)")
         }
     )
-}
-
-#Preview("Доступность кнопок - день 25 (день 49 недоступен)") {
-    ProgressGridView(
-        user: .preview,
-        progressItems: [],
-        currentDay: 25,
-        onProgressTap: { progress in
-            print("нажали на день \(progress.id)")
-        },
-        onPhotoTap: { progress, photoType in
-            print("нажали на фото \(photoType.localizedTitle) для дня \(progress.id)")
-        }
-    )
+    .currentDay(1)
 }
 
 #Preview("Доступность кнопок - день 49 (средний прогресс доступен)") {
     ProgressGridView(
         user: .previewWithDay49Progress,
-        progressItems: [.previewDay49],
-        currentDay: 49,
         onProgressTap: { progress in
             print("нажали на день \(progress.id)")
         },
-        onPhotoTap: { progress, photoType in
-            print("нажали на фото \(photoType.localizedTitle) для дня \(progress.id)")
+        onPhotoTap: { progress in
+            print("нажали на фото для дня \(progress.id)")
         }
     )
-}
-
-#Preview("Доступность кнопок - день 75 (день 100 недоступен)") {
-    ProgressGridView(
-        user: .preview,
-        progressItems: [],
-        currentDay: 75,
-        onProgressTap: { progress in
-            print("нажали на день \(progress.id)")
-        },
-        onPhotoTap: { progress, photoType in
-            print("нажали на фото \(photoType.localizedTitle) для дня \(progress.id)")
-        }
-    )
+    .currentDay(49)
 }
 #endif

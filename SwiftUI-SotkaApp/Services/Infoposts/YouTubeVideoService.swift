@@ -5,7 +5,7 @@ import OSLog
 /// Сервис для работы с YouTube видео инфопостов
 @Observable
 final class YouTubeVideoService {
-    private let logger = Logger(subsystem: "SotkaApp", category: "YouTubeVideoService")
+    @ObservationIgnored private let logger = Logger(subsystem: "SotkaApp", category: "YouTubeVideoService")
     @ObservationIgnored private var cachedVideos: [YouTubeVideo]?
 
     /// Получает YouTube видео для конкретного дня

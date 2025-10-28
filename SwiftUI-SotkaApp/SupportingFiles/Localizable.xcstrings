@@ -1584,13 +1584,13 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Loading"
+            "value" : "Loading …"
           }
         },
         "ru" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Загрузка"
+            "value" : "Загрузка ..."
           }
         }
       }
@@ -2436,7 +2436,7 @@
         },
         "ru" : {
           "stringUnit" : {
-            "state" : "needs_review",
+            "state" : "translated",
             "value" : "Полный прогресс"
           }
         }
@@ -2455,7 +2455,7 @@
         },
         "ru" : {
           "stringUnit" : {
-            "state" : "needs_review",
+            "state" : "translated",
             "value" : "Инфопосты"
           }
         }
@@ -2474,13 +2474,14 @@
         },
         "ru" : {
           "stringUnit" : {
-            "state" : "needs_review",
+            "state" : "translated",
             "value" : "Конец"
           }
         }
       }
     },
     "ProgressSection.Middle" : {
+      "comment" : "Заголовок для второго этапа прогресса",
       "extractionState" : "manual",
       "localizations" : {
         "en" : {
@@ -2491,7 +2492,7 @@
         },
         "ru" : {
           "stringUnit" : {
-            "state" : "needs_review",
+            "state" : "translated",
             "value" : "Середина"
           }
         }
@@ -2510,7 +2511,7 @@
         },
         "ru" : {
           "stringUnit" : {
-            "state" : "needs_review",
+            "state" : "translated",
             "value" : "Начало"
           }
         }
@@ -2529,7 +2530,7 @@
         },
         "ru" : {
           "stringUnit" : {
-            "state" : "needs_review",
+            "state" : "translated",
             "value" : "Легенда"
           }
         }

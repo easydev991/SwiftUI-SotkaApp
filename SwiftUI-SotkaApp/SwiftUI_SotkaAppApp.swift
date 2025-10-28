@@ -13,6 +13,15 @@ struct SwiftUI_SotkaAppApp: App {
     @State private var authHelper: AuthHelperImp
     @State private var networkStatus = NetworkStatus()
     private let client: SWClient
+    private var showLoadingOverlay: Bool {
+        let isLoadingCountries = countriesService.isLoading
+        let isLoadingInitialData = statusManager.state.isLoadingInitialData
+        let isAuthorized = authHelper.isAuthorized
+        let isDayCalculatorAvailable = statusManager.currentDayCalculator != nil
+        return isAuthorized
+            ? isLoadingCountries || isLoadingInitialData || !isDayCalculatorAvailable
+            : isLoadingCountries
+    }
 
     init() {
         let authHelper = AuthHelperImp()
@@ -45,11 +54,16 @@ struct SwiftUI_SotkaAppApp: App {
             ZStack {
                 if authHelper.isAuthorized {
                     RootScreen()
+                        .task(id: scenePhase) {
+                            guard scenePhase == .active else { return }
+                            guard authHelper.isAuthorized else { return }
+                            await statusManager.getStatus(client: client, context: modelContainer.mainContext)
+                        }
                 } else {
                     LoginScreen(client: client)
                 }
             }
-            .loadingOverlay(if: countriesService.isLoading || statusManager.isLoading)
+            .loadingOverlay(if: showLoadingOverlay)
             .animation(.default, value: authHelper.isAuthorized)
             .dynamicTypeSize(...DynamicTypeSize.accessibility2)
             .environment(appSettings)
@@ -57,14 +71,17 @@ struct SwiftUI_SotkaAppApp: App {
             .environment(statusManager)
             .environment(statusManager.customExercisesService)
             .environment(statusManager.infopostsService)
+            .currentDay(statusManager.currentDayCalculator?.currentDay)
             .environment(youtubeVideoService)
             .environment(\.isNetworkConnected, networkStatus.isConnected)
             .preferredColorScheme(appSettings.appTheme.colorScheme)
+            .onChange(of: statusManager.currentDayCalculator) { _, _ in
+                guard authHelper.isAuthorized else { return }
+                statusManager.loadInfopostsWithUserGender(context: modelContainer.mainContext)
+            }
             .task(id: scenePhase) {
                 guard scenePhase == .active else { return }
                 await countriesService.update(modelContainer.mainContext, client: client)
-                guard authHelper.isAuthorized else { return }
-                await statusManager.getStatus(client: client, context: modelContainer.mainContext)
             }
         }
         .modelContainer(modelContainer)

@@ -54,7 +54,7 @@ struct SyncStartDateView: View {
             .navigationBarTitleDisplayMode(.inline)
         }
         .interactiveDismissDisabled()
-        .loadingOverlay(if: statusManager.isLoading)
+        .loadingOverlay(if: statusManager.state.isLoading)
     }
 
     private func makeOpacity(_ model: DayCalculator) -> CGFloat {
@@ -79,7 +79,6 @@ struct SyncStartDateView: View {
         case let .site(model):
             syncTask = Task {
                 await statusManager.syncWithSiteDate(
-                    client: client,
                     siteDate: model.startDate,
                     context: modelContext
                 )

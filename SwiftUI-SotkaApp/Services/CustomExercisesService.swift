@@ -8,7 +8,7 @@ import SWUtils
 @MainActor
 @Observable
 final class CustomExercisesService {
-    private let logger = Logger(
+    @ObservationIgnored private let logger = Logger(
         subsystem: Bundle.main.bundleIdentifier!,
         category: String(describing: CustomExercisesService.self)
     )

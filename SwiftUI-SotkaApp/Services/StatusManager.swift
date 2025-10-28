@@ -7,15 +7,15 @@ import SWUtils
 @MainActor
 @Observable
 final class StatusManager {
-    private let logger = Logger(
+    @ObservationIgnored private let logger = Logger(
         subsystem: Bundle.main.bundleIdentifier!,
         category: String(describing: StatusManager.self)
     )
-    private let defaults = UserDefaults.standard
+    @ObservationIgnored private let defaults = UserDefaults.standard
     @ObservationIgnored let customExercisesService: CustomExercisesService
     @ObservationIgnored let infopostsService: InfopostsService
     @ObservationIgnored let progressSyncService: ProgressSyncService
-    private var isJournalSyncInProgress = false
+    @ObservationIgnored private var isJournalSyncInProgress = false
 
     /// Дата старта сотки
     private var startDate: Date? {
@@ -50,7 +50,16 @@ final class StatusManager {
     /// Конфликтующие даты начала программы
     var conflictingSyncModel: ConflictingStartDate?
 
-    private(set) var isLoading = false
+    private(set) var state = State.idle
+
+    /// Признак успешной первичной загрузки данных
+    private var didLoadInitialData: Bool {
+        get { defaults.bool(forKey: Key.didLoadInitialData.rawValue) }
+        set {
+            guard newValue != didLoadInitialData else { return }
+            defaults.set(newValue, forKey: Key.didLoadInitialData.rawValue)
+        }
+    }
 
     /// Максимальный день, до которого доступны инфопосты
     private(set) var maxReadInfoPostDay: Int {
@@ -79,8 +88,10 @@ final class StatusManager {
     /// - Parameters:
     ///   - client: Сервис для загрузки статуса
     func getStatus(client: StatusClient, context: ModelContext) async {
-        guard !isLoading else { return }
-        isLoading = true
+        let now = Date.now
+        currentDayCalculator = .init(startDate, now)
+        guard !state.isLoading else { return }
+        state = .init(didLoadInitialData: didLoadInitialData)
         do {
             let currentRun = try await client.current()
             let siteStartDate = currentRun.date
@@ -96,7 +107,7 @@ final class StatusManager {
             case let (.none, .some(date)):
                 // Сайт - источник истины
                 logger.info("Дата старта есть только на сайте: \(date.description)")
-                await syncWithSiteDate(client: client, siteDate: date, context: context)
+                await syncWithSiteDate(siteDate: date, context: context)
             case let (.some(appDate), .some(siteDate)):
                 logger.info("Дата старта в приложении: \(appDate.description), и на сайте: \(siteDate.description)")
                 if appDate.isTheSameDayIgnoringTime(siteDate) {
@@ -105,18 +116,21 @@ final class StatusManager {
                     conflictingSyncModel = .init(appDate, siteDate)
                 }
             }
-            currentDayCalculator = .init(startDate, .now)
+            currentDayCalculator = .init(startDate, now)
             await progressSyncService.syncProgress(context: context)
+            didLoadInitialData = true
+            state = .idle
         } catch {
             logger.error("\(error.localizedDescription)")
+            if !didLoadInitialData {
+                state = .error(error.localizedDescription)
+                SWAlert.shared.presentDefaultUIKit(error)
+            }
         }
-        // Загружаем инфопосты с учетом пола пользователя
-        loadInfopostsWithUserGender(context: context)
-        isLoading = false
     }
 
     func start(client: StatusClient, appDate: Date?, context: ModelContext) async {
-        isLoading = true
+        state = .init(didLoadInitialData: didLoadInitialData)
         let newStartDate = appDate ?? .now
         let isoDateString = DateFormatterService.stringFromFullDate(newStartDate, iso: true)
         let currentRun = try? await client.start(date: isoDateString)
@@ -128,9 +142,26 @@ final class StatusManager {
         await syncJournalAndProgress(context: context)
     }
 
-    func syncWithSiteDate(client _: StatusClient, siteDate: Date, context: ModelContext) async {
+    func syncWithSiteDate(siteDate: Date, context: ModelContext) async {
         startDate = siteDate
         await syncJournalAndProgress(context: context)
+    }
+
+    func loadInfopostsWithUserGender(context: ModelContext) {
+        do {
+            let user = try context.fetch(FetchDescriptor<User>()).first
+            try infopostsService.loadAvailableInfoposts(
+                currentDay: currentDayCalculator?.currentDay,
+                maxReadInfoPostDay: maxReadInfoPostDay,
+                userGender: user?.gender,
+                force: true
+            )
+            Task {
+                try await infopostsService.syncReadPosts(context: context)
+            }
+        } catch {
+            logger.error("Не удалось загрузить инфопосты: \(error.localizedDescription)")
+        }
     }
 
     func didLogout() {
@@ -138,6 +169,31 @@ final class StatusManager {
         currentDayCalculator = nil
         maxReadInfoPostDay = 0
         infopostsService.didLogout()
+    }
+}
+
+extension StatusManager {
+    enum State {
+        case idle
+        case isLoadingInitialData
+        case isSynchronizingData
+        case error(String)
+
+        var isLoading: Bool {
+            isLoadingInitialData || isSyncing
+        }
+
+        var isLoadingInitialData: Bool {
+            if case .isLoadingInitialData = self { true } else { false }
+        }
+
+        var isSyncing: Bool {
+            if case .isSynchronizingData = self { true } else { false }
+        }
+
+        init(didLoadInitialData: Bool) {
+            self = didLoadInitialData ? .isSynchronizingData : .isLoadingInitialData
+        }
     }
 }
 
@@ -151,20 +207,8 @@ private extension StatusManager {
         ///
         /// Значение взял из старого приложения
         case maxReadInfoPostDay = "WorkoutMaxReadInfoPostDay"
-    }
-
-    func loadInfopostsWithUserGender(context: ModelContext) {
-        do {
-            let user = try context.fetch(FetchDescriptor<User>()).first
-            try infopostsService.loadAvailableInfoposts(
-                currentDay: currentDayCalculator?.currentDay,
-                maxReadInfoPostDay: maxReadInfoPostDay,
-                userGender: user?.gender,
-                force: true
-            )
-        } catch {
-            logger.error("Не удалось загрузить инфопосты: \(error.localizedDescription)")
-        }
+        /// Признак успешной первичной загрузки данных
+        case didLoadInitialData = "DidLoadInitialData"
     }
 }
 
@@ -173,13 +217,11 @@ private extension StatusManager {
         guard !isJournalSyncInProgress else { return }
         isJournalSyncInProgress = true
         defer { isJournalSyncInProgress = false }
-
-        currentDayCalculator = .init(startDate, .now)
-        isLoading = true
+        state = .init(didLoadInitialData: didLoadInitialData)
         logger.debug("Запускаем синхронизацию упражнений после авторизации")
         await customExercisesService.syncCustomExercises(context: context)
         logger.info("Синхронизация упражнений завершена")
         conflictingSyncModel = nil
-        isLoading = false
+        state = .idle
     }
 }

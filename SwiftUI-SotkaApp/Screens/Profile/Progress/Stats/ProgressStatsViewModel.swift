@@ -5,7 +5,7 @@ import SwiftData
 
 @Observable
 final class ProgressStatsViewModel {
-    private let logger = Logger(
+    @ObservationIgnored private let logger = Logger(
         subsystem: Bundle.main.bundleIdentifier!,
         category: String(describing: ProgressStatsViewModel.self)
     )

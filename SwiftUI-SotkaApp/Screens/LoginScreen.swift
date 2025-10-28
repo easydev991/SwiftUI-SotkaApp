@@ -111,6 +111,7 @@ private extension LoginScreen {
     }
 
     func performLogin() {
+        guard !isLoading else { return }
         isLoading = true
         loginTask = Task {
             do {
@@ -124,7 +125,7 @@ private extension LoginScreen {
                 authHelper.didAuthorize()
                 let user = User(from: userInfo)
                 modelContext.insert(user)
-                await statusManager.getStatus(client: client, context: modelContext)
+                try modelContext.save()
             } catch ClientError.noConnection {
                 SWAlert.shared.presentNoConnection(true)
             } catch {
