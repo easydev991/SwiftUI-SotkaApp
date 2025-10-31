@@ -59,8 +59,8 @@ struct HomeScreenModelTests {
     }
 
     @Test(
-        "Не должен показывать секцию активности при текущем дне >= 100",
-        arguments: [100, 150]
+        "Не должен показывать секцию активности при текущем дне > 100",
+        arguments: [101, 150]
     )
     func hidesActivitySectionForDays100AndAbove(currentDay: Int) throws {
         let calculator = DayCalculator(now, now)

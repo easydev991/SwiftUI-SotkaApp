@@ -87,7 +87,7 @@ extension HomeScreen {
             guard let dayCalculator else { return nil }
             self.calculator = dayCalculator
             self.todayInfopost = todayInfopost
-            self.showActivitySection = currentDay < 100
+            self.showActivitySection = currentDay <= 100
             self.showProgressSection = !isMaximumsFilled
         }
     }
