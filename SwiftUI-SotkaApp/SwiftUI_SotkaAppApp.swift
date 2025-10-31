@@ -33,14 +33,24 @@ struct SwiftUI_SotkaAppApp: App {
                 language: Locale.current.language.languageCode?.identifier ?? "ru",
                 infopostsClient: client
             ),
-            progressSyncService: progressSyncService
+            progressSyncService: progressSyncService,
+            dailyActivitiesService: .init(client: client)
         )
         self.authHelper = authHelper
         self.client = client
     }
 
     private var modelContainer: ModelContainer = {
-        let schema = Schema([User.self, Country.self, CustomExercise.self, UserProgress.self])
+        let schema = Schema(
+            [
+                User.self,
+                Country.self,
+                CustomExercise.self,
+                UserProgress.self,
+                DayActivity.self,
+                DayActivityTraining.self
+            ]
+        )
         let modelConfiguration = ModelConfiguration(schema: schema, isStoredInMemoryOnly: false)
         do {
             return try ModelContainer(for: schema, configurations: [modelConfiguration])

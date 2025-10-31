@@ -73,4 +73,25 @@ extension CustomExercise {
         }
         return customType.image
     }
+
+    /// Проверяет, изменились ли данные упражнения по сравнению с ответом сервера
+    /// - Parameter serverResponse: Ответ сервера для сравнения
+    /// - Returns: `true` если данные изменились, `false` если идентичны
+    func hasDataChanged(comparedTo serverResponse: CustomExerciseResponse) -> Bool {
+        name != serverResponse.name || imageId != serverResponse.imageId
+    }
+
+    /// Преобразование в ExerciseSnapshot для конкурентной синхронизации
+    var exerciseSnapshot: ExerciseSnapshot {
+        ExerciseSnapshot(
+            id: id,
+            name: name,
+            imageId: imageId,
+            createDate: createDate,
+            modifyDate: modifyDate,
+            isSynced: isSynced,
+            shouldDelete: shouldDelete,
+            userId: user?.id
+        )
+    }
 }

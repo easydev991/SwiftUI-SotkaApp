@@ -78,7 +78,7 @@ struct MoreScreen: View {
             settings.showLanguageAlert.toggle()
         }
         .alert(.alertLanguage, isPresented: $settings.showLanguageAlert) {
-            Button("Cancel", role: .cancel) {}
+            Button(.cancel, role: .cancel) {}
             Button(.goToSettings) {
                 let settingsUrl = URL(string: UIApplication.openSettingsURLString)
                 URLOpener.open(settingsUrl)

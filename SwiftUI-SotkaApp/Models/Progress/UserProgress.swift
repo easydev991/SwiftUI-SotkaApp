@@ -235,7 +235,7 @@ extension UserProgress {
         switch dataType {
         case .weight:
             guard let weight, weight > 0 else { return "—" }
-            return String(format: String(localized: "Progress.Weight"), weight) + String(localized: .progressWeightUnit)
+            return formattedWeight(weight) + String(localized: .progressWeightUnit)
         case .pullUps:
             guard let pullUps, pullUps > 0 else { return "—" }
             return "\(pullUps)"
@@ -430,6 +430,34 @@ extension UserProgress: CustomStringConvertible {
             photoBackDescription,
             photoSideDescription
         ].joined(separator: ", ")
+    }
+}
+
+private extension UserProgress {
+    /// Форматирует вес для отображения, убирая trailing zeros
+    /// - Parameter weight: Вес для форматирования
+    /// - Returns: Отформатированная строка веса без trailing zeros (например, "70" вместо "70.0", но "75.5" остается "75.5")
+    func formattedWeight(_ weight: Float) -> String {
+        let formatter = NumberFormatter()
+        formatter.numberStyle = .decimal
+        formatter.maximumFractionDigits = 1
+        formatter.minimumFractionDigits = 0
+        formatter.usesGroupingSeparator = false
+
+        guard let formattedString = formatter.string(from: NSNumber(value: weight)) else {
+            // Fallback на стандартное форматирование, если NumberFormatter вернул nil
+            let formatted = String(format: "%.1f", weight)
+            // Убираем trailing zero и точку/запятую
+            return formatted.replacingOccurrences(of: "\\.0$", with: "", options: .regularExpression)
+                .replacingOccurrences(of: ",0$", with: "", options: .regularExpression)
+        }
+
+        // Явно убираем trailing zero и разделитель, если они есть
+        let withoutTrailingZero = formattedString
+            .replacingOccurrences(of: "\\.0$", with: "", options: .regularExpression)
+            .replacingOccurrences(of: ",0$", with: "", options: .regularExpression)
+
+        return withoutTrailingZero
     }
 }
 

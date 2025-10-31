@@ -162,6 +162,94 @@ struct MainUserFormTests {
         }
         #expect(!form4.shouldUpdateOnAppear)
     }
+
+    // MARK: - requestParameters Tests
+
+    @Test
+    func requestParameters_allKeysPresent() {
+        let form = makeForm()
+        let params = form.requestParameters
+
+        #expect(params.keys.contains("name"))
+        #expect(params.keys.contains("fullname"))
+        #expect(params.keys.contains("email"))
+        #expect(params.keys.contains("gender"))
+        #expect(params.keys.contains("country_id"))
+        #expect(params.keys.contains("city_id"))
+        #expect(params.keys.contains("birth_date"))
+        #expect(params.keys.count == 7)
+    }
+
+    @Test
+    func requestParameters_correctValues() {
+        let form = makeForm(
+            userName: "testUser",
+            fullName: "Test Full Name",
+            email: "test@example.com",
+            country: .init(cities: [], id: "17", name: "Россия"),
+            city: .init(id: "1", name: "Москва", lat: "55.75", lon: "37.62"),
+            gender: .male
+        )
+        let params = form.requestParameters
+
+        #expect(params["name"] == "testUser")
+        #expect(params["fullname"] == "Test Full Name")
+        #expect(params["email"] == "test@example.com")
+        #expect(params["gender"] == "\(Gender.male.code)")
+        #expect(params["country_id"] == "17")
+        #expect(params["city_id"] == "1")
+    }
+
+    @Test
+    func requestParameters_birthDateIsoFormat() {
+        let form = makeForm()
+        let params = form.requestParameters
+
+        // Проверяем, что birth_date в ISO формате
+        #expect(params["birth_date"] != nil)
+        // Проверяем формат ISO: должна быть строка с датой
+        if let birthDateString = params["birth_date"] {
+            // Формат должен содержать T и Z или часовой пояс
+            #expect(birthDateString.contains("T"))
+        }
+    }
+
+    @Test
+    func requestParameters_genderConversionToString() {
+        let formMale = makeForm(gender: .male)
+        let formFemale = makeForm(gender: .female)
+        let formUnspecified = makeForm(gender: .unspecified)
+
+        #expect(formMale.requestParameters["gender"] == "\(Gender.male.code)")
+        #expect(formFemale.requestParameters["gender"] == "\(Gender.female.code)")
+        #expect(formUnspecified.requestParameters["gender"] == "\(Gender.unspecified.code)")
+    }
+
+    @Test
+    func requestParameters_countryAndCityIds() {
+        let form = makeForm(
+            country: .init(cities: [], id: "42", name: "США"),
+            city: .init(id: "100", name: "Нью-Йорк", lat: "40.71", lon: "-74.01")
+        )
+        let params = form.requestParameters
+
+        #expect(params["country_id"] == "42")
+        #expect(params["city_id"] == "100")
+    }
+
+    @Test
+    func requestParameters_differentFieldValues() {
+        let form = makeForm(
+            userName: "anotherUser",
+            fullName: "Another Name",
+            email: "another@test.com"
+        )
+        let params = form.requestParameters
+
+        #expect(params["name"] == "anotherUser")
+        #expect(params["fullname"] == "Another Name")
+        #expect(params["email"] == "another@test.com")
+    }
 }
 
 private extension MainUserFormTests {

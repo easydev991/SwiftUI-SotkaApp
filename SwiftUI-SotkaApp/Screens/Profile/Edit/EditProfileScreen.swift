@@ -141,7 +141,7 @@ private extension EditProfileScreen {
     var changePasswordButton: some View {
         if let userName = user.userName {
             NavigationLink(destination: ChangePasswordScreen(userName: userName)) {
-                let localizedString = NSLocalizedString("Change password", comment: "")
+                let localizedString = String(localized: .changePassword)
                 ListRowView(leadingContent: .iconWithText(.key, localizedString), trailingContent: .chevron)
             }
         }

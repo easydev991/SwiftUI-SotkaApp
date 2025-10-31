@@ -90,7 +90,7 @@ private extension ProfileScreen {
 
     func makeCustomExercisesButton(for user: User) -> some View {
         NavigationLink(destination: CustomExercisesScreen()) {
-            let localizedString = NSLocalizedString("Custom exercises", comment: "")
+            let localizedString = String(localized: .customExercises)
             FormRowView(
                 title: localizedString,
                 trailingContent: .textWithChevron(user.customExerciseCountText)

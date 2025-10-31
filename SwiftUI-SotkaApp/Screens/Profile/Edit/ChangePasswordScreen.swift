@@ -17,13 +17,13 @@ struct ChangePasswordScreen: View {
 
     var body: some View {
         VStack(spacing: 22) {
-            SectionView(headerWithPadding: "Current password", mode: .regular) {
+            SectionView(headerWithPadding: String(localized: .currentPassword), mode: .regular) {
                 passwordField
             }
-            SectionView(headerWithPadding: "New password", mode: .regular) {
+            SectionView(headerWithPadding: String(localized: .newPassword), mode: .regular) {
                 newPasswordField
             }
-            SectionView(headerWithPadding: "Password confirmation", mode: .regular) {
+            SectionView(headerWithPadding: String(localized: .passwordConfirmation), mode: .regular) {
                 newRepeatedField
             }
             Spacer()
@@ -33,7 +33,7 @@ struct ChangePasswordScreen: View {
         .loadingOverlay(if: isLoading)
         .background(Color.swBackground)
         .onDisappear { changePasswordTask?.cancel() }
-        .navigationTitle("Change password")
+        .navigationTitle(.changePassword)
         .navigationBarTitleDisplayMode(.inline)
     }
 }

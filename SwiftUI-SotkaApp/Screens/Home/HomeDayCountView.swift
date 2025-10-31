@@ -42,7 +42,7 @@ private extension HomeDayCountView {
 
     var notFinishedView: some View {
         HStack(spacing: 0) {
-            let currentDayTitle = NSLocalizedString("Current day", comment: "")
+            let currentDayTitle = String(localized: .currentDay)
             let daysLeftTitle = String(localized: .daysLeft)
             makeDayStack(title: currentDayTitle, day: calculator.currentDay)
             Rectangle()

@@ -15,6 +15,7 @@ final class StatusManager {
     @ObservationIgnored let customExercisesService: CustomExercisesService
     @ObservationIgnored let infopostsService: InfopostsService
     @ObservationIgnored let progressSyncService: ProgressSyncService
+    @ObservationIgnored let dailyActivitiesService: DailyActivitiesService
     @ObservationIgnored private var isJournalSyncInProgress = false
 
     /// Дата старта сотки
@@ -77,11 +78,13 @@ final class StatusManager {
     init(
         customExercisesService: CustomExercisesService,
         infopostsService: InfopostsService,
-        progressSyncService: ProgressSyncService
+        progressSyncService: ProgressSyncService,
+        dailyActivitiesService: DailyActivitiesService
     ) {
         self.customExercisesService = customExercisesService
         self.infopostsService = infopostsService
         self.progressSyncService = progressSyncService
+        self.dailyActivitiesService = dailyActivitiesService
     }
 
     /// Получает статус прохождения пользователя
@@ -117,7 +120,6 @@ final class StatusManager {
                 }
             }
             currentDayCalculator = .init(startDate, now)
-            await progressSyncService.syncProgress(context: context)
             didLoadInitialData = true
             state = .idle
         } catch {
@@ -218,9 +220,9 @@ private extension StatusManager {
         isJournalSyncInProgress = true
         defer { isJournalSyncInProgress = false }
         state = .init(didLoadInitialData: didLoadInitialData)
-        logger.debug("Запускаем синхронизацию упражнений после авторизации")
+        await progressSyncService.syncProgress(context: context)
         await customExercisesService.syncCustomExercises(context: context)
-        logger.info("Синхронизация упражнений завершена")
+        await dailyActivitiesService.syncDailyActivities(context: context)
         conflictingSyncModel = nil
         state = .idle
     }

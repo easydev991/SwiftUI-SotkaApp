@@ -12,11 +12,11 @@ enum ProgressPhotoType: Int, Codable, CaseIterable {
     var localizedTitle: String {
         switch self {
         case .front:
-            NSLocalizedString("PhotoType.front", comment: "Фото спереди")
+            String(localized: .photoTypeFront)
         case .back:
-            NSLocalizedString("PhotoType.back", comment: "Фото сзади")
+            String(localized: .photoTypeBack)
         case .side:
-            NSLocalizedString("PhotoType.side", comment: "Фото сбоку")
+            String(localized: .photoTypeSide)
         }
     }
 

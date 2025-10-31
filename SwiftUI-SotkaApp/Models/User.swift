@@ -23,6 +23,9 @@ final class User {
     /// Результаты прогресса пользователя
     @Relationship(deleteRule: .cascade) var progressResults: [UserProgress] = []
 
+    /// Активности пользователя
+    @Relationship(deleteRule: .cascade) var dayActivities: [DayActivity] = []
+
     /// ID избранных инфопостов
     var favoriteInfopostIds: [String] = []
 
@@ -80,10 +83,7 @@ extension User {
     }
 
     var genderWithAge: String {
-        let localizedAgeString = String.localizedStringWithFormat(
-            NSLocalizedString("ageInYears", comment: ""),
-            age
-        )
+        let localizedAgeString = String(localized: .ageInYears(age))
         return genderString.isEmpty
             ? localizedAgeString
             : genderString + ", " + localizedAgeString

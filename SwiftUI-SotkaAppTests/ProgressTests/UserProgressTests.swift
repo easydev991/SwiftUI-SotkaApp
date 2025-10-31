@@ -339,7 +339,7 @@ extension AllProgressTests {
         func displayedValueForWeightWithValue() {
             let progress = UserProgress(id: 1, weight: 75.5)
             let displayed = progress.displayedValue(for: .weight)
-            #expect(displayed.contains("75.5"))
+            #expect(displayed.contains("75.5") || displayed.contains("75,5"))
             #expect(displayed.contains("кг") || displayed.contains("kg"))
         }
 
@@ -400,7 +400,7 @@ extension AllProgressTests {
             let progress = UserProgress(id: 1, pullUps: 15, pushUps: 25, squats: 35, weight: 75.5)
 
             let weightResult = progress.displayedValue(for: .weight)
-            #expect(weightResult.contains("75.5"))
+            #expect(weightResult.contains("75.5") || weightResult.contains("75,5"))
             #expect(weightResult.contains("кг") || weightResult.contains("kg"))
 
             #expect(progress.displayedValue(for: .pullUps) == "15")
@@ -417,7 +417,7 @@ extension AllProgressTests {
             let pushUpsDisplayed = progress.displayedValue(for: .pushUps)
             let squatsDisplayed = progress.displayedValue(for: .squats)
 
-            #expect(weightDisplayed.contains("70.0"))
+            #expect(weightDisplayed.contains("70") && !weightDisplayed.contains("70.0") && !weightDisplayed.contains("70,0"))
             #expect(weightDisplayed.contains("кг") || weightDisplayed.contains("kg"))
             #expect(pullUpsDisplayed == "10")
             #expect(pushUpsDisplayed == "20")
@@ -442,17 +442,85 @@ extension AllProgressTests {
             #expect(progress.displayedValue(for: .weight) == "—")
         }
 
-        @Test(arguments: [
-            (1.0, "1.0"),
-            (10.5, "10.5"),
-            (99.9, "99.9"),
-            (100.0, "100.0")
+        @Test("displayedValue для weight убирает trailing zero")
+        func displayedValueForWeightRemovesTrailingZero() {
+            let progress = UserProgress(id: 1, weight: 70.0)
+            let displayed = progress.displayedValue(for: .weight)
+
+            #expect(displayed.contains("70"))
+            #expect(!displayed.contains("70.0") && !displayed.contains("70,0"))
+            #expect(displayed.contains("кг") || displayed.contains("kg"))
+        }
+
+        @Test("displayedValue для weight убирает trailing zero для разных значений", arguments: [
+            (1.0, "1"),
+            (10.0, "10"),
+            (70.0, "70"),
+            (100.0, "100")
         ])
-        func displayedValueForWeightParameterized(weight: Float, expected: String) {
+        func displayedValueForWeightRemovesTrailingZeroForDifferentValues(weight: Float, expected: String) {
             let progress = UserProgress(id: 1, weight: weight)
             let displayed = progress.displayedValue(for: .weight)
 
-            #expect(displayed.contains(expected))
+            let hasExpectedWithDot = displayed.contains(expected)
+            let expectedWithComma = expected.replacingOccurrences(of: ".", with: ",")
+            let hasExpectedWithComma = displayed.contains(expectedWithComma)
+
+            #expect(hasExpectedWithDot || hasExpectedWithComma)
+            #expect(!displayed.contains(".0") && !displayed.contains(",0"))
+            #expect(displayed.contains("кг") || displayed.contains("kg"))
+        }
+
+        @Test("displayedValue для weight не убирает значащие десятичные цифры", arguments: [
+            (10.5, "10.5"),
+            (75.5, "75.5"),
+            (99.9, "99.9"),
+            (1.5, "1.5")
+        ])
+        func displayedValueForWeightKeepsSignificantDecimalDigits(weight: Float, expected: String) {
+            let progress = UserProgress(id: 1, weight: weight)
+            let displayed = progress.displayedValue(for: .weight)
+
+            let hasExpectedWithDot = displayed.contains(expected)
+            let expectedWithComma = expected.replacingOccurrences(of: ".", with: ",")
+            let hasExpectedWithComma = displayed.contains(expectedWithComma)
+
+            #expect(hasExpectedWithDot || hasExpectedWithComma)
+        }
+
+        @Test(arguments: [
+            (1.0, "1"),
+            (10.0, "10"),
+            (70.0, "70"),
+            (100.0, "100")
+        ])
+        func displayedValueForWeightWithWholeNumbers(weight: Float, expected: String) {
+            let progress = UserProgress(id: 1, weight: weight)
+            let displayed = progress.displayedValue(for: .weight)
+
+            let hasExpectedWithDot = displayed.contains(expected)
+            let expectedWithComma = expected.replacingOccurrences(of: ".", with: ",")
+            let hasExpectedWithComma = displayed.contains(expectedWithComma)
+
+            #expect(hasExpectedWithDot || hasExpectedWithComma)
+            #expect(displayed.contains("кг") || displayed.contains("kg"))
+            #expect(!displayed.contains(".0") && !displayed.contains(",0"))
+        }
+
+        @Test(arguments: [
+            (10.5, "10.5"),
+            (75.5, "75.5"),
+            (99.9, "99.9")
+        ])
+        func displayedValueForWeightWithDecimalDigits(weight: Float, expected: String) {
+            let progress = UserProgress(id: 1, weight: weight)
+            let displayed = progress.displayedValue(for: .weight)
+
+            let hasExpectedWithDot = displayed.contains(expected)
+            let expectedWithComma = expected.replacingOccurrences(of: ".", with: ",")
+            let hasExpectedWithComma = displayed.contains(expectedWithComma)
+
+            #expect(hasExpectedWithDot || hasExpectedWithComma)
             #expect(displayed.contains("кг") || displayed.contains("kg"))
         }
 

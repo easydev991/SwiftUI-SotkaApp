@@ -59,3 +59,22 @@ struct CustomExerciseRequest: Codable, Sendable {
         self.isHidden = isHidden
     }
 }
+
+extension CustomExerciseRequest {
+    /// Параметры формы для отправки на сервер (application/x-www-form-urlencoded)
+    var formParameters: [String: String] {
+        var parameters: [String: String] = [
+            "id": id,
+            "name": name,
+            "image_id": String(imageId),
+            "create_date": createDate,
+            "is_hidden": String(isHidden)
+        ]
+
+        if let modifyDate {
+            parameters["modify_date"] = modifyDate
+        }
+
+        return parameters
+    }
+}

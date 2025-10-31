@@ -33,7 +33,7 @@ struct CustomExercisesScreen: View {
             }
         }
         .background(Color.swBackground)
-        .navigationTitle("Custom exercises")
+        .navigationTitle(.customExercises)
         .navigationBarTitleDisplayMode(.inline)
         .sheet(isPresented: $showAddExerciseSheet) {
             NavigationStack {
@@ -76,7 +76,7 @@ private extension CustomExercisesScreen {
                     deleteExercise(exerciseToDelete)
                 }
             }
-            Button("Cancel", role: .cancel) {
+            Button(.cancel, role: .cancel) {
                 exerciseToDelete = nil
             }
         } message: {

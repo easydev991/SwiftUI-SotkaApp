@@ -25,7 +25,7 @@ struct InfopostDetailScreen: View {
             onReachedEnd: didReadPost
         )
         .alert(isPresented: $showError, error: currentError) {
-            Button("Close", role: .cancel) {
+            Button(.close, role: .cancel) {
                 dismiss()
             }
             Button(.report) {

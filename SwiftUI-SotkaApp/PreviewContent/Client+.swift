@@ -285,3 +285,115 @@ struct MockInfopostsClient: InfopostsClient {
         }
     }
 }
+
+struct MockDaysClient: DaysClient {
+    let result: MockResult
+
+    func getDays() async throws -> [DayResponse] {
+        print("Имитируем запрос getDays")
+        try await Task.sleep(for: .seconds(1))
+        switch result {
+        case .success:
+            print("Успешно получили список дней тренировок")
+            return [
+                .init(
+                    id: 1,
+                    activityType: 1,
+                    count: 3,
+                    plannedCount: 3,
+                    executeType: 1,
+                    trainType: 1,
+                    trainings: [
+                        .init(typeId: 1, customTypeId: nil, count: 10, sortOrder: 0),
+                        .init(typeId: 2, customTypeId: nil, count: 20, sortOrder: 1)
+                    ],
+                    createDate: DateFormatterService.stringFromFullDate(Date(), format: .serverDateTimeSec),
+                    modifyDate: DateFormatterService.stringFromFullDate(Date(), format: .serverDateTimeSec),
+                    duration: 1800,
+                    comment: "Тренировка дня 1"
+                ),
+                .init(
+                    id: 2,
+                    activityType: 2,
+                    count: 1,
+                    plannedCount: 1,
+                    executeType: 1,
+                    trainType: 2,
+                    trainings: [
+                        .init(typeId: 3, customTypeId: nil, count: 30, sortOrder: 0)
+                    ],
+                    createDate: DateFormatterService.stringFromFullDate(Date(), format: .serverDateTimeSec),
+                    modifyDate: DateFormatterService.stringFromFullDate(Date(), format: .serverDateTimeSec),
+                    duration: 900,
+                    comment: "Растяжка"
+                )
+            ]
+        case let .failure(error):
+            throw error
+        }
+    }
+
+    func createDay(_ day: DayRequest) async throws -> DayResponse {
+        print("Имитируем запрос createDay (day=\(day.id))")
+        try await Task.sleep(for: .seconds(1))
+        switch result {
+        case .success:
+            print("Успешно создали день тренировки")
+            return makeResponse(from: day, isUpdate: false)
+        case let .failure(error):
+            throw error
+        }
+    }
+
+    func updateDay(model: DayRequest) async throws -> DayResponse {
+        print("Имитируем запрос updateDay (day=\(model.id))")
+        try await Task.sleep(for: .seconds(1))
+        switch result {
+        case .success:
+            print("Успешно обновили день тренировки")
+            return makeResponse(from: model, isUpdate: true)
+        case let .failure(error):
+            throw error
+        }
+    }
+
+    func deleteDay(day: Int) async throws {
+        print("Имитируем запрос deleteDay (day=\(day))")
+        try await Task.sleep(for: .seconds(1))
+        switch result {
+        case .success:
+            print("Успешно удалили день тренировки")
+        case let .failure(error):
+            throw error
+        }
+    }
+
+    private func makeResponse(from request: DayRequest, isUpdate: Bool) -> DayResponse {
+        let now = DateFormatterService.stringFromFullDate(Date(), format: .serverDateTimeSec)
+        let trainings: [DayResponse.Training]? = {
+            guard let reqTrainings = request.trainings, !reqTrainings.isEmpty else { return nil }
+            return reqTrainings.enumerated().map { index, t in
+                DayResponse.Training(
+                    typeId: t.typeId,
+                    customTypeId: t.customTypeId,
+                    count: t.count,
+                    sortOrder: index
+                )
+            }
+        }()
+
+        return DayResponse(
+            id: request.id,
+            activityType: request.activityType,
+            count: request.count,
+            plannedCount: request.plannedCount,
+            executeType: request.executeType,
+            trainType: request.trainingType,
+            trainings: trainings,
+            createDate: request.createDate ?? now,
+            modifyDate: isUpdate ? (request.modifyDate ?? now) : request.modifyDate,
+            duration: request.duration,
+            comment: request.comment
+        )
+    }
+}

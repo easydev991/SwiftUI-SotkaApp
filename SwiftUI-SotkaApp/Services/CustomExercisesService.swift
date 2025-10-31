@@ -130,18 +130,6 @@ final class CustomExercisesService {
 }
 
 private extension CustomExercisesService {
-    /// Снимок локального упражнения для безопасной передачи в конкурентные задачи без доступа к ModelContext
-    struct ExerciseSnapshot: Sendable, Hashable {
-        let id: String
-        let name: String
-        let imageId: Int
-        let createDate: Date
-        let modifyDate: Date
-        let isSynced: Bool
-        let shouldDelete: Bool
-        let userId: Int?
-    }
-
     /// Результат конкурентной операции синхронизации одного упражнения
     enum SyncEvent: Sendable, Hashable {
         case createdOrUpdated(id: String, server: CustomExerciseResponse)
@@ -237,24 +225,63 @@ private extension CustomExercisesService {
                         exerciseResponse.modifyDate, format: .serverDateTimeSec
                     )
 
-                    // Обработка специального случая: элемент удален на сервере, но изменен локально
+                    // Порядок проверок для разрешения конфликтов:
+                    // 1. shouldDelete - пропуск обновления (элемент помечен на удаление)
+                    // 2. hasDataChanged() == false && isSynced == true - пропуск обновления (данные не изменились)
+                    // 3. isSynced == false - пропуск обновления (локальные изменения имеют приоритет)
+                    // 4. Сравнение дат для синхронизированных упражнений с измененными данными
+
+                    // 1. Обработка специального случая: элемент помечен на удаление
                     if existingExercise.shouldDelete {
                         // Локальное упражнение помечено для удаления - не восстанавливаем его
                         logger.info("Локальное упражнение '\(existingExercise.name)' помечено для удаления, пропускаем")
-                    } else if existingExercise.modifyDate > serverModifyDate {
-                        // Локальная версия новее серверной - сохраняем локальные изменения
-                        logger.info("Локальная версия новее серверной для '\(existingExercise.name)' - сохраняем локальные изменения")
-                        // Не обновляем локальные данные, они уже новее
-                    } else if serverModifyDate > existingExercise.modifyDate {
-                        // Серверная версия новее - обновляем локальную (только для синхронизированных упражнений)
-                        updateLocalFromServer(existingExercise, exerciseResponse)
-                        logger
-                            .info(
-                                "Конфликт разрешен для упражнения \(existingExercise.id): локальная \(existingExercise.modifyDate) vs серверная \(serverModifyDate) -> Серверная версия новее"
-                            )
                     } else {
-                        // Локальная версия новее - уже отправлена на сервер
-                        logger.info("Локальная версия новее серверной для \(existingExercise.name)")
+                        // Проверяем, изменились ли данные на сервере
+                        let dataChanged = existingExercise.hasDataChanged(comparedTo: exerciseResponse)
+
+                        // 2. Данные не изменились и упражнение синхронизировано - пропускаем обновление
+                        if !dataChanged, existingExercise.isSynced {
+                            logger.debug("Упражнение '\(existingExercise.name)' уже синхронизировано, данные не изменились")
+                        }
+                        // 3. Локальное упражнение имеет несинхронизированные изменения - пропускаем обновление с сервера
+                        else if !existingExercise.isSynced {
+                            logger
+                                .info(
+                                    "Локальное упражнение '\(existingExercise.name)' имеет несинхронизированные изменения - пропускаем обновление с сервера"
+                                )
+                        }
+                        // 4. Сравнение дат для синхронизированных упражнений с измененными данными
+                        else {
+                            // Сравниваем даты напрямую
+                            let localTimestamp = existingExercise.modifyDate.timeIntervalSince1970
+                            let serverTimestamp = serverModifyDate.timeIntervalSince1970
+                            let difference = localTimestamp - serverTimestamp
+
+                            logger
+                                .info(
+                                    "Сравнение дат для упражнения '\(existingExercise.name)': локальная \(localTimestamp), серверная \(serverTimestamp), разница \(difference) секунд, dataChanged=\(dataChanged), isSynced=\(existingExercise.isSynced)"
+                                )
+
+                            if existingExercise.modifyDate > serverModifyDate {
+                                // Локальная версия новее серверной - сохраняем локальные изменения
+                                logger
+                                    .info(
+                                        "Локальная версия новее серверной для упражнения '\(existingExercise.name)' - сохраняем локальные изменения"
+                                    )
+                                // Не обновляем локальные данные, они уже новее
+                            } else if serverModifyDate > existingExercise.modifyDate {
+                                // Серверная версия новее - обновляем локальную
+                                updateLocalFromServer(existingExercise, exerciseResponse)
+                                logger
+                                    .info(
+                                        "Конфликт разрешен для упражнения \(existingExercise.id): локальная \(localTimestamp) vs серверная \(serverTimestamp) -> Серверная версия новее"
+                                    )
+                            } else {
+                                // Даты равны - сохраняем локальные данные
+                                logger
+                                    .debug("Даты модификации равны для упражнения '\(existingExercise.name)', сохраняем локальные данные")
+                            }
+                        }
                     }
                 } else {
                     // Создаем новое упражнение с сервера
@@ -336,19 +363,7 @@ private extension CustomExercisesService {
                 predicate: #Predicate { !$0.isSynced || $0.shouldDelete }
             )
         )
-        let snapshots: [ExerciseSnapshot] = toSync.map { exercise in
-            ExerciseSnapshot(
-                id: exercise.id,
-                name: exercise.name,
-                imageId: exercise.imageId,
-                createDate: exercise.createDate,
-                modifyDate: exercise.modifyDate,
-                isSynced: exercise.isSynced,
-                shouldDelete: exercise.shouldDelete,
-                userId: exercise.user?.id
-            )
-        }
-        return snapshots
+        return toSync.map(\.exerciseSnapshot)
     }
 
     /// Выполняет конкурентные сетевые операции синхронизации и собирает результаты без доступа к `ModelContext`
@@ -392,14 +407,7 @@ private extension CustomExercisesService {
                 try await client.deleteCustomExercise(id: snapshot.id)
                 return .deleted(id: snapshot.id)
             } else {
-                let request = CustomExerciseRequest(
-                    id: snapshot.id,
-                    name: snapshot.name,
-                    imageId: snapshot.imageId,
-                    createDate: DateFormatterService.stringFromFullDate(snapshot.createDate, format: .isoDateTimeSec),
-                    modifyDate: DateFormatterService.stringFromFullDate(snapshot.modifyDate, format: .isoDateTimeSec),
-                    isHidden: false
-                )
+                let request = snapshot.exerciseRequest
                 let response = try await client.saveCustomExercise(id: snapshot.id, exercise: request)
                 return .createdOrUpdated(id: snapshot.id, server: response)
             }
@@ -423,9 +431,42 @@ private extension CustomExercisesService {
                 switch event {
                 case let .createdOrUpdated(_, server):
                     if let local = dict[id] {
-                        // LWW — берем серверную модификацию, так как она возвращается с актуальной датой
-                        updateLocalFromServer(local, server)
-                        logger.info("Обновлено локально упражнение '\(local.name)' по данным сервера")
+                        // Если упражнение помечено на удаление, не обновляем его данными с сервера
+                        // Оно будет обработано в downloadServerExercises
+                        if local.shouldDelete {
+                            logger.debug("Упражнение '\(local.name)' помечено на удаление, пропускаем обновление в applySyncEvents")
+                        } else if local.isSynced {
+                            // Проверяем, не новее ли локальная версия серверной для синхронизированных упражнений
+                            let serverModifyDate = DateFormatterService.dateFromString(
+                                server.modifyDate,
+                                format: .serverDateTimeSec
+                            )
+                            // Сравниваем даты
+                            if local.modifyDate > serverModifyDate {
+                                // Локальная версия новее серверной - сохраняем локальные изменения
+                                logger
+                                    .info(
+                                        "Локальная версия новее серверной для упражнения '\(local.name)' в applySyncEvents - сохраняем локальные изменения. Локальная: \(local.modifyDate.timeIntervalSince1970), Серверная: \(serverModifyDate.timeIntervalSince1970)"
+                                    )
+                            } else if serverModifyDate > local.modifyDate {
+                                // Серверная версия новее - обновляем локальную
+                                updateLocalFromServer(local, server)
+                                logger
+                                    .info(
+                                        "Обновлено локально упражнение '\(local.name)' по данным сервера. Локальная: \(local.modifyDate.timeIntervalSince1970), Серверная: \(serverModifyDate.timeIntervalSince1970)"
+                                    )
+                            } else {
+                                // Даты равны - сохраняем локальные данные
+                                logger
+                                    .debug(
+                                        "Даты модификации равны для упражнения '\(local.name)' в applySyncEvents, сохраняем локальные данные"
+                                    )
+                            }
+                        } else {
+                            // Упражнение не синхронизировано - обновляем локальную
+                            updateLocalFromServer(local, server)
+                            logger.info("Обновлено локально упражнение '\(local.name)' по данным сервера")
+                        }
                     } else {
                         // Создаем новое локально по ответу сервера
                         let newExercise = CustomExercise(from: server, user: user)

@@ -1,15 +1,15 @@
 import SwiftUI
 
 /// Тип активности на день
-enum DayActivityType: CaseIterable {
+enum DayActivityType: Int, CaseIterable {
     /// Тренировка
-    case workout
+    case workout = 0
     /// Растяжка
-    case stretch
+    case stretch = 2
     /// Отдых
-    case rest
+    case rest = 1
     /// Пропуск из-за болезни/травмы
-    case sick
+    case sick = 3
 
     var localizedTitle: String {
         switch self {

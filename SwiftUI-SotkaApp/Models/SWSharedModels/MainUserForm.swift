@@ -111,4 +111,17 @@ extension MainUserForm {
     var shouldUpdateOnAppear: Bool {
         country.name.isEmpty || city.name.isEmpty
     }
+
+    /// Параметры для запроса редактирования профиля
+    var requestParameters: [String: String] {
+        [
+            "name": userName,
+            "fullname": fullName,
+            "email": email,
+            "gender": genderCode.description,
+            "country_id": country.id,
+            "city_id": city.id,
+            "birth_date": birthDateIsoString
+        ]
+    }
 }

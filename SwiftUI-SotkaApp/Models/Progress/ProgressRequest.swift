@@ -40,3 +40,17 @@ struct ProgressRequest: Codable, Sendable {
         self.photosToDelete = photosToDelete
     }
 }
+
+extension ProgressRequest {
+    /// Параметры для запроса создания/обновления прогресса
+    var requestParameters: [String: String] {
+        [
+            "id": String(id),
+            "pullups": String(pullups ?? 0),
+            "pushups": String(pushups ?? 0),
+            "squats": String(squats ?? 0),
+            "weight": String(weight ?? 0),
+            "modify_date": modifyDate
+        ]
+    }
+}

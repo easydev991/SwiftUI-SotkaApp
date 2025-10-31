@@ -81,7 +81,7 @@ private extension LoginScreen {
 
     @ViewBuilder
     var passwordField: some View {
-        let localizedPlaceholder = NSLocalizedString("Password", comment: "")
+        let localizedPlaceholder = String(localized: .password)
         SWTextField(
             placeholder: localizedPlaceholder,
             text: $credentials.password,

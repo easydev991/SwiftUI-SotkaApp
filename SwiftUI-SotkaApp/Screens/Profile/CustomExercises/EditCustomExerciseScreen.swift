@@ -107,8 +107,10 @@ struct EditCustomExerciseScreen: View {
         .accessibilityLabel(.exerciseIcon)
     }
 
-    private var backButtonTitle: LocalizedStringKey {
-        oldItem == nil ? "Close" : "Cancel"
+    private var backButtonTitle: String {
+        oldItem == nil
+            ? String(localized: .close)
+            : String(localized: .cancel)
     }
 
     private var backButtonAccessibilityIdentifier: String {

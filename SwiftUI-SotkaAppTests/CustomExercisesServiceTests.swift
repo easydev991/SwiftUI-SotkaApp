@@ -261,14 +261,13 @@ struct CustomExercisesServiceTests {
         )
         mockClient.mockedCustomExercises = [serverExerciseResponse]
 
-        // Act - синхронизируем, но локальные изменения должны сохраниться
         await service.syncCustomExercises(context: context)
 
         // Assert
         let updatedExercise = try #require(context.fetch(FetchDescriptor<CustomExercise>()).first)
-        #expect(updatedExercise.name == "Локальное название (изменено)") // Локальные изменения должны сохраниться
-        #expect(updatedExercise.imageId == 1) // Локальные изменения должны сохраниться
-        #expect(!updatedExercise.isSynced) // Должно остаться несинхронизированным
+        #expect(updatedExercise.name == "Локальное название (изменено)")
+        #expect(updatedExercise.imageId == 1)
+        #expect(!updatedExercise.isSynced)
     }
 
     @Test
@@ -297,6 +296,107 @@ struct CustomExercisesServiceTests {
         // Assert
         #expect(exercise.shouldDelete)
         #expect(!exercise.isSynced)
+    }
+
+    @Test("Пропускает обновление если данные не изменились и упражнение синхронизировано")
+    func skipUpdateWhenDataNotChangedAndSynced() async throws {
+        let mockClient = MockSWClient()
+        let service = CustomExercisesService(client: mockClient)
+        let container = try ModelContainer(
+            for: CustomExercise.self,
+            User.self,
+            configurations: ModelConfiguration(isStoredInMemoryOnly: true)
+        )
+        let context = container.mainContext
+
+        let user = User(id: 1, userName: "testuser", fullName: "Test User", email: "test@example.com")
+        context.insert(user)
+        try context.save()
+
+        let localDate = Date().addingTimeInterval(-3600)
+        let exercise = CustomExercise(
+            id: "test-exercise",
+            name: "Test Exercise",
+            imageId: 1,
+            createDate: localDate,
+            modifyDate: localDate,
+            user: user
+        )
+        exercise.isSynced = true
+        context.insert(exercise)
+        try context.save()
+
+        let serverDate = Date().addingTimeInterval(-1800)
+        let serverResponse = CustomExerciseResponse(
+            id: "test-exercise",
+            name: "Test Exercise",
+            imageId: 1,
+            createDate: DateFormatterService.stringFromFullDate(localDate, format: .serverDateTimeSec),
+            modifyDate: DateFormatterService.stringFromFullDate(serverDate, format: .serverDateTimeSec)
+        )
+        mockClient.mockedCustomExercises = [serverResponse]
+
+        await service.syncCustomExercises(context: context)
+
+        let updatedExercise = try #require(context.fetch(FetchDescriptor<CustomExercise>()).first)
+        #expect(updatedExercise.name == "Test Exercise")
+        #expect(updatedExercise.imageId == 1)
+        #expect(updatedExercise.isSynced)
+    }
+
+    @Test("Пропускает обновление при одинаковых датах")
+    func skipUpdateWhenDatesAreEqual() async throws {
+        let mockClient = MockSWClient()
+        let service = CustomExercisesService(client: mockClient)
+        let container = try ModelContainer(
+            for: CustomExercise.self,
+            User.self,
+            configurations: ModelConfiguration(isStoredInMemoryOnly: true)
+        )
+        let context = container.mainContext
+
+        let user = User(id: 1, userName: "testuser", fullName: "Test User", email: "test@example.com")
+        context.insert(user)
+        try context.save()
+
+        let baseDate = Date(timeIntervalSince1970: 1_700_000_000)
+        let exercise = CustomExercise(
+            id: "test-exercise",
+            name: "Local Name",
+            imageId: 1,
+            createDate: baseDate,
+            modifyDate: baseDate,
+            user: user
+        )
+        exercise.isSynced = true
+        context.insert(exercise)
+        try context.save()
+
+        let utcTimeZone = TimeZone(secondsFromGMT: 0)
+        let serverResponse = CustomExerciseResponse(
+            id: "test-exercise",
+            name: "Server Name",
+            imageId: 2,
+            createDate: DateFormatterService.stringFromFullDate(
+                baseDate,
+                format: .serverDateTimeSec,
+                timeZone: utcTimeZone,
+                iso: false
+            ),
+            modifyDate: DateFormatterService.stringFromFullDate(
+                baseDate,
+                format: .serverDateTimeSec,
+                timeZone: utcTimeZone,
+                iso: false
+            )
+        )
+        mockClient.mockedCustomExercises = [serverResponse]
+
+        await service.syncCustomExercises(context: context)
+
+        let updatedExercise = try #require(context.fetch(FetchDescriptor<CustomExercise>()).first)
+        #expect(updatedExercise.name == "Local Name")
+        #expect(updatedExercise.imageId == 1)
     }
 }
 

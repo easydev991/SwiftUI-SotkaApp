@@ -2,14 +2,14 @@ import SwiftUI
 
 /// Выглядит аналогично стандартному заголовку/футеру секции в списке/форме
 struct SectionSupplementaryView: View {
-    private let text: LocalizedStringKey
+    private let text: String
     private let mode: Mode
 
     /// Инициализирует `SectionHeaderView`
     /// - Parameters:
     ///   - text: Текст
     ///   - mode: Режим (заголовок/футер)
-    init(_ text: LocalizedStringKey, mode: Mode) {
+    init(_ text: String, mode: Mode) {
         self.text = text
         self.mode = mode
     }

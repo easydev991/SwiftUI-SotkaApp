@@ -19,7 +19,7 @@ struct RootScreen: View {
             isPresented: $settings.showNotificationError,
             error: appSettings.notificationError
         ) {
-            Button("Cancel", role: .cancel) {}
+            Button(.cancel, role: .cancel) {}
             Button(.goToSettings) {
                 let settingsUrl = URL(string: UIApplication.openSettingsURLString)
                 URLOpener.open(settingsUrl)

@@ -139,6 +139,28 @@ extension SWClient: ProgressClient {
     }
 }
 
+extension SWClient: DaysClient {
+    func getDays() async throws -> [DayResponse] {
+        let endpoint = Endpoint.getDays
+        return try await makeResult(for: endpoint)
+    }
+
+    func createDay(_ day: DayRequest) async throws -> DayResponse {
+        let endpoint = Endpoint.createDay(day)
+        return try await makeResult(for: endpoint)
+    }
+
+    func updateDay(model: DayRequest) async throws -> DayResponse {
+        let endpoint = Endpoint.updateDay(dayModel: model)
+        return try await makeResult(for: endpoint)
+    }
+
+    func deleteDay(day: Int) async throws {
+        let endpoint = Endpoint.deleteDay(day: day)
+        try await makeStatus(for: endpoint)
+    }
+}
+
 enum ClientError: Error, LocalizedError {
     case forceLogout
     case noConnection
@@ -235,6 +257,16 @@ enum Endpoint {
     /// **DELETE** ${API}/100/progress/<day>/photos/<type>
     case deleteProgressPhoto(day: Int, type: String)
 
+    // MARK: Дни тренировок (дневник)
+    /// **GET** ${API}/100/days
+    case getDays
+    /// **POST** ${API}/100/days
+    case createDay(_ day: DayRequest)
+    /// **POST** ${API}/100/days/<day>
+    case updateDay(dayModel: DayRequest)
+    /// **DELETE** ${API}/100/days/<day>
+    case deleteDay(day: Int)
+
     var urlPath: String {
         switch self {
         case .getCountries: "/countries"
@@ -257,16 +289,19 @@ enum Endpoint {
         case let .updateProgress(day, _): "/100/progress/\(day)"
         case let .deleteProgress(day): "/100/progress/\(day)"
         case let .deleteProgressPhoto(day, type): "/100/progress/\(day)/photos/\(type)"
+        case .getDays, .createDay: "/100/days"
+        case let .updateDay(dayModel): "/100/days/\(dayModel.id)"
+        case let .deleteDay(day): "/100/days/\(day)"
         }
     }
 
     var method: HTTPMethod {
         switch self {
         case .login, .resetPassword, .editUser, .changePassword, .start, .saveCustomExercise, .setPostRead, .createProgress,
-             .updateProgress: .post
+             .updateProgress, .createDay, .updateDay: .post
         case .getProgressDay: .get
-        case .getUser, .getCountries, .current, .getCustomExercises, .getReadPosts, .getProgress: .get
-        case .deleteCustomExercise, .deleteAllReadPosts, .deleteProgress, .deleteProgressPhoto: .delete
+        case .getUser, .getCountries, .current, .getCustomExercises, .getReadPosts, .getProgress, .getDays: .get
+        case .deleteCustomExercise, .deleteAllReadPosts, .deleteProgress, .deleteProgressPhoto, .deleteDay: .delete
         }
     }
 
@@ -276,7 +311,7 @@ enum Endpoint {
         case .getProgressDay: false
         case .login, .getUser, .resetPassword, .getCountries, .changePassword, .start, .current, .getCustomExercises, .saveCustomExercise,
              .deleteCustomExercise, .getReadPosts, .setPostRead, .deleteAllReadPosts, .getProgress, .deleteProgress,
-             .deleteProgressPhoto: false
+             .deleteProgressPhoto, .getDays, .createDay, .updateDay, .deleteDay: false
         }
     }
 
@@ -285,25 +320,17 @@ enum Endpoint {
         case .login, .getUser, .resetPassword, .getCountries, .editUser, .changePassword, .start, .current, .getCustomExercises,
              .saveCustomExercise, .deleteCustomExercise, .getReadPosts, .setPostRead, .deleteAllReadPosts, .getProgress, .getProgressDay,
              .createProgress,
-             .updateProgress, .deleteProgress, .deleteProgressPhoto: []
+             .updateProgress, .deleteProgress, .deleteProgressPhoto, .getDays, .createDay, .updateDay, .deleteDay: []
         }
     }
 
     var bodyParts: BodyMaker.Parts? {
         switch self {
         case .login, .getUser, .getCountries, .current, .getCustomExercises, .deleteCustomExercise, .getReadPosts, .setPostRead,
-             .deleteAllReadPosts, .getProgress, .getProgressDay, .deleteProgress, .deleteProgressPhoto:
+             .deleteAllReadPosts, .getProgress, .getProgressDay, .deleteProgress, .deleteProgressPhoto, .getDays, .deleteDay:
             return nil
         case let .editUser(_, form):
-            let parameters: [String: String] = [
-                "name": form.userName,
-                "fullname": form.fullName,
-                "email": form.email,
-                "gender": form.genderCode.description,
-                "country_id": form.country.id,
-                "city_id": form.city.id,
-                "birth_date": form.birthDateIsoString
-            ]
+            let parameters = form.requestParameters
             let mediaFiles: [BodyMaker.MediaFile]? = if let image = form.image {
                 [
                     BodyMaker.MediaFile(
@@ -324,28 +351,9 @@ enum Endpoint {
         case let .start(date):
             return .init(["date": date], nil)
         case let .saveCustomExercise(_, exercise):
-            let parameters: [String: String] = [
-                "id": exercise.id,
-                "name": exercise.name,
-                "image_id": String(exercise.imageId),
-                "create_date": exercise.createDate,
-                "is_hidden": String(exercise.isHidden)
-            ]
-            if let modifyDate = exercise.modifyDate {
-                var mutableParameters = parameters
-                mutableParameters["modify_date"] = modifyDate
-                return .init(mutableParameters, nil)
-            }
-            return .init(parameters, nil)
+            return .init(exercise.formParameters, nil)
         case let .createProgress(progress), let .updateProgress(_, progress):
-            let parameters: [String: String] = [
-                "id": String(progress.id),
-                "pullups": String(progress.pullups ?? 0),
-                "pushups": String(progress.pushups ?? 0),
-                "squats": String(progress.squats ?? 0),
-                "weight": String(progress.weight ?? 0),
-                "modify_date": progress.modifyDate
-            ]
+            let parameters = progress.requestParameters
 
             // Пустые медиа-файлы для удаления фото добавляются ниже
             // Создаем медиа-файлы для отправки фото
@@ -376,6 +384,8 @@ enum Endpoint {
             }
 
             return .init(parameters, mediaFiles)
+        case let .createDay(dayModel), let .updateDay(dayModel):
+            return .init(dayModel.formParameters, nil)
         }
     }
 }

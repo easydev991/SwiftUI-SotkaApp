@@ -1,11 +1,11 @@
 import SwiftUI
 
 /// Тип выполнения упражнений
-enum ExerciseExecutionType {
+enum ExerciseExecutionType: Int {
     /// Круги
-    case cycles
+    case cycles = 0
     /// Подходы
-    case sets
+    case sets = 1
 
     var localizedTitle: String {
         switch self {

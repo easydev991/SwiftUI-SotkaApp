@@ -11,7 +11,8 @@ extension StatusManager {
                 language: "ru",
                 infopostsClient: MockInfopostsClient(result: .success)
             ),
-            progressSyncService: ProgressSyncService(client: MockProgressClient(result: .success))
+            progressSyncService: ProgressSyncService(client: MockProgressClient(result: .success)),
+            dailyActivitiesService: DailyActivitiesService(client: MockDaysClient(result: .success))
         )
     }
 }
