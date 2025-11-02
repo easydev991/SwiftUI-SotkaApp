@@ -73,3 +73,10 @@ extension DayActivityTraining {
         )
     }
 }
+
+extension [DayActivityTraining] {
+    /// Отсортированный массив тренировок по порядку следования (`sortOrder`)
+    var sorted: [DayActivityTraining] {
+        sorted(by: { ($0.sortOrder ?? 0) < ($1.sortOrder ?? 0) })
+    }
+}

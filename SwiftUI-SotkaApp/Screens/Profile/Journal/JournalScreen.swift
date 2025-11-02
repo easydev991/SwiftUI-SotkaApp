@@ -16,6 +16,7 @@ struct JournalScreen: View {
             }
         }
         .animation(.default, value: displayMode)
+        .background(Color.swBackground)
         .navigationTitle(.journal)
         .navigationBarTitleDisplayMode(.inline)
     }
@@ -46,12 +47,15 @@ private extension JournalScreen {
             }
         }
         .pickerStyle(.segmented)
-        .padding([.top, .horizontal])
+        .padding(.horizontal)
     }
 }
 
 #if DEBUG
 #Preview {
-    JournalScreen(user: .init(from: .preview))
+    NavigationStack {
+        JournalScreen(user: .init(from: .preview))
+            .environment(DailyActivitiesService(client: MockDaysClient(result: .success)))
+    }
 }
 #endif

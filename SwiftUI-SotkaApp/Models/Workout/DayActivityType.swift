@@ -1,7 +1,8 @@
 import SwiftUI
 
 /// Тип активности на день
-enum DayActivityType: Int, CaseIterable {
+enum DayActivityType: Int, CaseIterable, Identifiable {
+    var id: Int { rawValue }
     /// Тренировка
     case workout = 0
     /// Растяжка

@@ -98,6 +98,11 @@ extension User {
         return count > 0 ? "\(count)" : ""
     }
 
+    /// Словарь активностей по номеру дня для быстрого поиска
+    var activitiesByDay: [Int: DayActivity] {
+        Dictionary(dayActivities.map { ($0.day, $0) }, uniquingKeysWith: { $1 })
+    }
+
     /// Проверяет, заполнены ли результаты для текущего дня
     func isMaximumsFilled(for currentDay: Int) -> Bool {
         // Используем UserProgress.Section для определения дня прогресса

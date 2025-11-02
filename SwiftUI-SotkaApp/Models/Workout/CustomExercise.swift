@@ -1,5 +1,6 @@
 import Foundation
 import SwiftData
+import SwiftUI
 import SWUtils
 
 /// Модель пользовательского упражнения для хранения в Swift Data
@@ -64,9 +65,19 @@ final class CustomExercise {
     }
 }
 
-import SwiftUI
-
 extension CustomExercise {
+    /// Получает пользовательское упражнение по идентификатору из контекста модели
+    /// - Parameters:
+    ///   - id: Идентификатор упражнения
+    ///   - context: Контекст модели SwiftData
+    /// - Returns: Найденное упражнение или `nil`, если не найдено
+    static func fetch(by id: String, in context: ModelContext) -> CustomExercise? {
+        let descriptor = FetchDescriptor<CustomExercise>(
+            predicate: #Predicate { $0.id == id }
+        )
+        return try? context.fetch(descriptor).first
+    }
+
     var image: Image {
         guard let customType = ExerciseType.CustomType(rawValue: imageId) else {
             return Image(systemName: "questionmark.square")

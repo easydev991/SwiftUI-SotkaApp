@@ -323,4 +323,94 @@ struct UserTests {
 
         #expect(user.isMaximumsFilled(for: currentDay) == expected)
     }
+
+    // MARK: - activitiesByDay Tests
+
+    @Test("activitiesByDay возвращает пустой словарь для пользователя без активностей")
+    func activitiesByDayWithEmptyActivities() {
+        let user = User(id: 1)
+        let activitiesByDay = user.activitiesByDay
+        #expect(activitiesByDay.isEmpty)
+    }
+
+    @Test("activitiesByDay возвращает словарь с одной активностью")
+    @MainActor
+    func activitiesByDayWithSingleActivity() throws {
+        let container = try ModelContainer(
+            for: User.self,
+            DayActivity.self,
+            configurations: ModelConfiguration(isStoredInMemoryOnly: true)
+        )
+        let context = container.mainContext
+
+        let user = User(id: 1)
+        context.insert(user)
+
+        let dayActivity = DayActivity(day: 5, createDate: Date(), modifyDate: Date(), user: user)
+        context.insert(dayActivity)
+        try context.save()
+
+        let activitiesByDay = user.activitiesByDay
+        #expect(activitiesByDay.count == 1)
+        let activity = try #require(activitiesByDay[5])
+        #expect(activity.day == 5)
+    }
+
+    @Test("activitiesByDay возвращает словарь с несколькими активностями")
+    @MainActor
+    func activitiesByDayWithMultipleActivities() throws {
+        let container = try ModelContainer(
+            for: User.self,
+            DayActivity.self,
+            configurations: ModelConfiguration(isStoredInMemoryOnly: true)
+        )
+        let context = container.mainContext
+
+        let user = User(id: 1)
+        context.insert(user)
+
+        let dayActivity1 = DayActivity(day: 1, createDate: Date(), modifyDate: Date(), user: user)
+        let dayActivity2 = DayActivity(day: 10, createDate: Date(), modifyDate: Date(), user: user)
+        let dayActivity3 = DayActivity(day: 50, createDate: Date(), modifyDate: Date(), user: user)
+        context.insert(dayActivity1)
+        context.insert(dayActivity2)
+        context.insert(dayActivity3)
+        try context.save()
+
+        let activitiesByDay = user.activitiesByDay
+        #expect(activitiesByDay.count == 3)
+        let activity1 = try #require(activitiesByDay[1])
+        let activity2 = try #require(activitiesByDay[10])
+        let activity3 = try #require(activitiesByDay[50])
+        #expect(activity1.day == 1)
+        #expect(activity2.day == 10)
+        #expect(activity3.day == 50)
+    }
+
+    @Test("activitiesByDay оставляет одну активность при дубликатах дней")
+    @MainActor
+    func activitiesByDayWithDuplicateDays() throws {
+        let container = try ModelContainer(
+            for: User.self,
+            DayActivity.self,
+            configurations: ModelConfiguration(isStoredInMemoryOnly: true)
+        )
+        let context = container.mainContext
+
+        let user = User(id: 1)
+        context.insert(user)
+
+        let dayActivity1 = DayActivity(day: 5, count: 10, createDate: Date(), modifyDate: Date(), user: user)
+        let dayActivity2 = DayActivity(day: 5, count: 20, createDate: Date(), modifyDate: Date(), user: user)
+        context.insert(dayActivity1)
+        context.insert(dayActivity2)
+        try context.save()
+
+        let activitiesByDay = user.activitiesByDay
+        #expect(activitiesByDay.count == 1)
+        let activity = try #require(activitiesByDay[5])
+        #expect(activity.day == 5)
+        let count = try #require(activity.count)
+        #expect(count == 10 || count == 20)
+    }
 }

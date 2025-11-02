@@ -435,4 +435,127 @@ struct DayActivityTests {
         #expect(firstTraining.count == 5)
         #expect(lastTraining.count == 10)
     }
+
+    // MARK: - DayActivityTraining sorted Tests
+
+    @Test("sorted возвращает пустой массив для пустого массива тренировок")
+    func sortedWithEmptyArray() {
+        let trainings: [DayActivityTraining] = []
+        let sorted = trainings.sorted
+        #expect(sorted.isEmpty)
+    }
+
+    @Test("sorted возвращает отсортированный массив тренировок по sortOrder")
+    @MainActor
+    func sortedWithMultipleTrainings() throws {
+        let container = try ModelContainer(
+            for: DayActivityTraining.self,
+            configurations: ModelConfiguration(isStoredInMemoryOnly: true)
+        )
+        let context = container.mainContext
+
+        let training1 = DayActivityTraining(count: 10, sortOrder: 2)
+        let training2 = DayActivityTraining(count: 20, sortOrder: 0)
+        let training3 = DayActivityTraining(count: 30, sortOrder: 1)
+        context.insert(training1)
+        context.insert(training2)
+        context.insert(training3)
+        try context.save()
+
+        let trainings = [training1, training2, training3]
+        let sorted = trainings.sorted
+
+        #expect(sorted.count == 3)
+        let first = try #require(sorted.first)
+        let last = try #require(sorted.last)
+        let firstSortOrder = try #require(first.sortOrder)
+        let lastSortOrder = try #require(last.sortOrder)
+        #expect(firstSortOrder == 0)
+        #expect(lastSortOrder == 2)
+        #expect(first.count == 20)
+        #expect(last.count == 10)
+    }
+
+    @Test("sorted обрабатывает тренировки с nil sortOrder")
+    @MainActor
+    func sortedWithNilSortOrder() throws {
+        let container = try ModelContainer(
+            for: DayActivityTraining.self,
+            configurations: ModelConfiguration(isStoredInMemoryOnly: true)
+        )
+        let context = container.mainContext
+
+        let training1 = DayActivityTraining(count: 10, sortOrder: 5)
+        let training2 = DayActivityTraining(count: 20, sortOrder: nil)
+        let training3 = DayActivityTraining(count: 30, sortOrder: 2)
+        context.insert(training1)
+        context.insert(training2)
+        context.insert(training3)
+        try context.save()
+
+        let trainings = [training1, training2, training3]
+        let sorted = trainings.sorted
+
+        #expect(sorted.count == 3)
+        let first = try #require(sorted.first)
+        let last = try #require(sorted.last)
+        #expect(first.sortOrder == nil || first.sortOrder == 2)
+        #expect(last.sortOrder == 5)
+        #expect(first.count == 20 || first.count == 30)
+        #expect(last.count == 10)
+    }
+
+    @Test("sorted обрабатывает тренировки с одинаковым sortOrder")
+    @MainActor
+    func sortedWithSameSortOrder() throws {
+        let container = try ModelContainer(
+            for: DayActivityTraining.self,
+            configurations: ModelConfiguration(isStoredInMemoryOnly: true)
+        )
+        let context = container.mainContext
+
+        let training1 = DayActivityTraining(count: 10, sortOrder: 1)
+        let training2 = DayActivityTraining(count: 20, sortOrder: 1)
+        let training3 = DayActivityTraining(count: 30, sortOrder: 0)
+        context.insert(training1)
+        context.insert(training2)
+        context.insert(training3)
+        try context.save()
+
+        let trainings = [training1, training2, training3]
+        let sorted = trainings.sorted
+
+        #expect(sorted.count == 3)
+        let first = try #require(sorted.first)
+        let firstSortOrder = try #require(first.sortOrder)
+        #expect(firstSortOrder == 0)
+        #expect(first.count == 30)
+    }
+
+    @Test("sorted сохраняет исходный массив без изменений")
+    @MainActor
+    func sortedPreservesOriginalArray() throws {
+        let container = try ModelContainer(
+            for: DayActivityTraining.self,
+            configurations: ModelConfiguration(isStoredInMemoryOnly: true)
+        )
+        let context = container.mainContext
+
+        let training1 = DayActivityTraining(count: 10, sortOrder: 2)
+        let training2 = DayActivityTraining(count: 20, sortOrder: 0)
+        context.insert(training1)
+        context.insert(training2)
+        try context.save()
+
+        let trainings = [training1, training2]
+        let sorted = trainings.sorted
+
+        #expect(trainings.count == sorted.count)
+        let originalFirst = try #require(trainings.first)
+        let sortedFirst = try #require(sorted.first)
+        let originalFirstSortOrder = try #require(originalFirst.sortOrder)
+        let sortedFirstSortOrder = try #require(sortedFirst.sortOrder)
+        #expect(originalFirstSortOrder == 2)
+        #expect(sortedFirstSortOrder == 0)
+    }
 }
