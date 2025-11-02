@@ -26,14 +26,13 @@ struct SwiftUI_SotkaAppApp: App {
     init() {
         let authHelper = AuthHelperImp()
         let client = SWClient(with: authHelper)
-        let progressSyncService = ProgressSyncService(client: client)
         self.statusManager = StatusManager(
             customExercisesService: .init(client: client),
             infopostsService: .init(
                 language: Locale.current.language.languageCode?.identifier ?? "ru",
                 infopostsClient: client
             ),
-            progressSyncService: progressSyncService,
+            progressSyncService: .init(client: client),
             dailyActivitiesService: .init(client: client)
         )
         self.authHelper = authHelper
@@ -80,6 +79,7 @@ struct SwiftUI_SotkaAppApp: App {
             .environment(authHelper)
             .environment(statusManager)
             .environment(statusManager.customExercisesService)
+            .environment(statusManager.dailyActivitiesService)
             .environment(statusManager.infopostsService)
             .currentDay(statusManager.currentDayCalculator?.currentDay)
             .environment(youtubeVideoService)
