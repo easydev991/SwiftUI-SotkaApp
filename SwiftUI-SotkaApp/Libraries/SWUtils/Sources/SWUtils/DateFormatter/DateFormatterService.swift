@@ -81,6 +81,26 @@ public enum DateFormatterService {
         )
         return components.day ?? 0
     }
+
+    /// Форматирует дату в читаемый формат с днём недели
+    /// - Parameters:
+    ///   - date: Дата для форматирования
+    ///   - locale: Локаль для форматирования (по умолчанию текущая локаль системы)
+    /// - Returns: Отформатированная строка в формате "d MMM yyyy (EEEE)" или аналогичном для текущей локали
+    public static func dateWithWeekday(
+        _ date: Date,
+        locale: Locale = .autoupdatingCurrent
+    ) -> String {
+        let formatter = DateFormatter()
+        formatter.locale = locale
+        // Форматируем дату: день, месяц, год
+        formatter.dateFormat = DateFormat.dayMonthYear.rawValue
+        let datePart = formatter.string(from: date)
+        // Форматируем день недели
+        formatter.dateFormat = "EEEE"
+        let weekdayPart = formatter.string(from: date)
+        return "\(datePart) (\(weekdayPart))"
+    }
 }
 
 public extension DateFormatterService {

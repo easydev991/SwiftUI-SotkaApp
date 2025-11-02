@@ -1,19 +1,23 @@
 import SWDesignSystem
-import SwiftData
 import SwiftUI
 
 struct JournalScreen: View {
-    @Environment(DailyActivitiesService.self) private var activitiesService
-    @Environment(\.modelContext) private var modelContext
     @AppStorage(DisplayMode.appStorageKey) private var displayMode = DisplayMode.grid
     let user: User
 
     var body: some View {
         VStack(spacing: 12) {
             displayModePicker
-            Text(.journal)
+            switch displayMode {
+            case .list:
+                JournalListView(user: user)
+            case .grid:
+                JournalGridView(user: user)
+            }
         }
+        .animation(.default, value: displayMode)
         .navigationTitle(.journal)
+        .navigationBarTitleDisplayMode(.inline)
     }
 }
 
@@ -49,6 +53,5 @@ private extension JournalScreen {
 #if DEBUG
 #Preview {
     JournalScreen(user: .init(from: .preview))
-        .environment(DailyActivitiesService(client: MockDaysClient(result: .success)))
 }
 #endif

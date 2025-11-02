@@ -26,7 +26,7 @@ private extension HomeActivitySectionView {
                     .fill(activityType.color)
                     .frame(maxHeight: 80)
                     .overlay {
-                        Image(systemName: activityType.iconName)
+                        activityType.image
                             .resizable()
                             .aspectRatio(contentMode: .fit)
                             .frame(width: 40, height: 40)

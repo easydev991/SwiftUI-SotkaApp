@@ -29,12 +29,12 @@ enum DayActivityType: Int, CaseIterable {
         }
     }
 
-    var iconName: String {
+    var image: Image {
         switch self {
-        case .workout: "figure.play"
-        case .stretch: "figure.flexibility"
-        case .rest: "chair.lounge"
-        case .sick: "medical.thermometer"
+        case .workout: Image(systemName: "figure.play")
+        case .stretch: Image(systemName: "figure.flexibility")
+        case .rest: Image(systemName: "chair.lounge")
+        case .sick: Image(systemName: "medical.thermometer")
         }
     }
 }

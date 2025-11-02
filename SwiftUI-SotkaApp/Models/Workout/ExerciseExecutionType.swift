@@ -13,4 +13,8 @@ enum ExerciseExecutionType: Int {
         case .sets: String(localized: .sets)
         }
     }
+
+    var image: Image {
+        .init(systemName: "arrow.2.squarepath")
+    }
 }
