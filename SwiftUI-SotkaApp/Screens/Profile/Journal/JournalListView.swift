@@ -92,7 +92,7 @@ private extension JournalListView {
             }
             return nil
         } else if let exerciseType = training.exerciseType {
-            return String(localized: exerciseType.localizedTitle)
+            return exerciseType.localizedTitle
         }
         return nil
     }

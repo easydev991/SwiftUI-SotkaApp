@@ -83,35 +83,35 @@ enum ExerciseType: Int {
     /// турбо-приседания 98 (лесенка)
     case turbo98Squats = 983
 
-    var localizedTitle: LocalizedStringResource {
+    var localizedTitle: String {
         switch self {
-        case .pullups: "Pull-ups"
-        case .austrPullups: "Australian pull-ups"
-        case .squats: "Squats"
-        case .pushups: "Push-ups"
-        case .pushupsKnees: "Knees push-ups"
-        case .lunges: "Lunges"
-        case .turbo93_1: "Turbo 93-1"
-        case .turbo93_2: "Turbo 93-2"
-        case .turbo93_3: "Turbo 93-3"
-        case .turbo93_4: "Turbo 93-4"
-        case .turbo93_5: "Turbo 93-5"
-        case .turbo94Pushups: "Turbo 94 push-ups"
-        case .turbo94Squats: "Turbo 94 squats"
-        case .turbo94Pullups: "Turbo 94 pull-ups"
-        case .turbo95_1: "Turbo 95-1"
-        case .turbo95_2: "Turbo 95-2"
-        case .turbo95_3: "Turbo 95-3"
-        case .turbo95_4: "Turbo 95-4"
-        case .turbo95_5: "Turbo 95-5"
-        case .turbo96Pushups: "Turbo 96 push-ups"
-        case .turbo96Squats: "Turbo 96 squats"
-        case .turbo96Pullups: "Turbo 96 pull-ups"
-        case .turbo97PushupsHigh: "Turbo 97 push-ups high"
-        case .turbo97PushupsHighArms: "Turbo 97 push-ups high arms"
-        case .turbo98Pushups: "Turbo 98 push-ups"
-        case .turbo98Squats: "Turbo 98 squats"
-        case .turbo98Pullups: "Turbo 98 pull-ups"
+        case .pullups: String(localized: .pullUps)
+        case .austrPullups: String(localized: .australianPullUps)
+        case .squats: String(localized: .squats)
+        case .pushups: String(localized: .pushUps)
+        case .pushupsKnees: String(localized: .kneesPushUps)
+        case .lunges: String(localized: .lunges)
+        case .turbo93_1: String(localized: .turbo931)
+        case .turbo93_2: String(localized: .turbo932)
+        case .turbo93_3: String(localized: .turbo933)
+        case .turbo93_4: String(localized: .turbo934)
+        case .turbo93_5: String(localized: .turbo935)
+        case .turbo94Pushups: String(localized: .turbo94PushUps)
+        case .turbo94Squats: String(localized: .turbo94Squats)
+        case .turbo94Pullups: String(localized: .turbo94PullUps)
+        case .turbo95_1: String(localized: .turbo951)
+        case .turbo95_2: String(localized: .turbo952)
+        case .turbo95_3: String(localized: .turbo953)
+        case .turbo95_4: String(localized: .turbo954)
+        case .turbo95_5: String(localized: .turbo955)
+        case .turbo96Pushups: String(localized: .turbo96PushUps)
+        case .turbo96Squats: String(localized: .turbo96Squats)
+        case .turbo96Pullups: String(localized: .turbo96PullUps)
+        case .turbo97PushupsHigh: String(localized: .turbo97PushUpsHigh)
+        case .turbo97PushupsHighArms: String(localized: .turbo97PushUpsHighArms)
+        case .turbo98Pushups: String(localized: .turbo98PushUps)
+        case .turbo98Squats: String(localized: .turbo98Squats)
+        case .turbo98Pullups: String(localized: .turbo98PullUps)
         }
     }
 

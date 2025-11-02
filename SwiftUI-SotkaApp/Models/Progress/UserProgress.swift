@@ -209,9 +209,9 @@ extension UserProgress {
         var localizedTitle: String {
             switch self {
             case .weight: String(localized: .weight)
-            case .pullUps: String(localized: ExerciseType.pullups.localizedTitle)
-            case .pushUps: String(localized: ExerciseType.pushups.localizedTitle)
-            case .squats: String(localized: ExerciseType.squats.localizedTitle)
+            case .pullUps: ExerciseType.pullups.localizedTitle
+            case .pushUps: ExerciseType.pushups.localizedTitle
+            case .squats: ExerciseType.squats.localizedTitle
             }
         }
 
