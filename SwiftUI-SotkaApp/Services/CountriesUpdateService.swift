@@ -78,11 +78,12 @@ final class CountriesUpdateService {
             logger.info("Успешно синхронизировали страны и города")
         } catch {
             logger.error("Не удалось обновить страны и города, ошибка: \(error.localizedDescription)")
-            let localizedTitle = String(localized: .errorCountriesUpdate)
-            SWAlert.shared.presentDefaultUIKit(
-                error,
-                title: localizedTitle
-            )
+            if lastCountriesUpdateDate == nil {
+                SWAlert.shared.presentDefaultUIKit(
+                    error,
+                    title: String(localized: .errorCountriesUpdate)
+                )
+            }
         }
         isLoading = false
     }
