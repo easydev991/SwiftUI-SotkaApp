@@ -14,6 +14,7 @@ struct DayActivityHeaderView: View {
                 .font(.headline)
             subtitleView
                 .font(.subheadline)
+                .transition(.slide.combined(with: .opacity))
         }
         .opacity(isEnabled ? 1 : 0.6)
     }
@@ -58,5 +59,4 @@ private extension DayActivityHeaderView {
         )
         .disabled(true)
     }
-    .padding()
 }

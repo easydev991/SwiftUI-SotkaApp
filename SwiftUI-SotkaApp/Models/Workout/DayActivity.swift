@@ -193,4 +193,66 @@ extension DayActivity {
 
         return basicDataChanged || trainingsChanged
     }
+
+    /// Устанавливает тип активности для stretch/rest/sick и очищает тренировочные данные
+    ///
+    /// Используется для установки активности дня через главный экран
+    /// - Parameters:
+    ///   - activityType: Тип активности (`stretch`, `rest`, `sick`)
+    ///   - user: Пользователь, которому принадлежит активность
+    func setNonWorkoutType(_ activityType: DayActivityType, user: User) {
+        let originalCreateDate = createDate
+
+        // Устанавливаем тип активности
+        activityTypeRaw = activityType.rawValue
+
+        // Очищаем тренировочные данные
+        count = nil
+        trainings.removeAll()
+        executeTypeRaw = nil
+        trainingTypeRaw = nil
+
+        // Очищаем дополнительные данные
+        comment = nil
+        duration = nil
+
+        // Обновляем флаги синхронизации и даты
+        modifyDate = .now
+        isSynced = false
+        shouldDelete = false
+
+        // Сохраняем оригинальный createDate
+        createDate = originalCreateDate
+
+        // Убеждаемся, что активность привязана к пользователю
+        self.user = user
+    }
+
+    /// Создает новую активность для stretch/rest/sick без тренировочных данных
+    /// - Parameters:
+    ///   - day: Номер дня (1-100)
+    ///   - activityType: Тип активности (stretch, rest, sick)
+    ///   - user: Пользователь, которому принадлежит активность
+    /// - Returns: Новая активность дня
+    static func createNonWorkoutActivity(day: Int, activityType: DayActivityType, user: User) -> DayActivity {
+        let activity = DayActivity(
+            day: day,
+            activityTypeRaw: activityType.rawValue,
+            count: nil,
+            plannedCount: nil,
+            executeTypeRaw: nil,
+            trainingTypeRaw: nil,
+            duration: nil,
+            comment: nil,
+            createDate: .now,
+            modifyDate: .now,
+            user: user
+        )
+
+        // Установка флагов синхронизации
+        activity.isSynced = false
+        activity.shouldDelete = false
+
+        return activity
+    }
 }

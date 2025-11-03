@@ -71,7 +71,22 @@ private extension JournalGridView {
         let activityColor = activity?.activityType?.color ?? Color.gray.opacity(0.2)
         let isToday = day == currentDay
         return Menu {
-            makeMenuContent(for: day, activity: activity)
+            DayActivityMenuView(
+                day: day,
+                activity: activity,
+                onComment: { day in
+                    print("TODO: комментировать день \(day)")
+                },
+                onDelete: { day in
+                    dayForConfirmationDialog = day
+                },
+                onSelectType: { day, activityType in
+                    if activityType == .workout {
+                        print("TODO: настроить тренировку, день \(day)")
+                    }
+                    activitiesService.set(activityType, for: day, context: modelContext)
+                }
+            )
         } label: {
             RoundedRectangle(cornerRadius: 4)
                 .fill(activityColor)
@@ -96,46 +111,12 @@ private extension JournalGridView {
     }
 
     @ViewBuilder
-    func makeMenuContent(for day: Int, activity: DayActivity?) -> some View {
-        Label(.day(number: day), systemImage: "calendar")
-        Divider()
-        if let activity {
-            if let currentActivityType = activity.activityType {
-                if currentActivityType == .workout {
-                    Button(.journalEdit) {
-                        print("TODO: изменить тренировку, день \(day)")
-                    }
-                } else {
-                    Menu(.journalEdit) {
-                        ForEach(DayActivityType.allCases.filter { $0 != currentActivityType }) { type in
-                            Button(type.localizedTitle) {
-                                print("TODO: изменить день \(day) на \(type.localizedTitle)")
-                            }
-                        }
-                    }
-                }
-            }
-            Button(.journalComment) {
-                print("TODO: комментировать день \(day)")
-            }
-            Button(.journalDelete, role: .destructive) {
-                dayForConfirmationDialog = day
-            }
-        } else {
-            ForEach(DayActivityType.allCases) { activityType in
-                Button(activityType.localizedTitle) {
-                    print("TODO: выбрать \(activityType.localizedTitle) для дня \(day)")
-                }
-            }
-        }
-    }
-
-    @ViewBuilder
     var confirmationDialogContent: some View {
-        if let day = dayForConfirmationDialog {
+        if let dayForConfirmationDialog,
+           let activity = activitiesByDay[dayForConfirmationDialog] {
             Button(.journalDelete, role: .destructive) {
-                print("TODO: удалить день \(day)")
-                dayForConfirmationDialog = nil
+                activitiesService.deleteDailyActivity(activity, context: modelContext)
+                self.dayForConfirmationDialog = nil
             }
         }
     }
@@ -145,6 +126,7 @@ private extension JournalGridView {
 #Preview("День 50") {
     JournalGridView(activitiesByDay: User.previewWithActivities.activitiesByDay)
         .environment(DailyActivitiesService(client: MockDaysClient(result: .success)))
+        .modelContainer(PreviewModelContainer.make(with: .previewWithActivities))
         .environment(\.currentDay, 50)
 }
 #endif

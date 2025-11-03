@@ -46,126 +46,43 @@ private extension JournalListView {
     }
 
     func makeRowView(for day: Int) -> some View {
-        VStack(alignment: .leading, spacing: 16) {
-            let activity = activitiesByDay[day]
-            makeHeaderView(for: day, activity: activity)
-            if let activity, let activityType = activity.activityType {
-                switch activityType {
-                case .workout:
-                    makeTrainingView(for: activity)
-                case .rest, .stretch, .sick:
-                    ActivityRowView(
-                        image: activityType.image,
-                        title: activityType.localizedTitle
-                    )
-                }
+        let activity = activitiesByDay[day]
+        return VStack(alignment: .leading, spacing: 16) {
+            DayActivityHeaderMenuView(day: day, activity: activity) {
+                DayActivityMenuView(
+                    day: day,
+                    activity: activity,
+                    onComment: { day in
+                        print("TODO: добавить комментарий, день \(day)")
+                    },
+                    onDelete: { day in
+                        dayForConfirmationDialog = day
+                    },
+                    onSelectType: { day, activityType in
+                        if activityType == .workout {
+                            print("TODO: настроить тренировку, день \(day)")
+                        }
+                        activitiesService.set(activityType, for: day, context: modelContext)
+                    }
+                )
+            }
+            if let activity {
+                DayActivityContentView(activity: activity)
+                    .transition(.scale.combined(with: .opacity))
             }
         }
+        .animation(.default, value: activity)
     }
 
     @ViewBuilder
     var confirmationDialogContent: some View {
-        if let day = dayForConfirmationDialog {
+        if let dayForConfirmationDialog,
+           let activity = activitiesByDay[dayForConfirmationDialog] {
             Button(.journalDelete, role: .destructive) {
-                print("TODO: удалить день \(day)")
-                dayForConfirmationDialog = nil
+                activitiesService.deleteDailyActivity(activity, context: modelContext)
+                self.dayForConfirmationDialog = nil
             }
         }
-    }
-
-    func makeHeaderView(for day: Int, activity: DayActivity?) -> some View {
-        HStack(spacing: 8) {
-            DayActivityHeaderView(
-                dayNumber: day,
-                activityDate: activity?.createDate
-            )
-            if day <= currentDay {
-                Menu {
-                    makeMenuContent(for: day, activity: activity)
-                } label: {
-                    Image(systemName: activity == nil ? "plus" : "ellipsis")
-                        .symbolVariant(.circle)
-                }
-            }
-        }
-    }
-
-    @ViewBuilder
-    func makeMenuContent(for day: Int, activity: DayActivity?) -> some View {
-        Label(.day(number: day), systemImage: "calendar")
-        Divider()
-        if let activity {
-            if let currentActivityType = activity.activityType {
-                if currentActivityType == .workout {
-                    Button(.journalEdit) {
-                        print("TODO: изменить тренировку, день \(day)")
-                    }
-                } else {
-                    Menu(.journalEdit) {
-                        ForEach(DayActivityType.allCases.filter { $0 != currentActivityType }) { type in
-                            Button(type.localizedTitle) {
-                                print("TODO: изменить день \(day) на \(type.localizedTitle)")
-                            }
-                        }
-                    }
-                }
-            }
-            Button(.journalComment) {
-                print("TODO: комментировать день \(day)")
-            }
-            Button(.journalDelete, role: .destructive) {
-                dayForConfirmationDialog = day
-            }
-        } else {
-            ForEach(DayActivityType.allCases) { activityType in
-                Button(activityType.localizedTitle) {
-                    print("TODO: выбрать \(activityType.localizedTitle) для дня \(day)")
-                }
-            }
-        }
-    }
-
-    func makeTrainingView(for activity: DayActivity) -> some View {
-        VStack(alignment: .leading, spacing: 12) {
-            if let executeType = activity.executeType,
-               let count = activity.count {
-                ActivityRowView(
-                    image: executeType.image,
-                    title: executeType.localizedTitle,
-                    count: count
-                )
-            }
-            ForEach(activity.trainings.sorted, id: \.persistentModelID) { training in
-                if let count = training.count {
-                    ActivityRowView(
-                        image: exerciseImage(for: training),
-                        title: exerciseTitle(for: training),
-                        count: count
-                    )
-                }
-            }
-        }
-    }
-
-    func exerciseImage(for training: DayActivityTraining) -> Image {
-        if let customTypeId = training.customTypeId,
-           let customExercise = CustomExercise.fetch(by: customTypeId, in: modelContext) {
-            customExercise.image
-        } else if let exerciseType = training.exerciseType {
-            exerciseType.image
-        } else {
-            .init(systemName: "questionmark.circle")
-        }
-    }
-
-    func exerciseTitle(for training: DayActivityTraining) -> String {
-        if let customTypeId = training.customTypeId,
-           let customExercise = CustomExercise.fetch(by: customTypeId, in: modelContext) {
-            return customExercise.name
-        } else if let exerciseType = training.exerciseType {
-            return exerciseType.localizedTitle
-        }
-        return String(localized: .exerciseTypeUnknown)
     }
 }
 

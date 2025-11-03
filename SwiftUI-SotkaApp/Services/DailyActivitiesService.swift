@@ -115,6 +115,124 @@ final class DailyActivitiesService {
         }
     }
 
+    /// Устанавливает активность для выбранного дня (офлайн-приоритет)
+    ///
+    /// Обрабатывает только типы `stretch`, `rest`, `sick`. Для типа workout метод логирует сообщение и возвращается без действий.
+    /// - Parameters:
+    ///   - activityType: Тип активности для установки
+    ///   - day: Номер дня (1-100)
+    ///   - context: Контекст SwiftData
+    func set(_ activityType: DayActivityType, for day: Int, context: ModelContext) {
+        if activityType == .workout {
+            logger.info("Пропускаем настройку тренировки с главного экрана")
+            return
+        }
+        guard let user = try? context.fetch(FetchDescriptor<User>()).first else {
+            logger.error("Пользователь не найден для установки активности дня")
+            return
+        }
+        // Находим существующую активность для дня (включая помеченные на удаление)
+        let existingActivities = (try? context.fetch(FetchDescriptor<DayActivity>())) ?? []
+        if let existingActivity = existingActivities.first(where: {
+            $0.day == day && $0.user?.id == user.id
+        }) {
+            // Если активность помечена на удаление - снимаем флаг и обновляем тип
+            let needsUpdate = existingActivity.activityType != activityType || existingActivity.shouldDelete
+
+            // Если активность существует с тем же типом и не помечена на удаление - ничего не делать
+            if !needsUpdate {
+                logger.debug("Активность дня \(day) уже имеет тип \(activityType.rawValue), пропускаем обновление")
+                return
+            }
+
+            // Если активность существует с другим типом - обновляем тип активности
+            existingActivity.setNonWorkoutType(activityType, user: user)
+
+            logger.info("Обновлена активность дня \(day) на тип \(activityType.rawValue)")
+        } else {
+            // Если активности для дня нет - создаем новую с указанным типом
+            let newActivity = DayActivity.createNonWorkoutActivity(
+                day: day,
+                activityType: activityType,
+                user: user
+            )
+
+            // Вставка активности в контекст
+            context.insert(newActivity)
+            logger.info("Создана новая активность дня \(day) с типом \(activityType.rawValue)")
+        }
+
+        // Сохранение контекста
+        do {
+            try context.save()
+            logger.info("Активность дня \(day) сохранена локально, синхронизация будет выполнена через syncDailyActivities")
+        } catch {
+            logger.error("Ошибка сохранения активности дня \(day): \(error.localizedDescription)")
+        }
+    }
+
+    /// Обновляет комментарий для активности дня (офлайн-приоритет)
+    /// - Parameters:
+    ///   - day: Номер дня (1-100)
+    ///   - comment: Комментарий (может быть nil для удаления)
+    ///   - context: Контекст SwiftData
+    func updateComment(day: Int, comment: String?, context: ModelContext) {
+        guard let user = try? context.fetch(FetchDescriptor<User>()).first else {
+            logger.error("Пользователь не найден для обновления комментария дня \(day)")
+            return
+        }
+
+        // Находим существующую активность для дня (включая помеченные на удаление)
+        let existingActivities = (try? context.fetch(FetchDescriptor<DayActivity>())) ?? []
+        if let existingActivity = existingActivities.first(where: {
+            $0.day == day && $0.user?.id == user.id
+        }) {
+            // Если активность помечена на удаление - снимаем флаг
+            if existingActivity.shouldDelete {
+                existingActivity.shouldDelete = false
+                existingActivity.user = user
+            }
+
+            // Обновляем комментарий
+            existingActivity.comment = comment
+            existingActivity.modifyDate = .now
+            existingActivity.isSynced = false
+
+            logger.info("Обновлен комментарий для активности дня \(day)")
+        } else {
+            // Если активности для дня нет - создаем новую с комментарием
+            let newActivity = DayActivity(
+                day: day,
+                activityTypeRaw: nil,
+                count: nil,
+                plannedCount: nil,
+                executeTypeRaw: nil,
+                trainingTypeRaw: nil,
+                duration: nil,
+                comment: comment,
+                createDate: .now,
+                modifyDate: .now,
+                user: user
+            )
+
+            // Установка флагов синхронизации
+            newActivity.isSynced = false
+            newActivity.shouldDelete = false
+
+            // Вставка активности в контекст
+            context.insert(newActivity)
+            logger.info("Создана новая активность дня \(day) с комментарием")
+        }
+
+        // Сохранение контекста
+        do {
+            try context.save()
+            logger.info("Комментарий для дня \(day) сохранен локально, синхронизация будет выполнена через syncDailyActivities")
+        } catch {
+            logger.error("Ошибка сохранения комментария для дня \(day): \(error.localizedDescription)")
+        }
+    }
+
     /// Синхронизирует ежедневные активности с сервером (двунаправленная синхронизация)
     /// - Parameter context: Контекст SwiftData
     func syncDailyActivities(context: ModelContext) async {

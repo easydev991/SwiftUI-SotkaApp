@@ -558,4 +558,325 @@ struct DayActivityTests {
         #expect(originalFirstSortOrder == 2)
         #expect(sortedFirstSortOrder == 0)
     }
+
+    // MARK: - setNonWorkoutType Tests
+
+    @Test("setNonWorkoutType устанавливает тип активности stretch")
+    @MainActor
+    func setNonWorkoutTypeSetsStretch() throws {
+        let container = try ModelContainer(
+            for: DayActivity.self,
+            DayActivityTraining.self,
+            User.self,
+            configurations: ModelConfiguration(isStoredInMemoryOnly: true)
+        )
+        let context = container.mainContext
+
+        let user = User(id: 1, userName: "testuser", fullName: "Test User", email: "test@example.com")
+        context.insert(user)
+        try context.save()
+
+        let originalCreateDate = Date().addingTimeInterval(-3600)
+        let activity = DayActivity(
+            day: 1,
+            activityTypeRaw: 0,
+            count: 5,
+            createDate: originalCreateDate,
+            modifyDate: originalCreateDate,
+            user: user
+        )
+        let training = DayActivityTraining(count: 10, typeId: 1, dayActivity: activity)
+        activity.trainings.append(training)
+        context.insert(activity)
+        try context.save()
+
+        activity.setNonWorkoutType(.stretch, user: user)
+
+        #expect(activity.activityType == .stretch)
+        #expect(activity.count == nil)
+        #expect(activity.trainings.isEmpty)
+        #expect(activity.executeTypeRaw == nil)
+        #expect(activity.trainingTypeRaw == nil)
+        #expect(activity.comment == nil)
+        #expect(activity.duration == nil)
+        #expect(!activity.isSynced)
+        #expect(!activity.shouldDelete)
+        #expect(activity.createDate == originalCreateDate)
+        let userFromActivity = try #require(activity.user)
+        #expect(userFromActivity.id == user.id)
+    }
+
+    @Test("setNonWorkoutType устанавливает тип активности rest")
+    @MainActor
+    func setNonWorkoutTypeSetsRest() throws {
+        let container = try ModelContainer(
+            for: DayActivity.self,
+            User.self,
+            configurations: ModelConfiguration(isStoredInMemoryOnly: true)
+        )
+        let context = container.mainContext
+
+        let user = User(id: 1, userName: "testuser", fullName: "Test User", email: "test@example.com")
+        context.insert(user)
+        try context.save()
+
+        let originalCreateDate = Date().addingTimeInterval(-3600)
+        let activity = DayActivity(
+            day: 2,
+            activityTypeRaw: 2,
+            count: nil,
+            createDate: originalCreateDate,
+            modifyDate: originalCreateDate,
+            user: user
+        )
+        context.insert(activity)
+        try context.save()
+
+        activity.setNonWorkoutType(.rest, user: user)
+
+        #expect(activity.activityType == .rest)
+        #expect(activity.createDate == originalCreateDate)
+    }
+
+    @Test("setNonWorkoutType устанавливает тип активности sick")
+    @MainActor
+    func setNonWorkoutTypeSetsSick() throws {
+        let container = try ModelContainer(
+            for: DayActivity.self,
+            User.self,
+            configurations: ModelConfiguration(isStoredInMemoryOnly: true)
+        )
+        let context = container.mainContext
+
+        let user = User(id: 1, userName: "testuser", fullName: "Test User", email: "test@example.com")
+        context.insert(user)
+        try context.save()
+
+        let originalCreateDate = Date().addingTimeInterval(-3600)
+        let activity = DayActivity(
+            day: 3,
+            activityTypeRaw: 1,
+            duration: 3600,
+            comment: "Test comment",
+            createDate: originalCreateDate,
+            modifyDate: originalCreateDate,
+            user: user
+        )
+        context.insert(activity)
+        try context.save()
+
+        activity.setNonWorkoutType(.sick, user: user)
+
+        #expect(activity.activityType == .sick)
+        #expect(activity.comment == nil)
+        #expect(activity.duration == nil)
+        #expect(activity.createDate == originalCreateDate)
+    }
+
+    @Test("setNonWorkoutType обновляет modifyDate на текущее время")
+    @MainActor
+    func setNonWorkoutTypeUpdatesModifyDate() throws {
+        let container = try ModelContainer(
+            for: DayActivity.self,
+            User.self,
+            configurations: ModelConfiguration(isStoredInMemoryOnly: true)
+        )
+        let context = container.mainContext
+
+        let user = User(id: 1, userName: "testuser", fullName: "Test User", email: "test@example.com")
+        context.insert(user)
+        try context.save()
+
+        let oldModifyDate = Date().addingTimeInterval(-3600)
+        let activity = DayActivity(
+            day: 1,
+            activityTypeRaw: 0,
+            createDate: Date().addingTimeInterval(-7200),
+            modifyDate: oldModifyDate,
+            user: user
+        )
+        context.insert(activity)
+        try context.save()
+
+        let beforeUpdate = Date()
+        activity.setNonWorkoutType(.stretch, user: user)
+        let afterUpdate = Date()
+
+        #expect(activity.modifyDate >= beforeUpdate)
+        #expect(activity.modifyDate <= afterUpdate)
+    }
+
+    @Test("setNonWorkoutType очищает все тренировочные данные")
+    @MainActor
+    func setNonWorkoutTypeClearsTrainingData() throws {
+        let container = try ModelContainer(
+            for: DayActivity.self,
+            DayActivityTraining.self,
+            User.self,
+            configurations: ModelConfiguration(isStoredInMemoryOnly: true)
+        )
+        let context = container.mainContext
+
+        let user = User(id: 1, userName: "testuser", fullName: "Test User", email: "test@example.com")
+        context.insert(user)
+        try context.save()
+
+        let activity = DayActivity(
+            day: 1,
+            activityTypeRaw: 0,
+            count: 10,
+            executeTypeRaw: 1,
+            trainingTypeRaw: 2,
+            createDate: .now,
+            modifyDate: .now,
+            user: user
+        )
+        let training1 = DayActivityTraining(count: 5, typeId: 1, dayActivity: activity)
+        let training2 = DayActivityTraining(count: 8, typeId: 2, dayActivity: activity)
+        activity.trainings.append(training1)
+        activity.trainings.append(training2)
+        context.insert(activity)
+        try context.save()
+
+        activity.setNonWorkoutType(.rest, user: user)
+
+        #expect(activity.count == nil)
+        #expect(activity.trainings.isEmpty)
+        #expect(activity.executeTypeRaw == nil)
+        #expect(activity.trainingTypeRaw == nil)
+    }
+
+    @Test("setNonWorkoutType снимает флаг shouldDelete")
+    @MainActor
+    func setNonWorkoutTypeRemovesShouldDeleteFlag() throws {
+        let container = try ModelContainer(
+            for: DayActivity.self,
+            User.self,
+            configurations: ModelConfiguration(isStoredInMemoryOnly: true)
+        )
+        let context = container.mainContext
+
+        let user = User(id: 1, userName: "testuser", fullName: "Test User", email: "test@example.com")
+        context.insert(user)
+        try context.save()
+
+        let activity = DayActivity(
+            day: 1,
+            activityTypeRaw: 1,
+            createDate: .now,
+            modifyDate: .now,
+            user: user
+        )
+        activity.shouldDelete = true
+        activity.isSynced = true
+        context.insert(activity)
+        try context.save()
+
+        activity.setNonWorkoutType(.stretch, user: user)
+
+        #expect(!activity.shouldDelete)
+        #expect(!activity.isSynced)
+    }
+
+    // MARK: - createNonWorkoutActivity Tests
+
+    @Test("createNonWorkoutActivity создает активность с типом stretch")
+    @MainActor
+    func createNonWorkoutActivityCreatesStretch() throws {
+        let container = try ModelContainer(
+            for: DayActivity.self,
+            User.self,
+            configurations: ModelConfiguration(isStoredInMemoryOnly: true)
+        )
+        let context = container.mainContext
+
+        let user = User(id: 1, userName: "testuser", fullName: "Test User", email: "test@example.com")
+        context.insert(user)
+        try context.save()
+
+        let activity = DayActivity.createNonWorkoutActivity(day: 1, activityType: .stretch, user: user)
+
+        #expect(activity.day == 1)
+        #expect(activity.activityType == .stretch)
+        #expect(activity.count == nil)
+        #expect(activity.trainings.isEmpty)
+        #expect(activity.executeTypeRaw == nil)
+        #expect(activity.trainingTypeRaw == nil)
+        #expect(activity.comment == nil)
+        #expect(activity.duration == nil)
+        #expect(!activity.isSynced)
+        #expect(!activity.shouldDelete)
+        let userFromActivity = try #require(activity.user)
+        #expect(userFromActivity.id == user.id)
+    }
+
+    @Test("createNonWorkoutActivity создает активность с типом rest")
+    @MainActor
+    func createNonWorkoutActivityCreatesRest() {
+        let user = User(id: 1, userName: "testuser", fullName: "Test User", email: "test@example.com")
+
+        let activity = DayActivity.createNonWorkoutActivity(day: 2, activityType: .rest, user: user)
+
+        #expect(activity.day == 2)
+        #expect(activity.activityType == .rest)
+        #expect(activity.activityTypeRaw == 1)
+    }
+
+    @Test("createNonWorkoutActivity создает активность с типом sick")
+    @MainActor
+    func createNonWorkoutActivityCreatesSick() {
+        let user = User(id: 1, userName: "testuser", fullName: "Test User", email: "test@example.com")
+
+        let activity = DayActivity.createNonWorkoutActivity(day: 3, activityType: .sick, user: user)
+
+        #expect(activity.day == 3)
+        #expect(activity.activityType == .sick)
+        #expect(activity.activityTypeRaw == 3)
+    }
+
+    @Test("createNonWorkoutActivity устанавливает правильные флаги синхронизации")
+    @MainActor
+    func createNonWorkoutActivitySetsSyncFlags() {
+        let user = User(id: 1, userName: "testuser", fullName: "Test User", email: "test@example.com")
+
+        let activity = DayActivity.createNonWorkoutActivity(day: 1, activityType: .stretch, user: user)
+
+        #expect(!activity.isSynced)
+        #expect(!activity.shouldDelete)
+    }
+
+    @Test("createNonWorkoutActivity устанавливает текущие даты")
+    @MainActor
+    func createNonWorkoutActivitySetsCurrentDates() {
+        let user = User(id: 1, userName: "testuser", fullName: "Test User", email: "test@example.com")
+
+        let beforeCreation = Date()
+        let activity = DayActivity.createNonWorkoutActivity(day: 1, activityType: .stretch, user: user)
+        let afterCreation = Date()
+
+        #expect(activity.createDate >= beforeCreation)
+        #expect(activity.createDate <= afterCreation)
+        #expect(activity.modifyDate >= beforeCreation)
+        #expect(activity.modifyDate <= afterCreation)
+    }
+
+    @Test("createNonWorkoutActivity привязывает активность к пользователю")
+    @MainActor
+    func createNonWorkoutActivityBindsToUser() throws {
+        let container = try ModelContainer(
+            for: DayActivity.self,
+            User.self,
+            configurations: ModelConfiguration(isStoredInMemoryOnly: true)
+        )
+        let context = container.mainContext
+
+        let user = User(id: 1, userName: "testuser", fullName: "Test User", email: "test@example.com")
+        context.insert(user)
+        try context.save()
+
+        let activity = DayActivity.createNonWorkoutActivity(day: 1, activityType: .stretch, user: user)
+
+        let userFromActivity = try #require(activity.user)
+        #expect(userFromActivity.id == user.id)
+    }
 }

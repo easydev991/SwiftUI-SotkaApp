@@ -413,4 +413,35 @@ struct UserTests {
         let count = try #require(activity.count)
         #expect(count == 10 || count == 20)
     }
+
+    @Test("activitiesByDay исключает активности с shouldDelete = true")
+    @MainActor
+    func activitiesByDayExcludesDeletedActivities() throws {
+        let container = try ModelContainer(
+            for: User.self,
+            DayActivity.self,
+            configurations: ModelConfiguration(isStoredInMemoryOnly: true)
+        )
+        let context = container.mainContext
+
+        let user = User(id: 1)
+        context.insert(user)
+
+        let activeActivity = DayActivity(day: 1, createDate: Date(), modifyDate: Date(), user: user)
+        activeActivity.shouldDelete = false
+
+        let deletedActivity = DayActivity(day: 2, createDate: Date(), modifyDate: Date(), user: user)
+        deletedActivity.shouldDelete = true
+
+        context.insert(activeActivity)
+        context.insert(deletedActivity)
+        try context.save()
+
+        let activitiesByDay = user.activitiesByDay
+        #expect(activitiesByDay.count == 1)
+        let activity = try #require(activitiesByDay[1])
+        #expect(activity.day == 1)
+        #expect(!activity.shouldDelete)
+        #expect(activitiesByDay[2] == nil)
+    }
 }

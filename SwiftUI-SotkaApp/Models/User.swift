@@ -98,9 +98,9 @@ extension User {
         return count > 0 ? "\(count)" : ""
     }
 
-    /// Словарь активностей по номеру дня для быстрого поиска
+    /// Словарь активностей по номеру дня для быстрого поиска (исключает удаленные активности)
     var activitiesByDay: [Int: DayActivity] {
-        Dictionary(dayActivities.map { ($0.day, $0) }, uniquingKeysWith: { $1 })
+        Dictionary(dayActivities.filter { !$0.shouldDelete }.map { ($0.day, $0) }, uniquingKeysWith: { $1 })
     }
 
     /// Проверяет, заполнены ли результаты для текущего дня

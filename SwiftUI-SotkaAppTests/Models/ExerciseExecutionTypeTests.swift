@@ -7,5 +7,6 @@ struct ExerciseExecutionTypeTests {
     func exerciseExecutionTypeRawValues() {
         #expect(ExerciseExecutionType.cycles.rawValue == 0)
         #expect(ExerciseExecutionType.sets.rawValue == 1)
+        #expect(ExerciseExecutionType.turbo.rawValue == 2)
     }
 }

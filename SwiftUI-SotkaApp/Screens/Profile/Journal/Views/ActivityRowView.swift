@@ -35,7 +35,6 @@ struct ActivityRowView: View {
         title: "Подтягивания",
         count: 10
     )
-    .padding()
 }
 
 #Preview("С системной иконкой без счетчика", traits: .sizeThatFitsLayout) {
@@ -43,7 +42,6 @@ struct ActivityRowView: View {
         image: Image(systemName: "figure.flexibility"),
         title: "Растяжка"
     )
-    .padding()
 }
 
 #Preview("С ассетом с счетчиком", traits: .sizeThatFitsLayout) {
@@ -52,7 +50,6 @@ struct ActivityRowView: View {
         title: "Отжимания",
         count: 25
     )
-    .padding()
 }
 
 #Preview("С ассетом без счетчика", traits: .sizeThatFitsLayout) {
@@ -60,7 +57,6 @@ struct ActivityRowView: View {
         image: Image(.pullups),
         title: "Подтягивания"
     )
-    .padding()
 }
 
 #Preview("Малый размер шрифта", traits: .sizeThatFitsLayout) {
@@ -76,7 +72,6 @@ struct ActivityRowView: View {
             count: 30
         )
     }
-    .padding()
     .environment(\.dynamicTypeSize, .xSmall)
 }
 
@@ -93,7 +88,6 @@ struct ActivityRowView: View {
             count: 30
         )
     }
-    .padding()
     .environment(\.dynamicTypeSize, .medium)
 }
 
@@ -110,7 +104,6 @@ struct ActivityRowView: View {
             count: 30
         )
     }
-    .padding()
     .environment(\.dynamicTypeSize, .large)
 }
 
@@ -127,7 +120,6 @@ struct ActivityRowView: View {
             count: 30
         )
     }
-    .padding()
     .environment(\.dynamicTypeSize, .xxxLarge)
 }
 
@@ -144,7 +136,6 @@ struct ActivityRowView: View {
             count: 30
         )
     }
-    .padding()
     .environment(\.dynamicTypeSize, .accessibility5)
 }
 #endif

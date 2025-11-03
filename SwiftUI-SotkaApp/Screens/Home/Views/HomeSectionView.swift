@@ -7,9 +7,7 @@ struct HomeSectionView<Content: View>: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {
-            Text(title)
-                .font(.headline)
-                .padding([.top, .horizontal], 12)
+            HomeSectionTitleView(title: title)
             content
         }
         .foregroundStyle(Color.swMainText)
