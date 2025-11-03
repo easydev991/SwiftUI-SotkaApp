@@ -58,7 +58,7 @@ struct MoreScreen: View {
         @Bindable var settings = appSettings
         Picker("App theme", selection: $settings.appTheme) {
             ForEach(AppTheme.allCases) {
-                Text($0.title).tag($0)
+                Text($0.localizedTitle).tag($0)
             }
         }
         .accessibilityIdentifier("appThemeButton")
@@ -69,7 +69,7 @@ struct MoreScreen: View {
         @Bindable var settings = appSettings
         Picker("App language", selection: .constant(AppLanguage.makeCurrentValue(locale.identifier))) {
             ForEach(AppLanguage.allCases) {
-                Text($0.title).tag($0)
+                Text($0.localizedTitle).tag($0)
             }
         }
         .overlay { Rectangle().opacity(0.0001) }

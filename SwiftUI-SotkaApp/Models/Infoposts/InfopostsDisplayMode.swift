@@ -9,7 +9,7 @@ enum InfopostsDisplayMode: CaseIterable, Identifiable {
     case favorites
 
     /// Локализованные названия режимов
-    var title: String {
+    var localizedTitle: String {
         switch self {
         case .all:
             String(localized: .infopostsAll)

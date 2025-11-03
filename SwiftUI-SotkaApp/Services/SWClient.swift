@@ -170,7 +170,7 @@ enum ClientError: Error, LocalizedError {
         switch self {
         case .forceLogout: String(localized: .errorForceLogout)
         case .noConnection: String(localized: .errorNoConnection)
-        case let .progressNotFound(day): String(localized: "Progress.Error.NotFound \(day)")
+        case let .progressNotFound(day): String(localized: .progressErrorNotFound(day))
         }
     }
 }

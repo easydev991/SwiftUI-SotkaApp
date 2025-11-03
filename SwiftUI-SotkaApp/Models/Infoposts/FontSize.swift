@@ -8,7 +8,7 @@ enum FontSize: String, CaseIterable, Identifiable {
     case medium
     case large
 
-    var title: String {
+    var localizedTitle: String {
         switch self {
         case .small: String(localized: .fontSizeSmall)
         case .medium: String(localized: .fontSizeMedium)

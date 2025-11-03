@@ -53,19 +53,15 @@ struct InfopostDetailScreen: View {
 private extension InfopostDetailScreen {
     var fontSizeButton: some View {
         Menu {
-            ForEach(FontSize.allCases) { size in
-                Button {
-                    fontSize = size
-                } label: {
-                    Text(size.title)
-                    if size == fontSize {
-                        Image(systemName: "checkmark")
-                    }
+            Picker(.fontSize, selection: $fontSize) {
+                ForEach(FontSize.allCases) {
+                    Text($0.localizedTitle).tag($0)
                 }
             }
         } label: {
             Label(.fontSize, systemImage: "textformat.size")
         }
+        .accessibilityValue(fontSize.localizedTitle)
     }
 
     var favoriteButton: some View {

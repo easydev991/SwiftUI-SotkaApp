@@ -149,7 +149,7 @@ private extension EditProfileScreen {
 
     var genderPicker: some View {
         Menu {
-            Picker("", selection: $userForm.genderCode) {
+            Picker(.placeholderGender, selection: $userForm.genderCode) {
                 ForEach([Gender.male, Gender.female], id: \.code) {
                     Text($0.affiliation)
                 }

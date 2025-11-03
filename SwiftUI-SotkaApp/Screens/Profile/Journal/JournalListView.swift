@@ -7,53 +7,47 @@ struct JournalListView: View {
     @Environment(\.currentDay) private var currentDay
     @Environment(\.modelContext) private var modelContext
     @State private var dayForConfirmationDialog: Int?
-    let user: User
+    let activitiesByDay: [Int: DayActivity]
+    let sortOrder: SortOrder
 
     var body: some View {
-        List(Array(1 ... 100), id: \.self) { day in
-            contentView(for: day, activity: user.activitiesByDay[day])
-                .listRowInsets(
-                    .init(
-                        top: 20,
-                        leading: 16,
-                        bottom: 20,
-                        trailing: 16
-                    )
-                )
-                .listRowSeparator(
-                    day == 100 ? .hidden : .automatic,
-                    edges: .bottom
-                )
-                .disabled(day > currentDay)
-        }
-        .listStyle(.plain)
-        .confirmationDialog(
-            .journalDeleteEntry,
-            isPresented: .constant(dayForConfirmationDialog != nil),
-            titleVisibility: .visible
-        ) {
-            confirmationDialogContent
-        } message: {
-            if let day = dayForConfirmationDialog {
-                Text(.journalDeleteEntryMessage(day))
+        List(InfopostSection.sectionsSortedBy(sortOrder), rowContent: makeSectionView)
+            .animation(.default, value: sortOrder)
+            .confirmationDialog(
+                .journalDeleteEntry,
+                isPresented: $dayForConfirmationDialog.mappedToBool(),
+                titleVisibility: .visible
+            ) {
+                confirmationDialogContent
+            } message: {
+                if let day = dayForConfirmationDialog {
+                    Text(.journalDeleteEntryMessage(day))
+                }
             }
-        }
     }
 }
 
 private extension JournalListView {
-    @ViewBuilder
-    var confirmationDialogContent: some View {
-        if let day = dayForConfirmationDialog {
-            Button(.journalDelete, role: .destructive) {
-                print("TODO: удалить день \(day)")
-                dayForConfirmationDialog = nil
+    func makeSectionView(for section: InfopostSection) -> some View {
+        Section(section.localizedTitle) {
+            ForEach(section.daysSortedBy(sortOrder), id: \.self) { day in
+                makeRowView(for: day)
+                    .listRowInsets(
+                        .init(
+                            top: 24,
+                            leading: 16,
+                            bottom: 24,
+                            trailing: 16
+                        )
+                    )
+                    .disabled(day > currentDay)
             }
         }
     }
 
-    func contentView(for day: Int, activity: DayActivity?) -> some View {
+    func makeRowView(for day: Int) -> some View {
         VStack(alignment: .leading, spacing: 16) {
+            let activity = activitiesByDay[day]
             makeHeaderView(for: day, activity: activity)
             if let activity, let activityType = activity.activityType {
                 switch activityType {
@@ -65,6 +59,16 @@ private extension JournalListView {
                         title: activityType.localizedTitle
                     )
                 }
+            }
+        }
+    }
+
+    @ViewBuilder
+    var confirmationDialogContent: some View {
+        if let day = dayForConfirmationDialog {
+            Button(.journalDelete, role: .destructive) {
+                print("TODO: удалить день \(day)")
+                dayForConfirmationDialog = nil
             }
         }
     }
@@ -88,7 +92,7 @@ private extension JournalListView {
 
     @ViewBuilder
     func makeMenuContent(for day: Int, activity: DayActivity?) -> some View {
-        Label("День \(day)", systemImage: "calendar")
+        Label(.day(number: day), systemImage: "calendar")
         Divider()
         if let activity {
             if let currentActivityType = activity.activityType {
@@ -122,7 +126,7 @@ private extension JournalListView {
     }
 
     func makeTrainingView(for activity: DayActivity) -> some View {
-        VStack(alignment: .leading, spacing: 8) {
+        VStack(alignment: .leading, spacing: 12) {
             if let executeType = activity.executeType,
                let count = activity.count {
                 ActivityRowView(
@@ -131,7 +135,6 @@ private extension JournalListView {
                     count: count
                 )
             }
-
             ForEach(activity.trainings.sorted, id: \.persistentModelID) { training in
                 if let count = training.count {
                     ActivityRowView(
@@ -167,19 +170,25 @@ private extension JournalListView {
 }
 
 #if DEBUG
-#Preview("День 7") {
+#Preview("День 7, по возрастанию") {
     NavigationStack {
-        JournalListView(user: .previewWithActivities)
-            .environment(DailyActivitiesService(client: MockDaysClient(result: .success)))
+        JournalListView(
+            activitiesByDay: User.previewWithActivities.activitiesByDay,
+            sortOrder: .forward
+        )
+        .environment(DailyActivitiesService(client: MockDaysClient(result: .success)))
     }
     .modelContainer(PreviewModelContainer.make(with: .previewWithActivities))
     .environment(\.currentDay, 7)
 }
 
-#Preview("День 100") {
+#Preview("День 100, по убыванию") {
     NavigationStack {
-        JournalListView(user: .previewWithActivities)
-            .environment(DailyActivitiesService(client: MockDaysClient(result: .success)))
+        JournalListView(
+            activitiesByDay: User.previewWithActivities.activitiesByDay,
+            sortOrder: .reverse
+        )
+        .environment(DailyActivitiesService(client: MockDaysClient(result: .success)))
     }
     .modelContainer(PreviewModelContainer.make(with: .previewWithActivities))
     .environment(\.currentDay, 100)

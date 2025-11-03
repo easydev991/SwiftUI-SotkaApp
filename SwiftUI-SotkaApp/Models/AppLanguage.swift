@@ -5,7 +5,7 @@ enum AppLanguage: CaseIterable, Identifiable {
     case russian
     case english
 
-    var title: String {
+    var localizedTitle: String {
         switch self {
         case .russian: String(localized: .russian)
         case .english: String(localized: .english)

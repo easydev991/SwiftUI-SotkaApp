@@ -9,7 +9,7 @@ struct JournalGridView: View {
     @Environment(\.modelContext) private var modelContext
     @State private var dayForConfirmationDialog: Int?
     private let itemHeight: CGFloat = 44
-    let user: User
+    let activitiesByDay: [Int: DayActivity]
 
     var body: some View {
         ScrollView {
@@ -35,57 +35,29 @@ struct JournalGridView: View {
 }
 
 private extension JournalGridView {
-    struct JournalSection: Identifiable {
-        let id: InfopostSection
-        let section: InfopostSection
-        let days: [Int]
+    var journalSections: [InfopostSection] {
+        InfopostSection.journalSections
     }
 
-    var journalSections: [JournalSection] {
-        [
-            JournalSection(
-                id: .base,
-                section: .base,
-                days: Array(1 ... 49)
-            ),
-            JournalSection(
-                id: .advanced,
-                section: .advanced,
-                days: Array(50 ... 91)
-            ),
-            JournalSection(
-                id: .turbo,
-                section: .turbo,
-                days: Array(92 ... 98)
-            ),
-            JournalSection(
-                id: .conclusion,
-                section: .conclusion,
-                days: Array(99 ... 100)
-            )
-        ]
-    }
-
-    func makeSectionView(for journalSection: JournalSection) -> some View {
+    func makeSectionView(for section: InfopostSection) -> some View {
         VStack(alignment: .leading, spacing: 12) {
-            Text(journalSection.section.localizedTitle)
+            Text(section.localizedTitle)
                 .font(.headline)
                 .frame(maxWidth: .infinity, alignment: .leading)
-            makeGridView(for: journalSection)
+            makeGridView(for: section)
         }
     }
 
-    func makeGridView(for journalSection: JournalSection) -> some View {
-        let spacing: CGFloat = 8
-        return LazyVGrid(
-            columns: .init(repeating: GridItem(.flexible(), spacing: spacing), count: 7),
-            spacing: spacing
+    func makeGridView(for section: InfopostSection) -> some View {
+        LazyVGrid(
+            columns: .init(repeating: GridItem(.flexible(), spacing: 8), count: 7),
+            spacing: 8
         ) {
-            ForEach(journalSection.days, id: \.self) { day in
+            ForEach(section.days, id: \.self) { day in
                 makeDayButton(for: day)
                     .disabled(day > currentDay)
             }
-            if journalSection.section == .conclusion {
+            if section == .conclusion {
                 ForEach(0 ..< 5, id: \.self) { _ in
                     Color.clear.frame(height: itemHeight)
                 }
@@ -94,7 +66,7 @@ private extension JournalGridView {
     }
 
     func makeDayButton(for day: Int) -> some View {
-        let activity = user.activitiesByDay[day]
+        let activity = activitiesByDay[day]
         let textColor = activity != nil ? Color.contrastText : .swMainText
         let activityColor = activity?.activityType?.color ?? Color.gray.opacity(0.2)
         let isToday = day == currentDay
@@ -119,11 +91,13 @@ private extension JournalGridView {
                 .contentShape(.rect)
         }
         .buttonStyle(.plain)
+        .accessibilityLabel(.day(number: day))
+        .accessibilityValue(activity?.activityType?.localizedTitle ?? String(localized: .dayNotCompleted))
     }
 
     @ViewBuilder
     func makeMenuContent(for day: Int, activity: DayActivity?) -> some View {
-        Label("День \(day)", systemImage: "calendar")
+        Label(.day(number: day), systemImage: "calendar")
         Divider()
         if let activity {
             if let currentActivityType = activity.activityType {
@@ -168,8 +142,8 @@ private extension JournalGridView {
 }
 
 #if DEBUG
-#Preview {
-    JournalGridView(user: .previewWithActivities)
+#Preview("День 50") {
+    JournalGridView(activitiesByDay: User.previewWithActivities.activitiesByDay)
         .environment(DailyActivitiesService(client: MockDaysClient(result: .success)))
         .environment(\.currentDay, 50)
 }

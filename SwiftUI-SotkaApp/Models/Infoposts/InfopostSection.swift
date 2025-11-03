@@ -50,13 +50,47 @@ enum InfopostSection: String, Codable, CaseIterable, Identifiable {
                 return section(for: dayNumber)
             }
         }
+        return .preparation
+    }
 
-        // Специальные файлы относятся к подготовке
-        switch filename {
-        case "aims", "organiz", "d0-women":
-            return .preparation
-        default:
-            return .preparation
+    /// Массив дней для секции дневника тренировок
+    var days: [Int] {
+        switch self {
+        case .base:
+            Array(1 ... 49)
+        case .advanced:
+            Array(50 ... 91)
+        case .turbo:
+            Array(92 ... 98)
+        case .conclusion:
+            Array(99 ... 100)
+        case .preparation:
+            []
         }
+    }
+
+    /// Секции, используемые в дневнике тренировок
+    ///
+    /// Все кроме подготовительного блока
+    static var journalSections: [InfopostSection] {
+        [.base, .advanced, .turbo, .conclusion]
+    }
+
+    /// Отсортированные секции дневника в соответствии с порядком сортировки
+    ///
+    /// - Parameter sortOrder: Порядок сортировки
+    /// - Returns: Массив секций в соответствующем порядке
+    static func sectionsSortedBy(_ sortOrder: SortOrder) -> [InfopostSection] {
+        let sections = journalSections
+        return sortOrder == .forward ? sections : sections.reversed()
+    }
+
+    /// Отсортированные дни секции в соответствии с порядком сортировки
+    ///
+    /// - Parameter sortOrder: Порядок сортировки
+    /// - Returns: Массив дней в соответствующем порядке
+    func daysSortedBy(_ sortOrder: SortOrder) -> [Int] {
+        let days = days
+        return sortOrder == .forward ? days : days.reversed()
     }
 }

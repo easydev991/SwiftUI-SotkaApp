@@ -112,9 +112,7 @@ extension AllInfopostsTests {
             )
 
             // Assert
-            // Проверяем, что title возвращает правильный LocalizedStringKey
-            // Это проверяется через сравнение с ожидаемым значением секции
-            #expect(sectionDisplay.title == section.localizedTitle)
+            #expect(sectionDisplay.localizedTitle == section.localizedTitle)
         }
 
         // MARK: - Тесты идентичности

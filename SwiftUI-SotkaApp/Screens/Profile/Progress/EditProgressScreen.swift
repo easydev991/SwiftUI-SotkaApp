@@ -95,7 +95,7 @@ private extension EditProgressScreen {
         @Bindable var service = progressService
         Picker(.progressDisplayMode, selection: $service.displayMode) {
             ForEach(ProgressDisplayMode.allCases) {
-                Text($0.title).tag($0)
+                Text($0.localizedTitle).tag($0)
             }
         }
         .pickerStyle(.segmented)

@@ -8,12 +8,12 @@ enum ProgressDisplayMode: CaseIterable, Identifiable {
     case photos
 
     /// Локализованные названия режимов
-    var title: String {
+    var localizedTitle: String {
         switch self {
         case .metrics:
-            String(localized: "Progress.Metrics")
+            String(localized: .progressMetrics)
         case .photos:
-            String(localized: "Progress.Photos")
+            String(localized: .progressPhotos)
         }
     }
 }

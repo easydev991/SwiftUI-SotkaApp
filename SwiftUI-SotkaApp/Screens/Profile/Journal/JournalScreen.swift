@@ -2,17 +2,33 @@ import SWDesignSystem
 import SwiftUI
 
 struct JournalScreen: View {
+    @AppStorage(SortOrder.appStorageKey) private var sortOrder = SortOrder.forward
     @AppStorage(DisplayMode.appStorageKey) private var displayMode = DisplayMode.grid
     let user: User
 
     var body: some View {
         VStack(spacing: 12) {
-            displayModePicker
             switch displayMode {
             case .list:
-                JournalListView(user: user)
+                JournalListView(
+                    activitiesByDay: user.activitiesByDay,
+                    sortOrder: sortOrder
+                )
             case .grid:
-                JournalGridView(user: user)
+                JournalGridView(activitiesByDay: user.activitiesByDay)
+            }
+        }
+        .toolbar {
+            if displayMode == .list {
+                ToolbarItem {
+                    sortButton
+                }
+                if #available(iOS 26.0, *) {
+                    ToolbarSpacer(.fixed)
+                }
+            }
+            ToolbarItem(placement: .topBarTrailing) {
+                displayModeButton
             }
         }
         .animation(.default, value: displayMode)
@@ -28,7 +44,7 @@ extension JournalScreen {
         case list
         case grid
 
-        var title: String {
+        var localizedTitle: String {
             switch self {
             case .list: String(localized: .journalDisplayModeList)
             case .grid: String(localized: .journalDisplayModeGrid)
@@ -40,14 +56,30 @@ extension JournalScreen {
 }
 
 private extension JournalScreen {
-    var displayModePicker: some View {
-        Picker(.journalDisplayMode, selection: $displayMode) {
-            ForEach(DisplayMode.allCases) {
-                Text($0.title).tag($0)
+    var sortButton: some View {
+        Menu {
+            Picker(.journalListSortButtonLabel, selection: $sortOrder) {
+                ForEach(SortOrder.allCases, id: \.self) {
+                    Text($0.localizedTitle).tag($0)
+                }
             }
+        } label: {
+            Label(.journalListSortButtonLabel, systemImage: "arrow.up.arrow.down")
         }
-        .pickerStyle(.segmented)
-        .padding(.horizontal)
+        .accessibilityValue(sortOrder.localizedTitle)
+    }
+
+    var displayModeButton: some View {
+        Menu {
+            Picker(.journalDisplayMode, selection: $displayMode) {
+                ForEach(DisplayMode.allCases) {
+                    Text($0.localizedTitle).tag($0)
+                }
+            }
+        } label: {
+            Label(.journalDisplayMode, systemImage: "square.grid.2x2")
+        }
+        .accessibilityValue(displayMode.localizedTitle)
     }
 }
 

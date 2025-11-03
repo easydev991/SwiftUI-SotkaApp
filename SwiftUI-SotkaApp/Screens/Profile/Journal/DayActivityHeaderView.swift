@@ -3,6 +3,7 @@ import SwiftUI
 import SWUtils
 
 struct DayActivityHeaderView: View {
+    @Environment(\.isEnabled) private var isEnabled
     @Environment(\.currentDay) private var currentDay
     let dayNumber: Int
     let activityDate: Date?
@@ -14,7 +15,7 @@ struct DayActivityHeaderView: View {
             subtitleView
                 .font(.subheadline)
         }
-        .opacity(dayNumber > currentDay ? 0.6 : 1)
+        .opacity(isEnabled ? 1 : 0.6)
     }
 }
 
@@ -55,7 +56,7 @@ private extension DayActivityHeaderView {
             dayNumber: 10,
             activityDate: nil
         )
-        .currentDay(5)
+        .disabled(true)
     }
     .padding()
 }

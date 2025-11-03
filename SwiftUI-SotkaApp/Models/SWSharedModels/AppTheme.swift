@@ -6,7 +6,7 @@ enum AppTheme: Int, CaseIterable, Identifiable {
     case light = 1
     case dark = 2
 
-    var title: String {
+    var localizedTitle: String {
         switch self {
         case .system: String(localized: .system)
         case .light: String(localized: .light)

@@ -35,7 +35,7 @@ private extension InfopostsListScreen {
             @Bindable var service = infopostsService
             Picker(.infopostsDisplayMode, selection: $service.displayMode) {
                 ForEach(InfopostsDisplayMode.allCases) {
-                    Text($0.title).tag($0)
+                    Text($0.localizedTitle).tag($0)
                 }
             }
             .pickerStyle(.segmented)
@@ -50,7 +50,7 @@ private extension InfopostsListScreen {
             }
         } label: {
             HStack(spacing: 12) {
-                Text(sectionDisplay.title)
+                Text(sectionDisplay.localizedTitle)
                     .frame(maxWidth: .infinity, alignment: .leading)
                 ChevronView()
                     .rotationEffect(.degrees(sectionDisplay.isCollapsed ? 0 : 90))
