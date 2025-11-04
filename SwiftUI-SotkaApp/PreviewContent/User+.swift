@@ -187,6 +187,34 @@ extension User {
         ]
         user.dayActivities.append(setsWorkoutActivity)
 
+        // Тренировка с комментарием - день 7
+        let commentDate = calendar.date(byAdding: .day, value: 3, to: now) ?? now
+        let commentActivity = DayActivity(
+            day: 7,
+            activityTypeRaw: DayActivityType.workout.rawValue,
+            count: 4,
+            executeTypeRaw: ExerciseExecutionType.cycles.rawValue,
+            comment: "Отличная тренировка! Очень устал, но доволен результатом.",
+            createDate: commentDate,
+            modifyDate: commentDate,
+            user: user
+        )
+        commentActivity.trainings = [
+            DayActivityTraining(
+                count: 5,
+                typeId: ExerciseType.pullups.rawValue,
+                sortOrder: 0,
+                dayActivity: commentActivity
+            ),
+            DayActivityTraining(
+                count: 10,
+                typeId: ExerciseType.pushups.rawValue,
+                sortOrder: 1,
+                dayActivity: commentActivity
+            )
+        ]
+        user.dayActivities.append(commentActivity)
+
         return user
     }
 }

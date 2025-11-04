@@ -3,12 +3,12 @@ import SwiftUI
 /// Обертка для представления контента в модальном окне с готовым хедером
 public struct ContentInSheet<Content: View>: View {
     @Environment(\.dismiss) private var dismiss
-    private let title: LocalizedStringKey
+    private let title: String
     private var spacing: CGFloat?
     private let content: Content
 
     public init(
-        title: LocalizedStringKey,
+        title: String,
         spacing: CGFloat? = nil,
         @ViewBuilder content: () -> Content
     ) {

@@ -8,6 +8,7 @@ struct HomeActivitySectionView: View {
     @Environment(\.currentDay) private var currentDay
     @Environment(\.modelContext) private var modelContext
     @Query private var activities: [DayActivity]
+    @State private var activityForCommentSheet: DayActivity?
     @State private var shouldShowDeleteConfirmation = false
 
     private var currentActivity: DayActivity? {
@@ -16,46 +17,8 @@ struct HomeActivitySectionView: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {
-            HomeSectionTitleView(
-                title: String(localized: .homeActivity),
-                showMenu: currentActivity != nil
-            ) {
-                if let currentActivity {
-                    DayActivityMenuView(
-                        day: currentDay,
-                        activity: currentActivity,
-                        onComment: { day in
-                            print("TODO: добавить комментарий, день \(day)")
-                        },
-                        onDelete: { _ in
-                            shouldShowDeleteConfirmation = true
-                        },
-                        onSelectType: { day, type in
-                            if type == .workout {
-                                print("TODO: настроить тренировку, день \(day)")
-                            }
-                            activitiesService.set(type, for: day, context: modelContext)
-                        }
-                    )
-                }
-            }
-
-            ZStack {
-                if let currentActivity {
-                    DayActivityContentView(activity: currentActivity)
-                        .transition(.scale.combined(with: .opacity))
-                } else {
-                    HStack(spacing: 12) {
-                        ForEach(DayActivityType.allCases, id: \.self) {
-                            makeView(for: $0)
-                                .buttonStyle(.plain)
-                        }
-                    }
-                    .transition(.scale.combined(with: .opacity))
-                }
-            }
-            .animation(.default, value: currentActivity)
-            .padding([.horizontal, .bottom], 12)
+            headerView
+            contentView
         }
         .insideCardBackground(padding: 0)
         .confirmationDialog(
@@ -72,13 +35,62 @@ struct HomeActivitySectionView: View {
             Text(.journalDeleteEntryMessage(currentDay))
         }
         .animation(.default, value: currentActivity)
+        .sheet(item: $activityForCommentSheet) { activity in
+            EditCommentSheet(activity: activity)
+        }
     }
 }
 
 private extension HomeActivitySectionView {
-    func makeView(
-        for activityType: DayActivityType
-    ) -> some View {
+    var headerView: some View {
+        HomeSectionTitleView(
+            title: String(localized: .homeActivity),
+            showMenu: currentActivity != nil
+        ) {
+            if let currentActivity {
+                DayActivityMenuView(
+                    day: currentDay,
+                    activity: currentActivity,
+                    onComment: { _ in
+                        activityForCommentSheet = currentActivity
+                    },
+                    onDelete: { _ in
+                        shouldShowDeleteConfirmation = true
+                    },
+                    onSelectType: { day, type in
+                        if type == .workout {
+                            print("TODO: настроить тренировку, день \(day)")
+                        }
+                        activitiesService.set(type, for: day, context: modelContext)
+                    }
+                )
+            }
+        }
+    }
+
+    var contentView: some View {
+        ZStack {
+            if let currentActivity {
+                VStack(spacing: 8) {
+                    DayActivityContentView(activity: currentActivity)
+                        .transition(.scale.combined(with: .opacity))
+                    DayActivityCommentView(comment: currentActivity.comment)
+                }
+            } else {
+                HStack(spacing: 12) {
+                    ForEach(DayActivityType.allCases, id: \.self) {
+                        makeButton(for: $0)
+                            .buttonStyle(.plain)
+                    }
+                }
+                .transition(.scale.combined(with: .opacity))
+            }
+        }
+        .animation(.default, value: currentActivity)
+        .padding([.horizontal, .bottom], 12)
+    }
+
+    func makeButton(for activityType: DayActivityType) -> some View {
         Button {
             if activityType == .workout {
                 print("TODO: настроить тренировку")

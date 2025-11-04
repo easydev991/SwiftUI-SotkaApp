@@ -7,6 +7,7 @@ struct JournalListView: View {
     @Environment(\.currentDay) private var currentDay
     @Environment(\.modelContext) private var modelContext
     @State private var dayForConfirmationDialog: Int?
+    @State private var activityForCommentSheet: DayActivity?
     let activitiesByDay: [Int: DayActivity]
     let sortOrder: SortOrder
 
@@ -23,6 +24,9 @@ struct JournalListView: View {
                 if let day = dayForConfirmationDialog {
                     Text(.journalDeleteEntryMessage(day))
                 }
+            }
+            .sheet(item: $activityForCommentSheet) { activity in
+                EditCommentSheet(activity: activity)
             }
     }
 }
@@ -53,7 +57,9 @@ private extension JournalListView {
                     day: day,
                     activity: activity,
                     onComment: { day in
-                        print("TODO: добавить комментарий, день \(day)")
+                        if let activity = activitiesByDay[day] {
+                            activityForCommentSheet = activity
+                        }
                     },
                     onDelete: { day in
                         dayForConfirmationDialog = day
@@ -69,6 +75,7 @@ private extension JournalListView {
             if let activity {
                 DayActivityContentView(activity: activity)
                     .transition(.scale.combined(with: .opacity))
+                DayActivityCommentView(comment: activity.comment)
             }
         }
         .animation(.default, value: activity)

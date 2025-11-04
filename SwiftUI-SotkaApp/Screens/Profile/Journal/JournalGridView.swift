@@ -8,6 +8,7 @@ struct JournalGridView: View {
     @Environment(\.currentDay) private var currentDay
     @Environment(\.modelContext) private var modelContext
     @State private var dayForConfirmationDialog: Int?
+    @State private var activityForCommentSheet: DayActivity?
     private let itemHeight: CGFloat = 44
     let activitiesByDay: [Int: DayActivity]
 
@@ -30,6 +31,9 @@ struct JournalGridView: View {
             if let day = dayForConfirmationDialog {
                 Text(.journalDeleteEntryMessage(day))
             }
+        }
+        .sheet(item: $activityForCommentSheet) { activity in
+            EditCommentSheet(activity: activity)
         }
     }
 }
@@ -75,7 +79,9 @@ private extension JournalGridView {
                 day: day,
                 activity: activity,
                 onComment: { day in
-                    print("TODO: комментировать день \(day)")
+                    if let activity = activitiesByDay[day] {
+                        activityForCommentSheet = activity
+                    }
                 },
                 onDelete: { day in
                     dayForConfirmationDialog = day
