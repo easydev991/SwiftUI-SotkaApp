@@ -17,14 +17,18 @@ struct MoreScreen: View {
                 Section(.settings) {
                     appThemePicker
                     appLanguageButton
-                    notificationToggle
-                    if settings.workoutNotificationsEnabled {
-                        makeNotificationTimePicker(
-                            $settings.workoutNotificationTime
-                        )
+                    DisclosureGroup(.moreScreenWorkoutGroup) {
+                        notificationToggle
+                        if settings.workoutNotificationsEnabled {
+                            makeNotificationTimePicker(
+                                $settings.workoutNotificationTime
+                            )
+                        }
+                        DisclosureGroup(.moreScreenRestGroup) {
+                            makeTimerSoundToggle($settings.playTimerSound)
+                            makeVibrateToggle($settings.vibrate)
+                        }
                     }
-                    makeTimerSoundToggle($settings.playTimerSound)
-                    makeVibrateToggle($settings.vibrate)
                 }
                 Section(.aboutApp) {
                     rateAppButton
@@ -34,10 +38,10 @@ struct MoreScreen: View {
                     aboutProgramButton
                     appVersionText
                 }
-                Section("Other apps") {
+                Section(.otherApps) {
                     swParksButton
                 }
-                Section("Support the project") {
+                Section(.supportTheProject) {
                     workoutShopButton
                     githubButton
                 }
@@ -56,7 +60,7 @@ struct MoreScreen: View {
     @ViewBuilder
     private var appThemePicker: some View {
         @Bindable var settings = appSettings
-        Picker("App theme", selection: $settings.appTheme) {
+        Picker(.appTheme, selection: $settings.appTheme) {
             ForEach(AppTheme.allCases) {
                 Text($0.localizedTitle).tag($0)
             }
@@ -67,7 +71,7 @@ struct MoreScreen: View {
     @ViewBuilder
     private var appLanguageButton: some View {
         @Bindable var settings = appSettings
-        Picker("App language", selection: .constant(AppLanguage.makeCurrentValue(locale.identifier))) {
+        Picker(.appLanguage, selection: .constant(AppLanguage.makeCurrentValue(locale.identifier))) {
             ForEach(AppLanguage.allCases) {
                 Text($0.localizedTitle).tag($0)
             }
@@ -126,7 +130,7 @@ struct MoreScreen: View {
     @ViewBuilder
     private var rateAppButton: some View {
         if let appReviewLink = URL(string: "https://apps.apple.com/app/\(appId)?action=write-review") {
-            Link("Rate the app", destination: appReviewLink)
+            Link(.rateTheApp, destination: appReviewLink)
                 .accessibilityIdentifier("rateAppButton")
         }
     }
@@ -134,7 +138,7 @@ struct MoreScreen: View {
     @ViewBuilder
     private var officialSiteButton: some View {
         if let officialSiteLink = URL(string: "https://workout.su") {
-            Link("Official website", destination: officialSiteLink)
+            Link(.officialWebsite, destination: officialSiteLink)
                 .accessibilityIdentifier("officialSiteButton")
         }
     }
@@ -151,7 +155,7 @@ struct MoreScreen: View {
 
     private var appVersionText: some View {
         HStack {
-            Text("App version")
+            Text(.appVersion)
                 .frame(maxWidth: .infinity, alignment: .leading)
             Text("\(appSettings.appVersion)")
         }
@@ -169,7 +173,7 @@ struct MoreScreen: View {
     @ViewBuilder
     private var workoutShopButton: some View {
         if let shopLink = URL(string: "https://workoutshop.ru/?utm_source=iOS&utm_medium=100&utm_campaign=NASTROIKI") {
-            Link("WORKOUT shop", destination: shopLink)
+            Link(.workoutShop, destination: shopLink)
                 .accessibilityIdentifier("workoutShopButton")
         }
     }
@@ -177,7 +181,7 @@ struct MoreScreen: View {
     @ViewBuilder
     private var githubButton: some View {
         if let githubLink = URL(string: "https://github.com/easydev991/SwiftUI-SotkaApp") {
-            Link("GitHub page", destination: githubLink)
+            Link(.gitHubPage, destination: githubLink)
                 .accessibilityIdentifier("githubButton")
         }
     }

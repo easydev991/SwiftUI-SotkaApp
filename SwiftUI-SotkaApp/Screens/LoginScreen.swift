@@ -36,7 +36,7 @@ struct LoginScreen: View {
             .padding()
             .loadingOverlay(if: isLoading)
             .background(Color.swBackground)
-            .navigationTitle("Authorization")
+            .navigationTitle(.authorization)
             .onChange(of: credentials) { _, _ in clearErrorMessages() }
             .onChange(of: isLoading) { _, newValue in
                 if newValue { focus = nil }
