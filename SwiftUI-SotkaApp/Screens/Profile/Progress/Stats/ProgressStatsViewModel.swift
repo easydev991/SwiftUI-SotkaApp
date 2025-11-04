@@ -17,7 +17,6 @@ final class ProgressStatsViewModel {
 
     func updateStats(
         modelContext: ModelContext,
-        activities: [DayActivityType],
         currentDay: Int
     ) {
         do {
@@ -25,8 +24,10 @@ final class ProgressStatsViewModel {
                 logger.error("Пользователь не найден в базе данных")
                 return
             }
-
-            let calculator = ProgressCalculator(user: user, activities: activities, currentDay: currentDay)
+            let calculator = ProgressCalculator(
+                user: user,
+                currentDay: currentDay
+            )
 
             fullProgressPercent = calculator.fullProgressPercent
             infoPostsPercent = calculator.infoPostsPercent

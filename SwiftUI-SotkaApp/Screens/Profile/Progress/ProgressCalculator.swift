@@ -4,12 +4,10 @@ import SwiftData
 /// Калькулятор для расчета статистики прогресса
 struct ProgressCalculator {
     private let user: User
-    private let activities: [DayActivityType]
     private let currentDay: Int
 
-    init(user: User, activities: [DayActivityType], currentDay: Int) {
+    init(user: User, currentDay: Int) {
         self.user = user
-        self.activities = activities
         self.currentDay = currentDay
     }
 
@@ -21,10 +19,10 @@ struct ProgressCalculator {
         var completedDays = 0
 
         for day in 1 ... totalDays {
-            let hasActivity = activities.indices.contains(day - 1)
+            let hasActivityForDay = hasActivity(for: day)
             let hasInfopost = user.readInfopostDays.contains(day)
 
-            if hasActivity, hasInfopost {
+            if hasActivityForDay, hasInfopost {
                 completedDays += 1
             }
         }
@@ -42,7 +40,7 @@ struct ProgressCalculator {
     /// Рассчитывает прогресс по активностям
     var activityPercent: Int {
         let totalDays = 100
-        let activityDays = activities.count
+        let activityDays = user.dayActivities.count(where: { !$0.shouldDelete })
         return Int((Double(activityDays) / Double(totalDays)) * 100)
     }
 
@@ -52,9 +50,16 @@ struct ProgressCalculator {
             getDayStatus(day: day)
         }
     }
+}
+
+private extension ProgressCalculator {
+    /// Проверяет наличие активности для конкретного дня
+    func hasActivity(for day: Int) -> Bool {
+        user.activitiesByDay[day] != nil
+    }
 
     /// Определяет статус дня
-    private func getDayStatus(day: Int) -> DayProgressStatus {
+    func getDayStatus(day: Int) -> DayProgressStatus {
         // Текущий день - всегда синий
         if day == currentDay {
             return .currentDay
@@ -65,16 +70,16 @@ struct ProgressCalculator {
             return .notStarted
         }
 
-        let hasActivity = activities.indices.contains(day - 1)
+        let hasActivityForDay = hasActivity(for: day)
         let hasInfopost = user.readInfopostDays.contains(day)
 
         // Зеленый: активность + инфопост
-        if hasActivity && hasInfopost {
+        if hasActivityForDay && hasInfopost {
             return .completed
         }
 
         // Желтый: только активность ИЛИ только инфопост
-        if hasActivity || hasInfopost {
+        if hasActivityForDay || hasInfopost {
             return .partial
         }
 
