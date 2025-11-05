@@ -97,10 +97,10 @@ private extension CustomExercisesScreen {
     var emptyStateView: some View {
         ContentUnavailableView(
             label: { Label("No custom exercises yet", systemImage: "figure.mixed.cardio") },
-            description: { Text("Create your first custom exercise") },
+            description: { Text(.createYourFirstCustomExercise) },
             actions: {
                 Button { showAddExerciseSheet.toggle() } label: {
-                    Label("Create exercise", systemImage: "plus")
+                    Label(.createExercise, systemImage: "plus")
                 }
                 .buttonStyle(.borderedProminent)
             }

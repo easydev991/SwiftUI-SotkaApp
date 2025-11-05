@@ -53,8 +53,8 @@ struct DayActivityTrainingView: View {
 #if DEBUG
 #Preview(traits: .sizeThatFitsLayout) {
     DayActivityTrainingView(
-        activity: User.previewWithActivities.activitiesByDay[7]!
+        activity: User.preview.activitiesByDay[7]!
     )
-    .modelContainer(PreviewModelContainer.make(with: .previewWithActivities))
+    .modelContainer(PreviewModelContainer.make(with: .preview))
 }
 #endif

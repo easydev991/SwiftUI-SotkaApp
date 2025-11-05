@@ -66,7 +66,7 @@ private extension EditCommentSheet {
 
 #if DEBUG
 #Preview("Есть комментарий (день 7)") {
-    let user = User.previewWithActivities
+    let user = User.preview
     let container = PreviewModelContainer.make(with: user)
     if let activity = user.dayActivities.first(where: { $0.day == 7 }) ?? user.dayActivities.first {
         EditCommentSheet(activity: activity)
@@ -78,7 +78,7 @@ private extension EditCommentSheet {
 }
 
 #Preview("Нет комментария (день 1)") {
-    let user = User.previewWithActivities
+    let user = User.preview
     let container = PreviewModelContainer.make(with: user)
     if let activity = user.dayActivities.first {
         EditCommentSheet(activity: activity)

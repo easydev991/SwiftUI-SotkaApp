@@ -35,6 +35,6 @@ struct ProgressStatsView: View {
 #Preview("День 25") {
     ProgressStatsView()
         .currentDay(25)
-        .modelContainer(PreviewModelContainer.make(with: .previewWithActivities))
+        .modelContainer(PreviewModelContainer.make(with: .preview))
 }
 #endif

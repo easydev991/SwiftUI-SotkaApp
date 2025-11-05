@@ -26,8 +26,8 @@ struct DayActivityContentView: View {
 #if DEBUG
 #Preview("Тренировка", traits: .sizeThatFitsLayout) {
     DayActivityContentView(
-        activity: User.previewWithActivities.activitiesByDay[7]!
+        activity: User.preview.activitiesByDay[7]!
     )
-    .modelContainer(PreviewModelContainer.make(with: .previewWithActivities))
+    .modelContainer(PreviewModelContainer.make(with: .preview))
 }
 #endif

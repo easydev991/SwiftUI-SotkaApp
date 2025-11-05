@@ -7,7 +7,7 @@ struct JournalListView: View {
     @Environment(\.currentDay) private var currentDay
     @Environment(\.modelContext) private var modelContext
     @State private var dayForConfirmationDialog: Int?
-    @State private var activityForCommentSheet: DayActivity?
+    @State private var sheetItem: DayActivitySheetItem?
     let activitiesByDay: [Int: DayActivity]
     let sortOrder: SortOrder
 
@@ -25,8 +25,15 @@ struct JournalListView: View {
                     Text(.journalDeleteEntryMessage(day))
                 }
             }
-            .sheet(item: $activityForCommentSheet) { activity in
-                EditCommentSheet(activity: activity)
+            .sheet(item: $sheetItem) { item in
+                switch item {
+                case let .comment(activity):
+                    EditCommentSheet(activity: activity)
+                case let .workoutPreview(day):
+                    NavigationStack {
+                        WorkoutPreviewScreen(day: day)
+                    }
+                }
             }
     }
 }
@@ -58,7 +65,7 @@ private extension JournalListView {
                     activity: activity,
                     onComment: { day in
                         if let activity = activitiesByDay[day] {
-                            activityForCommentSheet = activity
+                            sheetItem = .comment(activity)
                         }
                     },
                     onDelete: { day in
@@ -66,19 +73,36 @@ private extension JournalListView {
                     },
                     onSelectType: { day, activityType in
                         if activityType == .workout {
-                            print("TODO: настроить тренировку, день \(day)")
+                            sheetItem = .workoutPreview(day)
                         }
                         activitiesService.set(activityType, for: day, context: modelContext)
                     }
                 )
             }
             if let activity {
-                DayActivityContentView(activity: activity)
-                    .transition(.scale.combined(with: .opacity))
-                DayActivityCommentView(comment: activity.comment)
+                VStack(spacing: 8) {
+                    makeDayActivityContentView(for: activity)
+                    DayActivityCommentView(comment: activity.comment)
+                }
+                .transition(.scale.combined(with: .opacity))
             }
         }
         .animation(.default, value: activity)
+    }
+
+    @ViewBuilder
+    func makeDayActivityContentView(for activity: DayActivity) -> some View {
+        let contentView = DayActivityContentView(activity: activity)
+        if activity.activityType == .workout {
+            Button {
+                sheetItem = .workoutPreview(activity.day)
+            } label: {
+                contentView.contentShape(.rect)
+            }
+            .buttonStyle(.plain)
+        } else {
+            contentView
+        }
     }
 
     @ViewBuilder
@@ -97,24 +121,24 @@ private extension JournalListView {
 #Preview("День 7, по возрастанию") {
     NavigationStack {
         JournalListView(
-            activitiesByDay: User.previewWithActivities.activitiesByDay,
+            activitiesByDay: User.preview.activitiesByDay,
             sortOrder: .forward
         )
         .environment(DailyActivitiesService(client: MockDaysClient(result: .success)))
     }
-    .modelContainer(PreviewModelContainer.make(with: .previewWithActivities))
+    .modelContainer(PreviewModelContainer.make(with: .preview))
     .environment(\.currentDay, 7)
 }
 
 #Preview("День 100, по убыванию") {
     NavigationStack {
         JournalListView(
-            activitiesByDay: User.previewWithActivities.activitiesByDay,
+            activitiesByDay: User.preview.activitiesByDay,
             sortOrder: .reverse
         )
         .environment(DailyActivitiesService(client: MockDaysClient(result: .success)))
     }
-    .modelContainer(PreviewModelContainer.make(with: .previewWithActivities))
+    .modelContainer(PreviewModelContainer.make(with: .preview))
     .environment(\.currentDay, 100)
 }
 #endif

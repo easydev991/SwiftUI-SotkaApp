@@ -54,6 +54,17 @@ extension DayActivityTraining {
         }
     }
 
+    /// Инициализатор из WorkoutPreviewTraining
+    convenience init(from preview: WorkoutPreviewTraining, dayActivity: DayActivity?) {
+        self.init(
+            count: preview.count,
+            typeId: preview.typeId,
+            customTypeId: preview.customTypeId,
+            sortOrder: preview.sortOrder,
+            dayActivity: dayActivity
+        )
+    }
+
     /// Преобразование в DayRequest.Training для отправки на сервер
     var dayRequestTraining: DayRequest.Training {
         .init(

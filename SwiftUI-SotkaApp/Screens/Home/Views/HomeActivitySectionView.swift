@@ -8,8 +8,8 @@ struct HomeActivitySectionView: View {
     @Environment(\.currentDay) private var currentDay
     @Environment(\.modelContext) private var modelContext
     @Query private var activities: [DayActivity]
-    @State private var activityForCommentSheet: DayActivity?
     @State private var shouldShowDeleteConfirmation = false
+    @State private var sheetItem: DayActivitySheetItem?
 
     private var currentActivity: DayActivity? {
         activities.first { $0.day == currentDay && !$0.shouldDelete }
@@ -35,8 +35,15 @@ struct HomeActivitySectionView: View {
             Text(.journalDeleteEntryMessage(currentDay))
         }
         .animation(.default, value: currentActivity)
-        .sheet(item: $activityForCommentSheet) { activity in
-            EditCommentSheet(activity: activity)
+        .sheet(item: $sheetItem) { item in
+            switch item {
+            case let .comment(activity):
+                EditCommentSheet(activity: activity)
+            case let .workoutPreview(day):
+                NavigationStack {
+                    WorkoutPreviewScreen(day: day)
+                }
+            }
         }
     }
 }
@@ -52,16 +59,13 @@ private extension HomeActivitySectionView {
                     day: currentDay,
                     activity: currentActivity,
                     onComment: { _ in
-                        activityForCommentSheet = currentActivity
+                        sheetItem = .comment(currentActivity)
                     },
                     onDelete: { _ in
                         shouldShowDeleteConfirmation = true
                     },
                     onSelectType: { day, type in
-                        if type == .workout {
-                            print("TODO: настроить тренировку, день \(day)")
-                        }
-                        activitiesService.set(type, for: day, context: modelContext)
+                        actionFor(type, day: day)
                     }
                 )
             }
@@ -92,10 +96,7 @@ private extension HomeActivitySectionView {
 
     func makeButton(for activityType: DayActivityType) -> some View {
         Button {
-            if activityType == .workout {
-                print("TODO: настроить тренировку")
-            }
-            activitiesService.set(activityType, for: currentDay, context: modelContext)
+            actionFor(activityType, day: currentDay)
         } label: {
             VStack(spacing: 8) {
                 Circle()
@@ -116,12 +117,19 @@ private extension HomeActivitySectionView {
             .frame(maxWidth: .infinity)
         }
     }
+
+    func actionFor(_ activityType: DayActivityType, day: Int) {
+        if activityType == .workout {
+            sheetItem = .workoutPreview(day)
+        }
+        activitiesService.set(activityType, for: day, context: modelContext)
+    }
 }
 
 #if DEBUG
 #Preview {
     HomeActivitySectionView()
         .environment(DailyActivitiesService(client: MockDaysClient(result: .success)))
-        .modelContainer(PreviewModelContainer.make(with: .previewWithActivities))
+        .modelContainer(PreviewModelContainer.make(with: .preview))
 }
 #endif

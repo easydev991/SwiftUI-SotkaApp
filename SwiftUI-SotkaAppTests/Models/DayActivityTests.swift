@@ -879,4 +879,46 @@ struct DayActivityTests {
         let userFromActivity = try #require(activity.user)
         #expect(userFromActivity.id == user.id)
     }
+
+    // MARK: - isPassed Tests
+
+    @Test("Должен возвращать true когда count не nil")
+    @MainActor
+    func isPassedReturnsTrueWhenCountIsNotNil() throws {
+        let container = try ModelContainer(
+            for: DayActivity.self,
+            configurations: ModelConfiguration(isStoredInMemoryOnly: true)
+        )
+        let context = container.mainContext
+
+        let dayActivity = DayActivity(
+            day: 1,
+            count: 5,
+            createDate: Date(),
+            modifyDate: Date()
+        )
+        context.insert(dayActivity)
+
+        #expect(dayActivity.isPassed)
+    }
+
+    @Test("Должен возвращать false когда count равен nil")
+    @MainActor
+    func isPassedReturnsFalseWhenCountIsNil() throws {
+        let container = try ModelContainer(
+            for: DayActivity.self,
+            configurations: ModelConfiguration(isStoredInMemoryOnly: true)
+        )
+        let context = container.mainContext
+
+        let dayActivity = DayActivity(
+            day: 1,
+            count: nil,
+            createDate: Date(),
+            modifyDate: Date()
+        )
+        context.insert(dayActivity)
+
+        #expect(!dayActivity.isPassed)
+    }
 }

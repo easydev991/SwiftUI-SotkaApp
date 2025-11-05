@@ -133,6 +133,52 @@ enum ExerciseType: Int {
             .init(systemName: "figure.play")
         }
     }
+
+    /// Получить локализованное название упражнения с учетом дня и типа выполнения
+    /// - Parameters:
+    ///   - dayNumber: Номер дня
+    ///   - executionType: Тип выполнения упражнений
+    ///   - sortOrder: Порядок следования упражнения в списке (для дня 97 в турбо-режиме)
+    /// - Returns: Локализованное название упражнения
+    func makeLocalizedTitle(_ dayNumber: Int, executionType: ExerciseExecutionType, sortOrder: Int? = nil) -> String {
+        if executionType == .turbo, dayNumber == 92, self == .lunges {
+            return String(localized: .lunges92)
+        }
+
+        // Для дня 97 в турбо-режиме используем разные названия в зависимости от sortOrder
+        if executionType == .turbo, dayNumber == 97, self == .pushups, let sortOrder {
+            switch sortOrder {
+            case 0, 4:
+                return String(localized: "pushUps970")
+            case 1, 3:
+                return String(localized: "pushUps971")
+            case 2:
+                return String(localized: "pushUps972")
+            default:
+                return localizedTitle
+            }
+        }
+
+        // Для дня 97 в турбо-режиме для других типов упражнений используем стандартные названия
+        if executionType == .turbo, dayNumber == 97, self == .turbo97PushupsHigh {
+            if let sortOrder {
+                switch sortOrder {
+                case 0, 4:
+                    return String(localized: "pushUps970")
+                default:
+                    return localizedTitle
+                }
+            }
+        }
+
+        if executionType == .turbo, dayNumber == 97, self == .turbo97PushupsHighArms {
+            if let sortOrder, sortOrder == 2 {
+                return String(localized: "pushUps972")
+            }
+        }
+
+        return localizedTitle
+    }
 }
 
 extension ExerciseType {

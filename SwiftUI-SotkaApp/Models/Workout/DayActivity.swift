@@ -136,6 +136,11 @@ extension DayActivity {
         }
     }
 
+    /// Пройден ли день (определяется по наличию count)
+    var isPassed: Bool {
+        count != nil
+    }
+
     /// Преобразование в ActivitySnapshot для конкурентной синхронизации
     var activitySnapshot: ActivitySnapshot {
         ActivitySnapshot(

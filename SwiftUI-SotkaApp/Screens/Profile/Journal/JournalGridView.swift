@@ -8,7 +8,7 @@ struct JournalGridView: View {
     @Environment(\.currentDay) private var currentDay
     @Environment(\.modelContext) private var modelContext
     @State private var dayForConfirmationDialog: Int?
-    @State private var activityForCommentSheet: DayActivity?
+    @State private var sheetItem: DayActivitySheetItem?
     private let itemHeight: CGFloat = 44
     let activitiesByDay: [Int: DayActivity]
 
@@ -32,8 +32,15 @@ struct JournalGridView: View {
                 Text(.journalDeleteEntryMessage(day))
             }
         }
-        .sheet(item: $activityForCommentSheet) { activity in
-            EditCommentSheet(activity: activity)
+        .sheet(item: $sheetItem) { item in
+            switch item {
+            case let .comment(activity):
+                EditCommentSheet(activity: activity)
+            case let .workoutPreview(day):
+                NavigationStack {
+                    WorkoutPreviewScreen(day: day)
+                }
+            }
         }
     }
 }
@@ -80,7 +87,7 @@ private extension JournalGridView {
                 activity: activity,
                 onComment: { day in
                     if let activity = activitiesByDay[day] {
-                        activityForCommentSheet = activity
+                        sheetItem = .comment(activity)
                     }
                 },
                 onDelete: { day in
@@ -88,7 +95,7 @@ private extension JournalGridView {
                 },
                 onSelectType: { day, activityType in
                     if activityType == .workout {
-                        print("TODO: настроить тренировку, день \(day)")
+                        sheetItem = .workoutPreview(day)
                     }
                     activitiesService.set(activityType, for: day, context: modelContext)
                 }
@@ -130,9 +137,9 @@ private extension JournalGridView {
 
 #if DEBUG
 #Preview("День 50") {
-    JournalGridView(activitiesByDay: User.previewWithActivities.activitiesByDay)
+    JournalGridView(activitiesByDay: User.preview.activitiesByDay)
         .environment(DailyActivitiesService(client: MockDaysClient(result: .success)))
-        .modelContainer(PreviewModelContainer.make(with: .previewWithActivities))
+        .modelContainer(PreviewModelContainer.make(with: .preview))
         .environment(\.currentDay, 50)
 }
 #endif

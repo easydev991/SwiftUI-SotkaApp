@@ -69,7 +69,7 @@ struct DayActivityMenuView: View {
     Menu {
         DayActivityMenuView(
             day: 7,
-            activity: User.previewWithActivities.dayActivities.first,
+            activity: User.preview.dayActivities.first,
             onComment: { _ in },
             onDelete: { _ in },
             onSelectType: { _, _ in }
