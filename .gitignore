@@ -15,4 +15,5 @@ Backend/
 # Build
 buildServer.json
 build/
+.build/
 /.continue
