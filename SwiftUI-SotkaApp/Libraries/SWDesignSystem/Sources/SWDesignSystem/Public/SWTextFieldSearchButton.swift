@@ -2,13 +2,13 @@ import SwiftUI
 
 /// Имитирует текстовое поле для поиска
 public struct SWTextFieldSearchButton: View {
-    private let titleKey: LocalizedStringKey
+    private let titleKey: String
     private let showClearButton: Bool
     private let mainAction: () -> Void
     private let clearAction: () -> Void
 
     public init(
-        _ titleKey: LocalizedStringKey,
+        _ titleKey: String,
         showClearButton: Bool = false,
         mainAction: @escaping () -> Void,
         clearAction: @escaping () -> Void

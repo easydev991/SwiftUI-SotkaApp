@@ -36,5 +36,13 @@ struct HomeSectionTitleView<MenuContent: View>: View {
 }
 
 #Preview {
-    HomeSectionTitleView(title: "Title")
+    VStack(spacing: 20) {
+        HomeSectionTitleView(title: "Title")
+        HomeSectionTitleView(
+            title: "Title",
+            showMenu: true
+        ) {
+            Text("Hello")
+        }
+    }
 }

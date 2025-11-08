@@ -60,7 +60,7 @@ public extension ListRowView {
                 }
         }
 
-        private func makeTextView(with text: LocalizedStringKey) -> some View {
+        private func makeTextView(with text: String) -> some View {
             Text(text).foregroundStyle(Color.swMainText)
         }
     }
@@ -94,7 +94,7 @@ public extension ListRowView {
             }
         }
 
-        private func makeTextView(with text: LocalizedStringKey) -> some View {
+        private func makeTextView(with text: String) -> some View {
             Text(text).foregroundStyle(Color.swSmallElements)
         }
     }
