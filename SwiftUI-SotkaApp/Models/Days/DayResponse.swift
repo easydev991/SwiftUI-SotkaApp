@@ -1,4 +1,5 @@
 import Foundation
+import SWUtils
 
 /// Модель ответа сервера для дня тренировки
 struct DayResponse: Codable, Sendable, Hashable, Equatable {
@@ -54,52 +55,16 @@ struct DayResponse: Codable, Sendable, Hashable, Equatable {
     init(from decoder: Decoder) throws {
         let container = try decoder.container(keyedBy: CodingKeys.self)
 
-        // Вспомогательная функция для безопасного декодирования чисел из строк или чисел
-        func decodeIntOrString(_ key: CodingKeys) throws -> Int? {
-            // Сначала пытаемся декодировать как String, так как сервер иногда возвращает числа как строки
-            if let stringValue = try? container.decodeIfPresent(String.self, forKey: key),
-               let intValue = Int(stringValue) {
-                return intValue
-            }
-            // Если не получилось как String, пытаемся как Int
-            else if let intValue = try? container.decodeIfPresent(Int.self, forKey: key) {
-                return intValue
-            }
-            return nil
-        }
-
-        // Декодируем обязательное поле id с безопасной конвертацией
-        self.id = try {
-            // Сначала пытаемся декодировать как String, так как сервер иногда возвращает числа как строки
-            if let idString = try? container.decodeIfPresent(String.self, forKey: .id),
-               let idInt = Int(idString) {
-                return idInt
-            }
-            // Если не получилось как String, пытаемся как Int
-            else if let idInt = try? container.decodeIfPresent(Int.self, forKey: .id) {
-                return idInt
-            } else {
-                throw DecodingError.typeMismatch(Int.self, DecodingError.Context(
-                    codingPath: decoder.codingPath + [CodingKeys.id],
-                    debugDescription: "Ожидали Int или String для конвертации в Int"
-                ))
-            }
-        }()
-
-        // Декодируем опциональные числовые поля с безопасной конвертацией
-        self.activityType = try decodeIntOrString(.activityType)
-        self.count = try decodeIntOrString(.count)
-        self.plannedCount = try decodeIntOrString(.plannedCount)
-        self.executeType = try decodeIntOrString(.executeType)
-        self.trainType = try decodeIntOrString(.trainType)
-        self.duration = try decodeIntOrString(.duration)
-
-        // Декодируем строковые поля
+        self.id = try container.decodeIntOrString(.id)
+        self.activityType = container.decodeIntOrStringIfPresent(.activityType)
+        self.count = container.decodeIntOrStringIfPresent(.count)
+        self.plannedCount = container.decodeIntOrStringIfPresent(.plannedCount)
+        self.executeType = container.decodeIntOrStringIfPresent(.executeType)
+        self.trainType = container.decodeIntOrStringIfPresent(.trainType)
+        self.duration = container.decodeIntOrStringIfPresent(.duration)
         self.createDate = try container.decodeIfPresent(String.self, forKey: .createDate)
         self.modifyDate = try container.decodeIfPresent(String.self, forKey: .modifyDate)
         self.comment = try container.decodeIfPresent(String.self, forKey: .comment)
-
-        // Декодируем массив тренировок
         self.trainings = try container.decodeIfPresent([Training].self, forKey: .trainings)
     }
 }
@@ -131,26 +96,9 @@ extension DayResponse {
         init(from decoder: Decoder) throws {
             let container = try decoder.container(keyedBy: CodingKeys.self)
 
-            // Вспомогательная функция для безопасного декодирования чисел из строк или чисел
-            func decodeIntOrString(_ key: CodingKeys) throws -> Int? {
-                // Сначала пытаемся декодировать как String, так как сервер иногда возвращает числа как строки
-                if let stringValue = try? container.decodeIfPresent(String.self, forKey: key),
-                   let intValue = Int(stringValue) {
-                    return intValue
-                }
-                // Если не получилось как String, пытаемся как Int
-                else if let intValue = try? container.decodeIfPresent(Int.self, forKey: key) {
-                    return intValue
-                }
-                return nil
-            }
-
-            // Декодируем опциональные числовые поля с безопасной конвертацией
-            self.typeId = try decodeIntOrString(.typeId)
-            self.count = try decodeIntOrString(.count)
-            self.sortOrder = try decodeIntOrString(.sortOrder)
-
-            // Декодируем строковые поля
+            self.typeId = container.decodeIntOrStringIfPresent(.typeId)
+            self.count = container.decodeIntOrStringIfPresent(.count)
+            self.sortOrder = container.decodeIntOrStringIfPresent(.sortOrder)
             self.customTypeId = try container.decodeIfPresent(String.self, forKey: .customTypeId)
         }
     }

@@ -391,11 +391,10 @@ enum Endpoint {
 }
 
 private extension SWClient {
-    @discardableResult
-    func makeStatus(for endpoint: Endpoint) async throws -> Bool {
+    func makeStatus(for endpoint: Endpoint) async throws {
         do {
             let finalComponents = try await makeComponents(for: endpoint)
-            return try await service.requestStatus(components: finalComponents)
+            try await service.requestStatus(components: finalComponents)
         } catch APIError.invalidCredentials {
             await authHelper.triggerLogout()
             throw ClientError.forceLogout

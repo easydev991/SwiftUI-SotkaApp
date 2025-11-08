@@ -1,4 +1,5 @@
 import Foundation
+import SWUtils
 
 /// Модель ответа сервера для прогресса пользователя
 struct ProgressResponse: Codable, Sendable, Hashable, Equatable {
@@ -48,57 +49,11 @@ struct ProgressResponse: Codable, Sendable, Hashable, Equatable {
     init(from decoder: Decoder) throws {
         let container = try decoder.container(keyedBy: CodingKeys.self)
 
-        // Вспомогательная функция для безопасного декодирования чисел из строк или чисел
-        func decodeIntOrString(_ key: CodingKeys) throws -> Int? {
-            // Сначала пытаемся декодировать как String, так как сервер иногда возвращает числа как строки
-            if let stringValue = try? container.decodeIfPresent(String.self, forKey: key),
-               let intValue = Int(stringValue) {
-                return intValue
-            }
-            // Если не получилось как String, пытаемся как Int
-            else if let intValue = try? container.decodeIfPresent(Int.self, forKey: key) {
-                return intValue
-            }
-            return nil
-        }
-
-        func decodeFloatOrString(_ key: CodingKeys) throws -> Float? {
-            // Сначала пытаемся декодировать как String, так как сервер иногда возвращает числа как строки
-            if let stringValue = try? container.decodeIfPresent(String.self, forKey: key),
-               let floatValue = Float(stringValue) {
-                return floatValue
-            }
-            // Если не получилось как String, пытаемся как Float
-            else if let floatValue = try? container.decodeIfPresent(Float.self, forKey: key) {
-                return floatValue
-            }
-            return nil
-        }
-
-        // Декодируем числовые поля с безопасной конвертацией
-        self.id = try {
-            // Сначала пытаемся декодировать как String, так как сервер иногда возвращает числа как строки
-            if let idString = try? container.decodeIfPresent(String.self, forKey: .id),
-               let idInt = Int(idString) {
-                return idInt
-            }
-            // Если не получилось как String, пытаемся как Int
-            else if let idInt = try? container.decodeIfPresent(Int.self, forKey: .id) {
-                return idInt
-            } else {
-                throw DecodingError.typeMismatch(Int.self, DecodingError.Context(
-                    codingPath: decoder.codingPath + [CodingKeys.id],
-                    debugDescription: "Ожидали Int или String для конвертации в Int"
-                ))
-            }
-        }()
-
-        self.pullups = try decodeIntOrString(.pullups)
-        self.pushups = try decodeIntOrString(.pushups)
-        self.squats = try decodeIntOrString(.squats)
-        self.weight = try decodeFloatOrString(.weight)
-
-        // Декодируем строковые поля
+        self.id = try container.decodeIntOrString(.id)
+        self.pullups = container.decodeIntOrStringIfPresent(.pullups)
+        self.pushups = container.decodeIntOrStringIfPresent(.pushups)
+        self.squats = container.decodeIntOrStringIfPresent(.squats)
+        self.weight = container.decodeFloatOrStringIfPresent(.weight)
         self.createDate = try container.decode(String.self, forKey: .createDate)
         self.modifyDate = try container.decodeIfPresent(String.self, forKey: .modifyDate)
         self.photoFront = try container.decodeIfPresent(String.self, forKey: .photoFront)
