@@ -43,6 +43,7 @@ extension SWNetworkService: SWNetworkProtocol {
             }
             switch StatusCodeGroup(code: response.statusCode) {
             case .success:
+                logger.debug("\(data.prettyJson)")
                 let decodedResult = try decoder.decode(T.self, from: data)
                 logSuccess(request: request, data: data)
                 return decodedResult

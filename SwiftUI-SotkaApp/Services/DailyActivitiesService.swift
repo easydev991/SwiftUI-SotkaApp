@@ -345,7 +345,6 @@ private extension DailyActivitiesService {
     ) async -> [Int: SyncEvent] {
         await withTaskGroup(of: (Int, SyncEvent).self) { group in
             for snapshot in snapshots {
-                // Локальные отладочные логи перед выполнением задач
                 let createDateStr = DateFormatterService.stringFromFullDate(snapshot.createDate, format: .isoDateTimeSec)
                 let modifyDateStr = DateFormatterService.stringFromFullDate(snapshot.modifyDate, format: .isoDateTimeSec)
                 logger.info("Отправляем активность на сервер: день \(snapshot.day)")

@@ -220,4 +220,68 @@ struct WorkoutPreviewTrainingTests {
 
         #expect(updatedTraining.count == nil)
     }
+
+    @Test("Должен определять стандартные упражнения как не турбо-упражнения")
+    func identifiesStandardExercisesAsNonTurbo() {
+        let pullups = WorkoutPreviewTraining(typeId: ExerciseType.pullups.rawValue)
+        let pushups = WorkoutPreviewTraining(typeId: ExerciseType.pushups.rawValue)
+        let squats = WorkoutPreviewTraining(typeId: ExerciseType.squats.rawValue)
+        let lunges = WorkoutPreviewTraining(typeId: ExerciseType.lunges.rawValue)
+
+        #expect(!pullups.isTurboExercise)
+        #expect(!pushups.isTurboExercise)
+        #expect(!squats.isTurboExercise)
+        #expect(!lunges.isTurboExercise)
+    }
+
+    @Test("Должен определять турбо-упражнения как турбо-упражнения")
+    func identifiesTurboExercisesAsTurbo() {
+        let turbo93_1 = WorkoutPreviewTraining(typeId: ExerciseType.turbo93_1.rawValue)
+        let turbo94Pushups = WorkoutPreviewTraining(typeId: ExerciseType.turbo94Pushups.rawValue)
+        let turbo95_1 = WorkoutPreviewTraining(typeId: ExerciseType.turbo95_1.rawValue)
+        let turbo96Pushups = WorkoutPreviewTraining(typeId: ExerciseType.turbo96Pushups.rawValue)
+        let turbo97PushupsHigh = WorkoutPreviewTraining(typeId: ExerciseType.turbo97PushupsHigh.rawValue)
+        let turbo98Pullups = WorkoutPreviewTraining(typeId: ExerciseType.turbo98Pullups.rawValue)
+
+        #expect(turbo93_1.isTurboExercise)
+        #expect(turbo94Pushups.isTurboExercise)
+        #expect(turbo95_1.isTurboExercise)
+        #expect(turbo96Pushups.isTurboExercise)
+        #expect(turbo97PushupsHigh.isTurboExercise)
+        #expect(turbo98Pullups.isTurboExercise)
+    }
+
+    @Test("Должен определять пользовательские упражнения как не турбо-упражнения")
+    func identifiesCustomExercisesAsNonTurbo() {
+        let customExercise = WorkoutPreviewTraining(
+            typeId: nil,
+            customTypeId: "custom-123"
+        )
+
+        #expect(!customExercise.isTurboExercise)
+    }
+
+    @Test("Должен определять упражнения без typeId и customTypeId как не турбо-упражнения")
+    func identifiesExercisesWithoutTypeIdAsNonTurbo() {
+        let exercise = WorkoutPreviewTraining(
+            typeId: nil,
+            customTypeId: nil
+        )
+
+        #expect(!exercise.isTurboExercise)
+    }
+
+    @Test("Должен определять упражнения с typeId меньше 93 как не турбо-упражнения")
+    func identifiesExercisesWithTypeIdLessThan93AsNonTurbo() {
+        let exercise = WorkoutPreviewTraining(typeId: 92)
+
+        #expect(!exercise.isTurboExercise)
+    }
+
+    @Test("Должен определять упражнения с typeId равным 93 как турбо-упражнения")
+    func identifiesExercisesWithTypeId93AsTurbo() {
+        let exercise = WorkoutPreviewTraining(typeId: 93)
+
+        #expect(exercise.isTurboExercise)
+    }
 }

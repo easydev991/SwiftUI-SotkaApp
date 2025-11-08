@@ -46,4 +46,30 @@ struct ExerciseTypeTests {
         #expect(ExerciseType.turbo98Pushups.rawValue == 982)
         #expect(ExerciseType.turbo98Squats.rawValue == 983)
     }
+
+    @Test("standardExercises должен содержать все стандартные упражнения в правильном порядке")
+    func standardExercisesContainsAllStandardExercises() {
+        let expectedExercises: [ExerciseType] = [
+            .pullups,
+            .austrPullups,
+            .squats,
+            .pushups,
+            .pushupsKnees,
+            .lunges
+        ]
+
+        #expect(ExerciseType.standardExercises == expectedExercises)
+    }
+
+    @Test("standardExercises должен содержать только стандартные упражнения, без турбо-упражнений")
+    func standardExercisesContainsOnlyStandardExercises() {
+        let standardExercises = ExerciseType.standardExercises
+
+        #expect(!standardExercises.contains(.turbo93_1))
+        #expect(!standardExercises.contains(.turbo94Pushups))
+        #expect(!standardExercises.contains(.turbo95_1))
+        #expect(!standardExercises.contains(.turbo96Pushups))
+        #expect(!standardExercises.contains(.turbo97PushupsHigh))
+        #expect(!standardExercises.contains(.turbo98Pullups))
+    }
 }

@@ -4239,6 +4239,91 @@
         }
       }
     },
+    "WorkoutExerciseEditor.CustomExercises" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Custom exercises"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Пользовательские упражнения"
+          }
+        }
+      }
+    },
+    "WorkoutExerciseEditor.DayExercises" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Day exercises"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Упражнения дня"
+          }
+        }
+      }
+    },
+    "WorkoutExerciseEditor.Done" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Done"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Готово"
+          }
+        }
+      }
+    },
+    "WorkoutExerciseEditor.StandardExercises" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Standard exercises"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Стандартные упражнения"
+          }
+        }
+      }
+    },
+    "WorkoutExerciseEditor.Title" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Workout editor"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Редактор тренировки"
+          }
+        }
+      }
+    },
     "WorkoutPreview.Save" : {
       "extractionState" : "manual",
       "localizations" : {

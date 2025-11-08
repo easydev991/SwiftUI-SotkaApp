@@ -90,7 +90,9 @@ private extension LoginScreen {
         .navigationTitle(.authorization)
         .toolbar {
             ToolbarItem(placement: .topBarLeading) {
-                backToWelcomeButton
+                if showLoginScreen {
+                    CloseButton(mode: .xmark) { showLoginScreen.toggle() }
+                }
             }
         }
     }
@@ -140,17 +142,6 @@ private extension LoginScreen {
     var forgotPasswordButton: some View {
         Button(.restorePassword, action: performRestorePassword)
             .tint(.swMainText)
-    }
-
-    @ViewBuilder
-    var backToWelcomeButton: some View {
-        if showLoginScreen {
-            Button {
-                showLoginScreen.toggle()
-            } label: {
-                Image(systemName: "xmark")
-            }
-        }
     }
 
     func performLogin() {

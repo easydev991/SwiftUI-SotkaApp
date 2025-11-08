@@ -241,6 +241,32 @@ final class WorkoutPreviewViewModel {
         let logDay = dayNumber
         logger.info("Нажата кнопка 'Начать тренировку' для дня \(logDay)")
     }
+
+    /// Определяет, нужно ли показывать кнопку редактирования упражнений
+    ///
+    /// - Показывается только для типов выполнения `.cycles` и `.sets`
+    /// - Скрывается для типа `.turbo`
+    var shouldShowEditButton: Bool {
+        guard let executionType = selectedExecutionType else { return false }
+        return executionType == .cycles || executionType == .sets
+    }
+
+    /// Обновляет список упражнений тренировки
+    /// Пересчитывает sortOrder на основе порядка в массиве
+    /// - Parameter newTrainings: Новый список упражнений
+    func updateTrainings(_ newTrainings: [WorkoutPreviewTraining]) {
+        let trainingsWithSortOrder = newTrainings.enumerated().map { index, training in
+            WorkoutPreviewTraining(
+                id: training.id,
+                count: training.count,
+                typeId: training.typeId,
+                customTypeId: training.customTypeId,
+                sortOrder: index
+            )
+        }
+        trainings = trainingsWithSortOrder
+        logger.info("Обновлен список упражнений: \(trainingsWithSortOrder.count) упражнений")
+    }
 }
 
 extension WorkoutPreviewViewModel {

@@ -62,6 +62,20 @@ struct WorkoutProgramCreator {
         self.comment = comment
     }
 
+    /// Метод для обновления упражнений с сохранением остальных данных
+    /// - Parameter exercises: Новый список упражнений
+    /// - Returns: Новый экземпляр WorkoutProgramCreator с обновленными упражнениями
+    func withCustomExercises(_ exercises: [WorkoutPreviewTraining]) -> WorkoutProgramCreator {
+        Self(
+            day: day,
+            executionType: executionType,
+            count: count,
+            plannedCount: plannedCount,
+            trainings: exercises,
+            comment: comment
+        )
+    }
+
     /// Метод для обновления типа выполнения
     /// Сохраняет пользовательские изменения: plannedCount и count упражнений
     func withExecutionType(_ newType: ExerciseExecutionType) -> WorkoutProgramCreator {

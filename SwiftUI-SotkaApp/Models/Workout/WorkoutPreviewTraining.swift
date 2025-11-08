@@ -53,6 +53,17 @@ struct WorkoutPreviewTraining: Equatable, Identifiable {
     }
 }
 
+extension WorkoutPreviewTraining {
+    /// Проверяет, является ли упражнение турбо-упражнением
+    /// Турбо-упражнения определяются по typeId >= 93
+    /// Пользовательские упражнения (customTypeId != nil) не являются турбо-упражнениями
+    var isTurboExercise: Bool {
+        guard customTypeId == nil else { return false }
+        guard let typeId else { return false }
+        return typeId >= 93
+    }
+}
+
 extension [WorkoutPreviewTraining] {
     /// Отсортированный массив тренировок по порядку следования (`sortOrder`)
     var sorted: [WorkoutPreviewTraining] {

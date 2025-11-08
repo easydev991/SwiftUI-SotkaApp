@@ -4,10 +4,12 @@ import SwiftUI
 import SWUtils
 
 struct WorkoutPreviewScreen: View {
+    // TODO: передавать activitiesService в инициализаторе, не через environment
     @Environment(DailyActivitiesService.self) private var activitiesService
     @Environment(\.modelContext) private var modelContext
     @Environment(\.dismiss) private var dismiss
     @State private var viewModel = WorkoutPreviewViewModel()
+    @State private var showEditorScreen = false
     @FocusState private var isCommentFocused: Bool
     let day: Int
 
@@ -21,6 +23,20 @@ struct WorkoutPreviewScreen: View {
         .animation(.default, value: viewModel.selectedExecutionType)
         .background(Color.swBackground)
         .navigationTitle(.workoutPreviewTitle(day))
+        .toolbar {
+            ToolbarItem(placement: .topBarLeading) {
+                CloseButton(mode: .xmark) { dismiss() }
+            }
+            if viewModel.shouldShowEditButton {
+                ToolbarItem(placement: .topBarTrailing) {
+                    openEditorButton
+                }
+            }
+        }
+        .sheet(isPresented: $showEditorScreen) {
+            WorkoutExerciseEditorScreen()
+                .environment(viewModel)
+        }
         .navigationBarTitleDisplayMode(.inline)
         .onAppear {
             viewModel.updateData(modelContext: modelContext, day: day)
@@ -37,6 +53,14 @@ struct WorkoutPreviewScreen: View {
 }
 
 private extension WorkoutPreviewScreen {
+    var openEditorButton: some View {
+        Button {
+            showEditorScreen.toggle()
+        } label: {
+            Image(systemName: "pencil")
+        }
+    }
+
     @ViewBuilder
     var executionTypePicker: some View {
         if viewModel.shouldShowExecutionTypePicker(modelContext: modelContext, day: day) {

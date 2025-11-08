@@ -70,7 +70,8 @@ extension DayActivityTraining {
         .init(
             count: count,
             typeId: typeId,
-            customTypeId: customTypeId
+            customTypeId: customTypeId,
+            sortOrder: sortOrder
         )
     }
 

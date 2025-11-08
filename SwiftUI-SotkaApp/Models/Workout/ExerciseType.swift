@@ -182,6 +182,18 @@ enum ExerciseType: Int {
 }
 
 extension ExerciseType {
+    /// Стандартные упражнения, доступные для редактирования тренировки
+    static var standardExercises: [ExerciseType] {
+        [
+            .pullups,
+            .austrPullups,
+            .squats,
+            .pushups,
+            .pushupsKnees,
+            .lunges
+        ]
+    }
+
     /// Пользовательские упражнения
     enum CustomType: Int, CaseIterable {
         case pushups = 0

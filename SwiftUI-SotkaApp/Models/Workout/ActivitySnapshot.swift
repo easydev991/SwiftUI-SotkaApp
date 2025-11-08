@@ -47,7 +47,8 @@ extension ActivitySnapshot {
                 DayRequest.Training(
                     count: training.count,
                     typeId: training.typeId,
-                    customTypeId: training.customTypeId
+                    customTypeId: training.customTypeId,
+                    sortOrder: training.sortOrder
                 )
             }
         )

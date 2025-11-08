@@ -35,11 +35,14 @@ extension DayRequest {
         let typeId: Int?
         /// Идентификатор пользовательского типа упражнения (если задан)
         let customTypeId: String?
+        /// Порядок следования в списке тренировок
+        let sortOrder: Int?
 
-        init(count: Int? = nil, typeId: Int? = nil, customTypeId: String? = nil) {
+        init(count: Int? = nil, typeId: Int? = nil, customTypeId: String? = nil, sortOrder: Int? = nil) {
             self.count = count
             self.typeId = typeId
             self.customTypeId = customTypeId
+            self.sortOrder = sortOrder
         }
     }
 }
@@ -50,7 +53,8 @@ extension DayRequest.Training {
         self.init(
             count: snapshot.count,
             typeId: snapshot.typeId,
-            customTypeId: snapshot.customTypeId
+            customTypeId: snapshot.customTypeId,
+            sortOrder: snapshot.sortOrder
         )
     }
 }
@@ -72,7 +76,13 @@ extension DayRequest {
         if let modifyDate { parameters["modify_date"] = modifyDate }
 
         if let trainings, !trainings.isEmpty {
-            for (index, training) in trainings.enumerated() {
+            // Сортируем тренировки по sortOrder, чтобы индекс массива соответствовал sort_order
+            let sortedTrainings = trainings.sorted { training1, training2 in
+                let order1 = training1.sortOrder ?? Int.max
+                let order2 = training2.sortOrder ?? Int.max
+                return order1 < order2
+            }
+            for (index, training) in sortedTrainings.enumerated() {
                 let base = "training[\(index)]"
                 if let cnt = training.count { parameters["\(base)[count]"] = String(cnt) }
                 if let customId = training.customTypeId {
@@ -80,6 +90,8 @@ extension DayRequest {
                 } else if let typeId = training.typeId {
                     parameters["\(base)[type_id]"] = String(typeId)
                 }
+                // Используем индекс массива как sort_order (после сортировки)
+                parameters["\(base)[sort_order]"] = String(index)
             }
         }
 
