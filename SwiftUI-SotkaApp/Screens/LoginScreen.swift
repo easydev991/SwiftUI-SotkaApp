@@ -9,6 +9,7 @@ struct LoginScreen: View {
     @Environment(StatusManager.self) private var statusManager
     @Environment(\.modelContext) private var modelContext
     @Environment(\.isNetworkConnected) private var isNetworkConnected
+    @State private var showLoginScreen = false
     @State private var credentials = LoginCredentials()
     @FocusState private var focus: FocusableField?
     @State private var isLoading = false
@@ -22,21 +23,17 @@ struct LoginScreen: View {
 
     var body: some View {
         NavigationStack {
-            VStack(spacing: 0) {
-                VStack(spacing: 12) {
-                    loginField
-                    passwordField
-                }
-                Spacer()
-                VStack(spacing: 12) {
-                    loginButton
-                    forgotPasswordButton
+            ZStack {
+                if showLoginScreen {
+                    authView
+                } else {
+                    welcomeView
                 }
             }
+            .animation(.spring, value: showLoginScreen)
             .padding()
             .loadingOverlay(if: isLoading)
             .background(Color.swBackground)
-            .navigationTitle(.authorization)
             .onChange(of: credentials) { _, _ in clearErrorMessages() }
             .onChange(of: isLoading) { _, newValue in
                 if newValue { focus = nil }
@@ -61,11 +58,47 @@ private extension LoginScreen {
         credentials.canLogIn(isError: isError)
     }
 
+    var welcomeView: some View {
+        VStack(spacing: 32) {
+            Image(.launcherLogo)
+            VStack(spacing: 16) {
+                Button(.loginScreenAuthorizeButtonTitle) {
+                    showLoginScreen.toggle()
+                }
+                .buttonStyle(SWButtonStyle(mode: .filled, size: .large))
+                Text(.loginScreenRegistrationInfoText)
+                    .font(.footnote.weight(.medium))
+                    .multilineTextAlignment(.center)
+                    .foregroundStyle(Color.swMainText)
+            }
+        }
+        .transition(.scale(2).combined(with: .opacity))
+    }
+
+    var authView: some View {
+        VStack(spacing: 0) {
+            VStack(spacing: 12) {
+                loginField
+                passwordField
+            }
+            Spacer()
+            VStack(spacing: 12) {
+                loginButton
+                forgotPasswordButton
+            }
+        }
+        .navigationTitle(.authorization)
+        .toolbar {
+            ToolbarItem(placement: .topBarLeading) {
+                backToWelcomeButton
+            }
+        }
+    }
+
     @ViewBuilder
     var loginField: some View {
-        let localizedPlaceholder = String(localized: .loginOrEmail)
         SWTextField(
-            placeholder: localizedPlaceholder,
+            placeholder: String(localized: .loginOrEmail),
             text: $credentials.login,
             isFocused: focus == .username,
             errorState: isError ? .message(resetErrorMessage) : nil
@@ -81,9 +114,8 @@ private extension LoginScreen {
 
     @ViewBuilder
     var passwordField: some View {
-        let localizedPlaceholder = String(localized: .password)
         SWTextField(
-            placeholder: localizedPlaceholder,
+            placeholder: String(localized: .password),
             text: $credentials.password,
             isSecure: true,
             isFocused: focus == .password,
@@ -108,6 +140,17 @@ private extension LoginScreen {
     var forgotPasswordButton: some View {
         Button(.restorePassword, action: performRestorePassword)
             .tint(.swMainText)
+    }
+
+    @ViewBuilder
+    var backToWelcomeButton: some View {
+        if showLoginScreen {
+            Button {
+                showLoginScreen.toggle()
+            } label: {
+                Image(systemName: "xmark")
+            }
+        }
     }
 
     func performLogin() {
@@ -137,9 +180,8 @@ private extension LoginScreen {
 
     func performRestorePassword() {
         guard credentials.canRestorePassword else {
-            let localizedString = String(localized: .alertRestorePassword)
             SWAlert.shared.presentDefaultUIKit(
-                message: localizedString,
+                message: String(localized: .alertRestorePassword),
                 completion: { focus = .username }
             )
             return
@@ -172,11 +214,13 @@ private extension LoginScreen {
 #Preview("Успех") {
     LoginScreen(client: MockLoginClient(result: .success))
         .environment(AuthHelperImp())
+        .environment(StatusManager.preview)
         .environment(\.isNetworkConnected, true)
 }
 
 #Preview("Ошибка") {
     LoginScreen(client: MockLoginClient(result: .failure()))
         .environment(AuthHelperImp())
+        .environment(StatusManager.preview)
         .environment(\.isNetworkConnected, true)
 }
