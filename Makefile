@@ -270,11 +270,11 @@ screenshots:
 
 ## build: Сборка проекта в терминале
 build:
-	xcodebuild -project SwiftUI-SotkaApp.xcodeproj -scheme SwiftUI-SotkaApp -sdk iphonesimulator -destination 'platform=iOS Simulator,name=iPhone 17' build
+	xcodebuild -project SwiftUI-SotkaApp.xcodeproj -scheme SwiftUI-SotkaApp -sdk iphonesimulator -destination 'platform=iOS Simulator,name=iPhone 13 Pro,OS=18.6' build
 
 ## test: Запускает unit-тесты в терминале
 test:
-	xcodebuild -project SwiftUI-SotkaApp.xcodeproj -scheme SwiftUI-SotkaApp -sdk iphonesimulator -destination 'platform=iOS Simulator,name=iPhone 17' test -testPlan SwiftUI-SotkaApp
+	xcodebuild -project SwiftUI-SotkaApp.xcodeproj -scheme SwiftUI-SotkaApp -sdk iphonesimulator -destination 'platform=iOS Simulator,name=iPhone 13 Pro,OS=18.6' test -testPlan SwiftUI-SotkaApp
 
 ## setup_cursor: Настроить языковой сервер Swift для работы в Cursor
 setup_cursor:
