@@ -79,7 +79,7 @@ extension User {
     static var previewWithInfoposts: User {
         let user = preview
         // Добавляем прочитанные инфопосты для разных дней
-        user.readInfopostDays = [1, 3, 5, 7, 10, 15, 20, 25, 30, 35, 40, 45, 50]
+        user.setReadInfopostDays([1, 3, 5, 7, 10, 15, 20, 25, 30, 35, 40, 45, 50])
         return user
     }
 }

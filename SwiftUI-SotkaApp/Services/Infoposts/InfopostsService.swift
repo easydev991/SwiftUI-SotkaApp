@@ -115,11 +115,11 @@ final class InfopostsService {
         let user = try getCurrentUser(modelContext: modelContext)
 
         if user.favoriteInfopostIds.contains(id) {
-            user.favoriteInfopostIds.removeAll { $0 == id }
+            user.removeFavoriteInfopostId(id)
             favoriteIds.remove(id)
             logger.info("Удален из избранного: \(id)")
         } else {
-            user.favoriteInfopostIds.append(id)
+            user.addFavoriteInfopostId(id)
             favoriteIds.insert(id)
             logger.info("Добавлен в избранное: \(id)")
         }
@@ -277,7 +277,7 @@ extension InfopostsService {
             logger.info("Получено \(serverReadDays.count) прочитанных дней с сервера")
 
             // Обновляем синхронизированные дни
-            user.readInfopostDays = serverReadDays
+            user.setReadInfopostDays(serverReadDays)
 
             // Параллельно отправляем несинхронизированные дни на сервер
             let successfullySyncedDays = try await withThrowingTaskGroup(of: Int?.self) { group in
@@ -336,9 +336,7 @@ extension InfopostsService {
         logger.info("Отмечаем инфопост дня \(day) как прочитанный")
 
         // Добавляем в несинхронизированные дни
-        if !user.unsyncedReadInfopostDays.contains(day) {
-            user.unsyncedReadInfopostDays.append(day)
-        }
+        user.addUnsyncedReadInfopostDay(day)
 
         // Сохраняем изменения
         try modelContext.save()
@@ -421,12 +419,10 @@ private extension InfopostsService {
         // В одном цикле делаем обе операции
         for day in days {
             // Удаляем из несинхронизированных
-            user.unsyncedReadInfopostDays.removeAll { $0 == day }
+            user.removeUnsyncedReadInfopostDay(day)
 
             // Добавляем в синхронизированные (только если еще нет)
-            if !user.readInfopostDays.contains(day) {
-                user.readInfopostDays.append(day)
-            }
+            user.addReadInfopostDay(day)
         }
 
         // Сохраняем изменения один раз

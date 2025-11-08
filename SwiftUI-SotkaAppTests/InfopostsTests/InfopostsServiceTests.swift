@@ -110,7 +110,7 @@ extension AllInfopostsTests {
             let modelContext = modelContainer.mainContext
 
             let user = User(id: 1)
-            user.favoriteInfopostIds = ["d1", "d2", "d4"]
+            user.setFavoriteInfopostIds(["d1", "d2", "d4"])
             modelContext.insert(user)
             try modelContext.save()
 
@@ -160,7 +160,7 @@ extension AllInfopostsTests {
             let modelContext = modelContainer.mainContext
 
             let user = User(id: 1)
-            user.favoriteInfopostIds = ["d1"]
+            user.setFavoriteInfopostIds(["d1"])
             modelContext.insert(user)
             try modelContext.save()
 
@@ -191,7 +191,7 @@ extension AllInfopostsTests {
 
             let user = User(id: 1)
             let favoriteIds = ["d1", "d2", "about", "organiz"]
-            user.favoriteInfopostIds = favoriteIds
+            user.setFavoriteInfopostIds(favoriteIds)
             modelContext.insert(user)
             try modelContext.save()
 
@@ -226,7 +226,7 @@ extension AllInfopostsTests {
             let modelContext = modelContainer.mainContext
 
             let user = User(id: 1)
-            user.favoriteInfopostIds = ["d1", "d2"]
+            user.setFavoriteInfopostIds(["d1", "d2"])
             modelContext.insert(user)
             try modelContext.save()
 
@@ -247,7 +247,7 @@ extension AllInfopostsTests {
             let modelContext = modelContainer.mainContext
 
             let user = User(id: 1)
-            user.favoriteInfopostIds = ["d1", "d2", "d3"]
+            user.setFavoriteInfopostIds(["d1", "d2", "d3"])
             modelContext.insert(user)
             try modelContext.save()
 

@@ -26,14 +26,14 @@ final class User {
     /// Активности пользователя
     @Relationship(deleteRule: .cascade) var dayActivities: [DayActivity] = []
 
-    /// ID избранных инфопостов
-    var favoriteInfopostIds: [String] = []
+    /// ID избранных инфопостов (хранится как строка через запятую, например "id1,id2,id3")
+    private var favoriteInfopostIdsString = ""
 
-    /// Синхронизированные прочитанные дни инфопостов
-    var readInfopostDays: [Int] = []
+    /// Синхронизированные прочитанные дни инфопостов (хранится как строка через запятую, например "1,2,15")
+    private var readInfopostDaysString = ""
 
-    /// Несинхронизированные прочитанные дни инфопостов
-    var unsyncedReadInfopostDays: [Int] = []
+    /// Несинхронизированные прочитанные дни инфопостов (хранится как строка через запятую, например "1,2,15")
+    private var unsyncedReadInfopostDaysString = ""
 
     init(
         id: Int,
@@ -142,5 +142,105 @@ private extension User {
 
     var age: Int {
         Calendar.current.dateComponents([.year], from: birthDate, to: .now).year ?? 0
+    }
+}
+
+extension User {
+    /// ID избранных инфопостов
+    private(set) var favoriteInfopostIds: [String] {
+        get {
+            guard !favoriteInfopostIdsString.isEmpty else { return [] }
+            return favoriteInfopostIdsString.split(separator: ",").map { String($0.trimmingCharacters(in: .whitespaces)) }
+        }
+        set {
+            favoriteInfopostIdsString = newValue.isEmpty ? "" : newValue.joined(separator: ",")
+        }
+    }
+
+    /// Синхронизированные прочитанные дни инфопостов
+    private(set) var readInfopostDays: [Int] {
+        get {
+            guard !readInfopostDaysString.isEmpty else { return [] }
+            return readInfopostDaysString.split(separator: ",").compactMap { Int($0.trimmingCharacters(in: .whitespaces)) }
+        }
+        set {
+            readInfopostDaysString = newValue.isEmpty ? "" : newValue.map(String.init).joined(separator: ",")
+        }
+    }
+
+    /// Несинхронизированные прочитанные дни инфопостов
+    private(set) var unsyncedReadInfopostDays: [Int] {
+        get {
+            guard !unsyncedReadInfopostDaysString.isEmpty else { return [] }
+            return unsyncedReadInfopostDaysString.split(separator: ",").compactMap { Int($0.trimmingCharacters(in: .whitespaces)) }
+        }
+        set {
+            unsyncedReadInfopostDaysString = newValue.isEmpty ? "" : newValue.map(String.init).joined(separator: ",")
+        }
+    }
+
+    // MARK: - Вспомогательные методы для работы с массивами
+
+    /// Добавляет ID в избранные инфопосты
+    func addFavoriteInfopostId(_ id: String) {
+        var ids = favoriteInfopostIds
+        if !ids.contains(id) {
+            ids.append(id)
+            favoriteInfopostIds = ids
+        }
+    }
+
+    /// Удаляет ID из избранных инфопостов
+    func removeFavoriteInfopostId(_ id: String) {
+        var ids = favoriteInfopostIds
+        ids.removeAll { $0 == id }
+        favoriteInfopostIds = ids
+    }
+
+    /// Добавляет день в список прочитанных дней
+    func addReadInfopostDay(_ day: Int) {
+        var days = readInfopostDays
+        if !days.contains(day) {
+            days.append(day)
+            readInfopostDays = days
+        }
+    }
+
+    /// Удаляет день из списка прочитанных дней
+    func removeReadInfopostDay(_ day: Int) {
+        var days = readInfopostDays
+        days.removeAll { $0 == day }
+        readInfopostDays = days
+    }
+
+    /// Добавляет день в список несинхронизированных прочитанных дней
+    func addUnsyncedReadInfopostDay(_ day: Int) {
+        var days = unsyncedReadInfopostDays
+        if !days.contains(day) {
+            days.append(day)
+            unsyncedReadInfopostDays = days
+        }
+    }
+
+    /// Удаляет день из списка несинхронизированных прочитанных дней
+    func removeUnsyncedReadInfopostDay(_ day: Int) {
+        var days = unsyncedReadInfopostDays
+        days.removeAll { $0 == day }
+        unsyncedReadInfopostDays = days
+    }
+
+    /// Устанавливает весь список ID избранных инфопостов
+    func setFavoriteInfopostIds(_ ids: [String]) {
+        favoriteInfopostIds = ids
+    }
+
+    /// Устанавливает весь список прочитанных дней
+    func setReadInfopostDays(_ days: [Int]) {
+        readInfopostDays = days
+    }
+
+    /// Устанавливает весь список несинхронизированных прочитанных дней
+    func setUnsyncedReadInfopostDays(_ days: [Int]) {
+        unsyncedReadInfopostDays = days
     }
 }

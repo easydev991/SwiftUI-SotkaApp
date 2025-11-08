@@ -33,8 +33,8 @@ extension AllInfopostsTests {
             unsyncedDays: [Int] = []
         ) -> User {
             let user = User(id: 1)
-            user.readInfopostDays = readDays
-            user.unsyncedReadInfopostDays = unsyncedDays
+            user.setReadInfopostDays(readDays)
+            user.setUnsyncedReadInfopostDays(unsyncedDays)
             modelContext.insert(user)
             return user
         }

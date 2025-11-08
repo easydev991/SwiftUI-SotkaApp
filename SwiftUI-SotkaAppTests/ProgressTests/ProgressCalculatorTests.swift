@@ -6,7 +6,7 @@ import Testing
 struct ProgressCalculatorTests {
     private func makeUser(readDays: [Int]) -> User {
         let user = User.preview
-        user.readInfopostDays = readDays
+        user.setReadInfopostDays(readDays)
         return user
     }
 

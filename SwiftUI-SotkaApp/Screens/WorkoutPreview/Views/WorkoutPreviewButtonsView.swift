@@ -31,15 +31,7 @@ struct WorkoutPreviewButtonsView: View {
             Button(.workoutPreviewSave, action: onSave)
                 .buttonStyle(SWButtonStyle(mode: .filled, size: .large))
                 .disabled(!hasChanges)
-
             // TODO: Кнопка "Продолжить" - показывается только если тренировка была начата, но не завершена
-            // Button {
-            //     // Продолжить тренировку
-            // } label: {
-            //     Text(.workoutPreviewContinue)
-            //         .frame(maxWidth: .infinity)
-            // }
-            // .buttonStyle(SWButtonStyle(mode: .tinted, size: .large))
         }
     }
 }
