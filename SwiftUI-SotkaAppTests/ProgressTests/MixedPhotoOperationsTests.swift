@@ -56,7 +56,7 @@ extension AllProgressTests {
             try context.save()
 
             let syncService = ProgressSyncService.makeMock(client: mockClient)
-            await syncService.syncProgress(context: context)
+            _ = try await syncService.syncProgress(context: context)
 
             // Проверяем, что deletePhoto был вызван для удаления photo_back
             #expect(mockClient.deletePhotoCallCount == 1, "Должен быть вызван deletePhoto для photo_back")
@@ -117,7 +117,7 @@ extension AllProgressTests {
             try context.save()
 
             let syncService = ProgressSyncService.makeMock(client: mockClient)
-            await syncService.syncProgress(context: context)
+            _ = try await syncService.syncProgress(context: context)
 
             // Проверяем, что updateProgress был вызван для обновления прогресса
             #expect(mockClient.updateProgressCallCount == 1, "updateProgress должен быть вызван")
@@ -230,7 +230,7 @@ extension AllProgressTests {
             mockClient.mockedProgressResponses = [serverResponseA, serverResponseB]
 
             let syncService = ProgressSyncService.makeMock(client: mockClient)
-            await syncService.syncProgress(context: context)
+            _ = try await syncService.syncProgress(context: context)
 
             // Проверяем, что оба слота обработаны корректно
             let allProgress = try context.fetch(FetchDescriptor<UserProgress>())
@@ -280,7 +280,7 @@ extension AllProgressTests {
             mockClient.mockedProgressResponses = [serverResponse]
 
             let syncService = ProgressSyncService.makeMock(client: mockClient)
-            await syncService.syncProgress(context: context)
+            _ = try await syncService.syncProgress(context: context)
 
             let allProgress = try context.fetch(FetchDescriptor<UserProgress>())
             let updatedProgress = try #require(allProgress.first)
@@ -310,7 +310,7 @@ extension AllProgressTests {
             mockClient.shouldThrowError = true
 
             let syncService = ProgressSyncService.makeMock(client: mockClient)
-            await syncService.syncProgress(context: context)
+            _ = try await syncService.syncProgress(context: context)
 
             let allProgress = try context.fetch(FetchDescriptor<UserProgress>())
             #expect(allProgress.isEmpty, "При ошибке запись должна быть удалена из контекста")
@@ -349,7 +349,7 @@ extension AllProgressTests {
             mockClient.mockedProgressResponses = [serverResponse]
 
             let syncService = ProgressSyncService.makeMock(client: mockClient)
-            await syncService.syncProgress(context: context)
+            _ = try await syncService.syncProgress(context: context)
 
             // Проверяем финальное состояние
             let updatedProgress = try #require(context.fetch(FetchDescriptor<UserProgress>()).first)
@@ -390,7 +390,7 @@ extension AllProgressTests {
             mockClient.mockedProgressResponses = [serverResponse]
 
             let syncService = ProgressSyncService.makeMock(client: mockClient)
-            await syncService.syncProgress(context: context)
+            _ = try await syncService.syncProgress(context: context)
 
             // Пустой прогресс должен быть обработан корректно
             let updatedProgress = try #require(context.fetch(FetchDescriptor<UserProgress>()).first)
@@ -440,7 +440,7 @@ extension AllProgressTests {
             mockClient.mockedProgressResponses = serverResponses
 
             let syncService = ProgressSyncService.makeMock(client: mockClient)
-            await syncService.syncProgress(context: context)
+            _ = try await syncService.syncProgress(context: context)
 
             // Все слоты должны быть синхронизированы
             let allProgress = try context.fetch(FetchDescriptor<UserProgress>())
@@ -501,7 +501,7 @@ extension AllProgressTests {
             try context.save()
 
             // Act
-            await service.syncProgress(context: context)
+            _ = try await service.syncProgress(context: context)
 
             // Assert
             // Проверяем, что были вызваны правильные методы клиента
@@ -565,7 +565,7 @@ extension AllProgressTests {
             try context.save()
 
             // Act
-            await service.syncProgress(context: context)
+            _ = try await service.syncProgress(context: context)
 
             // Assert
             #expect(mockClient.deletePhotoCallCount == 0, "deletePhoto не должен вызываться")
@@ -616,7 +616,7 @@ extension AllProgressTests {
             try context.save()
 
             // Act
-            await service.syncProgress(context: context)
+            _ = try await service.syncProgress(context: context)
 
             // Assert
             #expect(mockClient.deletePhotoCallCount == 1, "deletePhoto должен быть вызван")

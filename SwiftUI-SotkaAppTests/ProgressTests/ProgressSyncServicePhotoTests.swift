@@ -209,7 +209,7 @@ extension AllProgressTests {
             try context.save()
 
             // Act - используем публичный метод syncProgress
-            await service.syncProgress(context: context)
+            _ = try await service.syncProgress(context: context)
 
             // Assert - проверяем, что фотография была обработана
             let updatedProgress = try #require(context.fetch(FetchDescriptor<UserProgress>()).first)
@@ -258,7 +258,7 @@ extension AllProgressTests {
             try context.save()
 
             // Act
-            await service.syncProgress(context: context)
+            _ = try await service.syncProgress(context: context)
 
             // Assert
             let updatedProgress = try #require(context.fetch(FetchDescriptor<UserProgress>()).first)
@@ -293,7 +293,7 @@ extension AllProgressTests {
             try context.save()
 
             // Act
-            await service.syncProgress(context: context)
+            _ = try await service.syncProgress(context: context)
 
             // Assert - прогресс должен остаться с помеченными фотографиями при ошибке
             let updatedProgress = try #require(context.fetch(FetchDescriptor<UserProgress>()).first)
@@ -341,7 +341,7 @@ extension AllProgressTests {
             try context.save()
 
             // Act
-            await service.syncProgress(context: context)
+            _ = try await service.syncProgress(context: context)
 
             // Assert
             let updatedProgress = try #require(context.fetch(FetchDescriptor<UserProgress>()).first)
@@ -395,7 +395,7 @@ extension AllProgressTests {
             progress.deletePhotoData(.back)
 
             // Act - синхронизируем
-            await service.syncProgress(context: context)
+            _ = try await service.syncProgress(context: context)
 
             // Assert
             let updatedProgress = try #require(context.fetch(FetchDescriptor<UserProgress>()).first)

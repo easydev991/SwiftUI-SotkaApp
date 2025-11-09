@@ -47,7 +47,7 @@ struct CustomExercisesServiceTests {
         mockClient.mockedCustomExercises = [serverExerciseResponse]
 
         // Act
-        await service.syncCustomExercises(context: context)
+        _ = try await service.syncCustomExercises(context: context)
 
         // Assert
         let updatedExercise = try #require(context.fetch(FetchDescriptor<CustomExercise>()).first)
@@ -86,7 +86,7 @@ struct CustomExercisesServiceTests {
         try context.save()
 
         // Act
-        await service.syncCustomExercises(context: context)
+        _ = try await service.syncCustomExercises(context: context)
 
         // Assert
         let updatedExercise = try #require(context.fetch(FetchDescriptor<CustomExercise>()).first)
@@ -125,7 +125,7 @@ struct CustomExercisesServiceTests {
         try context.save()
 
         // Act
-        await service.syncCustomExercises(context: context)
+        _ = try await service.syncCustomExercises(context: context)
 
         // Assert
         let exercises = try context.fetch(FetchDescriptor<CustomExercise>())
@@ -160,7 +160,7 @@ struct CustomExercisesServiceTests {
         mockClient.mockedCustomExercises = [serverExerciseResponse]
 
         // Act
-        await service.syncCustomExercises(context: context)
+        _ = try await service.syncCustomExercises(context: context)
 
         // Assert
         let exercises = try context.fetch(FetchDescriptor<CustomExercise>())
@@ -261,7 +261,7 @@ struct CustomExercisesServiceTests {
         )
         mockClient.mockedCustomExercises = [serverExerciseResponse]
 
-        await service.syncCustomExercises(context: context)
+        _ = try await service.syncCustomExercises(context: context)
 
         // Assert
         let updatedExercise = try #require(context.fetch(FetchDescriptor<CustomExercise>()).first)
@@ -336,7 +336,7 @@ struct CustomExercisesServiceTests {
         )
         mockClient.mockedCustomExercises = [serverResponse]
 
-        await service.syncCustomExercises(context: context)
+        _ = try await service.syncCustomExercises(context: context)
 
         let updatedExercise = try #require(context.fetch(FetchDescriptor<CustomExercise>()).first)
         #expect(updatedExercise.name == "Test Exercise")
@@ -392,11 +392,174 @@ struct CustomExercisesServiceTests {
         )
         mockClient.mockedCustomExercises = [serverResponse]
 
-        await service.syncCustomExercises(context: context)
+        _ = try await service.syncCustomExercises(context: context)
 
         let updatedExercise = try #require(context.fetch(FetchDescriptor<CustomExercise>()).first)
         #expect(updatedExercise.name == "Local Name")
         #expect(updatedExercise.imageId == 1)
+    }
+
+    // MARK: - Тесты для возврата SyncResult
+
+    @Test("Возвращает результат успешной синхронизации с подсчетом созданных записей")
+    func returnsSuccessResultWithCreatedCount() async throws {
+        let mockClient = MockSWClient()
+        let service = CustomExercisesService(client: mockClient)
+        let container = try ModelContainer(
+            for: CustomExercise.self,
+            User.self,
+            configurations: ModelConfiguration(isStoredInMemoryOnly: true)
+        )
+        let context = container.mainContext
+
+        let user = User(id: 1, userName: "testuser", fullName: "Test User", email: "test@example.com")
+        context.insert(user)
+        try context.save()
+
+        let exercise = CustomExercise(
+            id: "test-exercise",
+            name: "Test Exercise",
+            imageId: 1,
+            createDate: Date(),
+            modifyDate: Date(),
+            user: user
+        )
+        exercise.isSynced = false
+        context.insert(exercise)
+        try context.save()
+
+        let serverResponse = CustomExerciseResponse(
+            id: "test-exercise",
+            name: "Test Exercise",
+            imageId: 1,
+            createDate: DateFormatterService.stringFromFullDate(Date(), format: .serverDateTimeSec),
+            modifyDate: DateFormatterService.stringFromFullDate(Date(), format: .serverDateTimeSec)
+        )
+        mockClient.mockedCustomExercises = [serverResponse]
+
+        let result = try await service.syncCustomExercises(context: context)
+
+        #expect(result.type == .success)
+        let details = try #require(result.details.exercises)
+        #expect(details.created >= 0)
+        #expect(details.updated >= 0)
+        #expect(details.deleted >= 0)
+    }
+
+    @Test("Возвращает результат с ошибками при сетевой ошибке")
+    func returnsResultWithErrorsOnNetworkError() async throws {
+        let mockClient = MockSWClient()
+        let service = CustomExercisesService(client: mockClient)
+        let container = try ModelContainer(
+            for: CustomExercise.self,
+            User.self,
+            configurations: ModelConfiguration(isStoredInMemoryOnly: true)
+        )
+        let context = container.mainContext
+
+        let user = User(id: 1, userName: "testuser", fullName: "Test User", email: "test@example.com")
+        context.insert(user)
+        try context.save()
+
+        let exercise = CustomExercise(
+            id: "test-exercise",
+            name: "Test Exercise",
+            imageId: 1,
+            createDate: Date(),
+            modifyDate: Date(),
+            user: user
+        )
+        exercise.isSynced = false
+        context.insert(exercise)
+        try context.save()
+
+        mockClient.shouldThrowError = true
+
+        let result = try await service.syncCustomExercises(context: context)
+
+        #expect(result.type == .error || result.type == .partial)
+        let errors = result.details.errors ?? []
+        #expect(!errors.isEmpty)
+    }
+
+    @Test("Возвращает результат с подсчетом обновленных записей")
+    func returnsResultWithUpdatedCount() async throws {
+        let mockClient = MockSWClient()
+        let service = CustomExercisesService(client: mockClient)
+        let container = try ModelContainer(
+            for: CustomExercise.self,
+            User.self,
+            configurations: ModelConfiguration(isStoredInMemoryOnly: true)
+        )
+        let context = container.mainContext
+
+        let user = User(id: 1, userName: "testuser", fullName: "Test User", email: "test@example.com")
+        context.insert(user)
+        try context.save()
+
+        let exercise = CustomExercise(
+            id: "test-exercise",
+            name: "Test Exercise",
+            imageId: 1,
+            createDate: Date().addingTimeInterval(-3600),
+            modifyDate: Date().addingTimeInterval(-3600),
+            user: user
+        )
+        exercise.isSynced = true
+        context.insert(exercise)
+        try context.save()
+
+        let serverResponse = CustomExerciseResponse(
+            id: "test-exercise",
+            name: "Updated Exercise",
+            imageId: 2,
+            createDate: DateFormatterService.stringFromFullDate(Date().addingTimeInterval(-3600), format: .serverDateTimeSec),
+            modifyDate: DateFormatterService.stringFromFullDate(Date(), format: .serverDateTimeSec)
+        )
+        mockClient.mockedCustomExercises = [serverResponse]
+
+        let result = try await service.syncCustomExercises(context: context)
+
+        #expect(result.type == .success)
+        let details = try #require(result.details.exercises)
+        #expect(details.updated >= 0)
+    }
+
+    @Test("Возвращает результат с подсчетом удаленных записей")
+    func returnsResultWithDeletedCount() async throws {
+        let mockClient = MockSWClient()
+        let service = CustomExercisesService(client: mockClient)
+        let container = try ModelContainer(
+            for: CustomExercise.self,
+            User.self,
+            configurations: ModelConfiguration(isStoredInMemoryOnly: true)
+        )
+        let context = container.mainContext
+
+        let user = User(id: 1, userName: "testuser", fullName: "Test User", email: "test@example.com")
+        context.insert(user)
+        try context.save()
+
+        let exercise = CustomExercise(
+            id: "test-exercise",
+            name: "Test Exercise",
+            imageId: 1,
+            createDate: Date(),
+            modifyDate: Date(),
+            user: user
+        )
+        exercise.shouldDelete = true
+        exercise.isSynced = false
+        context.insert(exercise)
+        try context.save()
+
+        mockClient.mockedCustomExercises = []
+
+        let result = try await service.syncCustomExercises(context: context)
+
+        #expect(result.type == .success)
+        let details = try #require(result.details.exercises)
+        #expect(details.deleted >= 0)
     }
 }
 

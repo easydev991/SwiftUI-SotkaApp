@@ -52,7 +52,7 @@ extension DailyActivitiesServiceTests {
         )
         mockClient.setServerActivity(serverResponse)
 
-        await service.syncDailyActivities(context: context)
+        _ = try await service.syncDailyActivities(context: context)
 
         let updatedActivity = try #require(context.fetch(FetchDescriptor<DayActivity>()).first)
         #expect(updatedActivity.count == 5)
@@ -104,7 +104,7 @@ extension DailyActivitiesServiceTests {
         )
         mockClient.setServerActivity(serverResponse)
 
-        await service.syncDailyActivities(context: context)
+        _ = try await service.syncDailyActivities(context: context)
 
         let updatedActivity = try #require(context.fetch(FetchDescriptor<DayActivity>()).first)
         #expect(updatedActivity.count == 10)
@@ -177,7 +177,7 @@ extension DailyActivitiesServiceTests {
         )
         mockClient.setServerActivity(serverResponse)
 
-        await service.syncDailyActivities(context: context)
+        _ = try await service.syncDailyActivities(context: context)
 
         let updatedActivity = try #require(context.fetch(FetchDescriptor<DayActivity>()).first)
         let parsedServerDate = DateFormatterService.dateFromString(
@@ -248,7 +248,7 @@ extension DailyActivitiesServiceTests {
         )
         mockClient.setServerActivity(serverResponse)
 
-        await service.syncDailyActivities(context: context)
+        _ = try await service.syncDailyActivities(context: context)
 
         let updatedActivity = try #require(context.fetch(FetchDescriptor<DayActivity>()).first)
         #expect(updatedActivity.count == 5)
@@ -342,7 +342,7 @@ extension DailyActivitiesServiceTests {
         )
         mockClient.setServerActivity(serverResponse)
 
-        await service.syncDailyActivities(context: context)
+        _ = try await service.syncDailyActivities(context: context)
 
         let activities = try context.fetch(FetchDescriptor<DayActivity>())
         #expect(activities.count == 1)
@@ -380,7 +380,7 @@ extension DailyActivitiesServiceTests {
         context.insert(activity)
         try context.save()
 
-        await service.syncDailyActivities(context: context)
+        _ = try await service.syncDailyActivities(context: context)
 
         let activities = try context.fetch(FetchDescriptor<DayActivity>())
         #expect(activities.isEmpty)

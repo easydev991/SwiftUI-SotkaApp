@@ -67,7 +67,7 @@ extension DailyActivitiesServiceTests {
         )
         service.createDailyActivity(activity, context: context)
 
-        await service.syncDailyActivities(context: context)
+        _ = try await service.syncDailyActivities(context: context)
 
         let savedActivity = try #require(context.fetch(FetchDescriptor<DayActivity>()).first)
         #expect(savedActivity.isSynced)
@@ -105,7 +105,7 @@ extension DailyActivitiesServiceTests {
         activity.count = 10
         try service.markDailyActivityAsModified(activity, context: context)
 
-        await service.syncDailyActivities(context: context)
+        _ = try await service.syncDailyActivities(context: context)
 
         let updatedActivity = try #require(context.fetch(FetchDescriptor<DayActivity>()).first)
         #expect(updatedActivity.isSynced)
@@ -174,7 +174,7 @@ extension DailyActivitiesServiceTests {
         try context.save()
 
         service.deleteDailyActivity(activity, context: context)
-        await service.syncDailyActivities(context: context)
+        _ = try await service.syncDailyActivities(context: context)
 
         let activities = try context.fetch(FetchDescriptor<DayActivity>())
         #expect(activities.isEmpty)

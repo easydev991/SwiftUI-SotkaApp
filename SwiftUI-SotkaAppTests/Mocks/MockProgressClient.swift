@@ -11,6 +11,9 @@ final class MockProgressClient: ProgressClient, @unchecked Sendable {
     /// Флаг для имитации ошибок
     var shouldThrowError = false
 
+    /// Флаг для имитации ошибок только при вызове getProgress()
+    var shouldThrowErrorOnGetProgress = false
+
     /// Кастомная ошибка для выброса
     var errorToThrow: Error = NSError(domain: "TestError", code: 1, userInfo: [NSLocalizedDescriptionKey: "Test error"])
 
@@ -44,7 +47,7 @@ final class MockProgressClient: ProgressClient, @unchecked Sendable {
 
     func getProgress() async throws -> [ProgressResponse] {
         getProgressCallCount += 1
-        if shouldThrowError {
+        if shouldThrowError || shouldThrowErrorOnGetProgress {
             throw errorToThrow
         }
         return mockedProgressResponses
@@ -154,6 +157,7 @@ final class MockProgressClient: ProgressClient, @unchecked Sendable {
         lastDeletePhotoDay = nil
         lastDeletePhotoType = nil
         shouldThrowError = false
+        shouldThrowErrorOnGetProgress = false
         deletePhotoError = nil
         deletePhotoCalls.removeAll()
         updateProgressCalls.removeAll()

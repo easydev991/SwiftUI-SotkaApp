@@ -115,18 +115,55 @@ final class CustomExercisesService {
 
     /// Синхронизирует пользовательские упражнения с сервером (двунаправленная синхронизация)
     /// - Parameter context: Контекст Swift Data
-    func syncCustomExercises(context: ModelContext) async {
-        guard !isLoading else { return }
+    /// - Returns: Результат синхронизации с детальной информацией
+    func syncCustomExercises(context: ModelContext) async throws -> SyncResult {
+        guard !isLoading else {
+            throw AlreadySyncingError()
+        }
         isLoading = true
+        defer { isLoading = false }
+
+        var errors: [SyncError] = []
+        var stats: SyncStats?
 
         // 1. Сначала отправляем локальные изменения на сервер
-        await syncUnsyncedExercises(context: context)
+        let (syncStats, syncErrors) = await syncUnsyncedExercises(context: context)
+        stats = syncStats
+        errors.append(contentsOf: syncErrors)
 
         // 2. Потом загружаем серверные изменения
-        await downloadServerExercises(context: context)
+        do {
+            try await downloadServerExercises(context: context)
+        } catch {
+            logger.error("Ошибка загрузки серверных упражнений: \(error.localizedDescription)")
+            errors.append(SyncError(
+                type: "download_failed",
+                message: error.localizedDescription,
+                entityType: "exercise",
+                entityId: nil
+            ))
+        }
 
-        isLoading = false
+        // Определяем тип результата
+        let resultType = SyncResultType(
+            errors: errors.isEmpty ? nil : errors,
+            stats: stats
+        )
+
+        let details = SyncResultDetails(
+            progress: nil,
+            exercises: stats,
+            activities: nil,
+            errors: errors.isEmpty ? nil : errors
+        )
+
+        return SyncResult(type: resultType, details: details)
     }
+}
+
+extension CustomExercisesService {
+    /// Ошибка, возникающая при попытке запустить синхронизацию, когда она уже выполняется
+    struct AlreadySyncingError: Error {}
 }
 
 private extension CustomExercisesService {
@@ -208,7 +245,7 @@ private extension CustomExercisesService {
 
     /// Загружает упражнения с сервера и обрабатывает конфликты
     /// - Parameter context: Контекст Swift Data
-    func downloadServerExercises(context: ModelContext) async {
+    func downloadServerExercises(context: ModelContext) async throws {
         do {
             guard let user = try context.fetch(FetchDescriptor<User>()).first else {
                 logger.error("Не удалось получить текущего пользователя для синхронизации упражнений")
@@ -310,17 +347,20 @@ private extension CustomExercisesService {
             logger.info("Серверные упражнения загружены")
         } catch {
             logger.error("Ошибка загрузки серверных упражнений: \(error.localizedDescription)")
+            throw error
         }
     }
 
     /// Синхронизирует все несинхронизированные упражнения с сервером
     /// - Parameter context: Контекст Swift Data
-    func syncUnsyncedExercises(context: ModelContext) async {
+    /// - Returns: Кортеж со статистикой синхронизации и списком ошибок
+    func syncUnsyncedExercises(context: ModelContext) async -> (SyncStats, [SyncError]) {
         guard !isSyncing else {
             logger.info("Синхронизация упражнений уже выполняется")
-            return
+            return (SyncStats(created: 0, updated: 0, deleted: 0), [])
         }
         isSyncing = true
+        defer { isSyncing = false }
         logger.info("Начинаем синхронизацию упражнений")
 
         do {
@@ -331,15 +371,28 @@ private extension CustomExercisesService {
             // 2) Параллельные сетевые операции (без ModelContext)
             let eventsById = await runSyncTasks(snapshots: snapshots, client: client)
 
+            // Собираем ошибки из событий
+            var syncErrors: [SyncError] = []
+            for (id, event) in eventsById {
+                if case let .failed(_, errorDescription) = event {
+                    syncErrors.append(SyncError(
+                        type: "sync_failed",
+                        message: errorDescription,
+                        entityType: "exercise",
+                        entityId: id
+                    ))
+                }
+            }
+
             // 3) Применяем результаты к ModelContext единым этапом
-            applySyncEvents(eventsById, context: context)
+            let stats = applySyncEvents(eventsById, context: context)
 
             logger.info("Синхронизация упражнений завершена")
+            return (stats, syncErrors)
         } catch {
             logger.error("Ошибка получения несинхронизированных упражнений: \(error.localizedDescription)")
+            return (SyncStats(created: 0, updated: 0, deleted: 0), [])
         }
-
-        isSyncing = false
     }
 
     /// Обновляет локальное упражнение данными с сервера
@@ -417,12 +470,17 @@ private extension CustomExercisesService {
     }
 
     /// Применяет результаты синхронизации к локальному хранилищу в одном месте
-    func applySyncEvents(_ events: [String: SyncEvent], context: ModelContext) {
+    /// - Returns: Статистика синхронизации (создано/обновлено/удалено)
+    func applySyncEvents(_ events: [String: SyncEvent], context: ModelContext) -> SyncStats {
+        var created = 0
+        var updated = 0
+        var deleted = 0
+
         do {
             // Загружаем текущего пользователя и все упражнения заранее
             guard let user = try context.fetch(FetchDescriptor<User>()).first else {
                 logger.error("Пользователь не найден при применении результатов синхронизации")
-                return
+                return SyncStats(created: created, updated: updated, deleted: deleted)
             }
             let existing = try context.fetch(FetchDescriptor<CustomExercise>()).filter { $0.user?.id == user.id }
             let dict = Dictionary(existing.map { ($0.id, $0) }, uniquingKeysWith: { $1 })
@@ -451,6 +509,7 @@ private extension CustomExercisesService {
                             } else if serverModifyDate > local.modifyDate {
                                 // Серверная версия новее - обновляем локальную
                                 updateLocalFromServer(local, server)
+                                updated += 1
                                 logger
                                     .info(
                                         "Обновлено локально упражнение '\(local.name)' по данным сервера. Локальная: \(local.modifyDate.timeIntervalSince1970), Серверная: \(serverModifyDate.timeIntervalSince1970)"
@@ -465,17 +524,20 @@ private extension CustomExercisesService {
                         } else {
                             // Упражнение не синхронизировано - обновляем локальную
                             updateLocalFromServer(local, server)
+                            updated += 1
                             logger.info("Обновлено локально упражнение '\(local.name)' по данным сервера")
                         }
                     } else {
                         // Создаем новое локально по ответу сервера
                         let newExercise = CustomExercise(from: server, user: user)
                         context.insert(newExercise)
+                        created += 1
                         logger.info("Создано локально упражнение '\(newExercise.name)' из ответа сервера")
                     }
                 case .deleted:
                     if let local = dict[id] {
                         context.delete(local)
+                        deleted += 1
                         logger.info("Удалено локально упражнение с ID \(id)")
                     } else {
                         // Если локально уже отсутствует — ничего не делаем
@@ -490,5 +552,7 @@ private extension CustomExercisesService {
         } catch {
             logger.error("Ошибка применения результатов синхронизации: \(error.localizedDescription)")
         }
+
+        return SyncStats(created: created, updated: updated, deleted: deleted)
     }
 }

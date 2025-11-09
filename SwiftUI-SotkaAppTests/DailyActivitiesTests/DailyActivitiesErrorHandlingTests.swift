@@ -34,7 +34,7 @@ extension DailyActivitiesServiceTests {
         )
         service.createDailyActivity(activity, context: context)
 
-        await service.syncDailyActivities(context: context)
+        _ = try await service.syncDailyActivities(context: context)
 
         let savedActivity = try #require(context.fetch(FetchDescriptor<DayActivity>()).first)
         #expect(!savedActivity.isSynced)
@@ -70,8 +70,8 @@ extension DailyActivitiesServiceTests {
         let initialGetDaysCallCount = mockClient.getDaysCallCount
         let initialUpdateDayCallCount = mockClient.updateDayCallCount
 
-        await service.syncDailyActivities(context: context)
-        await service.syncDailyActivities(context: context)
+        _ = try await service.syncDailyActivities(context: context)
+        _ = try await service.syncDailyActivities(context: context)
 
         #expect(mockClient.getDaysCallCount > initialGetDaysCallCount)
         #expect(mockClient.updateDayCallCount > initialUpdateDayCallCount)
@@ -121,7 +121,7 @@ extension DailyActivitiesServiceTests {
         )
         mockClient.setServerActivity(serverResponse)
 
-        await service.syncDailyActivities(context: context)
+        _ = try await service.syncDailyActivities(context: context)
 
         let activities = try context.fetch(FetchDescriptor<DayActivity>())
         let deletedActivity = try #require(activities.first)
@@ -155,7 +155,7 @@ extension DailyActivitiesServiceTests {
         )
         service.deleteDailyActivity(activity, context: context)
 
-        await service.syncDailyActivities(context: context)
+        _ = try await service.syncDailyActivities(context: context)
 
         let activities = try context.fetch(FetchDescriptor<DayActivity>())
         #expect(activities.isEmpty)
@@ -207,7 +207,7 @@ extension DailyActivitiesServiceTests {
 
         let initialGetDaysCallCount = mockClient.getDaysCallCount
 
-        await service.syncDailyActivities(context: context)
+        _ = try await service.syncDailyActivities(context: context)
 
         let updatedActivity = try #require(context.fetch(FetchDescriptor<DayActivity>()).first)
         #expect(updatedActivity.count == 5)

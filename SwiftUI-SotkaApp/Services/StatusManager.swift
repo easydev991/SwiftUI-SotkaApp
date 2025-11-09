@@ -288,9 +288,93 @@ private extension StatusManager {
         isJournalSyncInProgress = true
         defer { isJournalSyncInProgress = false }
         state = .init(didLoadInitialData: didLoadInitialData)
-        await progressSyncService.syncProgress(context: context)
-        await customExercisesService.syncCustomExercises(context: context)
-        await dailyActivitiesService.syncDailyActivities(context: context)
+
+        let startDate = Date.now
+        let user = try? context.fetch(FetchDescriptor<User>()).first
+        let entry = SyncJournalEntry(
+            startDate: startDate,
+            result: .success,
+            user: user
+        )
+        context.insert(entry)
+
+        var allErrors: [SyncError] = []
+        var progressStats: SyncStats?
+        var exercisesStats: SyncStats?
+        var activitiesStats: SyncStats?
+
+        do {
+            let result = try await progressSyncService.syncProgress(context: context)
+            progressStats = result.details.progress
+            if let errors = result.details.errors {
+                allErrors.append(contentsOf: errors)
+            }
+        } catch {
+            logger.error("Ошибка синхронизации прогресса: \(error.localizedDescription)")
+            allErrors.append(
+                SyncError(
+                    type: "ProgressSyncError",
+                    message: error.localizedDescription,
+                    entityType: "progress",
+                    entityId: nil
+                )
+            )
+        }
+
+        do {
+            let result = try await customExercisesService.syncCustomExercises(context: context)
+            exercisesStats = result.details.exercises
+            if let errors = result.details.errors {
+                allErrors.append(contentsOf: errors)
+            }
+        } catch {
+            logger.error("Ошибка синхронизации упражнений: \(error.localizedDescription)")
+            allErrors.append(
+                SyncError(
+                    type: "CustomExercisesSyncError",
+                    message: error.localizedDescription,
+                    entityType: "exercise",
+                    entityId: nil
+                )
+            )
+        }
+
+        do {
+            let result = try await dailyActivitiesService.syncDailyActivities(context: context)
+            activitiesStats = result.details.activities
+            if let errors = result.details.errors {
+                allErrors.append(contentsOf: errors)
+            }
+        } catch {
+            logger.error("Ошибка синхронизации активностей: \(error.localizedDescription)")
+            allErrors.append(
+                SyncError(
+                    type: "DailyActivitiesSyncError",
+                    message: error.localizedDescription,
+                    entityType: "activity",
+                    entityId: nil
+                )
+            )
+        }
+
+        let combinedStats = SyncStats(combining: progressStats, exercises: exercisesStats, activities: activitiesStats)
+        let syncResult = SyncResultType(
+            errors: allErrors.isEmpty ? nil : allErrors,
+            stats: combinedStats
+        )
+
+        let details = SyncResultDetails(
+            progress: progressStats,
+            exercises: exercisesStats,
+            activities: activitiesStats,
+            errors: allErrors.isEmpty ? nil : allErrors
+        )
+
+        entry.endDate = Date.now
+        entry.result = syncResult
+        entry.details = details
+        try? context.save()
+
         conflictingSyncModel = nil
         state = .idle
     }

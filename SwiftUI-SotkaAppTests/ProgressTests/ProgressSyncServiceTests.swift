@@ -45,7 +45,7 @@ extension AllProgressTests {
             mockClient.mockedProgressResponses = [serverResponse]
 
             // Act
-            await service.syncProgress(context: context)
+            _ = try await service.syncProgress(context: context)
 
             // Assert
             let allProgress = try context.fetch(FetchDescriptor<UserProgress>())
@@ -98,7 +98,7 @@ extension AllProgressTests {
             mockClient.mockedProgressResponses = [serverResponse]
 
             // Act
-            await service.syncProgress(context: context)
+            _ = try await service.syncProgress(context: context)
 
             // Assert
             let allProgress = try context.fetch(FetchDescriptor<UserProgress>())
@@ -156,7 +156,7 @@ extension AllProgressTests {
             mockClient.mockedProgressResponses = [serverResponse]
 
             // Act
-            await service.syncProgress(context: context)
+            _ = try await service.syncProgress(context: context)
 
             // Assert - локальные данные должны сохраниться
             let allProgress = try context.fetch(FetchDescriptor<UserProgress>())
@@ -208,7 +208,7 @@ extension AllProgressTests {
             mockClient.mockedProgressResponses = [serverResponse]
 
             // Act
-            await service.syncProgress(context: context)
+            _ = try await service.syncProgress(context: context)
 
             // Assert - серверные данные должны быть применены
             let allProgress = try context.fetch(FetchDescriptor<UserProgress>())
@@ -247,7 +247,7 @@ extension AllProgressTests {
             try context.save()
 
             // Act
-            await service.syncProgress(context: context)
+            _ = try await service.syncProgress(context: context)
 
             // Assert
             let allProgress = try context.fetch(FetchDescriptor<UserProgress>())
@@ -284,7 +284,7 @@ extension AllProgressTests {
             mockClient.mockedProgressResponses = [serverResponse]
 
             // Act
-            await service.syncProgress(context: context)
+            _ = try await service.syncProgress(context: context)
 
             // Assert
             let allProgress = try context.fetch(FetchDescriptor<UserProgress>())
@@ -329,7 +329,7 @@ extension AllProgressTests {
             mockClient.mockedProgressResponses = []
 
             // Act
-            await service.syncProgress(context: context)
+            _ = try await service.syncProgress(context: context)
 
             // Assert
             let allProgress = try context.fetch(FetchDescriptor<UserProgress>())
@@ -367,7 +367,7 @@ extension AllProgressTests {
             mockClient.shouldThrowError = true
 
             // Act
-            await service.syncProgress(context: context)
+            _ = try await service.syncProgress(context: context)
 
             // Assert - локальный прогресс должен остаться без изменений
             let unchangedProgress = try #require(context.fetch(FetchDescriptor<UserProgress>()).first)
@@ -409,7 +409,7 @@ extension AllProgressTests {
             try context.save()
 
             // Act
-            await service.syncProgress(context: context)
+            _ = try await service.syncProgress(context: context)
 
             // Assert - должен остаться только один прогресс (более новый)
             let allProgress = try context.fetch(FetchDescriptor<UserProgress>())
@@ -459,7 +459,7 @@ extension AllProgressTests {
             try context.save()
 
             // Act - тестируем приватный метод через публичный интерфейс
-            await service.syncProgress(context: context)
+            _ = try await service.syncProgress(context: context)
 
             // Проверяем, что записи обработаны корректно
             let allProgress = try context.fetch(FetchDescriptor<UserProgress>())
@@ -517,7 +517,7 @@ extension AllProgressTests {
             mockClient.mockedProgressResponses = [serverResponse]
 
             // Act
-            await service.syncProgress(context: context)
+            _ = try await service.syncProgress(context: context)
 
             // Assert - локальные данные должны сохраниться (локальная версия новее)
             let updatedProgress = try #require(context.fetch(FetchDescriptor<UserProgress>()).first)
@@ -554,7 +554,7 @@ extension AllProgressTests {
             try context.save()
 
             // Act
-            await service.syncProgress(context: context)
+            _ = try await service.syncProgress(context: context)
 
             // Assert - фотографии должны быть очищены после успешного удаления
             let updatedProgress = try #require(context.fetch(FetchDescriptor<UserProgress>()).first)
@@ -589,7 +589,7 @@ extension AllProgressTests {
             try context.save()
 
             // Act
-            await service.syncProgress(context: context)
+            _ = try await service.syncProgress(context: context)
 
             // Assert - при ошибках фотографии должны остаться помеченными для удаления
             let updatedProgress = try #require(context.fetch(FetchDescriptor<UserProgress>()).first)
@@ -634,7 +634,7 @@ extension AllProgressTests {
             mockClient.mockedProgressResponses = [serverResponse]
 
             // Act
-            await service.syncProgress(context: context)
+            _ = try await service.syncProgress(context: context)
 
             // Assert - проверяем финальное состояние
             let updatedProgress = try #require(context.fetch(FetchDescriptor<UserProgress>()).first)
@@ -664,7 +664,7 @@ extension AllProgressTests {
             try context.save()
 
             // Act
-            await service.syncProgress(context: context)
+            _ = try await service.syncProgress(context: context)
 
             // Assert - синхронизация должна пройти без ошибок
             let allProgress = try context.fetch(FetchDescriptor<UserProgress>())
@@ -696,7 +696,7 @@ extension AllProgressTests {
             try context.save()
 
             // Act - запускаем первую синхронизацию
-            await service.syncProgress(context: context)
+            _ = try await service.syncProgress(context: context)
 
             // Проверяем состояние после первой синхронизации
             let progressAfterFirst = try context.fetch(FetchDescriptor<UserProgress>())
@@ -705,7 +705,7 @@ extension AllProgressTests {
             #expect(firstProgress.isSynced, "Прогресс должен быть синхронизирован после первой синхронизации")
 
             // Запускаем вторую синхронизацию (должна быть пропущена из-за флага isSyncing)
-            await service.syncProgress(context: context)
+            _ = try await service.syncProgress(context: context)
 
             // Assert - синхронизация должна пройти корректно без дублирования
             let allProgress = try context.fetch(FetchDescriptor<UserProgress>())
@@ -751,7 +751,7 @@ extension AllProgressTests {
             let syncService = ProgressSyncService.makeMock(client: mockClient)
 
             // Act
-            await syncService.syncProgress(context: context)
+            _ = try await syncService.syncProgress(context: context)
 
             // Assert
             let allProgress = try context.fetch(FetchDescriptor<UserProgress>())
@@ -835,7 +835,7 @@ extension AllProgressTests {
             let syncService = ProgressSyncService.makeMock(client: mockClient)
 
             // Act
-            await syncService.syncProgress(context: context)
+            _ = try await syncService.syncProgress(context: context)
 
             // Assert
             let allProgress = try context.fetch(FetchDescriptor<UserProgress>())
@@ -853,6 +853,210 @@ extension AllProgressTests {
             #expect(!progress.shouldDelete)
             #expect(progress.urlPhotoFront == "https://example.com/front.jpg")
             #expect(progress.urlPhotoBack == "https://example.com/back.jpg")
+        }
+
+        @Test("Возвращает результат успешной синхронизации с подсчетом созданных записей")
+        func returnsSuccessResultWithCreatedCount() async throws {
+            let mockClient = MockProgressClient()
+            let service = ProgressSyncService.makeMock(client: mockClient)
+            let container = try ModelContainer(
+                for: UserProgress.self,
+                User.self,
+                configurations: ModelConfiguration(isStoredInMemoryOnly: true)
+            )
+            let context = container.mainContext
+
+            let user = User(id: 1, userName: "testuser", fullName: "Test User", email: "test@example.com")
+            context.insert(user)
+            try context.save()
+
+            let progress = UserProgress(id: 1, pullUps: 10, pushUps: 20, squats: 30, weight: 70.0)
+            progress.user = user
+            progress.isSynced = false
+            context.insert(progress)
+            try context.save()
+
+            let serverResponse = ProgressResponse(
+                id: 1,
+                pullups: 10,
+                pushups: 20,
+                squats: 30,
+                weight: 70.0,
+                createDate: DateFormatterService.stringFromFullDate(Date(), format: .serverDateTimeSec),
+                modifyDate: DateFormatterService.stringFromFullDate(Date(), format: .serverDateTimeSec)
+            )
+            mockClient.mockedProgressResponses = [serverResponse]
+
+            let result = try await service.syncProgress(context: context)
+
+            #expect(result.type == .success)
+            let details = try #require(result.details.progress)
+            #expect(details.created >= 0)
+            #expect(details.updated >= 0)
+            #expect(details.deleted >= 0)
+        }
+
+        @Test("Возвращает результат с ошибками при сетевой ошибке")
+        func returnsResultWithErrorsOnNetworkError() async throws {
+            let mockClient = MockProgressClient()
+            mockClient.shouldThrowError = true
+            let service = ProgressSyncService.makeMock(client: mockClient)
+            let container = try ModelContainer(
+                for: UserProgress.self,
+                User.self,
+                configurations: ModelConfiguration(isStoredInMemoryOnly: true)
+            )
+            let context = container.mainContext
+
+            let user = User(id: 1, userName: "testuser", fullName: "Test User", email: "test@example.com")
+            context.insert(user)
+            try context.save()
+
+            let progress = UserProgress(id: 1, pullUps: 10, pushUps: 20, squats: 30, weight: 70.0)
+            progress.user = user
+            progress.isSynced = false
+            context.insert(progress)
+            try context.save()
+
+            let result = try await service.syncProgress(context: context)
+
+            #expect(!result.isSuccess)
+            let errors = try #require(result.details.errors)
+            #expect(!errors.isEmpty)
+            // При ошибках и статистике = 0 должен быть тип .error
+            let stats = result.details.progress ?? SyncStats(created: 0, updated: 0, deleted: 0)
+            if stats.totalOperations == 0 {
+                #expect(result.type == .error)
+            } else {
+                #expect(result.type == .partial)
+            }
+        }
+
+        @Test("Подсчитывает созданные обновленные и удаленные записи")
+        func countsCreatedUpdatedAndDeletedRecords() async throws {
+            let mockClient = MockProgressClient()
+            let service = ProgressSyncService.makeMock(client: mockClient)
+            let container = try ModelContainer(
+                for: UserProgress.self,
+                User.self,
+                configurations: ModelConfiguration(isStoredInMemoryOnly: true)
+            )
+            let context = container.mainContext
+
+            let user = User(id: 1, userName: "testuser", fullName: "Test User", email: "test@example.com")
+            context.insert(user)
+            try context.save()
+
+            let progress1 = UserProgress(id: 1, pullUps: 10, pushUps: 20, squats: 30, weight: 70.0)
+            progress1.user = user
+            progress1.isSynced = false
+            context.insert(progress1)
+
+            let progress2 = UserProgress(id: 2, pullUps: 15, pushUps: 25, squats: 35, weight: 75.0)
+            progress2.user = user
+            progress2.isSynced = true
+            progress2.lastModified = Date().addingTimeInterval(-3600)
+            context.insert(progress2)
+            try context.save()
+
+            let response1 = ProgressResponse(
+                id: 1,
+                pullups: 10,
+                pushups: 20,
+                squats: 30,
+                weight: 70.0,
+                createDate: DateFormatterService.stringFromFullDate(Date(), format: .serverDateTimeSec),
+                modifyDate: DateFormatterService.stringFromFullDate(Date(), format: .serverDateTimeSec)
+            )
+            let response2 = ProgressResponse(
+                id: 2,
+                pullups: 15,
+                pushups: 25,
+                squats: 35,
+                weight: 75.0,
+                createDate: DateFormatterService.stringFromFullDate(Date().addingTimeInterval(-7200), format: .serverDateTimeSec),
+                modifyDate: DateFormatterService.stringFromFullDate(Date(), format: .serverDateTimeSec)
+            )
+            mockClient.mockedProgressResponses = [response1, response2]
+
+            let result = try await service.syncProgress(context: context)
+
+            #expect(result.type == .success)
+            let details = try #require(result.details.progress)
+            #expect(details.created >= 0)
+            #expect(details.updated >= 0)
+            #expect(details.deleted >= 0)
+        }
+
+        @Test("Определяет тип результата как error когда есть ошибки и статистика = 0")
+        func determinesErrorTypeWhenErrorsExistAndStatsZero() async throws {
+            let mockClient = MockProgressClient()
+            mockClient.shouldThrowError = true
+            let service = ProgressSyncService.makeMock(client: mockClient)
+            let container = try ModelContainer(
+                for: UserProgress.self,
+                User.self,
+                configurations: ModelConfiguration(isStoredInMemoryOnly: true)
+            )
+            let context = container.mainContext
+
+            let user = User(id: 1, userName: "testuser", fullName: "Test User", email: "test@example.com")
+            context.insert(user)
+            try context.save()
+
+            // Не добавляем прогресс, чтобы статистика была 0
+            let result = try await service.syncProgress(context: context)
+
+            #expect(result.type == .error)
+            let errors = try #require(result.details.errors)
+            #expect(!errors.isEmpty)
+        }
+
+        @Test("Определяет тип результата как partial когда есть ошибки и статистика > 0")
+        func determinesPartialTypeWhenErrorsExistAndStatsGreaterThanZero() async throws {
+            let mockClient = MockProgressClient()
+            let service = ProgressSyncService.makeMock(client: mockClient)
+            let container = try ModelContainer(
+                for: UserProgress.self,
+                User.self,
+                configurations: ModelConfiguration(isStoredInMemoryOnly: true)
+            )
+            let context = container.mainContext
+
+            let user = User(id: 1, userName: "testuser", fullName: "Test User", email: "test@example.com")
+            context.insert(user)
+            try context.save()
+
+            // Создаем прогресс для синхронизации
+            let progress = UserProgress(id: 1, pullUps: 10, pushUps: 20, squats: 30, weight: 70.0)
+            progress.user = user
+            progress.isSynced = false
+            context.insert(progress)
+            try context.save()
+
+            // Мокаем успешный ответ сервера
+            let serverResponse = ProgressResponse(
+                id: 1,
+                pullups: 10,
+                pushups: 20,
+                squats: 30,
+                weight: 70.0,
+                createDate: DateFormatterService.stringFromFullDate(Date(), format: .serverDateTimeSec),
+                modifyDate: DateFormatterService.stringFromFullDate(Date(), format: .serverDateTimeSec)
+            )
+            mockClient.mockedProgressResponses = [serverResponse]
+
+            // Симулируем ошибку при загрузке серверных изменений
+            mockClient.shouldThrowErrorOnGetProgress = true
+
+            let result = try await service.syncProgress(context: context)
+
+            // Должен быть .partial, так как есть ошибки, но статистика > 0 (была успешная синхронизация)
+            #expect(result.type == .partial)
+            let errors = try #require(result.details.errors)
+            #expect(!errors.isEmpty)
+            let stats = try #require(result.details.progress)
+            #expect(stats.totalOperations > 0)
         }
     }
 }

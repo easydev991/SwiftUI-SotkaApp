@@ -24,14 +24,21 @@ final class ProgressSyncService {
     }
 
     /// Основной метод синхронизации
-    func syncProgress(context: ModelContext) async {
+    func syncProgress(context: ModelContext) async throws -> SyncResult {
         logger.info("🔄 [TRACE] syncProgress() - начало синхронизации")
         guard !isSyncing else {
             logger.info("⏭️ [TRACE] syncProgress() - синхронизация уже выполняется, выход")
-            return
+            throw AlreadySyncingError()
         }
         isSyncing = true
         logger.info("🚀 [TRACE] syncProgress() - устанавливаем isSyncing=true, начинаем синхронизацию")
+        defer {
+            logger.info("🏁 [TRACE] syncProgress() - устанавливаем isSyncing=false, завершение")
+            isSyncing = false
+        }
+
+        var errors: [SyncError] = []
+        var stats: SyncStats?
 
         do {
             logger.info("🧹 [TRACE] syncProgress() - этап 1: очистка дубликатов")
@@ -49,12 +56,34 @@ final class ProgressSyncService {
 
             logger.info("💾 [TRACE] syncProgress() - этап 4: применение результатов к ModelContext")
             // Отправляем локальные изменения на сервер и применяем результаты к ModelContext единым этапом
-            await applySyncEvents(eventsById, context: context)
+            stats = await applySyncEvents(eventsById, context: context)
             logger.info("✅ [TRACE] syncProgress() - синхронизация локальных изменений завершена")
+
+            // Собираем ошибки из событий
+            for (id, event) in eventsById {
+                if case let .failed(_, errorDescription) = event {
+                    errors.append(SyncError(
+                        type: "sync_failed",
+                        message: errorDescription,
+                        entityType: "progress",
+                        entityId: String(id)
+                    ))
+                }
+            }
 
             logger.info("📥 [TRACE] syncProgress() - этап 5: загрузка серверных изменений")
             // Затем загружаем серверные изменения
-            await downloadServerProgress(context: context)
+            do {
+                try await downloadServerProgress(context: context)
+            } catch {
+                logger.error("❌ [TRACE] syncProgress() - ошибка загрузки серверных изменений: \(error.localizedDescription)")
+                errors.append(SyncError(
+                    type: "download_failed",
+                    message: error.localizedDescription,
+                    entityType: "progress",
+                    entityId: nil
+                ))
+            }
 
             logger.info("🧹 [TRACE] syncProgress() - этап 6: финальная очистка дубликатов")
             // Финальная очистка дубликатов после всех операций
@@ -64,10 +93,26 @@ final class ProgressSyncService {
         } catch {
             logger.error("❌ [TRACE] syncProgress() - ошибка синхронизации: \(error.localizedDescription)")
             logger.error("❌ [TRACE] syncProgress() - тип ошибки: \(String(describing: type(of: error)))")
+            errors.append(SyncError(
+                type: "sync_error",
+                message: error.localizedDescription,
+                entityType: "progress",
+                entityId: nil
+            ))
+            throw error
         }
 
-        logger.info("🏁 [TRACE] syncProgress() - устанавливаем isSyncing=false, завершение")
-        isSyncing = false
+        let resultType = SyncResultType(
+            errors: errors.isEmpty ? nil : errors,
+            stats: stats ?? SyncStats(created: 0, updated: 0, deleted: 0)
+        )
+        let details = SyncResultDetails(
+            progress: stats ?? SyncStats(created: 0, updated: 0, deleted: 0),
+            exercises: nil,
+            activities: nil,
+            errors: errors.isEmpty ? nil : errors
+        )
+        return SyncResult(type: resultType, details: details)
     }
 
     /// Очищает дубликаты прогресса в базе данных
@@ -141,11 +186,12 @@ final class ProgressSyncService {
     }
 
     /// Загружает обновленный прогресс с сервера и обрабатывает конфликты
-    private func downloadServerProgress(context: ModelContext) async {
+    private func downloadServerProgress(context: ModelContext) async throws {
         do {
             guard let user = try context.fetch(FetchDescriptor<User>()).first else {
                 logger.error("Не удалось получить текущего пользователя для синхронизации прогресса")
-                return
+                struct UserNotFoundError: Error {}
+                throw UserNotFoundError()
             }
 
             // Добавляем небольшую задержку перед загрузкой с сервера, чтобы избежать конфликтов
@@ -174,7 +220,8 @@ final class ProgressSyncService {
 
                     guard let user = try context.fetch(FetchDescriptor<User>()).first else {
                         logger.error("Не удалось получить текущего пользователя для повторной попытки")
-                        return
+                        struct UserNotFoundError: Error {}
+                        throw UserNotFoundError()
                     }
 
                     await mergeServerProgress(serverProgress, user: user, context: context)
@@ -184,7 +231,10 @@ final class ProgressSyncService {
                     logger.info("Серверный прогресс загружен и обработан после повторной попытки")
                 } catch {
                     logger.error("Повторная попытка загрузки серверного прогресса также не удалась: \(error.localizedDescription)")
+                    throw error
                 }
+            } else {
+                throw error
             }
         }
     }
@@ -335,6 +385,11 @@ final class ProgressSyncService {
                 "📋 [TRACE] createNewProgress() - состояние новой записи: isSynced=\(newProgress.isSynced), shouldDelete=\(newProgress.shouldDelete), lastModified=\(newProgress.lastModified)"
             )
     }
+}
+
+extension ProgressSyncService {
+    /// Ошибка, возникающая при попытке запустить синхронизацию, когда она уже выполняется
+    struct AlreadySyncingError: Error {}
 }
 
 private extension ProgressSyncService {
@@ -586,8 +641,12 @@ private extension ProgressSyncService {
     }
 
     /// Применяет результаты синхронизации к локальному хранилищу в одном месте
-    func applySyncEvents(_ events: [Int: SyncEvent], context: ModelContext) async {
+    func applySyncEvents(_ events: [Int: SyncEvent], context: ModelContext) async -> SyncStats {
         logger.info("💾 [TRACE] applySyncEvents() - начало применения \(events.count) результатов синхронизации")
+
+        var created = 0
+        var updated = 0
+        var deleted = 0
 
         // Логируем все события перед обработкой
         for (id, event) in events {
@@ -599,7 +658,7 @@ private extension ProgressSyncService {
             logger.info("👤 [TRACE] applySyncEvents() - загрузка пользователя и существующих записей")
             guard let user = try context.fetch(FetchDescriptor<User>()).first else {
                 logger.error("❌ [TRACE] applySyncEvents() - пользователь не найден")
-                return
+                return SyncStats(created: created, updated: updated, deleted: deleted)
             }
             let existingCount = (try? context.fetch(FetchDescriptor<UserProgress>()).count(where: { $0.user?.id == user.id })) ?? 0
             logger.info("📊 [TRACE] applySyncEvents() - найдено \(existingCount) существующих записей прогресса")
@@ -622,6 +681,7 @@ private extension ProgressSyncService {
 
                         // Реальный ответ сервера - применяем LWW логику
                         _ = await applyLWWLogic(local: local, server: server, internalDay: id)
+                        updated += 1
 
                         logger
                             .info(
@@ -635,6 +695,7 @@ private extension ProgressSyncService {
                         context.insert(newProgress)
                         // Обновляем фотографии из ответа сервера
                         await updateProgressFromServerResponse(newProgress, server)
+                        created += 1
                         logger
                             .info(
                                 "✅ [TRACE] applySyncEvents() - новая запись создана: isSynced=\(newProgress.isSynced), shouldDelete=\(newProgress.shouldDelete)"
@@ -651,6 +712,7 @@ private extension ProgressSyncService {
                         // Локальная запись уже существует на сервере - помечаем как синхронизированную
                         local.isSynced = true
                         local.shouldDelete = false
+                        updated += 1
 
                         logger
                             .info(
@@ -663,6 +725,7 @@ private extension ProgressSyncService {
                     if let local = dict[id] {
                         logger.info("🗑️ [TRACE] applySyncEvents() - удаление записи дня \(id)")
                         context.delete(local)
+                        deleted += 1
                         logger.info("✅ [TRACE] applySyncEvents() - запись дня \(id) удалена")
                     } else {
                         logger.debug("⚠️ [TRACE] applySyncEvents() - локальный прогресс дня \(id) не найден для удаления")
@@ -675,7 +738,7 @@ private extension ProgressSyncService {
                     } else {
                         logger.warning("⚠️ [TRACE] applySyncEvents() - запись дня \(id) не найдена для удаления фотографий")
                     }
-                case let .failed(id, errorDescription):
+                case let .failed(_, errorDescription):
                     logger.error("❌ [TRACE] applySyncEvents() - ошибка синхронизации прогресса дня \(id): \(errorDescription)")
                 }
             }
@@ -690,6 +753,7 @@ private extension ProgressSyncService {
                             "🗑️ [TRACE] applySyncEvents() - удаляем локальную запись дня \(progress.id) (shouldDelete=true, isSynced=false)"
                         )
                     context.delete(progress)
+                    deleted += 1
                 }
             }
 
@@ -710,7 +774,8 @@ private extension ProgressSyncService {
             logger.error("❌ [TRACE] applySyncEvents() - ошибка применения результатов: \(error.localizedDescription)")
             logger.error("❌ [TRACE] applySyncEvents() - тип ошибки: \(String(describing: type(of: error)))")
         }
-        logger.info("🏁 [TRACE] applySyncEvents() - завершение")
+        logger.info("🏁 [TRACE] applySyncEvents() - завершение, статистика: created=\(created), updated=\(updated), deleted=\(deleted)")
+        return SyncStats(created: created, updated: updated, deleted: deleted)
     }
 
     /// Обновляет локальный прогресс данными с сервера

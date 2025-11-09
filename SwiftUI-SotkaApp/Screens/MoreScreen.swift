@@ -35,6 +35,7 @@ struct MoreScreen: View {
                             makeVibrateToggle($settings.vibrate)
                         }
                     }
+                    syncJournalButton
                 }
                 if currentDay > 1 {
                     Section(.moreScreenResetProgramSection) {
@@ -238,6 +239,13 @@ struct MoreScreen: View {
             }
             .accessibilityIdentifier("aboutProgramButton")
         }
+    }
+
+    private var syncJournalButton: some View {
+        NavigationLink(destination: SyncJournalScreen()) {
+            Text(.moreScreenSyncJournalButton)
+        }
+        .accessibilityIdentifier("syncJournalButton")
     }
 }
 

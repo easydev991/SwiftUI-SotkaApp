@@ -235,18 +235,55 @@ final class DailyActivitiesService {
 
     /// Синхронизирует ежедневные активности с сервером (двунаправленная синхронизация)
     /// - Parameter context: Контекст SwiftData
-    func syncDailyActivities(context: ModelContext) async {
-        guard !isLoading else { return }
+    /// - Returns: Результат синхронизации с детальной информацией
+    func syncDailyActivities(context: ModelContext) async throws -> SyncResult {
+        guard !isLoading else {
+            throw AlreadySyncingError()
+        }
         isLoading = true
+        defer { isLoading = false }
+
+        var errors: [SyncError] = []
+        var stats: SyncStats?
 
         // 1. Сначала отправляем локальные изменения на сервер
-        let deletedDays = await syncUnsyncedActivities(context: context)
+        let (syncStats, syncErrors, deletedDays) = await syncUnsyncedActivities(context: context)
+        stats = syncStats
+        errors.append(contentsOf: syncErrors)
 
         // 2. Потом загружаем серверные изменения
-        await downloadServerActivities(context: context, excludeDeletedDays: deletedDays)
+        do {
+            try await downloadServerActivities(context: context, excludeDeletedDays: deletedDays)
+        } catch {
+            logger.error("Ошибка загрузки серверных активностей: \(error.localizedDescription)")
+            errors.append(SyncError(
+                type: "download_failed",
+                message: error.localizedDescription,
+                entityType: "activity",
+                entityId: nil
+            ))
+        }
 
-        isLoading = false
+        // Определяем тип результата
+        let resultType = SyncResultType(
+            errors: errors.isEmpty ? nil : errors,
+            stats: stats
+        )
+
+        let details = SyncResultDetails(
+            progress: nil,
+            exercises: nil,
+            activities: stats,
+            errors: errors.isEmpty ? nil : errors
+        )
+
+        return SyncResult(type: resultType, details: details)
     }
+}
+
+extension DailyActivitiesService {
+    /// Ошибка, возникающая при попытке запустить синхронизацию, когда она уже выполняется
+    struct AlreadySyncingError: Error {}
 }
 
 private extension DailyActivitiesService {
@@ -297,11 +334,11 @@ private extension DailyActivitiesService {
 
     /// Синхронизирует все несинхронизированные активности с сервером
     /// - Parameter context: Контекст SwiftData
-    /// - Returns: Set дней, которые были удалены в процессе синхронизации
-    func syncUnsyncedActivities(context: ModelContext) async -> Set<Int> {
+    /// - Returns: Кортеж со статистикой синхронизации, списком ошибок и множеством удаленных дней
+    func syncUnsyncedActivities(context: ModelContext) async -> (SyncStats, [SyncError], Set<Int>) {
         guard !isSyncing else {
             logger.info("Синхронизация активностей уже выполняется")
-            return []
+            return (SyncStats(created: 0, updated: 0, deleted: 0), [], [])
         }
         isSyncing = true
         defer { isSyncing = false }
@@ -316,14 +353,30 @@ private extension DailyActivitiesService {
             // 2) Параллельные сетевые операции (без ModelContext)
             let eventsByDay = await runSyncTasks(snapshots: snapshots, client: client)
 
+            // Собираем ошибки и удаленные дни из событий
+            var syncErrors: [SyncError] = []
+            var deletedDays = Set<Int>()
+            for (day, event) in eventsByDay {
+                if case let .failed(_, errorDescription) = event {
+                    syncErrors.append(SyncError(
+                        type: "sync_failed",
+                        message: errorDescription,
+                        entityType: "activity",
+                        entityId: String(day)
+                    ))
+                } else if case .deleted = event {
+                    deletedDays.insert(day)
+                }
+            }
+
             // 3) Применяем результаты к ModelContext единым этапом
-            let deletedDays = applySyncEvents(eventsByDay, context: context)
+            let stats = applySyncEvents(eventsByDay, context: context)
 
             logger.info("Синхронизация активностей завершена")
-            return deletedDays
+            return (stats, syncErrors, deletedDays)
         } catch {
             logger.error("Ошибка получения несинхронизированных активностей: \(error.localizedDescription)")
-            return []
+            return (SyncStats(created: 0, updated: 0, deleted: 0), [], [])
         }
     }
 
@@ -395,15 +448,17 @@ private extension DailyActivitiesService {
     /// - Parameters:
     ///   - events: События синхронизации
     ///   - context: Контекст SwiftData
-    /// - Returns: Set дней, которые были удалены
-    func applySyncEvents(_ events: [Int: SyncEvent], context: ModelContext) -> Set<Int> {
-        var deletedDays = Set<Int>()
+    /// - Returns: Статистика синхронизации (создано/обновлено/удалено)
+    func applySyncEvents(_ events: [Int: SyncEvent], context: ModelContext) -> SyncStats {
+        var created = 0
+        var updated = 0
+        var deleted = 0
 
         do {
             // Загружаем текущего пользователя и все активности заранее
             guard let user = try context.fetch(FetchDescriptor<User>()).first else {
                 logger.error("Пользователь не найден при применении результатов синхронизации")
-                return deletedDays
+                return SyncStats(created: created, updated: updated, deleted: deleted)
             }
             let existing = try context.fetch(FetchDescriptor<DayActivity>()).filter { $0.user?.id == user.id }
             let dict = Dictionary(existing.map { ($0.day, $0) }, uniquingKeysWith: { $1 })
@@ -432,6 +487,7 @@ private extension DailyActivitiesService {
                             } else {
                                 // Серверная версия новее или равна - обновляем локальную
                                 updateLocalFromServer(local, server)
+                                updated += 1
                                 logger
                                     .info(
                                         "Обновлено локально активность дня \(day) по данным сервера. Локальная: \(local.modifyDate.timeIntervalSince1970), Серверная: \(serverModifyDate.timeIntervalSince1970)"
@@ -440,26 +496,37 @@ private extension DailyActivitiesService {
                         } else {
                             // Активность не синхронизирована или нет даты в ответе - обновляем локальную
                             updateLocalFromServer(local, server)
+                            updated += 1
                             logger.info("Обновлено локально активность дня \(day) по данным сервера")
                         }
                     } else {
                         // Создаем новое локально по ответу сервера
                         let newActivity = DayActivity(from: server, user: user)
                         context.insert(newActivity)
+                        created += 1
                         logger.info("Создано локально активность дня \(day) из ответа сервера")
                     }
                 case .deleted:
-                    if dict[day] != nil {
-                        // Если активность помечена на удаление и сервер подтвердил удаление,
-                        // проверяем, возвращает ли сервер её обратно в downloadServerActivities
-                        // Если да - не удаляем физически, оставляем с shouldDelete = true
-                        deletedDays.insert(day)
-                        // Не удаляем физически сразу - проверка в downloadServerActivities определит, нужно ли удалять
-                        logger.info("Удаление активности дня \(day) отправлено на сервер")
+                    if let local = dict[day] {
+                        // Если активность помечена на удаление, не удаляем её физически сразу
+                        // Проверка в downloadServerActivities определит, нужно ли удалять физически
+                        // (если сервер не возвращает её, то удаление подтверждено)
+                        if local.shouldDelete {
+                            // Оставляем с shouldDelete = true, не удаляем физически
+                            // downloadServerActivities проверит, возвращает ли сервер эту активность
+                            // Если сервер возвращает её, оставляем с shouldDelete = true
+                            // Если сервер не возвращает её, удалим физически в downloadServerActivities
+                            logger.debug("Активность дня \(day) помечена на удаление, оставляем для проверки в downloadServerActivities")
+                            // Не увеличиваем счетчик deleted здесь, так как удаление еще не подтверждено сервером
+                        } else {
+                            // Если активность не помечена на удаление, но сервер подтвердил удаление - удаляем физически
+                            context.delete(local)
+                            deleted += 1
+                            logger.info("Удалено локально активность дня \(day)")
+                        }
                     } else {
                         // Если локально уже отсутствует — ничего не делаем
                         logger.debug("Удаление: локальная активность дня \(day) не найдена")
-                        deletedDays.insert(day)
                     }
                 case let .failed(_, errorDescription):
                     logger.error("Ошибка синхронизации активности дня \(day): \(errorDescription)")
@@ -471,7 +538,7 @@ private extension DailyActivitiesService {
             logger.error("Ошибка применения результатов синхронизации: \(error.localizedDescription)")
         }
 
-        return deletedDays
+        return SyncStats(created: created, updated: updated, deleted: deleted)
     }
 
     /// Обновляет локальную активность данными с сервера
@@ -514,7 +581,7 @@ private extension DailyActivitiesService {
     /// - Parameters:
     ///   - context: Контекст SwiftData
     ///   - excludeDeletedDays: Set дней, которые были удалены в текущем цикле синхронизации
-    func downloadServerActivities(context: ModelContext, excludeDeletedDays: Set<Int> = []) async {
+    func downloadServerActivities(context: ModelContext, excludeDeletedDays: Set<Int> = []) async throws {
         do {
             guard let user = try context.fetch(FetchDescriptor<User>()).first else {
                 logger.error("Не удалось получить текущего пользователя для синхронизации активностей")

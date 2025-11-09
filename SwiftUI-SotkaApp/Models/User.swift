@@ -26,6 +26,9 @@ final class User {
     /// Активности пользователя
     @Relationship(deleteRule: .cascade) var dayActivities: [DayActivity] = []
 
+    /// Записи журнала синхронизаций
+    @Relationship(deleteRule: .cascade) var syncJournalEntries: [SyncJournalEntry] = []
+
     /// ID избранных инфопостов (хранится как строка через запятую, например "id1,id2,id3")
     private var favoriteInfopostIdsString = ""
 

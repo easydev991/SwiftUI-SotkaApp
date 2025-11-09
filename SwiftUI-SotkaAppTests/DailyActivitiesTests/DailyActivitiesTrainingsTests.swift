@@ -38,7 +38,7 @@ extension DailyActivitiesServiceTests {
         context.insert(activity)
         try context.save()
 
-        await service.syncDailyActivities(context: context)
+        _ = try await service.syncDailyActivities(context: context)
 
         let savedActivity = try #require(context.fetch(FetchDescriptor<DayActivity>()).first)
         #expect(savedActivity.trainings.count == 2)
@@ -94,7 +94,7 @@ extension DailyActivitiesServiceTests {
         )
         mockClient.setServerActivity(serverResponse)
 
-        await service.syncDailyActivities(context: context)
+        _ = try await service.syncDailyActivities(context: context)
 
         let updatedActivity = try #require(context.fetch(FetchDescriptor<DayActivity>()).first)
         #expect(updatedActivity.trainings.count == 2)
