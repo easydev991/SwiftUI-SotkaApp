@@ -2207,6 +2207,91 @@
         }
       }
     },
+    "MoreScreen.ResetProgramButton" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Reset everything"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Сбросить всё"
+          }
+        }
+      }
+    },
+    "MoreScreen.ResetProgramDialogConfirm" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Reset"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Сбросить"
+          }
+        }
+      }
+    },
+    "MoreScreen.ResetProgramDialogMessage" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Training diary will be deleted, workouts will start from day one. This action cannot be undone."
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Дневник тренировок будет удалён, тренировки начнутся с первого дня. Это действие нельзя отменить."
+          }
+        }
+      }
+    },
+    "MoreScreen.ResetProgramDialogTitle" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Reset program progress"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Сброс прохождения"
+          }
+        }
+      }
+    },
+    "MoreScreen.ResetProgramSection" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Start from scratch"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Начать с нуля"
+          }
+        }
+      }
+    },
     "MoreScreen.Rest.Group" : {
       "comment" : "The header title for a section that contains options related to resting.",
       "extractionState" : "manual",
@@ -3361,6 +3446,23 @@
         }
       }
     },
+    "resetProgram" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Start from scratch"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Начать с нуля"
+          }
+        }
+      }
+    },
     "RestDay" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -3661,13 +3763,13 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Street Workout: Parks"
+            "value" : "Street Workout Parks"
           }
         },
         "ru" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Street Workout: Площадки"
+            "value" : "Street Workout Площадки"
           }
         }
       }
@@ -4250,7 +4352,7 @@
         },
         "ru" : {
           "stringUnit" : {
-            "state" : "needs_review",
+            "state" : "translated",
             "value" : "Пользовательские упражнения"
           }
         }
@@ -4267,7 +4369,7 @@
         },
         "ru" : {
           "stringUnit" : {
-            "state" : "needs_review",
+            "state" : "translated",
             "value" : "Упражнения дня"
           }
         }
@@ -4284,7 +4386,7 @@
         },
         "ru" : {
           "stringUnit" : {
-            "state" : "needs_review",
+            "state" : "translated",
             "value" : "Готово"
           }
         }
@@ -4301,7 +4403,7 @@
         },
         "ru" : {
           "stringUnit" : {
-            "state" : "needs_review",
+            "state" : "translated",
             "value" : "Стандартные упражнения"
           }
         }

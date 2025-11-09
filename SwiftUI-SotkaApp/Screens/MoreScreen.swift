@@ -1,14 +1,18 @@
 import OSLog
+import SwiftData
 import SwiftUI
 import SWUtils
 
 struct MoreScreen: View {
     @Environment(\.locale) private var locale
+    @Environment(\.currentDay) private var currentDay
     @Environment(AppSettings.self) private var appSettings
-    @Environment(InfopostsService.self) private var infopostsService
+    @Environment(StatusManager.self) private var statusManager
+    @Environment(AuthHelperImp.self) private var authHelper
+    @Environment(\.modelContext) private var modelContext
     @State private var aboutInfopost: Infopost?
+    @State private var showResetDialog = false
     private let appId = "id6753644091"
-    private let logger = Logger(subsystem: "SotkaApp", category: "MoreScreen")
 
     var body: some View {
         NavigationStack {
@@ -17,6 +21,9 @@ struct MoreScreen: View {
                 Section(.settings) {
                     appThemePicker
                     appLanguageButton
+                    #if DEBUG
+                    debugCurrentDayPicker
+                    #endif
                     DisclosureGroup(.moreScreenWorkoutGroup) {
                         notificationToggle
                         if settings.workoutNotificationsEnabled {
@@ -28,6 +35,11 @@ struct MoreScreen: View {
                             makeTimerSoundToggle($settings.playTimerSound)
                             makeVibrateToggle($settings.vibrate)
                         }
+                    }
+                }
+                if currentDay > 1 {
+                    Section(.moreScreenResetProgramSection) {
+                        resetProgramButton
                     }
                 }
                 Section(.aboutApp) {
@@ -51,7 +63,7 @@ struct MoreScreen: View {
             .navigationBarTitleDisplayMode(.inline)
             .onAppear {
                 if aboutInfopost == nil {
-                    aboutInfopost = infopostsService.loadAboutInfopost()
+                    aboutInfopost = statusManager.infopostsService.loadAboutInfopost()
                 }
             }
         }
@@ -90,6 +102,20 @@ struct MoreScreen: View {
         }
     }
 
+    #if DEBUG
+    private var debugCurrentDayPicker: some View {
+        Picker(.currentDay, selection: .init(
+            get: { statusManager.currentDayCalculator?.currentDay ?? 1 },
+            set: { statusManager.setCurrentDayForDebug($0) }
+        )) {
+            ForEach(1 ... 100, id: \.self) { day in
+                Text(.day(number: day)).tag(day)
+            }
+        }
+        .pickerStyle(.navigationLink)
+    }
+    #endif
+
     @ViewBuilder
     private var notificationToggle: some View {
         @Bindable var settings = appSettings
@@ -125,6 +151,26 @@ struct MoreScreen: View {
             appSettings.sendFeedback()
         }
         .accessibilityIdentifier("sendFeedbackButton")
+    }
+
+    private var resetProgramButton: some View {
+        Button(.moreScreenResetProgramButton) {
+            showResetDialog = true
+        }
+        .confirmationDialog(
+            .moreScreenResetProgramDialogTitle,
+            isPresented: $showResetDialog,
+            titleVisibility: .visible
+        ) {
+            Button(.moreScreenResetProgramDialogConfirm, role: .destructive) {
+                Task {
+                    let client = SWClient(with: authHelper)
+                    await statusManager.resetProgram(client: client, context: modelContext)
+                }
+            }
+        } message: {
+            Text(.moreScreenResetProgramDialogMessage)
+        }
     }
 
     @ViewBuilder
@@ -198,14 +244,21 @@ struct MoreScreen: View {
 }
 
 #if DEBUG
-#Preview {
+#Preview("День 1") {
     MoreScreen()
         .environment(AppSettings())
-        .environment(
-            InfopostsService(
-                language: "ru",
-                infopostsClient: MockInfopostsClient(result: .success)
-            )
-        )
+        .environment(StatusManager.preview)
+        .environment(AuthHelperImp())
+        .environment(\.currentDay, 1)
+        .modelContainer(PreviewModelContainer.make(with: .preview))
+}
+
+#Preview("День 2") {
+    MoreScreen()
+        .environment(AppSettings())
+        .environment(StatusManager.preview)
+        .environment(AuthHelperImp())
+        .environment(\.currentDay, 2)
+        .modelContainer(PreviewModelContainer.make(with: .preview))
 }
 #endif

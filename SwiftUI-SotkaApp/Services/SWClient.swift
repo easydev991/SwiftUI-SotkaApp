@@ -56,12 +56,12 @@ extension SWClient: CountryClient {
 }
 
 extension SWClient: StatusClient {
-    func start(date: String) async throws -> CurrentRun {
+    func start(date: String) async throws -> CurrentRunResponse {
         let endpoint = Endpoint.start(date)
         return try await makeResult(for: endpoint)
     }
 
-    func current() async throws -> CurrentRun {
+    func current() async throws -> CurrentRunResponse {
         let endpoint = Endpoint.current
         return try await makeResult(for: endpoint)
     }

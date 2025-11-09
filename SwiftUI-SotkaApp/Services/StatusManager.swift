@@ -131,8 +131,7 @@ final class StatusManager {
         }
     }
 
-    func start(client: StatusClient, appDate: Date?, context: ModelContext) async {
-        state = .init(didLoadInitialData: didLoadInitialData)
+    func startNewRun(client: StatusClient, appDate: Date?) async {
         let newStartDate = appDate ?? .now
         let isoDateString = DateFormatterService.stringFromFullDate(newStartDate, iso: true)
         let currentRun = try? await client.start(date: isoDateString)
@@ -141,6 +140,12 @@ final class StatusManager {
         } else {
             newStartDate
         }
+        let now = Date.now
+        currentDayCalculator = .init(startDate, now)
+    }
+
+    func start(client: StatusClient, appDate: Date?, context: ModelContext) async {
+        await startNewRun(client: client, appDate: appDate)
         await syncJournalAndProgress(context: context)
     }
 
@@ -172,6 +177,56 @@ final class StatusManager {
         maxReadInfoPostDay = 0
         infopostsService.didLogout()
     }
+
+    /// Сбрасывает программу: удаляет все данные прохождения программы и начинает заново
+    /// - Parameters:
+    ///   - client: Сервис для загрузки статуса
+    ///   - context: Контекст модели SwiftData
+    func resetProgram(client: StatusClient, context: ModelContext) async {
+        state = .isLoadingInitialData
+        guard let user = try? context.fetch(FetchDescriptor<User>()).first else {
+            logger.error("Пользователь не найден для сброса программы")
+            state = .idle
+            return
+        }
+        // Удаление всех DayActivity пользователя (DayActivityTraining удалятся автоматически через каскад)
+        let activities = user.dayActivities
+        activities.forEach { context.delete($0) }
+        // Удаление всех UserProgress пользователя (локальные фото dataPhoto* удалятся вместе с записями)
+        let progress = user.progressResults
+        progress.forEach { context.delete($0) }
+        // Очистка данных инфопостов в User
+        user.setFavoriteInfopostIds([])
+        user.setReadInfopostDays([])
+        user.setUnsyncedReadInfopostDays([])
+        // Сохраняем изменения перед вызовом startNewRun
+        try? context.save()
+        // Метод startNewRun сделает запрос к серверу через StatusClient.start(date:) и установит новую startDate
+        let now = Date.now
+        await startNewRun(client: client, appDate: now)
+        currentDayCalculator = .init(startDate, now)
+        state = .idle
+    }
+
+    #if DEBUG
+    /// Устанавливает текущий день программы для дебага и тестирования
+    /// - Parameter day: Номер дня от 1 до 100
+    func setCurrentDayForDebug(_ day: Int) {
+        guard (1 ... 100).contains(day) else {
+            logger.error("Попытка установить невалидный день: \(day). День должен быть от 1 до 100")
+            return
+        }
+        let now = Date.now
+        let daysToSubtract = day - 1
+        guard let newStartDate = Calendar.current.date(byAdding: .day, value: -daysToSubtract, to: now) else {
+            logger.error("Не удалось вычислить новую дату старта для дня \(day)")
+            return
+        }
+        logger.info("Установка дня \(day) для дебага. Новая дата старта: \(newStartDate.description)")
+        startDate = newStartDate
+        currentDayCalculator = .init(newStartDate, now)
+    }
+    #endif
 }
 
 extension StatusManager {

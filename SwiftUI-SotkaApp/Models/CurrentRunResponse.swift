@@ -1,7 +1,7 @@
 import Foundation
 
 /// Текущее прохождение программы
-struct CurrentRun: Decodable {
+struct CurrentRunResponse: Decodable {
     /// Дата начала программы
     ///
     /// `nil`, если пользователь не стартовал сотку

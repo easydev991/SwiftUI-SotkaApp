@@ -41,7 +41,7 @@ struct MockLoginClient: LoginClient {
 }
 
 extension MockLoginClient: StatusClient {
-    func start(date _: String) async throws -> CurrentRun {
+    func start(date _: String) async throws -> CurrentRunResponse {
         print("Имитируем запрос start")
         try await Task.sleep(for: .seconds(1))
         switch result {
@@ -53,7 +53,7 @@ extension MockLoginClient: StatusClient {
         }
     }
 
-    func current() async throws -> CurrentRun {
+    func current() async throws -> CurrentRunResponse {
         print("Имитируем запрос current")
         try await Task.sleep(for: .seconds(1))
         switch result {
