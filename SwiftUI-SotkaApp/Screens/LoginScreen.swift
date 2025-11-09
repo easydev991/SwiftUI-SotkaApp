@@ -6,7 +6,6 @@ import SWUtils
 
 struct LoginScreen: View {
     @Environment(AuthHelperImp.self) private var authHelper
-    @Environment(StatusManager.self) private var statusManager
     @Environment(\.modelContext) private var modelContext
     @Environment(\.isNetworkConnected) private var isNetworkConnected
     @State private var showLoginScreen = false
@@ -107,8 +106,8 @@ private extension LoginScreen {
         )
         .focused($focus, equals: .username)
         .task {
+            try? await Task.sleep(for: .seconds(1))
             guard focus == nil else { return }
-            try? await Task.sleep(for: .seconds(0.5))
             focus = .username
         }
         .accessibilityIdentifier("loginField")
@@ -205,13 +204,11 @@ private extension LoginScreen {
 #Preview("Успех") {
     LoginScreen(client: MockLoginClient(result: .success))
         .environment(AuthHelperImp())
-        .environment(StatusManager.preview)
         .environment(\.isNetworkConnected, true)
 }
 
 #Preview("Ошибка") {
     LoginScreen(client: MockLoginClient(result: .failure()))
         .environment(AuthHelperImp())
-        .environment(StatusManager.preview)
         .environment(\.isNetworkConnected, true)
 }

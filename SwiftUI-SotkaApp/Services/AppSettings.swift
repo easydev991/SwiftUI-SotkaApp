@@ -4,6 +4,7 @@ import SWUtils
 
 @Observable
 final class AppSettings {
+    @ObservationIgnored private let defaults: UserDefaults
     private let notificationCenter = UNUserNotificationCenter.current()
     private let audioPlayer = AudioPlayerManager(fileName: "timerSound", fileExtension: "mp3")
     private let vibrationService = VibrationService()
@@ -12,15 +13,19 @@ final class AppSettings {
     var showNotificationError = false
     var notificationError: NotificationError?
 
+    init(userDefaults: UserDefaults = UserDefaults.standard) {
+        self.defaults = userDefaults
+    }
+
     var appTheme: AppTheme {
         get {
             access(keyPath: \.appTheme)
-            let rawValue = UserDefaults.standard.integer(forKey: Key.appTheme.rawValue)
+            let rawValue = defaults.integer(forKey: Key.appTheme.rawValue)
             return .init(rawValue: rawValue) ?? .system
         }
         set {
             withMutation(keyPath: \.appTheme) {
-                UserDefaults.standard.setValue(
+                defaults.setValue(
                     newValue.rawValue,
                     forKey: Key.appTheme.rawValue
                 )
@@ -31,13 +36,13 @@ final class AppSettings {
     var workoutNotificationsEnabled: Bool {
         get {
             access(keyPath: \.workoutNotificationsEnabled)
-            return UserDefaults.standard.bool(
+            return defaults.bool(
                 forKey: Key.workoutNotificationsEnabled.rawValue
             )
         }
         set {
             withMutation(keyPath: \.workoutNotificationsEnabled) {
-                UserDefaults.standard.set(
+                defaults.set(
                     newValue,
                     forKey: Key.workoutNotificationsEnabled.rawValue
                 )
@@ -48,7 +53,7 @@ final class AppSettings {
     var workoutNotificationTime: Date {
         get {
             access(keyPath: \.workoutNotificationTime)
-            let storedTime = UserDefaults.standard.double(
+            let storedTime = defaults.double(
                 forKey: Key.workoutNotificationTime.rawValue
             )
             return storedTime == 0
@@ -57,7 +62,7 @@ final class AppSettings {
         }
         set {
             withMutation(keyPath: \.workoutNotificationTime) {
-                UserDefaults.standard.set(
+                defaults.set(
                     newValue.timeIntervalSinceReferenceDate,
                     forKey: Key.workoutNotificationTime.rawValue
                 )
@@ -71,11 +76,11 @@ final class AppSettings {
     var playTimerSound: Bool {
         get {
             access(keyPath: \.playTimerSound)
-            return UserDefaults.standard.bool(forKey: Key.playTimerSound.rawValue)
+            return defaults.bool(forKey: Key.playTimerSound.rawValue)
         }
         set {
             withMutation(keyPath: \.playTimerSound) {
-                UserDefaults.standard.set(newValue, forKey: Key.playTimerSound.rawValue)
+                defaults.set(newValue, forKey: Key.playTimerSound.rawValue)
             }
             if newValue { audioPlayer.play() }
         }
@@ -85,14 +90,27 @@ final class AppSettings {
     var vibrate: Bool {
         get {
             access(keyPath: \.vibrate)
-            return UserDefaults.standard.bool(forKey: Key.vibrate.rawValue)
+            return defaults.bool(forKey: Key.vibrate.rawValue)
         }
         set {
             withMutation(keyPath: \.vibrate) {
-                UserDefaults.standard.set(newValue, forKey: Key.vibrate.rawValue)
+                defaults.set(newValue, forKey: Key.vibrate.rawValue)
             }
             if newValue {
                 vibrationService.perform()
+            }
+        }
+    }
+
+    var restTime: Int {
+        get {
+            access(keyPath: \.restTime)
+            let storedValue = defaults.integer(forKey: Key.restTime.rawValue)
+            return storedValue == 0 ? Constants.defaultRestTime : storedValue
+        }
+        set {
+            withMutation(keyPath: \.restTime) {
+                defaults.set(newValue, forKey: Key.restTime.rawValue)
             }
         }
     }
@@ -127,6 +145,7 @@ final class AppSettings {
 
     @MainActor
     func didLogout() {
+        setWorkoutNotificationsEnabled(false)
         notificationCenter.removeAllPendingNotificationRequests()
     }
 }
@@ -158,6 +177,10 @@ private extension AppSettings {
         ///
         /// Значение взял из старого приложения
         case vibrate = "WorkoutPlayVibrate"
+        /// Время отдыха между подходами/кругами (в секундах)
+        ///
+        /// Значение взял из старого приложения
+        case restTime = "WorkoutTimer"
         /// Идентификатор для ежедневного уведомления
         case dailyWorkoutReminder
     }

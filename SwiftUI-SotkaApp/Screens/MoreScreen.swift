@@ -31,6 +31,7 @@ struct MoreScreen: View {
                             )
                         }
                         DisclosureGroup(.moreScreenRestGroup) {
+                            makeRestTimePicker($settings.restTime)
                             makeTimerSoundToggle($settings.playTimerSound)
                             makeVibrateToggle($settings.vibrate)
                         }
@@ -144,6 +145,15 @@ struct MoreScreen: View {
 
     private func makeVibrateToggle(_ value: Binding<Bool>) -> some View {
         Toggle(.timerVibrateToggle, isOn: value)
+    }
+
+    private func makeRestTimePicker(_ value: Binding<Int>) -> some View {
+        Picker(.restTimePicker, selection: value) {
+            ForEach(Constants.restPickerOptions, id: \.self) { seconds in
+                Text(.sec(seconds)).tag(seconds)
+            }
+        }
+        .pickerStyle(.navigationLink)
     }
 
     private var feedbackButton: some View {

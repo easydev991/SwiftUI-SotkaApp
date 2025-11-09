@@ -21,9 +21,10 @@ final class WorkoutPreviewViewModel {
     var trainings: [WorkoutPreviewTraining] = []
     var count: Int?
     var plannedCount: Int?
+    var restTime = Constants.defaultRestTime
     var comment: String?
     var error: TrainingError?
-    /// Определяет, должен ли степпер для plannedCount быть отключен
+    /// Определяет, должен ли степпер для `plannedCount` быть отключен
     var isPlannedCountDisabled: Bool {
         selectedExecutionType == .turbo
     }
@@ -36,6 +37,7 @@ final class WorkoutPreviewViewModel {
             trainings: trainings,
             count: count,
             plannedCount: plannedCount,
+            restTime: restTime,
             comment: comment
         )
         return currentSnapshot != originalSnapshot
@@ -47,7 +49,8 @@ final class WorkoutPreviewViewModel {
     /// - Parameters:
     ///   - modelContext: Контекст SwiftData
     ///   - day: Номер дня для загрузки
-    func updateData(modelContext: ModelContext, day: Int) {
+    ///   - restTime: Время отдыха между подходами/кругами (в секундах)
+    func updateData(modelContext: ModelContext, day: Int, restTime: Int) {
         guard dayNumber != day || trainings.isEmpty else {
             logger.info("Нет необходимости обновлять вьюмодель")
             return
@@ -81,6 +84,7 @@ final class WorkoutPreviewViewModel {
         selectedExecutionType = creator.executionType
         availableExecutionTypes = creator.availableExecutionTypes
         wasOriginallyPassed = creator.count != nil
+        self.restTime = restTime
 
         // Создать snapshot исходных данных для отслеживания изменений
         originalSnapshot = DataSnapshot(
@@ -88,6 +92,7 @@ final class WorkoutPreviewViewModel {
             trainings: trainings,
             count: count,
             plannedCount: plannedCount,
+            restTime: restTime,
             comment: comment
         )
     }
@@ -148,6 +153,12 @@ final class WorkoutPreviewViewModel {
             error = .trainingsListEmpty
             logger.error("Ошибка сохранения: список упражнений пуст")
             return
+        }
+
+        // Установить count = plannedCount, если count == nil
+        // Это соответствует логике Android приложения: actualCircles = getPlannedCircles(day) для непройденных дней
+        if count == nil, let plannedCount {
+            count = plannedCount
         }
 
         // Построить модель DayActivity из простых данных
@@ -224,6 +235,12 @@ final class WorkoutPreviewViewModel {
         comment = newComment
     }
 
+    /// Обновляет время отдыха между подходами/кругами
+    /// - Parameter newValue: Новое значение времени отдыха в секундах
+    func updateRestTime(_ newValue: Int) {
+        restTime = newValue
+    }
+
     /// Получить тип выполнения для отображения
     /// Для турбо-режима возвращает cycles (так как в турбо-режиме показывается "Круги")
     /// - Parameter executionType: Тип выполнения упражнений
@@ -293,6 +310,7 @@ private extension WorkoutPreviewViewModel {
         let trainings: [WorkoutPreviewTraining]
         let count: Int?
         let plannedCount: Int?
+        let restTime: Int
         let comment: String?
     }
 }

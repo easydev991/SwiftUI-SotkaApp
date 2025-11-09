@@ -4,49 +4,51 @@ import SwiftUI
 import SWUtils
 
 struct WorkoutPreviewScreen: View {
-    // TODO: передавать activitiesService в инициализаторе, не через environment
-    @Environment(DailyActivitiesService.self) private var activitiesService
+    @Environment(\.restTime) private var restTime
     @Environment(\.modelContext) private var modelContext
     @Environment(\.dismiss) private var dismiss
     @State private var viewModel = WorkoutPreviewViewModel()
     @State private var showEditorScreen = false
     @FocusState private var isCommentFocused: Bool
+    let activitiesService: DailyActivitiesService
     let day: Int
 
     var body: some View {
-        VStack(spacing: 0) {
-            executionTypePicker
-            workoutContentView
-            Spacer()
-            bottomButtonsView
-        }
-        .animation(.default, value: viewModel.selectedExecutionType)
-        .background(Color.swBackground)
-        .navigationTitle(.workoutPreviewTitle(day))
-        .toolbar {
-            ToolbarItem(placement: .topBarLeading) {
-                CloseButton(mode: .xmark) { dismiss() }
+        NavigationStack {
+            VStack(spacing: 0) {
+                executionTypePicker
+                workoutContentView
+                Spacer()
+                bottomButtonsView
             }
-            if viewModel.shouldShowEditButton {
-                ToolbarItem(placement: .topBarTrailing) {
-                    openEditorButton
+            .animation(.default, value: viewModel.selectedExecutionType)
+            .background(Color.swBackground)
+            .navigationTitle(.workoutPreviewTitle(day))
+            .toolbar {
+                ToolbarItem(placement: .topBarLeading) {
+                    CloseButton(mode: .xmark) { dismiss() }
+                }
+                if viewModel.shouldShowEditButton {
+                    ToolbarItem(placement: .topBarTrailing) {
+                        openEditorButton
+                    }
                 }
             }
-        }
-        .sheet(isPresented: $showEditorScreen) {
-            WorkoutExerciseEditorScreen()
-                .environment(viewModel)
-        }
-        .navigationBarTitleDisplayMode(.inline)
-        .onAppear {
-            viewModel.updateData(modelContext: modelContext, day: day)
-        }
-        .alert(
-            isPresented: $viewModel.error.mappedToBool(),
-            error: viewModel.error
-        ) {
-            Button(.ok, role: .cancel) {
-                viewModel.error = nil
+            .sheet(isPresented: $showEditorScreen) {
+                WorkoutExerciseEditorScreen()
+                    .environment(viewModel)
+            }
+            .navigationBarTitleDisplayMode(.inline)
+            .onAppear {
+                viewModel.updateData(modelContext: modelContext, day: day, restTime: restTime)
+            }
+            .alert(
+                isPresented: $viewModel.error.mappedToBool(),
+                error: viewModel.error
+            ) {
+                Button(.ok, role: .cancel) {
+                    viewModel.error = nil
+                }
             }
         }
     }
@@ -83,28 +85,20 @@ private extension WorkoutPreviewScreen {
         ScrollView {
             LazyVStack(spacing: 12) {
                 ForEach(viewModel.trainings.sorted) { training in
-                    TrainingRowView(
-                        id: training.id,
-                        image: exerciseImage(for: training),
-                        title: exerciseTitle(for: training),
-                        count: training.count,
-                        onAction: { id, action in
-                            viewModel.updatePlannedCount(id: id, action: action)
-                        }
-                    )
+                    makeTrainingRowView(for: training)
                 }
                 if let selectedExecutionType = viewModel.selectedExecutionType {
                     Divider()
-                    TrainingRowView(
-                        id: "plannedCount",
-                        image: viewModel.displayExecutionType(for: selectedExecutionType).image,
-                        title: viewModel.displayExecutionType(for: selectedExecutionType).localizedTitle,
-                        count: viewModel.plannedCount,
-                        onAction: { id, action in
-                            viewModel.updatePlannedCount(id: id, action: action)
-                        },
-                        isDisabled: viewModel.isPlannedCountDisabled
-                    )
+                    makePlannedCountView(for: selectedExecutionType)
+                    if !viewModel.wasOriginallyPassed {
+                        Divider()
+                        makeRestTimePicker(
+                            .init(
+                                get: { viewModel.restTime },
+                                set: { viewModel.updateRestTime($0) }
+                            )
+                        )
+                    }
                     if viewModel.wasOriginallyPassed {
                         Divider()
                         commentEditor
@@ -114,6 +108,42 @@ private extension WorkoutPreviewScreen {
             .padding()
         }
         .scrollBounceBehavior(.basedOnSize)
+    }
+
+    func makeTrainingRowView(for training: WorkoutPreviewTraining) -> some View {
+        TrainingRowView(
+            id: training.id,
+            image: exerciseImage(for: training),
+            title: exerciseTitle(for: training),
+            count: training.count,
+            onAction: { id, action in
+                viewModel.updatePlannedCount(id: id, action: action)
+            }
+        )
+    }
+
+    func makePlannedCountView(for executionType: ExerciseExecutionType) -> some View {
+        TrainingRowView(
+            id: "plannedCount",
+            image: viewModel.displayExecutionType(for: executionType).image,
+            title: viewModel.displayExecutionType(for: executionType).localizedTitle,
+            count: viewModel.plannedCount,
+            onAction: { id, action in
+                viewModel.updatePlannedCount(id: id, action: action)
+            },
+            isDisabled: viewModel.isPlannedCountDisabled
+        )
+    }
+
+    func makeRestTimePicker(_ value: Binding<Int>) -> some View {
+        Picker(selection: value) {
+            ForEach(Constants.restPickerOptions, id: \.self) { seconds in
+                Text(.sec(seconds)).tag(seconds)
+            }
+        } label: {
+            Label(.workoutPreviewRestTimePicker, systemImage: "timer")
+        }
+        .pickerStyle(.navigationLink)
     }
 
     var commentEditor: some View {
@@ -178,9 +208,11 @@ private extension WorkoutPreviewScreen {
 #if DEBUG
 #Preview {
     NavigationStack {
-        WorkoutPreviewScreen(day: 50)
-            .environment(DailyActivitiesService(client: MockDaysClient(result: .success)))
-            .modelContainer(PreviewModelContainer.make(with: .preview))
+        WorkoutPreviewScreen(
+            activitiesService: DailyActivitiesService(client: MockDaysClient(result: .success)),
+            day: 50
+        )
+        .modelContainer(PreviewModelContainer.make(with: .preview))
     }
 }
 #endif

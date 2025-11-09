@@ -21,8 +21,6 @@ final class CustomExercise {
     var isSynced = false
     /// Флаг для удаления с сервера
     var shouldDelete = false
-    /// Количество использований упражнения (для сортировки по частоте)
-    var usageCount = 0
 
     /// Пользователь, которому принадлежит упражнение
     @Relationship(inverse: \User.customExercises) var user: User?
@@ -44,7 +42,6 @@ final class CustomExercise {
         // Флаги синхронизации устанавливаются по умолчанию
         self.isSynced = false
         self.shouldDelete = false
-        self.usageCount = 0
     }
 
     /// Инициализатор из ответа сервера

@@ -40,9 +40,7 @@ struct HomeActivitySectionView: View {
             case let .comment(activity):
                 EditCommentSheet(activity: activity)
             case let .workoutPreview(day):
-                NavigationStack {
-                    WorkoutPreviewScreen(day: day)
-                }
+                WorkoutPreviewScreen(activitiesService: activitiesService, day: day)
             }
         }
     }

@@ -15,6 +15,7 @@ struct JournalGridView: View {
     var body: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: 28) {
+                legendView
                 ForEach(journalSections) { section in
                     makeSectionView(for: section)
                 }
@@ -37,9 +38,7 @@ struct JournalGridView: View {
             case let .comment(activity):
                 EditCommentSheet(activity: activity)
             case let .workoutPreview(day):
-                NavigationStack {
-                    WorkoutPreviewScreen(day: day)
-                }
+                WorkoutPreviewScreen(activitiesService: activitiesService, day: day)
             }
         }
     }
@@ -48,6 +47,34 @@ struct JournalGridView: View {
 private extension JournalGridView {
     var journalSections: [InfopostSection] {
         InfopostSection.journalSections
+    }
+
+    var legendView: some View {
+        ViewThatFits {
+            // Вариант для ландшафтной ориентации - все элементы по горизонтали
+            HStack(spacing: 24) {
+                ForEach(DayActivityType.allCases, content: makeLegendItemView)
+            }
+            // Вариант для портретной ориентации - сетка 2x2
+            LazyVGrid(
+                columns: .init(repeating: GridItem(.flexible(), spacing: 8), count: 2),
+                spacing: 8
+            ) {
+                ForEach(DayActivityType.allCases) { activityType in
+                    makeLegendItemView(for: activityType)
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                }
+            }
+        }
+    }
+
+    func makeLegendItemView(for activityType: DayActivityType) -> some View {
+        HStack(spacing: 8) {
+            Circle()
+                .fill(activityType.color)
+                .frame(width: 16, height: 16)
+            Text(activityType.localizedTitle)
+        }
     }
 
     func makeSectionView(for section: InfopostSection) -> some View {

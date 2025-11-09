@@ -12,3 +12,9 @@ public extension EnvironmentValues {
         set { self[NetworkStatusEnvironmentKey.self] = newValue }
     }
 }
+
+public extension View {
+    func networkStatus(_ isOnline: Bool) -> some View {
+        environment(\.isNetworkConnected, isOnline)
+    }
+}

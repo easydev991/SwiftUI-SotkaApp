@@ -1,44 +1,34 @@
 import Foundation
 import Network
 
+@Observable
 @MainActor
-public final class NetworkStatus: ObservableObject {
-    @Published public private(set) var isConnected = false
-    private let legacyMonitor = NWPathMonitor()
-    private var monitorTask: Task<Void, Never>?
+public final class NetworkStatus {
+    private let monitor = NWPathMonitor()
+    private var isConnected = false
+    private(set) var isInitialized = false
 
-    public init() {
-        if #available(iOS 17.0, *) {
-            startModernMonitoring()
-        } else {
-            startLegacyMonitoring()
-        }
+    /// `true` - есть подключение, `false` - нет подключения
+    /// Если статус не инициализирован, возвращает `true` (предполагается наличие подключения)
+    public var isOnline: Bool {
+        isInitialized ? isConnected : true
     }
 
-    @available(iOS 17.0, *)
-    private func startModernMonitoring() {
-        let monitor = NWPathMonitor()
-        monitorTask = Task {
+    public init() {
+        Task {
             for await path in monitor {
                 await MainActor.run {
                     self.isConnected = path.status == .satisfied
+                    if !self.isInitialized {
+                        self.isInitialized = true
+                    }
                 }
             }
         }
         monitor.start(queue: .global(qos: .background))
     }
 
-    private func startLegacyMonitoring() {
-        legacyMonitor.pathUpdateHandler = { [weak self] path in
-            DispatchQueue.main.async {
-                self?.isConnected = path.status == .satisfied
-            }
-        }
-        legacyMonitor.start(queue: .global(qos: .background))
-    }
-
     deinit {
-        legacyMonitor.cancel()
-        monitorTask?.cancel()
+        monitor.cancel()
     }
 }

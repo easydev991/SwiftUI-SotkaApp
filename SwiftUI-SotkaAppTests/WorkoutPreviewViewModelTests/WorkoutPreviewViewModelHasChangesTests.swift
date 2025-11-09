@@ -73,7 +73,7 @@ extension AllWorkoutPreviewViewModelTests {
         context.insert(dayActivity)
         try context.save()
 
-        viewModel.updateData(modelContext: context, day: 5)
+        viewModel.updateData(modelContext: context, day: 5, restTime: 60)
 
         #expect(!viewModel.hasChanges)
     }
@@ -115,7 +115,7 @@ extension AllWorkoutPreviewViewModelTests {
         context.insert(training1)
         try context.save()
 
-        viewModel.updateData(modelContext: context, day: 5)
+        viewModel.updateData(modelContext: context, day: 5, restTime: 60)
         let training = try #require(viewModel.trainings.first)
         viewModel.updatePlannedCount(id: training.id, action: .increment)
 
@@ -151,7 +151,7 @@ extension AllWorkoutPreviewViewModelTests {
         context.insert(dayActivity)
         try context.save()
 
-        viewModel.updateData(modelContext: context, day: 5)
+        viewModel.updateData(modelContext: context, day: 5, restTime: 60)
         viewModel.updatePlannedCount(id: "plannedCount", action: .increment)
 
         #expect(viewModel.hasChanges)
@@ -186,7 +186,7 @@ extension AllWorkoutPreviewViewModelTests {
         context.insert(dayActivity)
         try context.save()
 
-        viewModel.updateData(modelContext: context, day: 50)
+        viewModel.updateData(modelContext: context, day: 50, restTime: 60)
         viewModel.updateExecutionType(.sets)
 
         #expect(viewModel.hasChanges)
@@ -222,7 +222,7 @@ extension AllWorkoutPreviewViewModelTests {
         context.insert(dayActivity)
         try context.save()
 
-        viewModel.updateData(modelContext: context, day: 5)
+        viewModel.updateData(modelContext: context, day: 5, restTime: 60)
         viewModel.updateComment("New comment")
 
         #expect(viewModel.hasChanges)
@@ -258,7 +258,7 @@ extension AllWorkoutPreviewViewModelTests {
         context.insert(dayActivity)
         try context.save()
 
-        viewModel.updateData(modelContext: context, day: 5)
+        viewModel.updateData(modelContext: context, day: 5, restTime: 60)
         viewModel.updatePlannedCount(id: "plannedCount", action: .increment)
         #expect(viewModel.hasChanges)
 
@@ -282,7 +282,7 @@ extension AllWorkoutPreviewViewModelTests {
 
         let viewModel = WorkoutPreviewViewModel()
 
-        viewModel.updateData(modelContext: context, day: 1)
+        viewModel.updateData(modelContext: context, day: 1, restTime: 60)
 
         #expect(!viewModel.hasChanges)
     }
