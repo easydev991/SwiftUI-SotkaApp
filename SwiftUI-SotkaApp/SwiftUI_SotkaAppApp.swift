@@ -33,7 +33,8 @@ struct SwiftUI_SotkaAppApp: App {
                 infopostsClient: client
             ),
             progressSyncService: .init(client: client),
-            dailyActivitiesService: .init(client: client)
+            dailyActivitiesService: .init(client: client),
+            statusClient: client
         )
         self.authHelper = authHelper
         self.client = client
@@ -66,7 +67,7 @@ struct SwiftUI_SotkaAppApp: App {
                         .task(id: scenePhase) {
                             guard scenePhase == .active else { return }
                             guard authHelper.isAuthorized else { return }
-                            await statusManager.getStatus(client: client, context: modelContainer.mainContext)
+                            await statusManager.getStatus(context: modelContainer.mainContext)
                         }
                 } else {
                     LoginScreen(client: client)

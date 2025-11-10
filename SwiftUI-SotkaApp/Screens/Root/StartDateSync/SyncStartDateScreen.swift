@@ -3,12 +3,10 @@ import SwiftUI
 
 struct SyncStartDateView: View {
     @Environment(StatusManager.self) private var statusManager
-    @Environment(AuthHelperImp.self) private var authHelper
     @Environment(\.modelContext) private var modelContext
     @State private var selectedOption = Selection.none
     @State private var syncTask: Task<Void, Never>?
     let model: ConflictingStartDate
-    private var client: StatusClient { SWClient(with: authHelper) }
 
     var body: some View {
         NavigationStack {
@@ -71,7 +69,6 @@ struct SyncStartDateView: View {
         case let .app(model):
             syncTask = Task {
                 await statusManager.start(
-                    client: client,
                     appDate: model.startDate,
                     context: modelContext
                 )

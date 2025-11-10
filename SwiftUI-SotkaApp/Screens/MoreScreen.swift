@@ -8,7 +8,6 @@ struct MoreScreen: View {
     @Environment(\.currentDay) private var currentDay
     @Environment(AppSettings.self) private var appSettings
     @Environment(StatusManager.self) private var statusManager
-    @Environment(AuthHelperImp.self) private var authHelper
     @Environment(\.modelContext) private var modelContext
     @State private var aboutInfopost: Infopost?
     @State private var showResetDialog = false
@@ -164,8 +163,7 @@ struct MoreScreen: View {
         ) {
             Button(.moreScreenResetProgramDialogConfirm, role: .destructive) {
                 Task {
-                    let client = SWClient(with: authHelper)
-                    await statusManager.resetProgram(client: client, context: modelContext)
+                    await statusManager.resetProgram(context: modelContext)
                 }
             }
         } message: {
@@ -248,7 +246,6 @@ struct MoreScreen: View {
     MoreScreen()
         .environment(AppSettings())
         .environment(StatusManager.preview)
-        .environment(AuthHelperImp())
         .environment(\.currentDay, 1)
         .modelContainer(PreviewModelContainer.make(with: .preview))
 }
@@ -257,7 +254,6 @@ struct MoreScreen: View {
     MoreScreen()
         .environment(AppSettings())
         .environment(StatusManager.preview)
-        .environment(AuthHelperImp())
         .environment(\.currentDay, 2)
         .modelContainer(PreviewModelContainer.make(with: .preview))
 }

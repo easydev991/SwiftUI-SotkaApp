@@ -11,12 +11,14 @@ final class StatusManager {
         subsystem: Bundle.main.bundleIdentifier!,
         category: String(describing: StatusManager.self)
     )
-    @ObservationIgnored private let defaults = UserDefaults.standard
+    @ObservationIgnored private let defaults: UserDefaults
     @ObservationIgnored let customExercisesService: CustomExercisesService
     @ObservationIgnored let infopostsService: InfopostsService
     @ObservationIgnored let progressSyncService: ProgressSyncService
     @ObservationIgnored let dailyActivitiesService: DailyActivitiesService
     @ObservationIgnored private var isJournalSyncInProgress = false
+    @ObservationIgnored private(set) var syncReadPostsTask: Task<Void, Error>?
+    private let statusClient: StatusClient
 
     /// Дата старта сотки
     private var startDate: Date? {
@@ -79,34 +81,38 @@ final class StatusManager {
         customExercisesService: CustomExercisesService,
         infopostsService: InfopostsService,
         progressSyncService: ProgressSyncService,
-        dailyActivitiesService: DailyActivitiesService
+        dailyActivitiesService: DailyActivitiesService,
+        statusClient: StatusClient,
+        userDefaults: UserDefaults = UserDefaults.standard
     ) {
         self.customExercisesService = customExercisesService
         self.infopostsService = infopostsService
         self.progressSyncService = progressSyncService
         self.dailyActivitiesService = dailyActivitiesService
+        self.statusClient = statusClient
+        self.defaults = userDefaults
     }
 
     /// Получает статус прохождения пользователя
     /// - Parameters:
     ///   - client: Сервис для загрузки статуса
-    func getStatus(client: StatusClient, context: ModelContext) async {
+    func getStatus(context: ModelContext) async {
         let now = Date.now
         currentDayCalculator = .init(startDate, now)
         guard !state.isLoading else { return }
         state = .init(didLoadInitialData: didLoadInitialData)
         do {
-            let currentRun = try await client.current()
+            let currentRun = try await statusClient.current()
             let siteStartDate = currentRun.date
             maxReadInfoPostDay = currentRun.maxForAllRunsDay ?? 0
             switch (startDate, siteStartDate) {
             case (.none, .none):
                 logger.info("Сотку еще не стартовали")
-                await start(client: client, appDate: nil, context: context)
+                await start(appDate: nil, context: context)
             case let (.some(date), .none):
                 // Приложение - источник истины
                 logger.info("Дата старта есть только в приложении: \(date.description)")
-                await start(client: client, appDate: date, context: context)
+                await start(appDate: date, context: context)
             case let (.none, .some(date)):
                 // Сайт - источник истины
                 logger.info("Дата старта есть только на сайте: \(date.description)")
@@ -131,10 +137,10 @@ final class StatusManager {
         }
     }
 
-    func startNewRun(client: StatusClient, appDate: Date?) async {
+    func startNewRun(appDate: Date?) async {
         let newStartDate = appDate ?? .now
         let isoDateString = DateFormatterService.stringFromFullDate(newStartDate, iso: true)
-        let currentRun = try? await client.start(date: isoDateString)
+        let currentRun = try? await statusClient.start(date: isoDateString)
         startDate = if let siteStartDate = currentRun?.date {
             siteStartDate
         } else {
@@ -144,13 +150,15 @@ final class StatusManager {
         currentDayCalculator = .init(startDate, now)
     }
 
-    func start(client: StatusClient, appDate: Date?, context: ModelContext) async {
-        await startNewRun(client: client, appDate: appDate)
+    func start(appDate: Date?, context: ModelContext) async {
+        await startNewRun(appDate: appDate)
         await syncJournalAndProgress(context: context)
     }
 
     func syncWithSiteDate(siteDate: Date, context: ModelContext) async {
         startDate = siteDate
+        let now = Date.now
+        currentDayCalculator = .init(startDate, now)
         await syncJournalAndProgress(context: context)
     }
 
@@ -163,8 +171,13 @@ final class StatusManager {
                 userGender: user?.gender,
                 force: true
             )
-            Task {
-                try await infopostsService.syncReadPosts(context: context)
+            syncReadPostsTask?.cancel()
+            syncReadPostsTask = Task {
+                do {
+                    try await infopostsService.syncReadPosts(context: context)
+                } catch {
+                    logger.error("Ошибка синхронизации прочитанных инфопостов: \(error.localizedDescription)")
+                }
             }
         } catch {
             logger.error("Не удалось загрузить инфопосты: \(error.localizedDescription)")
@@ -172,6 +185,8 @@ final class StatusManager {
     }
 
     func didLogout() {
+        syncReadPostsTask?.cancel()
+        syncReadPostsTask = nil
         startDate = nil
         currentDayCalculator = nil
         maxReadInfoPostDay = 0
@@ -179,10 +194,8 @@ final class StatusManager {
     }
 
     /// Сбрасывает программу: удаляет все данные прохождения программы и начинает заново
-    /// - Parameters:
-    ///   - client: Сервис для загрузки статуса
-    ///   - context: Контекст модели SwiftData
-    func resetProgram(client: StatusClient, context: ModelContext) async {
+    /// - Parameter context: Контекст модели SwiftData
+    func resetProgram(context: ModelContext) async {
         state = .isLoadingInitialData
         guard let user = try? context.fetch(FetchDescriptor<User>()).first else {
             logger.error("Пользователь не найден для сброса программы")
@@ -203,7 +216,7 @@ final class StatusManager {
         try? context.save()
         // Метод startNewRun сделает запрос к серверу через StatusClient.start(date:) и установит новую startDate
         let now = Date.now
-        await startNewRun(client: client, appDate: now)
+        await startNewRun(appDate: now)
         currentDayCalculator = .init(startDate, now)
         state = .idle
     }
