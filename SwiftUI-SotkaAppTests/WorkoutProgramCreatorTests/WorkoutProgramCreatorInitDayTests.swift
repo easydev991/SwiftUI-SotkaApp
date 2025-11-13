@@ -156,19 +156,19 @@ extension AllWorkoutProgramCreatorTests {
         #expect(plannedCount == 40)
     }
 
-    @Test("Должен возвращать 1 для дней 93, 95, 98 в турбо-режиме")
-    func returns1ForDays939598InTurboMode() throws {
+    @Test("Должен возвращать правильные значения для дней 93, 95, 98 в турбо-режиме")
+    func returnsCorrectValuesForDays939598InTurboMode() throws {
         let creator93 = WorkoutProgramCreator(day: 93, executionType: .turbo)
         let plannedCount93 = try #require(creator93.plannedCount)
-        #expect(plannedCount93 == 1)
+        #expect(plannedCount93 == 5)
 
         let creator95 = WorkoutProgramCreator(day: 95, executionType: .turbo)
         let plannedCount95 = try #require(creator95.plannedCount)
-        #expect(plannedCount95 == 1)
+        #expect(plannedCount95 == 5)
 
         let creator98 = WorkoutProgramCreator(day: 98, executionType: .turbo)
         let plannedCount98 = try #require(creator98.plannedCount)
-        #expect(plannedCount98 == 1)
+        #expect(plannedCount98 == 3)
     }
 
     @Test("Должен возвращать 5 для остальных турбо-дней")

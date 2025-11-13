@@ -9,11 +9,21 @@ enum ExerciseExecutionType: Int {
     /// Турбо
     case turbo = 2
 
+    /// Локализованное название во множественном числе
     var localizedTitle: String {
         switch self {
         case .cycles: String(localized: .cycles)
         case .sets: String(localized: .sets)
         case .turbo: String(localized: .turbo)
+        }
+    }
+
+    /// Локализованное название в единственном числе
+    var localizedShortTitle: String {
+        switch self {
+        case .cycles: String(localized: .cycle)
+        case .sets: String(localized: .set)
+        case .turbo: localizedTitle
         }
     }
 

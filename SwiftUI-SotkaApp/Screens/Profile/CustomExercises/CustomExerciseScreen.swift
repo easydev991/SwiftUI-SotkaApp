@@ -38,7 +38,7 @@ struct CustomExerciseScreen: View {
             Spacer()
         }
         .padding()
-        .navigationTitle("Exercise")
+        .navigationTitle(.exercise)
         .toolbar {
             ToolbarItem(placement: .topBarTrailing) {
                 Button(.edit) { isEditing.toggle() }
@@ -55,7 +55,7 @@ struct CustomExerciseScreen: View {
                 .fontWeight(.medium)
         }
         .accessibilityElement()
-        .accessibilityLabel("Exercise name")
+        .accessibilityLabel(.exerciseName)
         .accessibilityValue(exercise.name)
     }
 

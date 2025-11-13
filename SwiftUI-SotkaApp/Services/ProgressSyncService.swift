@@ -194,10 +194,6 @@ final class ProgressSyncService {
                 throw UserNotFoundError()
             }
 
-            // Добавляем небольшую задержку перед загрузкой с сервера, чтобы избежать конфликтов
-            // с предыдущими параллельными операциями
-            try await Task.sleep(nanoseconds: 500_000_000) // 0.5 секунды
-
             let serverProgress = try await client.getProgress()
             logger.info("Получен ответ сервера: \(serverProgress.count) записей")
 

@@ -9,6 +9,7 @@ struct WorkoutPreviewScreen: View {
     @Environment(\.dismiss) private var dismiss
     @State private var viewModel = WorkoutPreviewViewModel()
     @State private var showEditorScreen = false
+    @State private var showWorkoutScreen = false
     @FocusState private var isCommentFocused: Bool
     let activitiesService: DailyActivitiesService
     let day: Int
@@ -34,9 +35,20 @@ struct WorkoutPreviewScreen: View {
                     }
                 }
             }
-            .sheet(isPresented: $showEditorScreen) {
-                WorkoutExerciseEditorScreen()
-                    .environment(viewModel)
+            .fullScreenCover(isPresented: $showWorkoutScreen) {
+                if let executionType = viewModel.selectedExecutionType {
+                    WorkoutScreen(
+                        dayNumber: day,
+                        executionType: executionType,
+                        trainings: viewModel.trainings,
+                        plannedCount: viewModel.plannedCount,
+                        restTime: viewModel.restTime,
+                        onWorkoutCompleted: { result in
+                            viewModel.handleWorkoutResult(result)
+                            showWorkoutScreen = false
+                        }
+                    )
+                }
             }
             .navigationBarTitleDisplayMode(.inline)
             .onAppear {
@@ -60,6 +72,9 @@ private extension WorkoutPreviewScreen {
             showEditorScreen.toggle()
         } label: {
             Image(systemName: "pencil")
+        }
+        .sheet(isPresented: $showEditorScreen) {
+            WorkoutExerciseEditorScreen(viewModel: viewModel)
         }
     }
 
@@ -99,7 +114,7 @@ private extension WorkoutPreviewScreen {
                             )
                         )
                     }
-                    if viewModel.wasOriginallyPassed {
+                    if viewModel.canEditComment {
                         Divider()
                         commentEditor
                     }
@@ -127,7 +142,7 @@ private extension WorkoutPreviewScreen {
             id: "plannedCount",
             image: viewModel.displayExecutionType(for: executionType).image,
             title: viewModel.displayExecutionType(for: executionType).localizedTitle,
-            count: viewModel.plannedCount,
+            count: viewModel.displayedCount,
             onAction: { id, action in
                 viewModel.updatePlannedCount(id: id, action: action)
             },
@@ -192,6 +207,8 @@ private extension WorkoutPreviewScreen {
         WorkoutPreviewButtonsView(
             isPassed: viewModel.wasOriginallyPassed,
             hasChanges: viewModel.hasChanges,
+            isWorkoutCompleted: viewModel.isWorkoutCompleted,
+            showCommentField: viewModel.isWorkoutCompleted,
             onSave: {
                 viewModel.saveTrainingAsPassed(
                     activitiesService: activitiesService,
@@ -199,9 +216,11 @@ private extension WorkoutPreviewScreen {
                 )
                 dismiss()
             },
-            onStartTraining: viewModel.startTraining
+            onStartTraining: {
+                showWorkoutScreen = true
+            }
         )
-        .padding(.horizontal)
+        .padding([.horizontal, .bottom])
     }
 }
 

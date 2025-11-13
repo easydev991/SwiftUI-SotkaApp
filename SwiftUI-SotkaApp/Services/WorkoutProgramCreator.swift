@@ -267,13 +267,42 @@ struct WorkoutProgramCreator {
         }
     }
 
-    private static func calculatePlannedCircles(for day: Int, executionType: ExerciseExecutionType) -> Int {
+    static func getEffectiveExecutionType(for day: Int, executionType: ExerciseExecutionType) -> ExerciseExecutionType {
         if executionType == .turbo {
-            return calculateTurboCircles(for: day)
+            let setsDays = [93, 95, 98]
+            if setsDays.contains(day) {
+                return .sets
+            }
+            return .cycles
+        }
+        return executionType
+    }
+
+    /// Проверяет, является ли комбинация дня и типа выполнения турбо с подходами
+    /// - Parameters:
+    ///   - day: Номер дня
+    ///   - executionType: Тип выполнения упражнений
+    /// - Returns: `true`, если это турбо режим с подходами (дни 93, 95, 98)
+    static func isTurboWithSets(day: Int, executionType: ExerciseExecutionType) -> Bool {
+        executionType == .turbo && getEffectiveExecutionType(for: day, executionType: executionType) == .sets
+    }
+
+    private static func calculatePlannedCircles(for day: Int, executionType: ExerciseExecutionType) -> Int {
+        let effectiveType = getEffectiveExecutionType(for: day, executionType: executionType)
+
+        if effectiveType == .sets {
+            if executionType == .turbo {
+                switch day {
+                case 93, 95: return 5
+                case 98: return 3
+                default: return 6
+                }
+            }
+            return 6
         }
 
-        if executionType == .sets {
-            return 6
+        if executionType == .turbo, effectiveType == .cycles {
+            return calculateTurboCircles(for: day)
         }
 
         var result = 4
@@ -288,7 +317,7 @@ struct WorkoutProgramCreator {
     private static func calculateTurboCircles(for day: Int) -> Int {
         switch day {
         case 92: 40
-        case 93, 95, 98: 1
+        case 94, 96, 97: 5
         default: 5
         }
     }

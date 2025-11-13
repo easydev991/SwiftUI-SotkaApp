@@ -24,9 +24,29 @@ final class WorkoutPreviewViewModel {
     var restTime = Constants.defaultRestTime
     var comment: String?
     var error: TrainingError?
+    var isWorkoutCompleted = false
+    var workoutDuration: Int?
     /// Определяет, должен ли степпер для `plannedCount` быть отключен
     var isPlannedCountDisabled: Bool {
         selectedExecutionType == .turbo
+    }
+
+    /// Отображаемое количество кругов/подходов
+    var displayedCount: Int? {
+        count ?? plannedCount
+    }
+
+    /// Определяет, нужно ли показывать кнопку редактирования упражнений
+    ///
+    /// - Показывается только для типов выполнения `.cycles` и `.sets`
+    /// - Скрывается для типа `.turbo`
+    var shouldShowEditButton: Bool {
+        guard let executionType = selectedExecutionType else { return false }
+        return executionType == .cycles || executionType == .sets
+    }
+
+    var canEditComment: Bool {
+        isWorkoutCompleted || wasOriginallyPassed
     }
 
     /// Определяет, были ли внесены изменения после первоначальной загрузки
@@ -134,7 +154,14 @@ final class WorkoutPreviewViewModel {
         )
 
         // Получить DayActivity через computed property
-        return creator.dayActivity
+        let activity = creator.dayActivity
+
+        // Если workoutDuration установлен, использовать его
+        if let workoutDuration {
+            activity.duration = workoutDuration
+        }
+
+        return activity
     }
 
     /// Сохранение тренировки через DailyActivitiesService
@@ -242,14 +269,27 @@ final class WorkoutPreviewViewModel {
     }
 
     /// Получить тип выполнения для отображения
-    /// Для турбо-режима возвращает cycles (так как в турбо-режиме показывается "Круги")
+    /// Для турбо-режима использует getEffectiveExecutionType для определения правильного типа
     /// - Parameter executionType: Тип выполнения упражнений
     /// - Returns: Тип выполнения для отображения
     func displayExecutionType(for executionType: ExerciseExecutionType) -> ExerciseExecutionType {
-        if executionType == .turbo {
-            return .cycles
+        WorkoutProgramCreator.getEffectiveExecutionType(for: dayNumber, executionType: executionType)
+    }
+
+    /// Обработка результата тренировки
+    /// - Parameter result: Результат выполнения тренировки
+    func handleWorkoutResult(_ result: WorkoutResult) {
+        if result.count == 0 {
+            logger.info("Результат тренировки с count = 0, не обновляем состояние")
+            return
         }
-        return executionType
+
+        count = result.count
+        workoutDuration = result.duration
+        isWorkoutCompleted = true
+        let countValue = result.count
+        let durationValue = result.duration ?? 0
+        logger.info("Обработка результата тренировки: количество \(countValue), длительность \(durationValue) секунд")
     }
 
     /// Обработка нажатия кнопки "Начать тренировку"
@@ -257,15 +297,6 @@ final class WorkoutPreviewViewModel {
         print("TODO: переход к началу тренировки")
         let logDay = dayNumber
         logger.info("Нажата кнопка 'Начать тренировку' для дня \(logDay)")
-    }
-
-    /// Определяет, нужно ли показывать кнопку редактирования упражнений
-    ///
-    /// - Показывается только для типов выполнения `.cycles` и `.sets`
-    /// - Скрывается для типа `.turbo`
-    var shouldShowEditButton: Bool {
-        guard let executionType = selectedExecutionType else { return false }
-        return executionType == .cycles || executionType == .sets
     }
 
     /// Обновляет список упражнений тренировки

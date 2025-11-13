@@ -77,7 +77,7 @@ private extension ProgressGridView {
                         .font(.caption)
                         .foregroundStyle(.secondary)
                         .fixedSize()
-                        .frame(maxWidth: .infinity, alignment: .leading)
+                        .frame(maxWidth: .infinity)
 
                     // Фотографии для каждого дня
                     ForEach(UserProgress.Section.allCases, id: \.self) { section in

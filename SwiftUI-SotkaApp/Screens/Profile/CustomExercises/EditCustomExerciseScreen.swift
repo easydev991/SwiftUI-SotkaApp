@@ -36,7 +36,7 @@ struct EditCustomExerciseScreen: View {
             Spacer()
         }
         .padding()
-        .navigationTitle("Exercise")
+        .navigationTitle(.exercise)
         .navigationBarBackButtonHidden(oldItem != nil)
         .navigationBarTitleDisplayMode(.inline)
         .onAppear {
@@ -66,17 +66,17 @@ struct EditCustomExerciseScreen: View {
 
     private var exerciseNameSection: some View {
         VStack(alignment: .leading, spacing: 8) {
-            Text("Exercise name")
+            Text(.exerciseName)
                 .font(.headline)
                 .foregroundStyle(.secondary)
 
-            TextField("Enter exercise name", text: $exerciseName)
+            TextField(String(localized: .enterExerciseName), text: $exerciseName)
                 .textFieldStyle(.roundedBorder)
                 .focused($isFirstFieldFocused)
                 .onAppear { isFirstFieldFocused = true }
         }
         .accessibilityElement()
-        .accessibilityLabel("Exercise name")
+        .accessibilityLabel(.exerciseName)
         .accessibilityValue(exerciseName)
     }
 

@@ -3,20 +3,27 @@ import SwiftData
 import SwiftUI
 
 struct WorkoutExerciseEditorScreen: View {
-    @Environment(WorkoutPreviewViewModel.self) private var previewViewModel
     @Environment(\.modelContext) private var modelContext
     @Environment(\.dismiss) private var dismiss
     @Query(FetchDescriptor<CustomExercise>(predicate: #Predicate { !$0.shouldDelete }))
     private var customExercises: [CustomExercise]
     @State private var editableExercises: [WorkoutPreviewTraining] = []
+    @State private var showCreateExerciseScreen = false
+    let viewModel: WorkoutPreviewViewModel
 
     var body: some View {
         NavigationStack {
             List {
                 dayExercisesSection
                 standardExercisesSection
-                if !customExercises.isEmpty {
-                    customExercisesSection
+                customExercisesSection
+            }
+            .sheet(isPresented: $showCreateExerciseScreen) {
+                NavigationStack {
+                    ScrollView {
+                        EditCustomExerciseScreen { showCreateExerciseScreen = false }
+                    }
+                    .scrollBounceBehavior(.basedOnSize)
                 }
             }
             .navigationTitle(.workoutExerciseEditorTitle)
@@ -87,6 +94,9 @@ private extension WorkoutExerciseEditorScreen {
                     }
                 )
             }
+            Button(.workoutExerciseEditorCreateExercise) {
+                showCreateExerciseScreen = true
+            }
         }
     }
 
@@ -108,9 +118,9 @@ private extension WorkoutExerciseEditorScreen {
             return customExercise.name
         } else if let typeId = training.typeId,
                   let exerciseType = ExerciseType(rawValue: typeId),
-                  let selectedExecutionType = previewViewModel.selectedExecutionType {
+                  let selectedExecutionType = viewModel.selectedExecutionType {
             return exerciseType.makeLocalizedTitle(
-                previewViewModel.dayNumber,
+                viewModel.dayNumber,
                 executionType: selectedExecutionType,
                 sortOrder: training.sortOrder
             )
@@ -123,7 +133,7 @@ private extension WorkoutExerciseEditorScreen {
 
     func initializeEditableExercises() {
         withAnimation {
-            editableExercises = previewViewModel.trainings.filter { !$0.isTurboExercise }
+            editableExercises = viewModel.trainings.filter { !$0.isTurboExercise }
         }
     }
 
@@ -163,7 +173,7 @@ private extension WorkoutExerciseEditorScreen {
     }
 
     func saveChanges() {
-        previewViewModel.updateTrainings(editableExercises)
+        viewModel.updateTrainings(editableExercises)
         dismiss()
     }
 }
@@ -171,8 +181,7 @@ private extension WorkoutExerciseEditorScreen {
 #if DEBUG
 #Preview {
     NavigationStack {
-        WorkoutExerciseEditorScreen()
-            .environment(WorkoutPreviewViewModel())
+        WorkoutExerciseEditorScreen(viewModel: .init())
             .modelContainer(PreviewModelContainer.make(with: .preview))
     }
 }

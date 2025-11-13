@@ -6,11 +6,15 @@ import SWUtils
 struct WorkoutPreviewButtonsView: View {
     let isPassed: Bool
     let hasChanges: Bool
+    let isWorkoutCompleted: Bool
+    let showCommentField: Bool
     let onSave: () -> Void
     let onStartTraining: () -> Void
 
     var body: some View {
-        if isPassed {
+        if isWorkoutCompleted {
+            workoutCompletedButtons
+        } else if isPassed {
             passedDayButtons
         } else {
             notPassedDayButtons
@@ -34,18 +38,55 @@ struct WorkoutPreviewButtonsView: View {
             // TODO: Кнопка "Продолжить" - показывается только если тренировка была начата, но не завершена
         }
     }
+
+    private var workoutCompletedButtons: some View {
+        Button(.workoutPreviewSave, action: onSave)
+            .buttonStyle(SWButtonStyle(mode: .filled, size: .large))
+    }
 }
 
 #if DEBUG
 #Preview("Не пройденный день") {
-    WorkoutPreviewButtonsView(isPassed: false, hasChanges: false, onSave: {}, onStartTraining: {})
+    WorkoutPreviewButtonsView(
+        isPassed: false,
+        hasChanges: false,
+        isWorkoutCompleted: false,
+        showCommentField: false,
+        onSave: {},
+        onStartTraining: {}
+    )
 }
 
 #Preview("Пройденный день без изменений") {
-    WorkoutPreviewButtonsView(isPassed: true, hasChanges: false, onSave: {}, onStartTraining: {})
+    WorkoutPreviewButtonsView(
+        isPassed: true,
+        hasChanges: false,
+        isWorkoutCompleted: false,
+        showCommentField: false,
+        onSave: {},
+        onStartTraining: {}
+    )
 }
 
 #Preview("Пройденный день с изменениями") {
-    WorkoutPreviewButtonsView(isPassed: true, hasChanges: true, onSave: {}, onStartTraining: {})
+    WorkoutPreviewButtonsView(
+        isPassed: true,
+        hasChanges: true,
+        isWorkoutCompleted: false,
+        showCommentField: false,
+        onSave: {},
+        onStartTraining: {}
+    )
+}
+
+#Preview("Тренировка завершена") {
+    WorkoutPreviewButtonsView(
+        isPassed: false,
+        hasChanges: false,
+        isWorkoutCompleted: true,
+        showCommentField: true,
+        onSave: {},
+        onStartTraining: {}
+    )
 }
 #endif
