@@ -6,7 +6,7 @@ import SWUtils
 final class AppSettings {
     @ObservationIgnored private let defaults: UserDefaults
     private let notificationCenter = UNUserNotificationCenter.current()
-    private let audioPlayer = AudioPlayerManager(fileName: "timerSound", fileExtension: "mp3")
+    private let audioPlayer = AudioPlayerManager()
     private let vibrationService = VibrationService()
     let appVersion = Constants.appVersion
     var showLanguageAlert = false
@@ -82,7 +82,31 @@ final class AppSettings {
             withMutation(keyPath: \.playTimerSound) {
                 defaults.set(newValue, forKey: Key.playTimerSound.rawValue)
             }
-            if newValue { audioPlayer.play() }
+            if newValue {
+                audioPlayer.setupSound(timerSound)
+                audioPlayer.play()
+            } else {
+                audioPlayer.stop()
+            }
+        }
+    }
+
+    var timerSound: TimerSound {
+        get {
+            access(keyPath: \.timerSound)
+            guard let rawValue = defaults.string(forKey: Key.timerSound.rawValue),
+                  let sound = TimerSound(rawValue: rawValue)
+            else {
+                return .ringtone1
+            }
+            return sound
+        }
+        set {
+            withMutation(keyPath: \.timerSound) {
+                defaults.set(newValue.rawValue, forKey: Key.timerSound.rawValue)
+            }
+            audioPlayer.setupSound(newValue)
+            audioPlayer.play()
         }
     }
 
@@ -181,6 +205,8 @@ private extension AppSettings {
         ///
         /// Значение взял из старого приложения
         case restTime = "WorkoutTimer"
+        /// Мелодия для уведомления об окончании отдыха
+        case timerSound = "WorkoutTimerSound"
         /// Идентификатор для ежедневного уведомления
         case dailyWorkoutReminder
     }

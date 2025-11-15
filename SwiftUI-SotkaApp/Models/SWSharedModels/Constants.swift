@@ -11,3 +11,12 @@ enum Constants {
     /// Получатели обратной связи
     static let feedbackRecipients = ["info@workout.su", "cuties.84tilbury@icloud.com"]
 }
+
+extension Constants {
+    static let appId = "id6753644091"
+    static let appReviewURL = URL(string: "https://apps.apple.com/app/\(Constants.appId)?action=write-review")
+    static let workoutSuURL = URL(string: "https://workout.su")
+    static let swParksAppURL = URL(string: "https://apps.apple.com/app/id6749501617")
+    static let workoutShopURL = URL(string: "https://workoutshop.ru/?utm_source=iOS&utm_medium=100&utm_campaign=NASTROIKI")
+    static let githubPageURL = URL(string: "https://github.com/easydev991/SwiftUI-SotkaApp")
+}

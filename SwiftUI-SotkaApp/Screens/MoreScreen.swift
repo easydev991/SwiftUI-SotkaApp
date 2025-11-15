@@ -9,13 +9,13 @@ struct MoreScreen: View {
     @Environment(AppSettings.self) private var appSettings
     @Environment(StatusManager.self) private var statusManager
     @Environment(\.modelContext) private var modelContext
+    @AppStorage(Key.isWorkoutGroupExpanded.rawValue) private var isWorkoutGroupExpanded = true
+    @AppStorage(Key.isWorkoutRestGroupExpanded.rawValue) private var isWorkoutRestGroupExpanded = true
     @State private var aboutInfopost: Infopost?
     @State private var showResetDialog = false
-    private let appId = "id6753644091"
 
     var body: some View {
         NavigationStack {
-            @Bindable var settings = appSettings
             List {
                 Section(.settings) {
                     appThemePicker
@@ -23,19 +23,7 @@ struct MoreScreen: View {
                     #if DEBUG
                     debugCurrentDayPicker
                     #endif
-                    DisclosureGroup(.moreScreenWorkoutGroup) {
-                        notificationToggle
-                        if settings.workoutNotificationsEnabled {
-                            makeNotificationTimePicker(
-                                $settings.workoutNotificationTime
-                            )
-                        }
-                        DisclosureGroup(.moreScreenRestGroup) {
-                            makeRestTimePicker($settings.restTime)
-                            makeTimerSoundToggle($settings.playTimerSound)
-                            makeVibrateToggle($settings.vibrate)
-                        }
-                    }
+                    workoutSettingsGroup
                     syncJournalButton
                 }
                 if currentDay > 1 {
@@ -60,6 +48,9 @@ struct MoreScreen: View {
                 }
             }
             .animation(.default, value: appSettings.workoutNotificationsEnabled)
+            .animation(.default, value: appSettings.playTimerSound)
+            .animation(.default, value: isWorkoutGroupExpanded)
+            .animation(.default, value: isWorkoutRestGroupExpanded)
             .navigationTitle(.more)
             .navigationBarTitleDisplayMode(.inline)
             .onAppear {
@@ -117,6 +108,26 @@ struct MoreScreen: View {
     }
     #endif
 
+    private var workoutSettingsGroup: some View {
+        DisclosureGroup(.moreScreenWorkoutGroup, isExpanded: $isWorkoutGroupExpanded) {
+            @Bindable var settings = appSettings
+            notificationToggle
+            if settings.workoutNotificationsEnabled {
+                makeNotificationTimePicker(
+                    $settings.workoutNotificationTime
+                )
+            }
+            DisclosureGroup(.moreScreenRestGroup, isExpanded: $isWorkoutRestGroupExpanded) {
+                makeRestTimePicker($settings.restTime)
+                makeTimerSoundToggle($settings.playTimerSound)
+                if settings.playTimerSound {
+                    makeTimerSoundPicker($settings.timerSound)
+                }
+                makeVibrateToggle($settings.vibrate)
+            }
+        }
+    }
+
     @ViewBuilder
     private var notificationToggle: some View {
         @Bindable var settings = appSettings
@@ -145,6 +156,15 @@ struct MoreScreen: View {
 
     private func makeVibrateToggle(_ value: Binding<Bool>) -> some View {
         Toggle(.timerVibrateToggle, isOn: value)
+    }
+
+    private func makeTimerSoundPicker(_ value: Binding<TimerSound>) -> some View {
+        Picker(.moreScreenTimerSound, selection: value) {
+            ForEach(TimerSound.allCases, id: \.self) { sound in
+                Text(sound.displayName).tag(sound)
+            }
+        }
+        .pickerStyle(.navigationLink)
     }
 
     private func makeRestTimePicker(_ value: Binding<Int>) -> some View {
@@ -184,7 +204,7 @@ struct MoreScreen: View {
 
     @ViewBuilder
     private var rateAppButton: some View {
-        if let appReviewLink = URL(string: "https://apps.apple.com/app/\(appId)?action=write-review") {
+        if let appReviewLink = Constants.appReviewURL {
             Link(.rateTheApp, destination: appReviewLink)
                 .accessibilityIdentifier("rateAppButton")
         }
@@ -192,7 +212,7 @@ struct MoreScreen: View {
 
     @ViewBuilder
     private var officialSiteButton: some View {
-        if let officialSiteLink = URL(string: "https://workout.su") {
+        if let officialSiteLink = Constants.workoutSuURL {
             Link(.officialWebsite, destination: officialSiteLink)
                 .accessibilityIdentifier("officialSiteButton")
         }
@@ -200,7 +220,7 @@ struct MoreScreen: View {
 
     @ViewBuilder
     private var shareAppButton: some View {
-        if let model = ShareAppURL(localeIdentifier: locale.identifier, appId: appId) {
+        if let model = ShareAppURL(localeIdentifier: locale.identifier, appId: Constants.appId) {
             ShareLink(item: model.url) {
                 Text(.shareTheApp)
             }
@@ -219,7 +239,7 @@ struct MoreScreen: View {
 
     @ViewBuilder
     private var swParksButton: some View {
-        if let githubLink = URL(string: "https://apps.apple.com/app/id6749501617") {
+        if let githubLink = Constants.swParksAppURL {
             Link(.streetWorkoutParks, destination: githubLink)
                 .accessibilityIdentifier("swParksButton")
         }
@@ -227,7 +247,7 @@ struct MoreScreen: View {
 
     @ViewBuilder
     private var workoutShopButton: some View {
-        if let shopLink = URL(string: "https://workoutshop.ru/?utm_source=iOS&utm_medium=100&utm_campaign=NASTROIKI") {
+        if let shopLink = Constants.workoutShopURL {
             Link(.workoutShop, destination: shopLink)
                 .accessibilityIdentifier("workoutShopButton")
         }
@@ -235,7 +255,7 @@ struct MoreScreen: View {
 
     @ViewBuilder
     private var githubButton: some View {
-        if let githubLink = URL(string: "https://github.com/easydev991/SwiftUI-SotkaApp") {
+        if let githubLink = Constants.githubPageURL {
             Link(.gitHubPage, destination: githubLink)
                 .accessibilityIdentifier("githubButton")
         }
@@ -256,6 +276,13 @@ struct MoreScreen: View {
             Text(.moreScreenSyncJournalButton)
         }
         .accessibilityIdentifier("syncJournalButton")
+    }
+}
+
+private extension MoreScreen {
+    enum Key: String {
+        case isWorkoutGroupExpanded = "WorkoutSettings.Expanded"
+        case isWorkoutRestGroupExpanded = "WorkoutSettings.Rest.Expanded"
     }
 }
 

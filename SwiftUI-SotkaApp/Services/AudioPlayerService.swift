@@ -9,14 +9,9 @@ final class AudioPlayerManager {
     private var audioPlayer: AVAudioPlayer?
     private let session: AVAudioSession
 
-    init(
-        fileName: String,
-        fileExtension: String,
-        session: AVAudioSession = .sharedInstance()
-    ) {
+    init(session: AVAudioSession = .sharedInstance()) {
         self.session = session
         configureAudioSession()
-        setupAudioPlayer(fileName: fileName, fileExtension: fileExtension)
     }
 
     private func configureAudioSession() {
@@ -25,29 +20,38 @@ final class AudioPlayerManager {
             try session.setActive(true)
         } catch {
             logger.error("Ошибка audioSession: \(error.localizedDescription, privacy: .public)")
-            assertionFailure()
         }
     }
 
-    private func setupAudioPlayer(fileName: String, fileExtension: String) {
-        guard let url = Bundle.main.url(
-            forResource: fileName,
-            withExtension: fileExtension
-        ) else {
-            logger.error("Звуковой файл с названием \(fileName).\(fileExtension) не найден")
-            assertionFailure()
-            return
+    @discardableResult
+    func setupSound(_ timerSound: TimerSound) -> Bool {
+        guard let url = timerSound.bundleURL else {
+            logger.error("Звуковой файл с названием \(timerSound.rawValue) не найден в папке TimerSounds")
+            return false
         }
         do {
             audioPlayer = try AVAudioPlayer(contentsOf: url)
             audioPlayer?.prepareToPlay()
+            return true
         } catch {
             logger.error("Ошибка инициализации аудиоплеера: \(error.localizedDescription, privacy: .public)")
-            assertionFailure()
+            return false
         }
     }
 
-    func play() {
-        audioPlayer?.play()
+    @discardableResult
+    func play() -> Bool {
+        guard let audioPlayer else {
+            logger.error("Попытка воспроизвести звук до настройки")
+            return false
+        }
+        return audioPlayer.play()
+    }
+
+    func stop() {
+        guard let audioPlayer, audioPlayer.isPlaying else {
+            return
+        }
+        audioPlayer.stop()
     }
 }

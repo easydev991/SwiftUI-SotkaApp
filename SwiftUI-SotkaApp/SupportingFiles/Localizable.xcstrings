@@ -2460,6 +2460,23 @@
         }
       }
     },
+    "MoreScreen.TimerSound" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sound"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Мелодия"
+          }
+        }
+      }
+    },
     "MoreScreen.Workout.Group" : {
       "comment" : "The title for a group of settings related to workouts.",
       "extractionState" : "manual",
