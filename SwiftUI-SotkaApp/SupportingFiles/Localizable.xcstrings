@@ -2739,6 +2739,7 @@
       }
     },
     "Pick from gallery" : {
+      "extractionState" : "manual",
       "localizations" : {
         "en" : {
           "stringUnit" : {

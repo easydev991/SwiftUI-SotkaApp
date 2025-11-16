@@ -1,6 +1,11 @@
 import Foundation
 
 protocol ProfileClient: Sendable {
+    /// Запрашивает данные пользователя по `id`
+    /// - Parameter userID: `id` пользователя
+    /// - Returns: вся информация о пользователе
+    func getUserByID(_ userID: Int) async throws -> UserResponse
+
     /// Изменяет данные пользователя
     /// - Parameters:
     ///   - id: `id` пользователя

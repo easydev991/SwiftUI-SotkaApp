@@ -30,18 +30,13 @@ struct HomeScreen: View {
                 Color.swBackground.ignoresSafeArea()
                 if let model {
                     ScrollView {
-                        VStack(spacing: 12) {
-                            HomeDayCountView(calculator: model.calculator)
-                            HomeInfopostSectionView(infopost: model.todayInfopost)
-                            if model.showActivitySection {
-                                HomeActivitySectionView()
-                            }
-                            if model.showProgressSection {
-                                HomeFillProgressSectionView()
-                            }
+                        ViewThatFits {
+                            makeHorizontalView(with: model)
+                            makeVerticalView(with: model)
                         }
                         .padding()
                     }
+                    .scrollBounceBehavior(.basedOnSize)
                 } else {
                     Text(.loading)
                 }
@@ -94,6 +89,37 @@ extension HomeScreen {
 }
 
 private extension HomeScreen {
+    func makeHorizontalView(with model: Model) -> some View {
+        VStack(spacing: 12) {
+            HStack(spacing: 16) {
+                HomeDayCountView(calculator: model.calculator)
+                    .frame(maxHeight: .infinity)
+                    .insideCardBackground()
+                HomeInfopostSectionView(infopost: model.todayInfopost)
+            }
+            if model.showActivitySection {
+                HomeActivitySectionView()
+            }
+            if model.showProgressSection {
+                HomeFillProgressSectionView()
+            }
+        }
+    }
+
+    func makeVerticalView(with model: Model) -> some View {
+        VStack(spacing: 12) {
+            HomeDayCountView(calculator: model.calculator)
+                .insideCardBackground()
+            HomeInfopostSectionView(infopost: model.todayInfopost)
+            if model.showActivitySection {
+                HomeActivitySectionView()
+            }
+            if model.showProgressSection {
+                HomeFillProgressSectionView()
+            }
+        }
+    }
+
     @ViewBuilder
     func makeView(for destination: NavigationDestination) -> some View {
         switch destination {

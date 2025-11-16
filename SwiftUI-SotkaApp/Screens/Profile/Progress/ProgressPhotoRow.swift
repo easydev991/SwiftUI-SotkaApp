@@ -27,7 +27,7 @@ struct ProgressPhotoRow: View {
                 Button(.takeAPhoto) {
                     onPhotoTap(.camera)
                 }
-                Button("Pick from gallery") {
+                Button(.pickFromGallery) {
                     onPhotoTap(.library)
                 }
                 if model.canBeDeleted {

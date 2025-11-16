@@ -19,7 +19,13 @@ struct SyncStartDateView: View {
                         Button(.dateSyncSelectAppDate) {
                             selectedOption = .app(model.appDayCalculator)
                         }
-                        .buttonStyle(SWButtonStyle(mode: .filled, size: .small))
+                        .buttonStyle(
+                            SWButtonStyle(
+                                icon: selectedOption.isAppSelected ? .checkmark : nil,
+                                mode: .filled,
+                                size: .small
+                            )
+                        )
                     }
                     SWDivider()
                     VStack(spacing: 12) {
@@ -28,7 +34,13 @@ struct SyncStartDateView: View {
                         Button(.dateSyncSelectSiteDate) {
                             selectedOption = .site(model.siteDayCalculator)
                         }
-                        .buttonStyle(SWButtonStyle(mode: .filled, size: .small))
+                        .buttonStyle(
+                            SWButtonStyle(
+                                icon: selectedOption.isSiteSelected ? .checkmark : nil,
+                                mode: .filled,
+                                size: .small
+                            )
+                        )
                     }
                 }
                 .padding()
@@ -95,6 +107,14 @@ extension SyncStartDateView {
             case let .app(model), let .site(model): model.startDate
             case .none: nil
             }
+        }
+
+        var isAppSelected: Bool {
+            if case .app = self { true } else { false }
+        }
+
+        var isSiteSelected: Bool {
+            if case .site = self { true } else { false }
         }
     }
 }

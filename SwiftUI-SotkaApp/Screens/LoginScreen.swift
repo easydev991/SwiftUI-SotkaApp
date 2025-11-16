@@ -201,6 +201,7 @@ private extension LoginScreen {
     }
 }
 
+#if DEBUG
 #Preview("Успех") {
     LoginScreen(client: MockLoginClient(result: .success))
         .environment(AuthHelperImp())
@@ -212,3 +213,4 @@ private extension LoginScreen {
         .environment(AuthHelperImp())
         .environment(\.isNetworkConnected, true)
 }
+#endif

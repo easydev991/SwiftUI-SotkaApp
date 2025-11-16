@@ -397,3 +397,53 @@ struct MockDaysClient: DaysClient {
         )
     }
 }
+
+struct MockProfileClient: ProfileClient {
+    let result: MockResult
+
+    func getUserByID(_: Int) async throws -> UserResponse {
+        print("Имитируем запрос getUserByID")
+        try await Task.sleep(for: .seconds(1))
+        switch result {
+        case .success:
+            print("Успешно получили данные пользователя")
+            return .preview
+        case let .failure(error):
+            throw error
+        }
+    }
+
+    func editUser(_ id: Int, model: MainUserForm) async throws -> UserResponse {
+        print("Имитируем запрос editUser (id=\(id))")
+        try await Task.sleep(for: .seconds(1))
+        switch result {
+        case .success:
+            print("Успешно обновили данные пользователя")
+            let birthDateString = DateFormatterService.stringFromFullDate(model.birthDate, format: .isoShortDate)
+            return .init(
+                id: id,
+                name: model.userName,
+                fullname: model.fullName,
+                email: model.email,
+                image: nil,
+                cityId: Int(model.city.id),
+                countryId: Int(model.country.id),
+                gender: model.genderCode,
+                birthDate: birthDateString
+            )
+        case let .failure(error):
+            throw error
+        }
+    }
+
+    func changePassword(current _: String, new _: String) async throws {
+        print("Имитируем запрос changePassword")
+        try await Task.sleep(for: .seconds(1))
+        switch result {
+        case .success:
+            print("Успешно изменили пароль")
+        case let .failure(error):
+            throw error
+        }
+    }
+}

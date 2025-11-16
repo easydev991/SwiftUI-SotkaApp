@@ -5,6 +5,7 @@ import SwiftUI
 ///
 /// В старом приложении это `HomeCountCell`
 struct HomeDayCountView: View {
+    @Environment(\.isIPad) private var isIpad
     let calculator: DayCalculator
 
     var body: some View {
@@ -13,25 +14,24 @@ struct HomeDayCountView: View {
                 finishedView
             } else {
                 notFinishedView
-                    .frame(height: 90)
+                    .frame(height: isIpad ? 120 : 90)
             }
         }
         .foregroundStyle(Color.swMainText)
-        .insideCardBackground()
     }
 }
 
 private extension HomeDayCountView {
     var finishedView: some View {
-        VStack(spacing: 4) {
-            VStack(spacing: 12) {
+        VStack(spacing: isIpad ? 8 : 4) {
+            VStack(spacing: isIpad ? 20 : 12) {
                 Text(.congratulationsTitle)
                     .font(.title2)
                 makeNumberView(for: 100)
-                    .frame(height: 80)
+                    .frame(height: isIpad ? 110 : 80)
             }
             Text(.congratulationsSubtitle)
-                .padding(.bottom, 8)
+                .padding(.bottom, isIpad ? 12 : 8)
             Text(.congratulationsBody)
                 .multilineTextAlignment(.center)
         }
@@ -47,22 +47,23 @@ private extension HomeDayCountView {
             makeDayStack(title: currentDayTitle, day: calculator.currentDay)
             Rectangle()
                 .fill(Color.swSeparators)
-                .frame(width: 1, height: 80)
+                .frame(width: 1, height: isIpad ? 110 : 80)
             makeDayStack(title: daysLeftTitle, day: calculator.daysLeft)
         }
     }
 
     func makeDayStack(title: String, day: Int) -> some View {
-        VStack(spacing: 4) {
+        VStack(spacing: isIpad ? 8 : 4) {
             Text(title)
-                .font(.footnote.bold())
+                .font(isIpad ? .body : .footnote)
+                .bold()
             makeNumberView(for: day)
         }
         .frame(maxWidth: .infinity)
     }
 
     func makeNumberView(for day: Int) -> some View {
-        HStack(spacing: 2) {
+        HStack(spacing: isIpad ? 4 : 2) {
             // Форматируем число как строку с ведущим нулём (например, "07")
             let formattedDay = String(format: "%02d", day)
             let digits = Array(formattedDay)

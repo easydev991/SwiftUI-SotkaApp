@@ -7,6 +7,7 @@ struct EditProfileScreen: View {
     @Environment(\.dismiss) private var dismiss
     @Environment(AuthHelperImp.self) private var authHelper
     @Environment(\.isNetworkConnected) private var isNetworkConnected
+    @Environment(\.isIPad) private var isIPad
     @Query(sort: \Country.name, order: .forward) private var countries: [Country]
     private var cities: [City] {
         guard let selected = countries.first(where: { $0.name == userForm.country.name })
@@ -22,34 +23,33 @@ struct EditProfileScreen: View {
     @State private var pickerSourceType: UIImagePickerController.SourceType?
     @State private var editUserTask: Task<Void, Never>?
     @FocusState private var focus: FocusableField?
-    private var client: ProfileClient { SWClient(with: authHelper) }
-    let user: User
+    private let user: User
+    private let client: ProfileClient
 
-    init(user: User) {
+    init(user: User, client: ProfileClient) {
         self.user = user
         self._oldUserForm = .init(initialValue: .init(user))
         self._userForm = .init(initialValue: .init(user))
+        self.client = client
     }
 
     var body: some View {
         VStack(spacing: 12) {
             ScrollView {
-                VStack(spacing: 12) {
-                    avatarPicker
-                    loginField
-                    emailField
-                    nameField
-                    changePasswordButton
-                    VStack(spacing: 4) {
-                        genderPicker
-                        birthdayPicker
-                        countryPicker
-                        cityPicker
+                Group {
+                    if isIPad {
+                        verticalView
+                    } else {
+                        ViewThatFits {
+                            horizontalView
+                            verticalView
+                        }
                     }
                 }
                 .padding()
             }
             saveChangesButton
+                .padding([.horizontal, .bottom])
         }
         .loadingOverlay(if: isLoading)
         .background(Color.swBackground)
@@ -70,6 +70,43 @@ private extension EditProfileScreen {
         let uiImage: UIImage
     }
 
+    var horizontalView: some View {
+        HStack(alignment: .top, spacing: 32) {
+            VStack(spacing: 12) {
+                avatarPicker
+            }
+            VStack(spacing: 4) {
+                VStack(spacing: 12) {
+                    loginField
+                    emailField
+                    nameField
+                    changePasswordButton
+                }
+                genderPicker
+                birthdayPicker
+                countryPicker
+                cityPicker
+            }
+        }
+    }
+
+    var verticalView: some View {
+        VStack(spacing: 12) {
+            avatarPicker
+                .padding(.bottom, 8)
+            loginField
+            emailField
+            nameField
+            changePasswordButton
+            VStack(spacing: 4) {
+                genderPicker
+                birthdayPicker
+                countryPicker
+                cityPicker
+            }
+        }
+    }
+
     var avatarPicker: some View {
         VStack(spacing: 20) {
             if let model = newAvatarImageModel {
@@ -85,8 +122,7 @@ private extension EditProfileScreen {
                     .transition(.scale.combined(with: .slide).combined(with: .opacity))
             }
             Button(.changeProfilePhoto) { showImagePickerDialog.toggle() }
-                .buttonStyle(SWButtonStyle(mode: .tinted, size: .large, maxWidth: nil))
-                .padding(.bottom, 8)
+                .buttonStyle(SWButtonStyle(mode: .tinted, size: .large))
                 .confirmationDialog(
                     "",
                     isPresented: $showImagePickerDialog,
@@ -95,7 +131,7 @@ private extension EditProfileScreen {
                     Button(.takeAPhoto) {
                         pickerSourceType = .camera
                     }
-                    Button("Pick from gallery") {
+                    Button(.pickFromGallery) {
                         pickerSourceType = .photoLibrary
                     }
                 }
@@ -283,7 +319,6 @@ private extension EditProfileScreen {
     var saveChangesButton: some View {
         Button(.saveChanges, action: saveChangesAction)
             .buttonStyle(SWButtonStyle(mode: .filled, size: .large))
-            .padding([.horizontal, .bottom])
             .disabled(!userForm.isReadyToSave(comparedTo: oldUserForm))
     }
 
@@ -326,10 +361,15 @@ private extension EditProfileScreen {
     }
 }
 
+#if DEBUG
 #Preview {
     NavigationStack {
-        EditProfileScreen(user: .init(from: .preview))
-            .environment(AuthHelperImp())
-            .environment(\.isNetworkConnected, true)
+        EditProfileScreen(
+            user: .init(from: .preview),
+            client: MockProfileClient(result: .success)
+        )
+        .environment(AuthHelperImp())
+        .environment(\.isNetworkConnected, true)
     }
 }
+#endif
