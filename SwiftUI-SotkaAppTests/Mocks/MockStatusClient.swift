@@ -71,3 +71,10 @@ final class MockStatusClient: StatusClient, @unchecked Sendable {
         currentResult = .success(CurrentRunResponse(date: Date.now, maxForAllRunsDay: nil))
     }
 }
+
+extension MockStatusClient {
+    /// Ошибка для тестирования
+    enum MockError: Error {
+        case demoError
+    }
+}

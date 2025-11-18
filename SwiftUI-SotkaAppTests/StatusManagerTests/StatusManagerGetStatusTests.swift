@@ -315,7 +315,7 @@ extension StatusManagerTests {
 
         @Test("Устанавливает state = .error при ошибке при первичной загрузке")
         func getStatusSetsErrorStateOnInitialLoadError() async throws {
-            let error = NSError(domain: "TestError", code: 1, userInfo: [NSLocalizedDescriptionKey: "Test error"])
+            let error = MockStatusClient.MockError.demoError
             let mockStatusClient = MockStatusClient(
                 currentResult: .failure(error)
             )
@@ -372,7 +372,7 @@ extension StatusManagerTests {
 
             #expect(!statusManager.state.isLoading)
 
-            let error = NSError(domain: "TestError", code: 1, userInfo: [NSLocalizedDescriptionKey: "Test error"])
+            let error = MockStatusClient.MockError.demoError
             mockStatusClient.currentResult = .failure(error)
 
             await statusManager.getStatus(context: context)

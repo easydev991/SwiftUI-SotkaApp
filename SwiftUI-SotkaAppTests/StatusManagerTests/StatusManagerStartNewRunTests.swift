@@ -60,7 +60,7 @@ extension StatusManagerTests {
         func startNewRunContinuesOnAPIError() async throws {
             let now = Date.now
             let appDate = try #require(Calendar.current.date(byAdding: .day, value: -30, to: now))
-            let error = NSError(domain: "TestError", code: 1, userInfo: [NSLocalizedDescriptionKey: "Test error"])
+            let error = MockStatusClient.MockError.demoError
             let mockStatusClient = MockStatusClient(
                 startResult: .failure(error)
             )

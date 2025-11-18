@@ -149,9 +149,9 @@ struct MockProgressClient: ProgressClient {
                     modifyDate: "2025-01-01 12:00:00"
                 )
             ]
-        case .failure:
+        case let .failure(error):
             print("Ошибка получения списка прогресса")
-            throw NSError(domain: "MockProgressClient", code: 1, userInfo: [NSLocalizedDescriptionKey: "Имитированная ошибка"])
+            throw error
         }
     }
 
@@ -174,11 +174,7 @@ struct MockProgressClient: ProgressClient {
                 )
             } else {
                 // День не найден - имитируем ошибку прогресса не найден
-                throw NSError(
-                    domain: "MockProgressClient",
-                    code: 404,
-                    userInfo: [NSLocalizedDescriptionKey: "Progress not found for day \(day)"]
-                )
+                throw MockProgressClient.MockError.progressNotFound(day: day)
             }
         case let .failure(error):
             throw error
@@ -245,6 +241,13 @@ struct MockProgressClient: ProgressClient {
         case let .failure(error):
             throw error
         }
+    }
+}
+
+extension MockProgressClient {
+    /// Ошибка для тестирования
+    enum MockError: Error {
+        case progressNotFound(day: Int)
     }
 }
 

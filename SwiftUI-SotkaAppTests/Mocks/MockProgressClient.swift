@@ -15,7 +15,7 @@ final class MockProgressClient: ProgressClient, @unchecked Sendable {
     var shouldThrowErrorOnGetProgress = false
 
     /// Кастомная ошибка для выброса
-    var errorToThrow: Error = NSError(domain: "TestError", code: 1, userInfo: [NSLocalizedDescriptionKey: "Test error"])
+    var errorToThrow: Error = MockProgressClient.MockError.demoError
 
     /// Специфичные ошибки для deletePhoto
     var deletePhotoError: Error?
@@ -161,6 +161,13 @@ final class MockProgressClient: ProgressClient, @unchecked Sendable {
         deletePhotoError = nil
         deletePhotoCalls.removeAll()
         updateProgressCalls.removeAll()
+    }
+}
+
+extension MockProgressClient {
+    /// Ошибка для тестирования
+    enum MockError: Error {
+        case demoError
     }
 }
 

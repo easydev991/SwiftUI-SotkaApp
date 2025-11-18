@@ -367,7 +367,7 @@ extension StatusManagerTests {
         @Test("Установка startDate = Date.now при ошибке API")
         func resetProgramSetsCurrentDateOnAPIError() async throws {
             let mockStatusClient = MockStatusClient(
-                startResult: .failure(NSError(domain: "TestError", code: 1, userInfo: [NSLocalizedDescriptionKey: "Test error"]))
+                startResult: .failure(MockStatusClient.MockError.demoError)
             )
             let statusManager = try MockStatusManager.create(statusClient: mockStatusClient)
 
@@ -402,7 +402,7 @@ extension StatusManagerTests {
         @Test("Обработка ошибки API с продолжением в офлайн режиме")
         func resetProgramContinuesOnAPIError() async throws {
             let mockStatusClient = MockStatusClient(
-                startResult: .failure(NSError(domain: "TestError", code: 1, userInfo: [NSLocalizedDescriptionKey: "Test error"]))
+                startResult: .failure(MockStatusClient.MockError.demoError)
             )
             let statusManager = try MockStatusManager.create(statusClient: mockStatusClient)
 

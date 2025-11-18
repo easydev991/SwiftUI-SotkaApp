@@ -12,7 +12,7 @@ final class MockDaysClient: DaysClient, @unchecked Sendable {
     var shouldThrowError = false
 
     /// Кастомная ошибка для выброса
-    var errorToThrow: Error = NSError(domain: "TestError", code: 1, userInfo: [NSLocalizedDescriptionKey: "Test error"])
+    var errorToThrow: Error = MockDaysClient.MockError.demoError
 
     /// Счетчики вызовов методов
     var getDaysCallCount = 0
@@ -164,5 +164,12 @@ final class MockDaysClient: DaysClient, @unchecked Sendable {
         for response in mockedDayResponses {
             serverActivities[response.id] = response
         }
+    }
+}
+
+extension MockDaysClient {
+    /// Ошибка для тестирования
+    enum MockError: Error {
+        case demoError
     }
 }

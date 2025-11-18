@@ -34,7 +34,7 @@ struct CountriesUpdateServiceTests {
             id: "1",
             name: "Россия"
         )
-        let mockClient = MockCountryClient(mockedCountries: [testCountry1])
+        let mockClient = MockCountriesClient(mockedCountries: [testCountry1])
         let defaults = try MockUserDefaults.create()
         let service = CountriesUpdateService(defaults: defaults, client: mockClient)
         let container = try ModelContainer(
@@ -80,7 +80,7 @@ struct CountriesUpdateServiceTests {
             id: "new",
             name: "Новая страна"
         )
-        let mockClient = MockCountryClient(mockedCountries: [newCountry])
+        let mockClient = MockCountriesClient(mockedCountries: [newCountry])
         let defaults = try MockUserDefaults.create()
         let service = CountriesUpdateService(defaults: defaults, client: mockClient)
 
@@ -97,7 +97,7 @@ struct CountriesUpdateServiceTests {
 
     @Test("Не должен обновлять, если прошло меньше дня")
     func noUpdateWhenLessThanDayPassed() async throws {
-        let mockClient = MockCountryClient()
+        let mockClient = MockCountriesClient()
         let defaults = try MockUserDefaults.create()
         let service = CountriesUpdateService(defaults: defaults, client: mockClient)
         Self.setLastUpdateDate(defaults, date: .now)
@@ -127,7 +127,7 @@ struct CountriesUpdateServiceTests {
             id: "1",
             name: "Новая страна"
         )
-        let mockClient = MockCountryClient(mockedCountries: [testCountry])
+        let mockClient = MockCountriesClient(mockedCountries: [testCountry])
         let defaults = try MockUserDefaults.create()
         let service = CountriesUpdateService(defaults: defaults, client: mockClient)
         let twoDaysAgo = Date().addingTimeInterval(-2 * 24 * 60 * 60)
@@ -156,7 +156,7 @@ struct CountriesUpdateServiceTests {
 
     @Test("Не должен обновлять, если уже идет загрузка")
     func noUpdateWhenAlreadyLoading() async throws {
-        let mockClient = MockCountryClient()
+        let mockClient = MockCountriesClient()
         mockClient.delay = 0.1
         let defaults = try MockUserDefaults.create()
         let service = CountriesUpdateService(defaults: defaults, client: mockClient)
@@ -175,7 +175,7 @@ struct CountriesUpdateServiceTests {
 
     @Test("Должен обработать ошибку при первой загрузке")
     func errorHandlingOnFirstLoad() async throws {
-        let mockClient = MockCountryClient()
+        let mockClient = MockCountriesClient()
         mockClient.shouldThrowError = true
         let defaults = try MockUserDefaults.create()
         let service = CountriesUpdateService(defaults: defaults, client: mockClient)
@@ -195,7 +195,7 @@ struct CountriesUpdateServiceTests {
 
     @Test("Должен обработать ошибку при повторной загрузке без изменения даты")
     func errorHandlingOnSubsequentLoad() async throws {
-        let mockClient = MockCountryClient()
+        let mockClient = MockCountriesClient()
         mockClient.shouldThrowError = true
         let defaults = try MockUserDefaults.create()
         let service = CountriesUpdateService(defaults: defaults, client: mockClient)
@@ -221,7 +221,7 @@ struct CountriesUpdateServiceTests {
     @Test("Должен отменить предыдущую задачу при повторном вызове")
     func taskCancellationOnSecondCall() async throws {
         let testCountry = CountryResponse(cities: [], id: "1", name: "Страна")
-        let mockClient = MockCountryClient(mockedCountries: [testCountry])
+        let mockClient = MockCountriesClient(mockedCountries: [testCountry])
         mockClient.delay = 0.2
         let defaults = try MockUserDefaults.create()
         let service = CountriesUpdateService(defaults: defaults, client: mockClient)
@@ -251,7 +251,7 @@ struct CountriesUpdateServiceTests {
             id: "1",
             name: "Россия"
         )
-        let mockClient = MockCountryClient(mockedCountries: [testCountry])
+        let mockClient = MockCountriesClient(mockedCountries: [testCountry])
         let defaults = try MockUserDefaults.create()
         let service = CountriesUpdateService(defaults: defaults, client: mockClient)
         let container = try ModelContainer(
@@ -281,7 +281,7 @@ struct CountriesUpdateServiceTests {
     @Test("Должен обновить при отсутствии даты последнего обновления")
     func updateWhenNoLastUpdateDate() async throws {
         let testCountry = CountryResponse(cities: [], id: "1", name: "Страна")
-        let mockClient = MockCountryClient(mockedCountries: [testCountry])
+        let mockClient = MockCountriesClient(mockedCountries: [testCountry])
         let defaults = try MockUserDefaults.create()
         let service = CountriesUpdateService(defaults: defaults, client: mockClient)
 
@@ -308,7 +308,7 @@ struct CountriesUpdateServiceTests {
 
     @Test("Должен очистить БД при пустом списке стран с сервера")
     func updateWithEmptyCountriesList() async throws {
-        let mockClient = MockCountryClient(mockedCountries: [])
+        let mockClient = MockCountriesClient(mockedCountries: [])
         let defaults = try MockUserDefaults.create()
         let service = CountriesUpdateService(defaults: defaults, client: mockClient)
 
@@ -333,7 +333,7 @@ struct CountriesUpdateServiceTests {
     @Test("Должен сохранить дату обновления после успешного обновления")
     func lastUpdateDateSaving() async throws {
         let testCountry = CountryResponse(cities: [], id: "1", name: "Страна")
-        let mockClient = MockCountryClient(mockedCountries: [testCountry])
+        let mockClient = MockCountriesClient(mockedCountries: [testCountry])
         let defaults = try MockUserDefaults.create()
         let service = CountriesUpdateService(defaults: defaults, client: mockClient)
         let container = try ModelContainer(

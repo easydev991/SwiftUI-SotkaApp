@@ -121,7 +121,7 @@ extension AllInfopostsTests {
         @MainActor
         func syncReadPostsWithServerError() async throws {
             // Arrange
-            let serverError = NSError(domain: "TestError", code: 500, userInfo: [NSLocalizedDescriptionKey: "Server error"])
+            let serverError = MockInfopostsClient.MockError.serverError
             let mockClient = MockInfopostsClient(getReadPostsResult: .failure(serverError))
             let service = createService(mockClient: mockClient)
 
@@ -136,7 +136,7 @@ extension AllInfopostsTests {
             try modelContext.save()
 
             // Act & Assert
-            await #expect(throws: NSError.self) {
+            await #expect(throws: MockInfopostsClient.MockError.self) {
                 try await service.syncReadPosts(context: modelContext)
             }
         }
@@ -168,7 +168,7 @@ extension AllInfopostsTests {
         @MainActor
         func markPostAsReadWithSyncError() async throws {
             // Arrange
-            let syncError = NSError(domain: "TestError", code: 500, userInfo: [NSLocalizedDescriptionKey: "Sync error"])
+            let syncError = MockInfopostsClient.MockError.syncError
             let mockClient = MockInfopostsClient(setPostReadResult: .failure(syncError))
             let service = createService(mockClient: mockClient)
 
@@ -406,7 +406,7 @@ extension AllInfopostsTests {
             // Arrange
             let serverReadDays = [1, 2, 3]
             let unsyncedDays = [4, 5, 6]
-            let syncError = NSError(domain: "TestError", code: 500, userInfo: [NSLocalizedDescriptionKey: "Sync error"])
+            let syncError = MockInfopostsClient.MockError.syncError
 
             // День 4 синхронизируется успешно, день 5 падает с ошибкой, день 6 синхронизируется успешно
             let setPostReadResultsByDay: [Int: Result<Void, Error>] = [
@@ -454,7 +454,7 @@ extension AllInfopostsTests {
         @MainActor
         func markPostAsReadWithNetworkError() async throws {
             // Arrange
-            let networkError = NSError(domain: "NetworkError", code: -1009, userInfo: [NSLocalizedDescriptionKey: "No internet connection"])
+            let networkError = MockInfopostsClient.MockError.networkError
             let mockClient = MockInfopostsClient(setPostReadResult: .failure(networkError))
             let service = createService(mockClient: mockClient)
 

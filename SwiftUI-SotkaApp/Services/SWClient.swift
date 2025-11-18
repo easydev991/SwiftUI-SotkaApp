@@ -48,7 +48,7 @@ extension SWClient: ProfileClient {
     }
 }
 
-extension SWClient: CountryClient {
+extension SWClient: CountriesClient {
     func getCountries() async throws -> [CountryResponse] {
         let endpoint = Endpoint.getCountries
         return try await makeResult(for: endpoint)

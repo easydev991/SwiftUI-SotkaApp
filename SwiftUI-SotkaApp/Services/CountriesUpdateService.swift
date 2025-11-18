@@ -12,7 +12,7 @@ final class CountriesUpdateService {
         category: String(describing: CountriesUpdateService.self)
     )
     @ObservationIgnored private let defaults: UserDefaults
-    private let client: CountryClient
+    private let client: CountriesClient
 
     /// Нужно ли обновлять справочник
     ///
@@ -51,7 +51,7 @@ final class CountriesUpdateService {
     private(set) var isLoading = false
     private(set) var updateTask: Task<Void, Never>?
 
-    init(defaults: UserDefaults = UserDefaults.standard, client: CountryClient) {
+    init(defaults: UserDefaults = UserDefaults.standard, client: CountriesClient) {
         self.defaults = defaults
         self.client = client
     }

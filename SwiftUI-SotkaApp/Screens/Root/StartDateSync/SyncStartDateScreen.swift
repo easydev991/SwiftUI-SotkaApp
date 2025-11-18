@@ -119,6 +119,7 @@ extension SyncStartDateView {
     }
 }
 
+#if DEBUG
 #Preview {
     let siteStartDate = Calendar.current.date(byAdding: .day, value: -25, to: .now)!
     let appStartDate = Calendar.current.date(byAdding: .day, value: -12, to: .now)!
@@ -126,3 +127,4 @@ extension SyncStartDateView {
         .environment(AuthHelperImp())
         .environment(StatusManager.preview)
 }
+#endif

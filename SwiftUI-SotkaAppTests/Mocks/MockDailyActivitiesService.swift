@@ -17,7 +17,7 @@ final class MockDailyActivitiesService {
     var shouldThrowError = false
 
     /// Кастомная ошибка для выброса
-    var errorToThrow: Error = NSError(domain: "TestError", code: 1, userInfo: [NSLocalizedDescriptionKey: "Test error"])
+    var errorToThrow: Error = MockDailyActivitiesService.MockError.demoError
 
     /// Массив всех вызовов createDailyActivity
     var createDailyActivityCalls: [(activity: DayActivity, context: ModelContext)] = []
@@ -44,5 +44,12 @@ extension MockDailyActivitiesService {
         if shouldThrowError {
             // В реальном сервисе ошибки обрабатываются внутри, но для тестов мы можем проверить факт вызова
         }
+    }
+}
+
+extension MockDailyActivitiesService {
+    /// Ошибка для тестирования
+    enum MockError: Error {
+        case demoError
     }
 }

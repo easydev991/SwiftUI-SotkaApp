@@ -41,7 +41,7 @@ extension AllProgressTests {
             mockClient.shouldThrowError = true
 
             // Act & Assert
-            await #expect(throws: NSError.self) {
+            await #expect(throws: MockProgressClient.MockError.self) {
                 try await mockClient.deletePhoto(day: 1, type: "front")
             }
         }
@@ -97,14 +97,10 @@ extension AllProgressTests {
             // Arrange
             let mockClient = MockProgressClient()
             mockClient.shouldThrowError = true
-            mockClient.errorToThrow = NSError(
-                domain: "ServerError",
-                code: 500,
-                userInfo: [NSLocalizedDescriptionKey: "Internal Server Error"]
-            )
+            mockClient.errorToThrow = MockProgressClient.MockError.demoError
 
             // Act & Assert
-            await #expect(throws: NSError.self) {
+            await #expect(throws: MockProgressClient.MockError.self) {
                 try await mockClient.deletePhoto(day: 1, type: "front")
             }
         }

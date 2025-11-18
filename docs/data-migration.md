@@ -4,20 +4,20 @@
 
 При добавлении новых полей в модели SwiftData необходимо обеспечить мягкую миграцию данных.
 
-### Пример миграции для CustomExercise
+### Пример миграции
 
-При добавлении полей `isSynced`, `shouldDelete`, `usageCount` в модель `CustomExercise`:
+При добавлении новых полей в модель SwiftData (например, `newField`):
 
 1. **Новые поля имеют значения по умолчанию** в объявлении модели:
    ```swift
-   var isSynced: Bool = false
-   var shouldDelete: Bool = false  
-   var usageCount: Int = 0
+   var newField: String = ""
+   var newOptionalField: Int? = nil
+   var newBoolField: Bool = false
    ```
 
 2. **Инициализаторы устанавливают правильные значения**:
-   - Для новых локальных объектов: `isSynced = false`, `shouldDelete = false`, `usageCount = 0`
-   - Для объектов с сервера: `isSynced = true`, `shouldDelete = false`
+   - Для новых объектов устанавливаются значения по умолчанию
+   - Для существующих объектов SwiftData автоматически применяет значения по умолчанию
 
 3. **SwiftData автоматически обрабатывает миграцию** при первом запуске после обновления модели
 

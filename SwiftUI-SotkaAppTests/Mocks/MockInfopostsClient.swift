@@ -58,3 +58,12 @@ struct MockInfopostsClient: InfopostsClient {
         }
     }
 }
+
+extension MockInfopostsClient {
+    /// Ошибка для тестирования
+    enum MockError: Error {
+        case serverError
+        case syncError
+        case networkError
+    }
+}

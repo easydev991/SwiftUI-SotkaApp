@@ -572,14 +572,14 @@ private class MockSWClient: ExerciseClient {
 
     func getCustomExercises() async throws -> [CustomExerciseResponse] {
         if shouldThrowError {
-            throw NSError(domain: "TestError", code: 1, userInfo: [NSLocalizedDescriptionKey: "Test error"])
+            throw MockSWClient.MockError.demoError
         }
         return mockedCustomExercises
     }
 
     func saveCustomExercise(id: String, exercise: CustomExerciseRequest) async throws -> CustomExerciseResponse {
         if shouldThrowError {
-            throw NSError(domain: "TestError", code: 1, userInfo: [NSLocalizedDescriptionKey: "Test error"])
+            throw MockSWClient.MockError.demoError
         }
         return CustomExerciseResponse(
             id: id,
@@ -592,7 +592,14 @@ private class MockSWClient: ExerciseClient {
 
     func deleteCustomExercise(id _: String) async throws {
         if shouldThrowError {
-            throw NSError(domain: "TestError", code: 1, userInfo: [NSLocalizedDescriptionKey: "Test error"])
+            throw MockSWClient.MockError.demoError
         }
+    }
+}
+
+extension MockSWClient {
+    /// Ошибка для тестирования
+    enum MockError: Error {
+        case demoError
     }
 }

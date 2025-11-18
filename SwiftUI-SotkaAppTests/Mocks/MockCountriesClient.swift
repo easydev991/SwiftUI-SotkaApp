@@ -1,14 +1,10 @@
 import Foundation
 @testable import SwiftUI_SotkaApp
 
-final class MockCountryClient: CountryClient, @unchecked Sendable {
+final class MockCountriesClient: CountriesClient, @unchecked Sendable {
     var mockedCountries: [CountryResponse] = []
     var shouldThrowError = false
-    var errorToThrow: Error = NSError(
-        domain: "TestError",
-        code: 1,
-        userInfo: [NSLocalizedDescriptionKey: "Test error"]
-    )
+    var errorToThrow: Error = MockCountriesClient.MockError.demoError
     var getCountriesCallCount = 0
     var delay: TimeInterval = 0
 
@@ -25,5 +21,12 @@ final class MockCountryClient: CountryClient, @unchecked Sendable {
             throw errorToThrow
         }
         return mockedCountries
+    }
+}
+
+extension MockCountriesClient {
+    /// Ошибка для тестирования
+    enum MockError: Error {
+        case demoError
     }
 }
