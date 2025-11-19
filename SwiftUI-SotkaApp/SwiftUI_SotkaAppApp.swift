@@ -2,6 +2,7 @@ import SWDesignSystem
 import SwiftData
 import SwiftUI
 import SWUtils
+import TipKit
 
 @main
 struct SwiftUI_SotkaAppApp: App {
@@ -38,6 +39,14 @@ struct SwiftUI_SotkaAppApp: App {
         self.countriesService = .init(client: client)
         self.authHelper = authHelper
         self.client = client
+        do {
+            #if DEBUG
+            try Tips.resetDatastore()
+            #endif
+            try Tips.configure()
+        } catch {
+            print("Ошибка TipKit: \(error.localizedDescription)")
+        }
     }
 
     private var modelContainer: ModelContainer = {

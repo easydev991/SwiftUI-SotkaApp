@@ -1,5 +1,29 @@
 import SwiftData
 import SwiftUI
+import TipKit
+
+/// Подсказка для статистики прогресса
+struct ProgressStatsTip: Tip {
+    static let reachedTenthDay = Event(id: "reachedTenthDay")
+
+    var id: String { "ProgressTip.StatsView" }
+
+    var title: Text {
+        Text(.progressTipStatsViewTitle)
+    }
+
+    var message: Text? {
+        Text(.progressTipStatsViewMessage)
+    }
+
+    var rules: [Rule] {
+        #Rule(Self.reachedTenthDay) { $0.donations.count > 0 }
+    }
+
+    var options: [any TipOption] {
+        [MaxDisplayCount(2)]
+    }
+}
 
 /// Основная вьюха для отображения статистики прогресса
 struct ProgressStatsView: View {
@@ -7,18 +31,26 @@ struct ProgressStatsView: View {
     @Environment(\.currentDay) private var currentDay
     @State private var viewModel = ProgressStatsViewModel()
     @State private var showInfoSheet = false
+    private let tip = ProgressStatsTip()
 
     var body: some View {
         Button {
             showInfoSheet.toggle()
+            tip.invalidate(reason: .actionPerformed)
         } label: {
             ProgressBarView(days: viewModel.dayStatuses)
         }
+        .popoverTip(tip)
         .onAppear {
             viewModel.updateStats(
                 modelContext: modelContext,
                 currentDay: currentDay
             )
+        }
+        .task(id: currentDay) {
+            if currentDay >= 10 {
+                await ProgressStatsTip.reachedTenthDay.donate()
+            }
         }
         .sheet(isPresented: $showInfoSheet) {
             ProgressStatsInfoView(
