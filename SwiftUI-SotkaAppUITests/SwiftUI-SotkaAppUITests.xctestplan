@@ -1,0 +1,24 @@
+{
+  "configurations" : [
+    {
+      "id" : "B9D6892A-144A-4892-8EBA-A9FEAFBA5433",
+      "name" : "Configuration 1",
+      "options" : {
+
+      }
+    }
+  ],
+  "defaultOptions" : {
+
+  },
+  "testTargets" : [
+    {
+      "target" : {
+        "containerPath" : "container:SwiftUI-SotkaApp.xcodeproj",
+        "identifier" : "674A8A792DC758BC003F6E50",
+        "name" : "SwiftUI-SotkaAppUITests"
+      }
+    }
+  ],
+  "version" : 1
+}

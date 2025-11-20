@@ -77,6 +77,7 @@ private extension HomeDayCountView {
     }
 }
 
+#if DEBUG
 #Preview("День 1") {
     HomeDayCountView(calculator: .init(previewDay: 1))
         .padding()
@@ -91,3 +92,4 @@ private extension HomeDayCountView {
     HomeDayCountView(calculator: .init(previewDay: 100))
         .padding()
 }
+#endif

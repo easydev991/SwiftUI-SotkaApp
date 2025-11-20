@@ -17,3 +17,6 @@ buildServer.json
 build/
 .build/
 /.continue
+
+# Fastlane
+fastlane/report.xml

@@ -148,6 +148,7 @@ private extension JournalGridView {
         .buttonStyle(.plain)
         .accessibilityLabel(.day(number: day))
         .accessibilityValue(activity?.activityType?.localizedTitle ?? String(localized: .dayNotCompleted))
+        .accessibilityIdentifier("JournalGridMenuButton.\(day)")
     }
 
     @ViewBuilder

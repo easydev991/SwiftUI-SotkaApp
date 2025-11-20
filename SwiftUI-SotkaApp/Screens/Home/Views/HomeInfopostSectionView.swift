@@ -19,6 +19,7 @@ struct HomeInfopostSectionView: View {
                         makeShortTitleWithChevronView(infopost.shortTitle)
                     }
                 }
+                .accessibilityIdentifier("TodayInfopostButton")
             }
         }
     }
@@ -47,8 +48,10 @@ private extension HomeInfopostSectionView {
     }
 }
 
+#if DEBUG
 #Preview("День 2", traits: .sizeThatFitsLayout) {
     HomeInfopostSectionView(infopost: .preview)
         .padding()
         .currentDay(2)
 }
+#endif

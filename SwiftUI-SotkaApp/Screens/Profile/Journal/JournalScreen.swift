@@ -74,12 +74,14 @@ private extension JournalScreen {
             Picker(.journalDisplayMode, selection: $displayMode) {
                 ForEach(DisplayMode.allCases) {
                     Text($0.localizedTitle).tag($0)
+                        .accessibilityIdentifier("JournalDisplayModeOption.\($0.id)")
                 }
             }
         } label: {
             Label(.journalDisplayMode, systemImage: "square.grid.2x2")
         }
         .accessibilityValue(displayMode.localizedTitle)
+        .accessibilityIdentifier("JournalDisplayModeButton")
     }
 }
 

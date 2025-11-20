@@ -114,6 +114,7 @@ private extension ProfileScreen {
                 trailingContent: .textWithChevron("")
             )
         }
+        .accessibilityIdentifier("ProfileJournalButton")
     }
 
     func makeProgressButton(for user: User) -> some View {
@@ -124,6 +125,7 @@ private extension ProfileScreen {
                 trailingContent: .textWithChevron("")
             )
         }
+        .accessibilityIdentifier("ProfileProgressButton")
     }
 
     func makeCustomExercisesButton(for user: User) -> some View {
@@ -134,6 +136,7 @@ private extension ProfileScreen {
                 trailingContent: .textWithChevron(user.customExerciseCountText)
             )
         }
+        .accessibilityIdentifier("ProfileExercisesButton")
     }
 
     var logoutButton: some View {

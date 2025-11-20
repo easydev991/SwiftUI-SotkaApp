@@ -22,7 +22,7 @@ APP_SCHEME_FOR_BUILD                  = "SwiftUI-SotkaApp"
 ARTIFACT_OUTPUT_NAME                  = "SwiftUI-SotkaApp"
 XCODEPROJECT_FILE_FOR_VERSION_LOOKUP  = "SwiftUI-SotkaApp.xcodeproj"
 UITESTS_SCHEME_FOR_SCREENSHOTS        = "SwiftUI-SotkaAppUITests"
-APP_IDENTIFIER_FOR_BUILD_NUMBER       = "com.oleg991.SotkaApp"
+APP_IDENTIFIER_FOR_BUILD_NUMBER       = "com.oleg991.SwiftUI-SotkaApp"
 
 SECRETS_REPO = "git@github.com:easydev991/ios-fastlane-secrets.git"
 SECRETS_DIR  = "appstoreconnect"

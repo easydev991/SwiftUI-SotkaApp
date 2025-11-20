@@ -5,7 +5,7 @@ devices(["iPhone 15 Pro Max", "iPad Pro (12.9-inch) (6th generation)"])
 languages(["en-US", "ru"])
 
 # By default, the latest version should be used automatically. If you want to change it, do it here. 
-#ios_version("18.1")
+#ios_version("26.1")
 
 # Пропускаем открытие html-файла с результатами
 skip_open_summary(true)

@@ -19,6 +19,7 @@ struct DayActivityMenuView: View {
                     Button(activityType.localizedTitle) {
                         onSelectType(day, activityType)
                     }
+                    .accessibilityIdentifier("DayActivityButton.\(activityType.rawValue)")
                 }
             }
         }

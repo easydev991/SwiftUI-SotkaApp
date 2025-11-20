@@ -73,6 +73,7 @@ private extension WorkoutPreviewScreen {
         } label: {
             Image(systemName: "pencil")
         }
+        .accessibilityIdentifier("OpenWorkoutEditorButton")
         .sheet(isPresented: $showEditorScreen) {
             WorkoutExerciseEditorScreen(viewModel: viewModel)
         }

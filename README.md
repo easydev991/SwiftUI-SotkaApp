@@ -4,59 +4,47 @@
 [<img alt="iOS Version" src="https://img.shields.io/badge/iOS_Version-17-4F9153">](https://www.apple.com/ios/)
 
 ## Реализованный функционал
-- Приложение работает по принципу offline-first - все функции доступны без интернета после первой синхронизации
-- Для доступа ко всем функциям необходимо авторизоваться и выполнить первую синхронизацию с сервером
-- После синхронизации все данные работают локально и синхронизируются с сервером при наличии подключения
-- Приложение поддерживает портретную и ландшафтную ориентации
+Описание всех экранов и функций приложения доступно в [карте экранов и функционала](docs/feature-map.md).
 
-### Авторизация
-- Авторизация в сервисе [100.workout.su](https://100.workout.su) под существующей учетной записью
-- Восстановление пароля от учетной записи
-
-### Профиль
-- Просмотр информации о своем профиле
-- Редактирование данных профиля
-- Редактор упражнений
-  - Список пользовательских упражнений
-  - Создание кастомных упражнений
-  - Редактирование упражнений
-  - Удаление упражнений
-  - Поиск и фильтрация
-  - Синхронизация с сервером
-
-### Инфопосты
-- Просмотр списка инфопостов с индикатором непрочитанных
-- Просмотр детальной информации об инфопосте
-- Навигация по инфопостам
-
-### Настройки
-- Настройки приложения
-- Управление аккаунтом
-- Уведомления
-
-## Помощь проекту
+## Помощь в разработке
 Прежде чем что-то делать, ознакомься с [правилами](.github/CONTRIBUTING.md), пожалуйста.
 
-### Установка и настройка проекта
-1. Проверяем, что установлен Xcode 26+
-2. Клонируем репозиторий
-3. В терминале переходим в папку с проектом:
+## Скриншоты  
+1. Генерируем скриншоты при помощи `Fastlane` ([документация](https://docs.fastlane.tools/getting-started/ios/setup/))
+2. Настройки для генерации скриншотов находятся в [Snapfile](./fastlane/Snapfile) ([документация](https://docs.fastlane.tools/actions/snapshot/))
+3. Для генерации скриншотов нужно предварительно [настроить проект](#установка-и-настройка-проекта)
+4. Генерация скриншотов выполняется командой:
 ```shell
-cd SwiftUI-SotkaApp
+make screenshots
 ```
-4. Устанавливаем все инструменты (справка доступна по команде `make help`):
+5. Для генерации скриншотов **необходимо наличие в Xcode симуляторов с нужной версией iOS** в соответствие с настройками в [Snapfile](./fastlane/Snapfile)
+6. Если тесты падают с ошибкой при запуске через `fastlane`, нужно убедиться, что при ручном запуске тестов из `Xcode` они успешно проходят во всех локализациях, используемых для создания скриншотов
+7. Готовые скриншоты сохраняются в папке [screenshots](./fastlane/screenshots)
+8. Отправить скриншоты в appstoreconnect можно командой:
 ```shell
-make setup
+make upload_screenshots
 ```
-5. Запускаем в папке с проектом файл `SwiftUI-SotkaApp.xcodeproj`
-6. Проект готов к работе!
 
-Подробная инструкция по установке и настройке доступна в [документации](docs/setup-guide.md).
+### iPhone
+| Инфопост | Превью тренировки | Редактор тренировки | Прогресс | Дневник (сетка) | Дневник (список) | Пользовательские упражнения |
+| --- | --- | --- | --- | --- | --- | --- |
+| <img src="./fastlane/screenshots/ru/iPhone 15 Pro Max-1-todayInfopost.png"> | <img src="./fastlane/screenshots/ru/iPhone 15 Pro Max-2-workoutPreview.png"> | <img src="./fastlane/screenshots/ru/iPhone 15 Pro Max-3-workoutEditor.png"> | <img src="./fastlane/screenshots/ru/iPhone 15 Pro Max-4-userProgress.png"> | <img src="./fastlane/screenshots/ru/iPhone 15 Pro Max-5-userJournalGrid.png"> | <img src="./fastlane/screenshots/ru/iPhone 15 Pro Max-6-userJournalList.png"> | <img src="./fastlane/screenshots/ru/iPhone 15 Pro Max-7-userExercises.png"> |
+
+### iPad
+| Инфопост | Превью тренировки | Редактор тренировки | Прогресс | Дневник (сетка) | Дневник (список) | Пользовательские упражнения |
+| --- | --- | --- | --- | --- | --- | --- |
+| <img src="./fastlane/screenshots/ru/iPad Pro (12.9-inch) (6th generation)-1-todayInfopost.png"> | <img src="./fastlane/screenshots/ru/iPad Pro (12.9-inch) (6th generation)-2-workoutPreview.png"> | <img src="./fastlane/screenshots/ru/iPad Pro (12.9-inch) (6th generation)-3-workoutEditor.png"> | <img src="./fastlane/screenshots/ru/iPad Pro (12.9-inch) (6th generation)-4-userProgress.png"> | <img src="./fastlane/screenshots/ru/iPad Pro (12.9-inch) (6th generation)-5-userJournalGrid.png"> | <img src="./fastlane/screenshots/ru/iPad Pro (12.9-inch) (6th generation)-6-userJournalList.png"> | <img src="./fastlane/screenshots/ru/iPad Pro (12.9-inch) (6th generation)-7-userExercises.png"> |
+
+### Модели девайсов, используемые для скриншотов
+По состоянию на 2025 год Apple берет за основу скриншоты для диагонали 6.9 (или 6.7) дюймов для айфона (13 дюймов для айпада) и масштабирует их под все остальные размеры экранов, то есть можно использовать для скриншотов по одному девайсу на платформу:
+- iPhone 15 Pro Max
+- iPad Pro (12.9-inch) (6th generation)
+
+Список всех существующих девайсов есть [тут](https://iosref.com/res).
 
 ## Документация
 
 - [Установка и настройка](docs/setup-guide.md) - подробная инструкция по настройке проекта
-- [Карта экранов и функционала](docs/feature-map.md) - описание всех экранов и функций приложения
 - [Миграция данных](docs/data-migration.md) - руководство по миграции данных SwiftData
 - [Публикация приложения](docs/deployment.md) - инструкции по сборке и публикации в AppStore
 - Остальная документация есть в папке [docs](docs)

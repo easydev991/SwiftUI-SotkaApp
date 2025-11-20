@@ -1,3 +1,4 @@
+#if DEBUG
 import Foundation
 import SwiftData
 
@@ -148,3 +149,4 @@ enum PreviewModelContainer {
         return container
     }
 }
+#endif

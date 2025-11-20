@@ -267,6 +267,7 @@ screenshots:
 	fi; \
 	printf "$(YELLOW)Запуск fastlane snapshot...$(RESET)\n"; \
 	$(BUNDLE_EXEC) fastlane screenshots; \
+	'
 
 ## build: Сборка проекта в терминале
 build:

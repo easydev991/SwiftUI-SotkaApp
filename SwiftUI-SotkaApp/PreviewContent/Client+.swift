@@ -1,12 +1,21 @@
+#if DEBUG
 import Foundation
 import SWUtils
 
 struct MockLoginClient: LoginClient {
     let result: MockResult
+    let instantResponse: Bool
+
+    init(result: MockResult, instantResponse: Bool = false) {
+        self.result = result
+        self.instantResponse = instantResponse
+    }
 
     func logIn(with _: String?) async throws -> Int {
         print("Имитируем запрос logIn")
-        try await Task.sleep(for: .seconds(1))
+        if !instantResponse {
+            try await Task.sleep(for: .seconds(1))
+        }
         switch result {
         case .success:
             print("Успешно авторизовались")
@@ -18,7 +27,9 @@ struct MockLoginClient: LoginClient {
 
     func getUserByID(_: Int) async throws -> UserResponse {
         print("Имитируем запрос getUserByID")
-        try await Task.sleep(for: .seconds(1))
+        if !instantResponse {
+            try await Task.sleep(for: .seconds(1))
+        }
         switch result {
         case .success:
             print("Успешно получили данные пользователя")
@@ -30,7 +41,9 @@ struct MockLoginClient: LoginClient {
 
     func resetPassword(for _: String) async throws {
         print("Имитируем запрос resetPassword")
-        try await Task.sleep(for: .seconds(1))
+        if !instantResponse {
+            try await Task.sleep(for: .seconds(1))
+        }
         switch result {
         case .success:
             print("Успешно сбросили пароль")
@@ -43,7 +56,9 @@ struct MockLoginClient: LoginClient {
 extension MockLoginClient: StatusClient {
     func start(date _: String) async throws -> CurrentRunResponse {
         print("Имитируем запрос start")
-        try await Task.sleep(for: .seconds(1))
+        if !instantResponse {
+            try await Task.sleep(for: .seconds(1))
+        }
         switch result {
         case .success:
             print("Успешно cтартовали сотку")
@@ -55,11 +70,16 @@ extension MockLoginClient: StatusClient {
 
     func current() async throws -> CurrentRunResponse {
         print("Имитируем запрос current")
-        try await Task.sleep(for: .seconds(1))
+        if !instantResponse {
+            try await Task.sleep(for: .seconds(1))
+        }
         switch result {
         case .success:
             print("Успешно получили статус прохождения сотки")
-            return .init(date: .now, maxForAllRunsDay: 0)
+            // Для дня 12 возвращаем дату старта 11 дней назад
+            let calendar = Calendar.current
+            let startDate = calendar.date(byAdding: .day, value: -11, to: .now) ?? .now
+            return .init(date: startDate, maxForAllRunsDay: 100)
         case let .failure(error):
             throw error
         }
@@ -68,28 +88,50 @@ extension MockLoginClient: StatusClient {
 
 struct MockExerciseClient: ExerciseClient {
     let result: MockResult
+    let instantResponse: Bool
+
+    init(result: MockResult, instantResponse: Bool = false) {
+        self.result = result
+        self.instantResponse = instantResponse
+    }
 
     func getCustomExercises() async throws -> [CustomExerciseResponse] {
         print("Имитируем запрос getCustomExercises")
-        try await Task.sleep(for: .seconds(1))
+        if !instantResponse {
+            try await Task.sleep(for: .seconds(1))
+        }
         switch result {
         case .success:
             print("Успешно получили список пользовательских упражнений")
+            let calendar = Calendar.current
+            let now = Date()
+            let exercise1Date = calendar.date(byAdding: .day, value: -5, to: now) ?? now
+            let exercise2Date = calendar.date(byAdding: .day, value: -3, to: now) ?? now
+            let exercise3Date = calendar.date(byAdding: .day, value: -2, to: now) ?? now
+
             return [
                 .init(
-                    id: "111",
-                    name: "Отжимания с хлопком",
-                    imageId: 1,
-                    createDate: "2025-01-01 12:00:00",
-                    modifyDate: "2025-01-01 12:00:00",
+                    id: "demo-exercise-1",
+                    name: String(localized: .demoExerciseClapPushUps),
+                    imageId: 0,
+                    createDate: DateFormatterService.stringFromFullDate(exercise1Date, format: .serverDateTimeSec),
+                    modifyDate: DateFormatterService.stringFromFullDate(exercise1Date, format: .serverDateTimeSec),
                     isHidden: false
                 ),
                 .init(
-                    id: "222",
-                    name: "Прыжки на тумбу",
+                    id: "demo-exercise-2",
+                    name: String(localized: .demoExerciseBoxJumps),
                     imageId: 2,
-                    createDate: "2025-01-02 12:00:00",
-                    modifyDate: "2025-01-02 12:00:00",
+                    createDate: DateFormatterService.stringFromFullDate(exercise2Date, format: .serverDateTimeSec),
+                    modifyDate: DateFormatterService.stringFromFullDate(exercise2Date, format: .serverDateTimeSec),
+                    isHidden: false
+                ),
+                .init(
+                    id: "demo-exercise-3",
+                    name: String(localized: .demoExerciseBurpees),
+                    imageId: 11,
+                    createDate: DateFormatterService.stringFromFullDate(exercise3Date, format: .serverDateTimeSec),
+                    modifyDate: DateFormatterService.stringFromFullDate(exercise3Date, format: .serverDateTimeSec),
                     isHidden: false
                 )
             ]
@@ -100,7 +142,9 @@ struct MockExerciseClient: ExerciseClient {
 
     func saveCustomExercise(id: String, exercise: CustomExerciseRequest) async throws -> CustomExerciseResponse {
         print("Имитируем запрос saveCustomExercise (id=\(id))")
-        try await Task.sleep(for: .seconds(1))
+        if !instantResponse {
+            try await Task.sleep(for: .seconds(1))
+        }
         switch result {
         case .success:
             print("Успешно сохранили пользовательское упражнение")
@@ -119,7 +163,9 @@ struct MockExerciseClient: ExerciseClient {
 
     func deleteCustomExercise(id: String) async throws {
         print("Имитируем запрос deleteCustomExercise (id=\(id))")
-        try await Task.sleep(for: .seconds(1))
+        if !instantResponse {
+            try await Task.sleep(for: .seconds(1))
+        }
         switch result {
         case .success:
             print("Успешно удалили пользовательское упражнение")
@@ -131,22 +177,35 @@ struct MockExerciseClient: ExerciseClient {
 
 struct MockProgressClient: ProgressClient {
     let result: MockResult
+    let instantResponse: Bool
+
+    init(result: MockResult, instantResponse: Bool = false) {
+        self.result = result
+        self.instantResponse = instantResponse
+    }
 
     func getProgress() async throws -> [ProgressResponse] {
         print("Имитируем запрос getProgress")
-        try await Task.sleep(for: .seconds(1))
+        if !instantResponse {
+            try await Task.sleep(for: .seconds(1))
+        }
         switch result {
         case .success:
             print("Успешно получили список прогресса")
+            // Возвращаем прогресс для дня 1 (контрольная точка) с данными из ScreenshotDemoData
+            let calendar = Calendar.current
+            let now = Date()
+            let progressDate = calendar.date(byAdding: .day, value: -11, to: now) ?? now
+            let dateString = DateFormatterService.stringFromFullDate(progressDate, format: .serverDateTimeSec)
             return [
                 .init(
                     id: 1,
-                    pullups: 10,
-                    pushups: 20,
+                    pullups: 7,
+                    pushups: 15,
                     squats: 30,
                     weight: 70.0,
-                    createDate: "2025-01-01 12:00:00",
-                    modifyDate: "2025-01-01 12:00:00"
+                    createDate: dateString,
+                    modifyDate: dateString
                 )
             ]
         case let .failure(error):
@@ -157,20 +216,26 @@ struct MockProgressClient: ProgressClient {
 
     func getProgress(day: Int) async throws -> ProgressResponse {
         print("Имитируем запрос getProgress для дня \(day)")
-        try await Task.sleep(for: .seconds(0.5))
+        if !instantResponse {
+            try await Task.sleep(for: .seconds(0.5))
+        }
         switch result {
         case .success:
             print("Успешно получили прогресс для дня \(day)")
             // Имитируем случай, когда день найден
             if day == 1 || day == 49 || day == 100 {
+                let calendar = Calendar.current
+                let now = Date()
+                let progressDate = calendar.date(byAdding: .day, value: -11, to: now) ?? now
+                let dateString = DateFormatterService.stringFromFullDate(progressDate, format: .serverDateTimeSec)
                 return .init(
                     id: day,
-                    pullups: 10,
-                    pushups: 20,
-                    squats: 30,
+                    pullups: day == 1 ? 7 : 10,
+                    pushups: day == 1 ? 15 : 20,
+                    squats: day == 1 ? 30 : 30,
                     weight: 70.0,
-                    createDate: "2025-01-01 12:00:00",
-                    modifyDate: "2025-01-01 12:00:00"
+                    createDate: dateString,
+                    modifyDate: dateString
                 )
             } else {
                 // День не найден - имитируем ошибку прогресса не найден
@@ -183,7 +248,9 @@ struct MockProgressClient: ProgressClient {
 
     func createProgress(progress: ProgressRequest) async throws -> ProgressResponse {
         print("Имитируем запрос createProgress (day=\(progress.id))")
-        try await Task.sleep(for: .seconds(1))
+        if !instantResponse {
+            try await Task.sleep(for: .seconds(1))
+        }
         switch result {
         case .success:
             print("Успешно создали прогресс")
@@ -203,7 +270,9 @@ struct MockProgressClient: ProgressClient {
 
     func updateProgress(day: Int, progress: ProgressRequest) async throws -> ProgressResponse {
         print("Имитируем запрос updateProgress (day=\(day))")
-        try await Task.sleep(for: .seconds(1))
+        if !instantResponse {
+            try await Task.sleep(for: .seconds(1))
+        }
         switch result {
         case .success:
             print("Успешно обновили прогресс")
@@ -223,7 +292,9 @@ struct MockProgressClient: ProgressClient {
 
     func deleteProgress(day: Int) async throws {
         print("Имитируем запрос deleteProgress (day=\(day))")
-        try await Task.sleep(for: .seconds(1))
+        if !instantResponse {
+            try await Task.sleep(for: .seconds(1))
+        }
         switch result {
         case .success:
             print("Успешно удалили прогресс")
@@ -234,7 +305,9 @@ struct MockProgressClient: ProgressClient {
 
     func deletePhoto(day: Int, type: String) async throws {
         print("Имитируем запрос deletePhoto (day=\(day), type=\(type))")
-        try await Task.sleep(for: .seconds(1))
+        if !instantResponse {
+            try await Task.sleep(for: .seconds(1))
+        }
         switch result {
         case .success:
             print("Успешно удалили фотографию")
@@ -253,14 +326,22 @@ extension MockProgressClient {
 
 struct MockInfopostsClient: InfopostsClient {
     let result: MockResult
+    let instantResponse: Bool
+
+    init(result: MockResult, instantResponse: Bool = false) {
+        self.result = result
+        self.instantResponse = instantResponse
+    }
 
     func getReadPosts() async throws -> [Int] {
         print("Имитируем запрос getReadPosts")
-        try await Task.sleep(for: .seconds(1))
+        if !instantResponse {
+            try await Task.sleep(for: .seconds(1))
+        }
         switch result {
         case .success:
             print("Успешно получили список прочитанных инфопостов")
-            return [1, 3, 5, 7, 10]
+            return ScreenshotDemoData.readInfopostDays
         case let .failure(error):
             throw error
         }
@@ -268,7 +349,9 @@ struct MockInfopostsClient: InfopostsClient {
 
     func setPostRead(day: Int) async throws {
         print("Имитируем запрос setPostRead (day=\(day))")
-        try await Task.sleep(for: .seconds(1))
+        if !instantResponse {
+            try await Task.sleep(for: .seconds(1))
+        }
         switch result {
         case .success:
             print("Успешно отметили инфопост \(day) как прочитанный")
@@ -279,7 +362,9 @@ struct MockInfopostsClient: InfopostsClient {
 
     func deleteAllReadPosts() async throws {
         print("Имитируем запрос deleteAllReadPosts")
-        try await Task.sleep(for: .seconds(1))
+        if !instantResponse {
+            try await Task.sleep(for: .seconds(1))
+        }
         switch result {
         case .success:
             print("Успешно удалили все прочитанные инфопосты")
@@ -291,46 +376,234 @@ struct MockInfopostsClient: InfopostsClient {
 
 struct MockDaysClient: DaysClient {
     let result: MockResult
+    let instantResponse: Bool
+
+    init(result: MockResult, instantResponse: Bool = false) {
+        self.result = result
+        self.instantResponse = instantResponse
+    }
 
     func getDays() async throws -> [DayResponse] {
         print("Имитируем запрос getDays")
-        try await Task.sleep(for: .seconds(1))
+        if !instantResponse {
+            try await Task.sleep(for: .seconds(1))
+        }
         switch result {
         case .success:
             print("Успешно получили список дней тренировок")
-            return [
-                .init(
-                    id: 1,
-                    activityType: 1,
-                    count: 3,
-                    plannedCount: 3,
-                    executeType: 1,
-                    trainType: 1,
-                    trainings: [
-                        .init(typeId: 1, customTypeId: nil, count: 10, sortOrder: 0),
-                        .init(typeId: 2, customTypeId: nil, count: 20, sortOrder: 1)
-                    ],
-                    createDate: DateFormatterService.stringFromFullDate(Date(), format: .serverDateTimeSec),
-                    modifyDate: DateFormatterService.stringFromFullDate(Date(), format: .serverDateTimeSec),
-                    duration: 1800,
-                    comment: "Тренировка дня 1"
-                ),
-                .init(
-                    id: 2,
-                    activityType: 2,
-                    count: 1,
-                    plannedCount: 1,
-                    executeType: 1,
-                    trainType: 2,
-                    trainings: [
-                        .init(typeId: 3, customTypeId: nil, count: 30, sortOrder: 0)
-                    ],
-                    createDate: DateFormatterService.stringFromFullDate(Date(), format: .serverDateTimeSec),
-                    modifyDate: DateFormatterService.stringFromFullDate(Date(), format: .serverDateTimeSec),
-                    duration: 900,
-                    comment: "Растяжка"
-                )
-            ]
+            let calendar = Calendar.current
+            let now = Date()
+            var days: [DayResponse] = []
+
+            // День 1: тренировка
+            let day1Date = calendar.date(byAdding: .day, value: -11, to: now) ?? now
+            days.append(.init(
+                id: 1,
+                activityType: 0,
+                count: 4,
+                plannedCount: 4,
+                executeType: 1,
+                trainType: 1,
+                trainings: [
+                    .init(typeId: 0, customTypeId: nil, count: 5, sortOrder: 0),
+                    .init(typeId: 3, customTypeId: nil, count: 10, sortOrder: 1),
+                    .init(typeId: 2, customTypeId: nil, count: 15, sortOrder: 2)
+                ],
+                createDate: DateFormatterService.stringFromFullDate(day1Date, format: .serverDateTimeSec),
+                modifyDate: DateFormatterService.stringFromFullDate(day1Date, format: .serverDateTimeSec),
+                duration: 1800,
+                comment: nil
+            ))
+
+            // День 2: тренировка
+            let day2Date = calendar.date(byAdding: .day, value: -10, to: now) ?? now
+            days.append(.init(
+                id: 2,
+                activityType: 0,
+                count: 4,
+                plannedCount: 4,
+                executeType: 1,
+                trainType: 1,
+                trainings: [
+                    .init(typeId: 0, customTypeId: nil, count: 6, sortOrder: 0),
+                    .init(typeId: 3, customTypeId: nil, count: 12, sortOrder: 1),
+                    .init(typeId: 2, customTypeId: nil, count: 18, sortOrder: 2)
+                ],
+                createDate: DateFormatterService.stringFromFullDate(day2Date, format: .serverDateTimeSec),
+                modifyDate: DateFormatterService.stringFromFullDate(day2Date, format: .serverDateTimeSec),
+                duration: 2000,
+                comment: nil
+            ))
+
+            // День 3: растяжка
+            let day3Date = calendar.date(byAdding: .day, value: -9, to: now) ?? now
+            days.append(.init(
+                id: 3,
+                activityType: 2,
+                count: nil,
+                plannedCount: nil,
+                executeType: nil,
+                trainType: nil,
+                trainings: nil,
+                createDate: DateFormatterService.stringFromFullDate(day3Date, format: .serverDateTimeSec),
+                modifyDate: DateFormatterService.stringFromFullDate(day3Date, format: .serverDateTimeSec),
+                duration: 900,
+                comment: nil
+            ))
+
+            // День 4: тренировка
+            let day4Date = calendar.date(byAdding: .day, value: -8, to: now) ?? now
+            days.append(.init(
+                id: 4,
+                activityType: 0,
+                count: 4,
+                plannedCount: 4,
+                executeType: 1,
+                trainType: 1,
+                trainings: [
+                    .init(typeId: 0, customTypeId: nil, count: 7, sortOrder: 0),
+                    .init(typeId: 3, customTypeId: nil, count: 14, sortOrder: 1),
+                    .init(typeId: 2, customTypeId: nil, count: 21, sortOrder: 2)
+                ],
+                createDate: DateFormatterService.stringFromFullDate(day4Date, format: .serverDateTimeSec),
+                modifyDate: DateFormatterService.stringFromFullDate(day4Date, format: .serverDateTimeSec),
+                duration: 2200,
+                comment: nil
+            ))
+
+            // День 5: тренировка
+            let day5Date = calendar.date(byAdding: .day, value: -7, to: now) ?? now
+            days.append(.init(
+                id: 5,
+                activityType: 0,
+                count: 4,
+                plannedCount: 4,
+                executeType: 1,
+                trainType: 1,
+                trainings: [
+                    .init(typeId: 0, customTypeId: nil, count: 8, sortOrder: 0),
+                    .init(typeId: 3, customTypeId: nil, count: 16, sortOrder: 1),
+                    .init(typeId: 2, customTypeId: nil, count: 24, sortOrder: 2)
+                ],
+                createDate: DateFormatterService.stringFromFullDate(day5Date, format: .serverDateTimeSec),
+                modifyDate: DateFormatterService.stringFromFullDate(day5Date, format: .serverDateTimeSec),
+                duration: 2400,
+                comment: nil
+            ))
+
+            // День 6: тренировка
+            let day6Date = calendar.date(byAdding: .day, value: -6, to: now) ?? now
+            days.append(.init(
+                id: 6,
+                activityType: 0,
+                count: 4,
+                plannedCount: 4,
+                executeType: 1,
+                trainType: 1,
+                trainings: [
+                    .init(typeId: 0, customTypeId: nil, count: 9, sortOrder: 0),
+                    .init(typeId: 3, customTypeId: nil, count: 18, sortOrder: 1),
+                    .init(typeId: 2, customTypeId: nil, count: 27, sortOrder: 2)
+                ],
+                createDate: DateFormatterService.stringFromFullDate(day6Date, format: .serverDateTimeSec),
+                modifyDate: DateFormatterService.stringFromFullDate(day6Date, format: .serverDateTimeSec),
+                duration: 2600,
+                comment: nil
+            ))
+
+            // День 7: отдых
+            let day7Date = calendar.date(byAdding: .day, value: -5, to: now) ?? now
+            days.append(.init(
+                id: 7,
+                activityType: 1,
+                count: nil,
+                plannedCount: nil,
+                executeType: nil,
+                trainType: nil,
+                trainings: nil,
+                createDate: DateFormatterService.stringFromFullDate(day7Date, format: .serverDateTimeSec),
+                modifyDate: DateFormatterService.stringFromFullDate(day7Date, format: .serverDateTimeSec),
+                duration: nil,
+                comment: nil
+            ))
+
+            // День 8: тренировка
+            let day8Date = calendar.date(byAdding: .day, value: -4, to: now) ?? now
+            days.append(.init(
+                id: 8,
+                activityType: 0,
+                count: 4,
+                plannedCount: 4,
+                executeType: 1,
+                trainType: 1,
+                trainings: [
+                    .init(typeId: 0, customTypeId: nil, count: 10, sortOrder: 0),
+                    .init(typeId: 3, customTypeId: nil, count: 20, sortOrder: 1),
+                    .init(typeId: 2, customTypeId: nil, count: 30, sortOrder: 2)
+                ],
+                createDate: DateFormatterService.stringFromFullDate(day8Date, format: .serverDateTimeSec),
+                modifyDate: DateFormatterService.stringFromFullDate(day8Date, format: .serverDateTimeSec),
+                duration: 2800,
+                comment: nil
+            ))
+
+            // День 9: тренировка
+            let day9Date = calendar.date(byAdding: .day, value: -3, to: now) ?? now
+            days.append(.init(
+                id: 9,
+                activityType: 0,
+                count: 4,
+                plannedCount: 4,
+                executeType: 1,
+                trainType: 1,
+                trainings: [
+                    .init(typeId: 0, customTypeId: nil, count: 11, sortOrder: 0),
+                    .init(typeId: 3, customTypeId: nil, count: 22, sortOrder: 1),
+                    .init(typeId: 2, customTypeId: nil, count: 33, sortOrder: 2)
+                ],
+                createDate: DateFormatterService.stringFromFullDate(day9Date, format: .serverDateTimeSec),
+                modifyDate: DateFormatterService.stringFromFullDate(day9Date, format: .serverDateTimeSec),
+                duration: 3000,
+                comment: nil
+            ))
+
+            // День 10: растяжка
+            let day10Date = calendar.date(byAdding: .day, value: -2, to: now) ?? now
+            days.append(.init(
+                id: 10,
+                activityType: 2,
+                count: nil,
+                plannedCount: nil,
+                executeType: nil,
+                trainType: nil,
+                trainings: nil,
+                createDate: DateFormatterService.stringFromFullDate(day10Date, format: .serverDateTimeSec),
+                modifyDate: DateFormatterService.stringFromFullDate(day10Date, format: .serverDateTimeSec),
+                duration: 900,
+                comment: nil
+            ))
+
+            // День 11: тренировка
+            let day11Date = calendar.date(byAdding: .day, value: -1, to: now) ?? now
+            days.append(.init(
+                id: 11,
+                activityType: 0,
+                count: 4,
+                plannedCount: 4,
+                executeType: 1,
+                trainType: 1,
+                trainings: [
+                    .init(typeId: 0, customTypeId: nil, count: 12, sortOrder: 0),
+                    .init(typeId: 3, customTypeId: nil, count: 24, sortOrder: 1),
+                    .init(typeId: 2, customTypeId: nil, count: 36, sortOrder: 2)
+                ],
+                createDate: DateFormatterService.stringFromFullDate(day11Date, format: .serverDateTimeSec),
+                modifyDate: DateFormatterService.stringFromFullDate(day11Date, format: .serverDateTimeSec),
+                duration: 3200,
+                comment: nil
+            ))
+
+            return days
         case let .failure(error):
             throw error
         }
@@ -338,7 +611,9 @@ struct MockDaysClient: DaysClient {
 
     func createDay(_ day: DayRequest) async throws -> DayResponse {
         print("Имитируем запрос createDay (day=\(day.id))")
-        try await Task.sleep(for: .seconds(1))
+        if !instantResponse {
+            try await Task.sleep(for: .seconds(1))
+        }
         switch result {
         case .success:
             print("Успешно создали день тренировки")
@@ -350,7 +625,9 @@ struct MockDaysClient: DaysClient {
 
     func updateDay(model: DayRequest) async throws -> DayResponse {
         print("Имитируем запрос updateDay (day=\(model.id))")
-        try await Task.sleep(for: .seconds(1))
+        if !instantResponse {
+            try await Task.sleep(for: .seconds(1))
+        }
         switch result {
         case .success:
             print("Успешно обновили день тренировки")
@@ -362,7 +639,9 @@ struct MockDaysClient: DaysClient {
 
     func deleteDay(day: Int) async throws {
         print("Имитируем запрос deleteDay (day=\(day))")
-        try await Task.sleep(for: .seconds(1))
+        if !instantResponse {
+            try await Task.sleep(for: .seconds(1))
+        }
         switch result {
         case .success:
             print("Успешно удалили день тренировки")
@@ -403,10 +682,18 @@ struct MockDaysClient: DaysClient {
 
 struct MockProfileClient: ProfileClient {
     let result: MockResult
+    let instantResponse: Bool
+
+    init(result: MockResult, instantResponse: Bool = false) {
+        self.result = result
+        self.instantResponse = instantResponse
+    }
 
     func getUserByID(_: Int) async throws -> UserResponse {
         print("Имитируем запрос getUserByID")
-        try await Task.sleep(for: .seconds(1))
+        if !instantResponse {
+            try await Task.sleep(for: .seconds(1))
+        }
         switch result {
         case .success:
             print("Успешно получили данные пользователя")
@@ -418,7 +705,9 @@ struct MockProfileClient: ProfileClient {
 
     func editUser(_ id: Int, model: MainUserForm) async throws -> UserResponse {
         print("Имитируем запрос editUser (id=\(id))")
-        try await Task.sleep(for: .seconds(1))
+        if !instantResponse {
+            try await Task.sleep(for: .seconds(1))
+        }
         switch result {
         case .success:
             print("Успешно обновили данные пользователя")
@@ -441,7 +730,9 @@ struct MockProfileClient: ProfileClient {
 
     func changePassword(current _: String, new _: String) async throws {
         print("Имитируем запрос changePassword")
-        try await Task.sleep(for: .seconds(1))
+        if !instantResponse {
+            try await Task.sleep(for: .seconds(1))
+        }
         switch result {
         case .success:
             print("Успешно изменили пароль")
@@ -450,3 +741,28 @@ struct MockProfileClient: ProfileClient {
         }
     }
 }
+
+struct MockCountriesClient: CountriesClient {
+    let result: MockResult
+    let instantResponse: Bool
+
+    init(result: MockResult, instantResponse: Bool = false) {
+        self.result = result
+        self.instantResponse = instantResponse
+    }
+
+    func getCountries() async throws -> [CountryResponse] {
+        print("Имитируем запрос getCountries")
+        if !instantResponse {
+            try await Task.sleep(for: .seconds(1))
+        }
+        switch result {
+        case .success:
+            print("Успешно получили список стран")
+            return []
+        case let .failure(error):
+            throw error
+        }
+    }
+}
+#endif

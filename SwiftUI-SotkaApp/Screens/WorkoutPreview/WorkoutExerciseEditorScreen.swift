@@ -34,6 +34,7 @@ struct WorkoutExerciseEditorScreen: View {
                 }
                 ToolbarItem(placement: .topBarTrailing) {
                     Button(.workoutExerciseEditorDone, action: saveChanges)
+                        .accessibilityIdentifier("WorkoutEditorDoneButton")
                 }
             }
             .onAppear {

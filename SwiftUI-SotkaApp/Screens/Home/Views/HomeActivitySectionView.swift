@@ -114,6 +114,7 @@ private extension HomeActivitySectionView {
             }
             .frame(maxWidth: .infinity)
         }
+        .accessibilityIdentifier("TodayActivityButton.\(activityType.rawValue)")
     }
 
     func actionFor(_ activityType: DayActivityType, day: Int) {
