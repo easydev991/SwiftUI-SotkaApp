@@ -181,5 +181,132 @@ extension WorkoutScreenViewModelTests {
             #expect(viewModel.totalRestTime >= initialTotalRestTime + 59)
             #expect(viewModel.totalRestTime <= initialTotalRestTime + 61)
         }
+
+        @Test("Должен предотвращать двойное добавление времени отдыха при повторном вызове handleTimerFinish после программного закрытия")
+        @MainActor
+        func handleTimerFinishShouldNotAddRestTimeTwiceAfterProgrammaticDismiss() throws {
+            let viewModel = WorkoutScreenViewModel()
+            let trainings = [
+                WorkoutPreviewTraining(count: 5, typeId: 0)
+            ]
+            let userDefaults = try MockUserDefaults.create()
+            let appSettings = AppSettings(userDefaults: userDefaults)
+
+            viewModel.setupWorkoutData(
+                dayNumber: 1,
+                executionType: .cycles,
+                trainings: trainings,
+                plannedCount: 4,
+                restTime: 60
+            )
+
+            viewModel.currentStepIndex = 1
+            viewModel.completeCurrentStep(appSettings: appSettings)
+
+            #expect(viewModel.showTimer)
+            #expect(viewModel.currentStepIndex == 2)
+            #expect(viewModel.stepStates[2].state == .inactive)
+
+            let restStartTime = Date().addingTimeInterval(-70)
+            viewModel.currentRestStartTime = restStartTime
+            let initialTotalRestTime = viewModel.totalRestTime
+
+            viewModel.checkAndHandleExpiredRestTimer(appSettings: appSettings)
+
+            #expect(!viewModel.showTimer)
+            #expect(viewModel.currentRestStartTime == nil)
+            #expect(viewModel.stepStates[2].state == .active)
+            let totalRestTimeAfterFirstCall = viewModel.totalRestTime
+            #expect(totalRestTimeAfterFirstCall >= initialTotalRestTime + 69)
+            #expect(totalRestTimeAfterFirstCall <= initialTotalRestTime + 71)
+
+            viewModel.handleTimerFinish(force: false, appSettings: appSettings)
+
+            #expect(viewModel.totalRestTime == totalRestTimeAfterFirstCall)
+            #expect(viewModel.currentRestStartTime == nil)
+            #expect(viewModel.stepStates[2].state == .active)
+        }
+
+        @Test("Должен игнорировать повторный вызов handleTimerFinish когда currentRestStartTime == nil")
+        @MainActor
+        func handleTimerFinishShouldIgnoreWhenRestStartTimeIsNil() throws {
+            let viewModel = WorkoutScreenViewModel()
+            let trainings = [
+                WorkoutPreviewTraining(count: 5, typeId: 0)
+            ]
+            let userDefaults = try MockUserDefaults.create()
+            let appSettings = AppSettings(userDefaults: userDefaults)
+
+            viewModel.setupWorkoutData(
+                dayNumber: 1,
+                executionType: .cycles,
+                trainings: trainings,
+                plannedCount: 4,
+                restTime: 60
+            )
+
+            viewModel.currentStepIndex = 1
+            viewModel.completeCurrentStep(appSettings: appSettings)
+
+            #expect(viewModel.showTimer)
+            #expect(viewModel.currentStepIndex == 2)
+            #expect(viewModel.stepStates[2].state == .inactive)
+
+            viewModel.currentRestStartTime = nil
+            viewModel.showTimer = false
+            let initialTotalRestTime = viewModel.totalRestTime
+            let initialStepState = viewModel.stepStates[2].state
+
+            viewModel.handleTimerFinish(force: false, appSettings: appSettings)
+
+            #expect(viewModel.totalRestTime == initialTotalRestTime)
+            #expect(viewModel.currentRestStartTime == nil)
+            #expect(viewModel.stepStates[2].state == initialStepState)
+        }
+
+        @Test("Должен вызываться только один раз при открытии приложения после истечения таймера")
+        @MainActor
+        func handleTimerFinishShouldBeCalledOnlyOnceWhenAppOpensAfterTimerExpired() throws {
+            let viewModel = WorkoutScreenViewModel()
+            let trainings = [
+                WorkoutPreviewTraining(count: 5, typeId: 0)
+            ]
+            let userDefaults = try MockUserDefaults.create()
+            let appSettings = AppSettings(userDefaults: userDefaults)
+
+            viewModel.setupWorkoutData(
+                dayNumber: 1,
+                executionType: .cycles,
+                trainings: trainings,
+                plannedCount: 4,
+                restTime: 60
+            )
+
+            viewModel.currentStepIndex = 1
+            viewModel.completeCurrentStep(appSettings: appSettings)
+
+            #expect(viewModel.showTimer)
+            #expect(viewModel.currentStepIndex == 2)
+            #expect(viewModel.stepStates[2].state == .inactive)
+
+            let restStartTime = Date().addingTimeInterval(-70)
+            viewModel.currentRestStartTime = restStartTime
+            let initialTotalRestTime = viewModel.totalRestTime
+
+            viewModel.checkAndHandleExpiredRestTimer(appSettings: appSettings)
+
+            #expect(!viewModel.showTimer)
+            #expect(viewModel.currentRestStartTime == nil)
+            #expect(viewModel.stepStates[2].state == .active)
+            let totalRestTimeAfterFirstCall = viewModel.totalRestTime
+            #expect(totalRestTimeAfterFirstCall >= initialTotalRestTime + 69)
+            #expect(totalRestTimeAfterFirstCall <= initialTotalRestTime + 71)
+
+            viewModel.handleTimerFinish(force: false, appSettings: appSettings)
+
+            #expect(viewModel.totalRestTime == totalRestTimeAfterFirstCall)
+            #expect(viewModel.currentRestStartTime == nil)
+            #expect(viewModel.stepStates[2].state == .active)
+        }
     }
 }

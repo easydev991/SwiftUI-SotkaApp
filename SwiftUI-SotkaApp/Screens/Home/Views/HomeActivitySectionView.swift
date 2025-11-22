@@ -9,11 +9,11 @@ struct HomeActivitySectionView: View {
     @Environment(\.modelContext) private var modelContext
     @Query private var activities: [DayActivity]
     @State private var shouldShowDeleteConfirmation = false
-    @State private var sheetItem: DayActivitySheetItem?
-
     private var currentActivity: DayActivity? {
         activities.first { $0.day == currentDay && !$0.shouldDelete }
     }
+
+    let onSheetItem: (DayActivitySheetItem) -> Void
 
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {
@@ -35,14 +35,6 @@ struct HomeActivitySectionView: View {
             Text(.journalDeleteEntryMessage(currentDay))
         }
         .animation(.default, value: currentActivity)
-        .sheet(item: $sheetItem) { item in
-            switch item {
-            case let .comment(activity):
-                EditCommentSheet(activity: activity)
-            case let .workoutPreview(day):
-                WorkoutPreviewScreen(activitiesService: activitiesService, day: day)
-            }
-        }
     }
 }
 
@@ -57,7 +49,7 @@ private extension HomeActivitySectionView {
                     day: currentDay,
                     activity: currentActivity,
                     onComment: { _ in
-                        sheetItem = .comment(currentActivity)
+                        onSheetItem(.comment(currentActivity))
                     },
                     onDelete: { _ in
                         shouldShowDeleteConfirmation = true
@@ -119,7 +111,7 @@ private extension HomeActivitySectionView {
 
     func actionFor(_ activityType: DayActivityType, day: Int) {
         if activityType == .workout {
-            sheetItem = .workoutPreview(day)
+            onSheetItem(.workoutPreview(day))
         }
         activitiesService.set(activityType, for: day, context: modelContext)
     }
@@ -127,7 +119,7 @@ private extension HomeActivitySectionView {
 
 #if DEBUG
 #Preview {
-    HomeActivitySectionView()
+    HomeActivitySectionView(onSheetItem: { _ in })
         .environment(DailyActivitiesService(client: MockDaysClient(result: .success)))
         .modelContainer(PreviewModelContainer.make(with: .preview))
 }

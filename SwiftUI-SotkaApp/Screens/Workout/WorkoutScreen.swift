@@ -45,9 +45,9 @@ struct WorkoutScreen: View {
                 vm.checkAndHandleExpiredRestTimer(appSettings: appSettings)
             }
             .fullScreenCover(isPresented: $vm.showTimer) {
-                vm.onTimerCompleted(appSettings: appSettings)
-            } content: {
-                WorkoutTimerScreen(duration: restTime)
+                WorkoutTimerScreen(duration: restTime) { force in
+                    vm.handleTimerFinish(force: force, appSettings: appSettings)
+                }
             }
         }
     }

@@ -4,8 +4,10 @@ import SwiftUI
 
 struct HomeScreen: View {
     @Environment(StatusManager.self) private var statusManager
+    @Environment(DailyActivitiesService.self) private var activitiesService
     @Environment(\.currentDay) private var currentDay
     @Query private var users: [User]
+    @State private var sheetItem: DayActivitySheetItem?
     private var user: User? { users.first }
     private var model: Model? {
         let calculator = statusManager.currentDayCalculator
@@ -37,6 +39,7 @@ struct HomeScreen: View {
                         .padding()
                     }
                     .scrollBounceBehavior(.basedOnSize)
+                    .sheet(item: $sheetItem, content: makeSheetContent)
                 } else {
                     Text(.loading)
                 }
@@ -98,7 +101,7 @@ private extension HomeScreen {
                 HomeInfopostSectionView(infopost: model.todayInfopost)
             }
             if model.showActivitySection {
-                HomeActivitySectionView()
+                HomeActivitySectionView { sheetItem = $0 }
             }
             if model.showProgressSection {
                 HomeFillProgressSectionView()
@@ -112,7 +115,7 @@ private extension HomeScreen {
                 .insideCardBackground()
             HomeInfopostSectionView(infopost: model.todayInfopost)
             if model.showActivitySection {
-                HomeActivitySectionView()
+                HomeActivitySectionView { sheetItem = $0 }
             }
             if model.showProgressSection {
                 HomeFillProgressSectionView()
@@ -127,6 +130,16 @@ private extension HomeScreen {
             if let user {
                 ProgressScreen(user: user)
             }
+        }
+    }
+
+    @ViewBuilder
+    func makeSheetContent(for item: DayActivitySheetItem) -> some View {
+        switch item {
+        case let .comment(activity):
+            EditCommentSheet(activity: activity)
+        case let .workoutPreview(day):
+            WorkoutPreviewScreen(activitiesService: activitiesService, day: day)
         }
     }
 }

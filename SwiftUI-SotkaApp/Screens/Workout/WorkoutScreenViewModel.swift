@@ -13,6 +13,7 @@ final class WorkoutScreenViewModel {
         category: String(describing: WorkoutScreenViewModel.self)
     )
     private let restTimerNotificationIdentifier = "restTimerNotification"
+    private let audioPlayer = AudioPlayerManager()
 
     var dayNumber = 1
     var executionType: ExerciseExecutionType = .cycles
@@ -164,7 +165,12 @@ final class WorkoutScreenViewModel {
         }
     }
 
-    func onTimerCompleted(appSettings: AppSettings, skipSoundAndVibration: Bool = false) {
+    func handleTimerFinish(force: Bool, appSettings: AppSettings) {
+        guard currentRestStartTime != nil else {
+            logger.info("Таймер уже был обработан, пропускаем повторный вызов")
+            return
+        }
+
         cancelRestTimerNotification()
         showTimer = false
 
@@ -179,16 +185,24 @@ final class WorkoutScreenViewModel {
             stepStates[currentStepIndex].state = .active
         }
         logger.info("Продолжение тренировки после отдыха")
-        guard !skipSoundAndVibration else {
+        guard !force else {
             return
         }
         if appSettings.playTimerSound {
-            let audioPlayer = AudioPlayerManager()
-            audioPlayer.setupSound(appSettings.timerSound)
-            audioPlayer.play()
+            logger.info("Воспроизведение звука после таймера отдыха: \(appSettings.timerSound.rawValue)")
+            if audioPlayer.setupSound(appSettings.timerSound) {
+                audioPlayer.play()
+            } else {
+                logger.error("Не удалось настроить звук")
+            }
+        } else {
+            logger.debug("Звук отключен в настройках")
         }
         if appSettings.vibrate {
-            VibrationService().perform()
+            logger.info("Выполнение вибрации после таймера отдыха")
+            VibrationService.perform()
+        } else {
+            logger.debug("Вибрация отключена в настройках")
         }
     }
 
@@ -228,7 +242,7 @@ final class WorkoutScreenViewModel {
         guard elapsedTime >= TimeInterval(restTime) else { return }
 
         logger.info("Обнаружен истекший таймер отдыха при активации приложения, закрываем экран таймера")
-        onTimerCompleted(appSettings: appSettings, skipSoundAndVibration: true)
+        handleTimerFinish(force: true, appSettings: appSettings)
     }
 
     func getWorkoutResult(interrupt: Bool = false) -> WorkoutResult? {

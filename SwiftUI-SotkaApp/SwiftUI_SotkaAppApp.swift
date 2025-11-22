@@ -100,7 +100,7 @@ struct SwiftUI_SotkaAppApp: App {
                             guard scenePhase == .active else { return }
                             guard authHelper.isAuthorized else { return }
                             await statusManager.getStatus(context: modelContainer.mainContext)
-                            appSettings.setWorkoutNotificationsEnabled(true)
+                            await appSettings.syncNotificationSettings()
                         }
                 } else {
                     LoginScreen(client: client)

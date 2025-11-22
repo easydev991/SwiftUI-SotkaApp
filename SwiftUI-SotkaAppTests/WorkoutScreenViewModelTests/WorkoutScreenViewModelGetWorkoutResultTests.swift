@@ -32,7 +32,7 @@ extension WorkoutScreenViewModelTests {
                 if viewModel.currentStepIndex < viewModel.stepStates.count {
                     viewModel.completeCurrentStep(appSettings: appSettings)
                     if viewModel.showTimer {
-                        viewModel.onTimerCompleted(appSettings: appSettings)
+                        viewModel.handleTimerFinish(force: false, appSettings: appSettings)
                     }
                 }
             }
@@ -129,7 +129,7 @@ extension WorkoutScreenViewModelTests {
                 if viewModel.currentStepIndex < viewModel.stepStates.count {
                     viewModel.completeCurrentStep(appSettings: appSettings)
                     if viewModel.showTimer {
-                        viewModel.onTimerCompleted(appSettings: appSettings)
+                        viewModel.handleTimerFinish(force: false, appSettings: appSettings)
                     }
                 }
             }
@@ -165,7 +165,7 @@ extension WorkoutScreenViewModelTests {
                 if viewModel.currentStepIndex < viewModel.stepStates.count {
                     viewModel.completeCurrentStep(appSettings: appSettings)
                     if viewModel.showTimer {
-                        viewModel.onTimerCompleted(appSettings: appSettings)
+                        viewModel.handleTimerFinish(force: false, appSettings: appSettings)
                     }
                 }
             }
@@ -199,7 +199,7 @@ extension WorkoutScreenViewModelTests {
                 if viewModel.currentStepIndex < viewModel.stepStates.count {
                     viewModel.completeCurrentStep(appSettings: appSettings)
                     if viewModel.showTimer {
-                        viewModel.onTimerCompleted(appSettings: appSettings)
+                        viewModel.handleTimerFinish(force: false, appSettings: appSettings)
                     }
                 }
             }
@@ -269,15 +269,15 @@ extension WorkoutScreenViewModelTests {
 
             viewModel.completeCurrentStep(appSettings: appSettings)
             if viewModel.showTimer {
-                viewModel.onTimerCompleted(appSettings: appSettings)
+                viewModel.handleTimerFinish(force: false, appSettings: appSettings)
             }
             viewModel.completeCurrentStep(appSettings: appSettings)
             if viewModel.showTimer {
-                viewModel.onTimerCompleted(appSettings: appSettings)
+                viewModel.handleTimerFinish(force: false, appSettings: appSettings)
             }
             viewModel.completeCurrentStep(appSettings: appSettings)
             if viewModel.showTimer {
-                viewModel.onTimerCompleted(appSettings: appSettings)
+                viewModel.handleTimerFinish(force: false, appSettings: appSettings)
             }
 
             let result = viewModel.getWorkoutResult(interrupt: true)
@@ -310,11 +310,11 @@ extension WorkoutScreenViewModelTests {
 
             viewModel.completeCurrentStep(appSettings: appSettings)
             if viewModel.showTimer {
-                viewModel.onTimerCompleted(appSettings: appSettings)
+                viewModel.handleTimerFinish(force: false, appSettings: appSettings)
             }
             viewModel.completeCurrentStep(appSettings: appSettings)
             if viewModel.showTimer {
-                viewModel.onTimerCompleted(appSettings: appSettings)
+                viewModel.handleTimerFinish(force: false, appSettings: appSettings)
             }
 
             let result = viewModel.getWorkoutResult(interrupt: true)
@@ -349,11 +349,11 @@ extension WorkoutScreenViewModelTests {
 
             viewModel.completeCurrentStep(appSettings: appSettings)
             if viewModel.showTimer {
-                viewModel.onTimerCompleted(appSettings: appSettings)
+                viewModel.handleTimerFinish(force: false, appSettings: appSettings)
             }
             viewModel.completeCurrentStep(appSettings: appSettings)
             if viewModel.showTimer {
-                viewModel.onTimerCompleted(appSettings: appSettings)
+                viewModel.handleTimerFinish(force: false, appSettings: appSettings)
             }
 
             let result = viewModel.getWorkoutResult(interrupt: true)

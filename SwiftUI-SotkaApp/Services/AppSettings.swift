@@ -1,13 +1,18 @@
 import Observation
+import OSLog
 import SwiftUI
 import SWUtils
 
 @Observable
+@MainActor
 final class AppSettings {
     @ObservationIgnored private let defaults: UserDefaults
+    @ObservationIgnored private let logger = Logger(
+        subsystem: Bundle.main.bundleIdentifier ?? "SotkaApp",
+        category: String(describing: AppSettings.self)
+    )
     private let notificationCenter = UNUserNotificationCenter.current()
     private let audioPlayer = AudioPlayerManager()
-    private let vibrationService = VibrationService()
     let appVersion = Constants.appVersion
     var showLanguageAlert = false
     var showNotificationError = false
@@ -110,7 +115,6 @@ final class AppSettings {
         }
     }
 
-    @MainActor
     var vibrate: Bool {
         get {
             access(keyPath: \.vibrate)
@@ -121,7 +125,7 @@ final class AppSettings {
                 defaults.set(newValue, forKey: Key.vibrate.rawValue)
             }
             if newValue {
-                vibrationService.perform()
+                VibrationService.perform()
             }
         }
     }
@@ -139,7 +143,6 @@ final class AppSettings {
         }
     }
 
-    @MainActor
     func setWorkoutNotificationsEnabled(_ enabled: Bool) {
         guard enabled else {
             workoutNotificationsEnabled = false
@@ -158,7 +161,6 @@ final class AppSettings {
         }
     }
 
-    @MainActor
     func sendFeedback(message: String? = nil) {
         FeedbackSender.sendFeedback(
             subject: CommonFeedback.subject,
@@ -167,7 +169,67 @@ final class AppSettings {
         )
     }
 
-    @MainActor
+    /// Синхронизирует настройки уведомлений с реальными разрешениями системы
+    func syncNotificationSettings() async {
+        let settings = await notificationCenter.notificationSettings()
+        switch settings.authorizationStatus {
+        case .denied:
+            if workoutNotificationsEnabled {
+                workoutNotificationsEnabled = false
+                showNotificationError = true
+                notificationError = .denied
+                logger.info("Уведомления отключены: разрешения отозваны в системных настройках")
+            }
+            let pendingRequests = await notificationCenter.pendingNotificationRequests()
+            if pendingRequests.contains(where: { $0.identifier == Key.dailyWorkoutReminder.rawValue }) {
+                removePendingDailyNotifications()
+            }
+        case .authorized, .provisional, .ephemeral:
+            // Разрешения есть - проверяем запланированные уведомления
+            let pendingRequests = await notificationCenter.pendingNotificationRequests()
+            let hasScheduledNotification = pendingRequests.contains { request in
+                request.identifier == Key.dailyWorkoutReminder.rawValue
+            }
+            if workoutNotificationsEnabled {
+                if !hasScheduledNotification {
+                    scheduleDailyNotification()
+                    logger.info("Уведомления перепланированы после синхронизации")
+                }
+            } else if hasScheduledNotification {
+                // Настройка выключена, но есть запланированные уведомления, значит
+                // настройка была отключена из-за отзыва разрешений - восстанавливаем
+                workoutNotificationsEnabled = true
+                logger.info("Уведомления восстановлены: разрешения вернулись")
+            }
+        // Если настройка выключена и нет запланированных уведомлений, значит
+        // настройка была отключена пользователем вручную, не восстанавливаем
+        case .notDetermined:
+            if workoutNotificationsEnabled {
+                let granted = await checkNotificationPermissions()
+                workoutNotificationsEnabled = granted
+                if granted {
+                    scheduleDailyNotification()
+                    logger.info("Разрешения на уведомления получены, уведомления запланированы")
+                } else {
+                    showNotificationError = true
+                    notificationError = .denied
+                    logger.info("Пользователь отказал в разрешениях на уведомления")
+                }
+            } else {
+                // Настройка выключена - убеждаемся, что уведомления не запланированы
+                let pendingRequests = await notificationCenter.pendingNotificationRequests()
+                if pendingRequests.contains(where: { $0.identifier == Key.dailyWorkoutReminder.rawValue }) {
+                    removePendingDailyNotifications()
+                }
+            }
+        @unknown default:
+            if workoutNotificationsEnabled {
+                workoutNotificationsEnabled = false
+                logger.warning("Неизвестный статус разрешений на уведомления, настройка отключена")
+            }
+        }
+    }
+
     func didLogout() {
         setWorkoutNotificationsEnabled(false)
         notificationCenter.removeAllPendingNotificationRequests()

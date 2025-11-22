@@ -117,11 +117,11 @@ enum ExerciseType: Int {
 
     var image: Image {
         switch self {
-        case .pushups, .turbo94Pushups, .turbo96Pushups, .turbo97PushupsHigh, .turbo97PushupsHighArms, .turbo98Pushups:
+        case .pushups, .turbo94Pushups, .turbo96Pushups, .turbo98Pushups:
             .init(.pushups)
-        case .pullups, .turbo93_1, .turbo94Pullups, .turbo96Pullups, .turbo98Pullups:
+        case .pullups, .turbo93_1, .turbo93_2, .turbo93_3, .turbo93_4, .turbo93_5, .turbo94Pullups, .turbo96Pullups, .turbo98Pullups:
             .init(.pullups)
-        case .squats, .turbo94Squats, .turbo96Squats, .turbo98Squats:
+        case .squats, .turbo94Squats, .turbo95_1, .turbo95_2, .turbo95_3, .turbo95_4, .turbo95_5, .turbo96Squats, .turbo98Squats:
             .init(.squats)
         case .austrPullups:
             .init(.pullupsAustralian)
@@ -129,8 +129,10 @@ enum ExerciseType: Int {
             .init(.pushupsKnee)
         case .lunges:
             .init(.lunges)
-        default:
-            .init(systemName: "figure.play")
+        case .turbo97PushupsHigh:
+            .init(.pushupsDecline)
+        case .turbo97PushupsHighArms:
+            .init(.pushupsIncline)
         }
     }
 

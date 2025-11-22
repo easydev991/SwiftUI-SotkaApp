@@ -124,7 +124,7 @@ final class DailyActivitiesService {
     ///   - context: Контекст SwiftData
     func set(_ activityType: DayActivityType, for day: Int, context: ModelContext) {
         if activityType == .workout {
-            logger.info("Пропускаем настройку тренировки с главного экрана")
+            logger.info("Пропускаем настройку тренировки")
             return
         }
         guard let user = try? context.fetch(FetchDescriptor<User>()).first else {

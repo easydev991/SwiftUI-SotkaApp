@@ -16,13 +16,15 @@ final class AudioPlayerManager {
 
     private func configureAudioSession() {
         do {
-            try session.setCategory(.playback, mode: .default)
+            try session.setCategory(.playback, mode: .default, options: [.mixWithOthers])
             try session.setActive(true)
+            logger.info("AudioSession успешно настроен")
         } catch {
             logger.error("Ошибка audioSession: \(error.localizedDescription, privacy: .public)")
         }
     }
 
+    @MainActor
     @discardableResult
     func setupSound(_ timerSound: TimerSound) -> Bool {
         guard let url = timerSound.bundleURL else {
@@ -30,8 +32,10 @@ final class AudioPlayerManager {
             return false
         }
         do {
+            stop()
             audioPlayer = try AVAudioPlayer(contentsOf: url)
             audioPlayer?.prepareToPlay()
+            logger.info("Звук настроен: \(timerSound.rawValue)")
             return true
         } catch {
             logger.error("Ошибка инициализации аудиоплеера: \(error.localizedDescription, privacy: .public)")
@@ -39,19 +43,29 @@ final class AudioPlayerManager {
         }
     }
 
+    @MainActor
     @discardableResult
     func play() -> Bool {
         guard let audioPlayer else {
             logger.error("Попытка воспроизвести звук до настройки")
             return false
         }
-        return audioPlayer.play()
+        let result = audioPlayer.play()
+        if result {
+            logger.info("Звук воспроизводится")
+        } else {
+            logger.error("Не удалось воспроизвести звук")
+        }
+        return result
     }
 
+    /// Останавливаем предыдущий звук, если он играет
+    @MainActor
     func stop() {
         guard let audioPlayer, audioPlayer.isPlaying else {
             return
         }
         audioPlayer.stop()
+        logger.debug("Звук остановлен")
     }
 }

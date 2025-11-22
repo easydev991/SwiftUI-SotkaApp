@@ -2,6 +2,7 @@ import Foundation
 @testable import SwiftUI_SotkaApp
 import Testing
 
+@MainActor
 struct AppSettingsTests {
     @Test("Должен возвращать значение по умолчанию 60 секунд при отсутствии сохраненного значения")
     func defaultRestTime() throws {
