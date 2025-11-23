@@ -34,6 +34,7 @@ private extension HomeDayCountView {
                 .padding(.bottom, isIpad ? 12 : 8)
             Text(.congratulationsBody)
                 .multilineTextAlignment(.center)
+            rateAppButton
         }
         .padding(.horizontal)
         .bold()
@@ -73,6 +74,16 @@ private extension HomeDayCountView {
                     .resizable()
                     .scaledToFit()
             }
+        }
+    }
+
+    @ViewBuilder
+    private var rateAppButton: some View {
+        if let appReviewLink = Constants.appReviewURL {
+            Link(.rateTheApp, destination: appReviewLink)
+                .buttonStyle(SWButtonStyle(icon: .star, mode: .filled, size: .small))
+                .padding(.top, 8)
+                .accessibilityIdentifier("rateAppButton")
         }
     }
 }

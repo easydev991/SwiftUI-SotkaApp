@@ -47,6 +47,7 @@ public enum Icons {
         case personQuestion = "person.fill.questionmark"
         case calendar
         case chevron = "chevron.forward"
+        case star
 
         public var view: some View { Image(systemName: rawValue) }
         public var imageView: Image { Image(systemName: rawValue) }
