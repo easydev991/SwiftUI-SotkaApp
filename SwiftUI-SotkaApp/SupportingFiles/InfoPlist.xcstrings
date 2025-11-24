@@ -8,11 +8,16 @@
         "en" : {
           "stringUnit" : {
             "state" : "new",
-            "value" : "SOTKA"
+            "value" : "SW Program"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "SW Тренировки"
           }
         }
-      },
-      "shouldTranslate" : false
+      }
     },
     "CFBundleName" : {
       "comment" : "Bundle name",

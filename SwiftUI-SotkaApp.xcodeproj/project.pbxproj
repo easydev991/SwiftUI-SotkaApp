@@ -450,7 +450,7 @@
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = "SwiftUI-SotkaApp/SupportingFiles/Info.plist";
-				INFOPLIST_KEY_CFBundleDisplayName = SOTKA;
+				INFOPLIST_KEY_CFBundleDisplayName = "SW Program";
 				INFOPLIST_KEY_ITSAppUsesNonExemptEncryption = NO;
 				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.healthcare-fitness";
 				INFOPLIST_KEY_NSCameraUsageDescription = "Camera access is required to create your profile and progress photos";
@@ -489,7 +489,7 @@
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = "SwiftUI-SotkaApp/SupportingFiles/Info.plist";
-				INFOPLIST_KEY_CFBundleDisplayName = SOTKA;
+				INFOPLIST_KEY_CFBundleDisplayName = "SW Program";
 				INFOPLIST_KEY_ITSAppUsesNonExemptEncryption = NO;
 				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.healthcare-fitness";
 				INFOPLIST_KEY_NSCameraUsageDescription = "Camera access is required to create your profile and progress photos";
