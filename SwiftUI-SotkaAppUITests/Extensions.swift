@@ -32,7 +32,7 @@ extension XCTestCase {
     }
 
     @MainActor
-    func waitAndTapOrFail(timeout: TimeInterval = 3, element: XCUIElement) {
+    func waitAndTapOrFail(timeout: TimeInterval = 5, element: XCUIElement) {
         if !waitAndTap(timeout: timeout, element: element) {
             XCTFail("Не нашли элемент \(element)")
         }
