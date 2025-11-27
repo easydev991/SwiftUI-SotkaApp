@@ -9,21 +9,9 @@
 ## Помощь в разработке
 Прежде чем что-то делать, ознакомься с [правилами](.github/CONTRIBUTING.md), пожалуйста.
 
-## Скриншоты  
-1. Генерируем скриншоты при помощи `Fastlane` ([документация](https://docs.fastlane.tools/getting-started/ios/setup/))
-2. Настройки для генерации скриншотов находятся в [Snapfile](./fastlane/Snapfile) ([документация](https://docs.fastlane.tools/actions/snapshot/))
-3. Для генерации скриншотов нужно предварительно [настроить проект](#установка-и-настройка-проекта)
-4. Генерация скриншотов выполняется командой:
-```shell
-make screenshots
-```
-5. Для генерации скриншотов **необходимо наличие в Xcode симуляторов с нужной версией iOS** в соответствие с настройками в [Snapfile](./fastlane/Snapfile)
-6. Если тесты падают с ошибкой при запуске через `fastlane`, нужно убедиться, что при ручном запуске тестов из `Xcode` они успешно проходят во всех локализациях, используемых для создания скриншотов
-7. Готовые скриншоты сохраняются в папке [screenshots](./fastlane/screenshots)
-8. Отправить скриншоты в appstoreconnect можно командой:
-```shell
-make upload_screenshots
-```
+## Скриншоты
+
+Инструкция по генерации и загрузке скриншотов есть в [документации](docs/deployment.md#скриншоты).
 
 ### iPhone
 | Инфопост | Превью тренировки | Редактор тренировки | Прогресс | Дневник (сетка) | Дневник (список) | Пользовательские упражнения |
@@ -35,12 +23,6 @@ make upload_screenshots
 | --- | --- | --- | --- | --- | --- | --- |
 | <img src="./fastlane/screenshots/ru/iPad Pro (12.9-inch) (6th generation)-1-todayInfopost.png"> | <img src="./fastlane/screenshots/ru/iPad Pro (12.9-inch) (6th generation)-2-workoutPreview.png"> | <img src="./fastlane/screenshots/ru/iPad Pro (12.9-inch) (6th generation)-3-workoutEditor.png"> | <img src="./fastlane/screenshots/ru/iPad Pro (12.9-inch) (6th generation)-4-userProgress.png"> | <img src="./fastlane/screenshots/ru/iPad Pro (12.9-inch) (6th generation)-5-userJournalGrid.png"> | <img src="./fastlane/screenshots/ru/iPad Pro (12.9-inch) (6th generation)-6-userJournalList.png"> | <img src="./fastlane/screenshots/ru/iPad Pro (12.9-inch) (6th generation)-7-userExercises.png"> |
 
-### Модели девайсов, используемые для скриншотов
-По состоянию на 2025 год Apple берет за основу скриншоты для диагонали 6.9 (или 6.7) дюймов для айфона (13 дюймов для айпада) и масштабирует их под все остальные размеры экранов, то есть можно использовать для скриншотов по одному девайсу на платформу:
-- iPhone 15 Pro Max
-- iPad Pro (12.9-inch) (6th generation)
-
-Список всех существующих девайсов есть [тут](https://iosref.com/res).
 
 ## Документация
 
