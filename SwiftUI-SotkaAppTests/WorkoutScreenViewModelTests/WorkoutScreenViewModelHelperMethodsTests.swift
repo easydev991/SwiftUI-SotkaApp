@@ -13,7 +13,8 @@ extension WorkoutScreenViewModelTests {
             let trainings = [
                 WorkoutPreviewTraining(count: 5, typeId: 0)
             ]
-            let appSettings = AppSettings(userDefaults: UserDefaults(suiteName: "test")!)
+            let userDefaults = try MockUserDefaults.create()
+            let appSettings = AppSettings(userDefaults: userDefaults)
 
             viewModel.setupWorkoutData(
                 dayNumber: 1,
@@ -42,7 +43,8 @@ extension WorkoutScreenViewModelTests {
             let trainings = [
                 WorkoutPreviewTraining(count: 5, typeId: 0)
             ]
-            let appSettings = AppSettings(userDefaults: UserDefaults(suiteName: "test")!)
+            let userDefaults = try MockUserDefaults.create()
+            let appSettings = AppSettings(userDefaults: userDefaults)
 
             viewModel.setupWorkoutData(
                 dayNumber: 1,
@@ -209,15 +211,18 @@ extension WorkoutScreenViewModelTests {
 
             let training1 = WorkoutPreviewTraining(count: 5, typeId: ExerciseType.pullups.rawValue)
             let title1 = viewModel.getExerciseTitleWithCount(for: training1, modelContext: context)
-            #expect(title1 == "Подтягивания x 5")
+            let expectedTitle1 = "\(ExerciseType.pullups.localizedTitle) x 5"
+            #expect(title1 == expectedTitle1)
 
             let training2 = WorkoutPreviewTraining(count: 20, typeId: ExerciseType.squats.rawValue)
             let title2 = viewModel.getExerciseTitleWithCount(for: training2, modelContext: context)
-            #expect(title2 == "Приседания x 20")
+            let expectedTitle2 = "\(ExerciseType.squats.localizedTitle) x 20"
+            #expect(title2 == expectedTitle2)
 
             let training3 = WorkoutPreviewTraining(count: nil, typeId: ExerciseType.pullups.rawValue)
             let title3 = viewModel.getExerciseTitleWithCount(for: training3, modelContext: context)
-            #expect(title3 == "Подтягивания")
+            let expectedTitle3 = ExerciseType.pullups.localizedTitle
+            #expect(title3 == expectedTitle3)
 
             let user = User(id: 1, userName: "testuser", fullName: "Test User", email: "test@example.com")
             context.insert(user)
@@ -256,15 +261,18 @@ extension WorkoutScreenViewModelTests {
 
             let training1 = WorkoutPreviewTraining(count: 5, typeId: ExerciseType.pullups.rawValue)
             let title1 = viewModel.getExerciseTitle(for: training1, modelContext: context)
-            #expect(title1 == "Подтягивания")
+            let expectedTitle1 = ExerciseType.pullups.localizedTitle
+            #expect(title1 == expectedTitle1)
 
             let training2 = WorkoutPreviewTraining(count: 20, typeId: ExerciseType.squats.rawValue)
             let title2 = viewModel.getExerciseTitle(for: training2, modelContext: context)
-            #expect(title2 == "Приседания")
+            let expectedTitle2 = ExerciseType.squats.localizedTitle
+            #expect(title2 == expectedTitle2)
 
             let training3 = WorkoutPreviewTraining(count: nil, typeId: ExerciseType.pushups.rawValue)
             let title3 = viewModel.getExerciseTitle(for: training3, modelContext: context)
-            #expect(title3 == "Отжимания")
+            let expectedTitle3 = ExerciseType.pushups.localizedTitle
+            #expect(title3 == expectedTitle3)
 
             let user = User(id: 1, userName: "testuser", fullName: "Test User", email: "test@example.com")
             context.insert(user)

@@ -13,7 +13,8 @@ extension WorkoutScreenViewModelTests {
             let trainings = [
                 WorkoutPreviewTraining(count: 5, typeId: 0)
             ]
-            let appSettings = AppSettings(userDefaults: UserDefaults(suiteName: "test")!)
+            let userDefaults = try MockUserDefaults.create()
+            let appSettings = AppSettings(userDefaults: userDefaults)
 
             viewModel.setupWorkoutData(
                 dayNumber: 1,
@@ -48,7 +49,8 @@ extension WorkoutScreenViewModelTests {
             let trainings = [
                 WorkoutPreviewTraining(count: 5, typeId: 0)
             ]
-            let appSettings = AppSettings(userDefaults: UserDefaults(suiteName: "test")!)
+            let userDefaults = try MockUserDefaults.create()
+            let appSettings = AppSettings(userDefaults: userDefaults)
 
             viewModel.setupWorkoutData(
                 dayNumber: 1,
@@ -84,7 +86,7 @@ extension WorkoutScreenViewModelTests {
             let trainings = [
                 WorkoutPreviewTraining(count: 5, typeId: 0)
             ]
-            let userDefaults = UserDefaults(suiteName: "test")!
+            let userDefaults = try MockUserDefaults.create()
             userDefaults.set(true, forKey: "playTimerSound")
             userDefaults.set(true, forKey: "vibrate")
             let appSettings = AppSettings(userDefaults: userDefaults)
@@ -144,7 +146,8 @@ extension WorkoutScreenViewModelTests {
             let trainings = [
                 WorkoutPreviewTraining(count: 5, typeId: 0)
             ]
-            let appSettings = AppSettings(userDefaults: UserDefaults(suiteName: "test")!)
+            let userDefaults = try MockUserDefaults.create()
+            let appSettings = AppSettings(userDefaults: userDefaults)
 
             viewModel.setupWorkoutData(
                 dayNumber: 1,
@@ -178,7 +181,8 @@ extension WorkoutScreenViewModelTests {
             let trainings = [
                 WorkoutPreviewTraining(count: 5, typeId: 0)
             ]
-            let appSettings = AppSettings(userDefaults: UserDefaults(suiteName: "test")!)
+            let userDefaults = try MockUserDefaults.create()
+            let appSettings = AppSettings(userDefaults: userDefaults)
 
             viewModel.setupWorkoutData(
                 dayNumber: 1,
@@ -213,7 +217,8 @@ extension WorkoutScreenViewModelTests {
             let trainings = [
                 WorkoutPreviewTraining(count: 5, typeId: 0)
             ]
-            let appSettings = AppSettings(userDefaults: UserDefaults(suiteName: "test")!)
+            let userDefaults = try MockUserDefaults.create()
+            let appSettings = AppSettings(userDefaults: userDefaults)
 
             viewModel.setupWorkoutData(
                 dayNumber: 1,
@@ -248,7 +253,7 @@ extension WorkoutScreenViewModelTests {
             let trainings = [
                 WorkoutPreviewTraining(count: 5, typeId: 0)
             ]
-            let userDefaults = UserDefaults(suiteName: "test")!
+            let userDefaults = try MockUserDefaults.create()
             userDefaults.set(true, forKey: "playTimerSound")
             userDefaults.set(true, forKey: "vibrate")
             let appSettings = AppSettings(userDefaults: userDefaults)
@@ -310,7 +315,7 @@ extension WorkoutScreenViewModelTests {
             let trainings = [
                 WorkoutPreviewTraining(count: 5, typeId: 0)
             ]
-            let userDefaults = UserDefaults(suiteName: "test")!
+            let userDefaults = try MockUserDefaults.create()
             userDefaults.set(true, forKey: "playTimerSound")
             userDefaults.set(true, forKey: "vibrate")
             let appSettings = AppSettings(userDefaults: userDefaults)
