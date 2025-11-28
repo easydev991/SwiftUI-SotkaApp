@@ -21,29 +21,31 @@ final class SwiftUI_SotkaAppUITests: XCTestCase {
 
     func testMakeScreenshots() {
         handleNotificationAlert()
-        waitAndTapOrFail(timeout: 10, element: todayInfopostButton)
         sleep(3)
-        snapshot("1-todayInfopost")
-        waitAndTapOrFail(timeout: 5, element: backButton)
-        waitAndTapOrFail(timeout: 10, element: todayActivityButton)
+        snapshot("1-mainScreen")
+        waitAndTapOrFail(element: todayInfopostButton)
+        sleep(2)
+        snapshot("2-todayInfopost")
+        waitAndTapOrFail(element: backButton)
+        waitAndTapOrFail(element: todayActivityButton)
         sleep(1)
-        snapshot("2-workoutPreview")
-        waitAndTapOrFail(timeout: 10, element: openWorkoutEditorButton)
-        snapshot("3-workoutEditor")
-        waitAndTapOrFail(timeout: 10, element: workoutEditorDoneButton)
-        waitAndTapOrFail(timeout: 5, element: closeButton)
-        waitAndTapOrFail(timeout: 10, element: profileTabButton)
-        waitAndTapOrFail(timeout: 10, element: profileProgressButton)
-        snapshot("4-userProgress")
-        waitAndTapOrFail(timeout: 5, element: backButton)
-        waitAndTapOrFail(timeout: 10, element: profileJournalButton)
-        snapshot("5-userJournalGrid")
-        waitAndTapOrFail(timeout: 10, element: journalDisplayModeButton)
-        waitAndTapOrFail(timeout: 10, element: journalDisplayModeOption)
-        snapshot("6-userJournalList")
-        waitAndTapOrFail(timeout: 5, element: backButton)
-        waitAndTapOrFail(timeout: 10, element: profileExercisesButton)
-        snapshot("7-userExercises")
+        snapshot("3-workoutPreview")
+        waitAndTapOrFail(element: openWorkoutEditorButton)
+        snapshot("4-workoutEditor")
+        waitAndTapOrFail(element: workoutEditorDoneButton)
+        waitAndTapOrFail(element: closeButton)
+        waitAndTapOrFail(element: profileTabButton)
+        waitAndTapOrFail(element: profileProgressButton)
+        snapshot("5-userProgress")
+        waitAndTapOrFail(element: backButton)
+        waitAndTapOrFail(element: profileJournalButton)
+        snapshot("6-userJournalGrid")
+        waitAndTapOrFail(element: journalDisplayModeButton)
+        waitAndTapOrFail(element: journalDisplayModeOption)
+        snapshot("7-userJournalList")
+        waitAndTapOrFail(element: backButton)
+        waitAndTapOrFail(element: profileExercisesButton)
+        snapshot("8-userExercises")
     }
 }
 
@@ -62,12 +64,17 @@ private extension SwiftUI_SotkaAppUITests {
 
 private extension SwiftUI_SotkaAppUITests {
     var tabbar: XCUIElement { app.tabBars.firstMatch }
-    var profileTabButton: XCUIElement { app.buttons["profileTabButton"].firstMatch }
+    var profileTabButton: XCUIElement {
+        let regularProfileTabButton = tabbar.buttons.element(boundBy: 1)
+        let ipadProfileTabButton = app.buttons["profileTabButton"].firstMatch
+        return regularProfileTabButton.exists ? regularProfileTabButton : ipadProfileTabButton
+    }
+
     var closeButton: XCUIElement { app.buttons["closeButton"].firstMatch }
     var backButton: XCUIElement {
         let regularBackButton = app.buttons["BackButton"].firstMatch
-        let firstNavBarButton = app.navigationBars.buttons.element(boundBy: 0)
-        return regularBackButton.exists ? regularBackButton : firstNavBarButton
+        let ipadBackButton = app.navigationBars.buttons.element(boundBy: 0)
+        return regularBackButton.exists ? regularBackButton : ipadBackButton
     }
 
     var todayInfopostButton: XCUIElement { app.buttons["TodayInfopostButton"].firstMatch }

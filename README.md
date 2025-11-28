@@ -14,14 +14,14 @@
 Инструкция по генерации и загрузке скриншотов есть в [документации](docs/deployment.md#скриншоты).
 
 ### iPhone
-| Инфопост | Превью тренировки | Редактор тренировки | Прогресс | Дневник (сетка) | Дневник (список) | Пользовательские упражнения |
-| --- | --- | --- | --- | --- | --- | --- |
-| <img src="./fastlane/screenshots/ru/iPhone 15 Pro Max-1-todayInfopost.png"> | <img src="./fastlane/screenshots/ru/iPhone 15 Pro Max-2-workoutPreview.png"> | <img src="./fastlane/screenshots/ru/iPhone 15 Pro Max-3-workoutEditor.png"> | <img src="./fastlane/screenshots/ru/iPhone 15 Pro Max-4-userProgress.png"> | <img src="./fastlane/screenshots/ru/iPhone 15 Pro Max-5-userJournalGrid.png"> | <img src="./fastlane/screenshots/ru/iPhone 15 Pro Max-6-userJournalList.png"> | <img src="./fastlane/screenshots/ru/iPhone 15 Pro Max-7-userExercises.png"> |
+| Главный экран | Инфопост | Превью тренировки | Редактор тренировки | Прогресс | Дневник (сетка) | Дневник (список) | Пользовательские упражнения |
+| --- | --- | --- | --- | --- | --- | --- | --- |
+| <img src="./fastlane/screenshots/ru/iPhone 15 Pro Max-1-mainScreen.png"> | <img src="./fastlane/screenshots/ru/iPhone 15 Pro Max-2-todayInfopost.png"> | <img src="./fastlane/screenshots/ru/iPhone 15 Pro Max-3-workoutPreview.png"> | <img src="./fastlane/screenshots/ru/iPhone 15 Pro Max-4-workoutEditor.png"> | <img src="./fastlane/screenshots/ru/iPhone 15 Pro Max-5-userProgress.png"> | <img src="./fastlane/screenshots/ru/iPhone 15 Pro Max-6-userJournalGrid.png"> | <img src="./fastlane/screenshots/ru/iPhone 15 Pro Max-7-userJournalList.png"> | <img src="./fastlane/screenshots/ru/iPhone 15 Pro Max-8-userExercises.png"> |
 
 ### iPad
-| Инфопост | Превью тренировки | Редактор тренировки | Прогресс | Дневник (сетка) | Дневник (список) | Пользовательские упражнения |
-| --- | --- | --- | --- | --- | --- | --- |
-| <img src="./fastlane/screenshots/ru/iPad Pro (12.9-inch) (6th generation)-1-todayInfopost.png"> | <img src="./fastlane/screenshots/ru/iPad Pro (12.9-inch) (6th generation)-2-workoutPreview.png"> | <img src="./fastlane/screenshots/ru/iPad Pro (12.9-inch) (6th generation)-3-workoutEditor.png"> | <img src="./fastlane/screenshots/ru/iPad Pro (12.9-inch) (6th generation)-4-userProgress.png"> | <img src="./fastlane/screenshots/ru/iPad Pro (12.9-inch) (6th generation)-5-userJournalGrid.png"> | <img src="./fastlane/screenshots/ru/iPad Pro (12.9-inch) (6th generation)-6-userJournalList.png"> | <img src="./fastlane/screenshots/ru/iPad Pro (12.9-inch) (6th generation)-7-userExercises.png"> |
+| Главный экран | Инфопост | Превью тренировки | Редактор тренировки | Прогресс | Дневник (сетка) | Дневник (список) | Пользовательские упражнения |
+| --- | --- | --- | --- | --- | --- | --- | --- |
+| <img src="./fastlane/screenshots/ru/iPad Pro (12.9-inch) (6th generation)-1-mainScreen.png"> | <img src="./fastlane/screenshots/ru/iPad Pro (12.9-inch) (6th generation)-2-todayInfopost.png"> | <img src="./fastlane/screenshots/ru/iPad Pro (12.9-inch) (6th generation)-3-workoutPreview.png"> | <img src="./fastlane/screenshots/ru/iPad Pro (12.9-inch) (6th generation)-4-workoutEditor.png"> | <img src="./fastlane/screenshots/ru/iPad Pro (12.9-inch) (6th generation)-5-userProgress.png"> | <img src="./fastlane/screenshots/ru/iPad Pro (12.9-inch) (6th generation)-6-userJournalGrid.png"> | <img src="./fastlane/screenshots/ru/iPad Pro (12.9-inch) (6th generation)-7-userJournalList.png"> | <img src="./fastlane/screenshots/ru/iPad Pro (12.9-inch) (6th generation)-8-userExercises.png"> |
 
 
 ## Документация
