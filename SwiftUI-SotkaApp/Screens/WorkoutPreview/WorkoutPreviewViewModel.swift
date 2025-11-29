@@ -292,13 +292,6 @@ final class WorkoutPreviewViewModel {
         logger.info("Обработка результата тренировки: количество \(countValue), длительность \(durationValue) секунд")
     }
 
-    /// Обработка нажатия кнопки "Начать тренировку"
-    func startTraining() {
-        print("TODO: переход к началу тренировки")
-        let logDay = dayNumber
-        logger.info("Нажата кнопка 'Начать тренировку' для дня \(logDay)")
-    }
-
     /// Обновляет список упражнений тренировки
     /// Пересчитывает sortOrder на основе порядка в массиве
     /// - Parameter newTrainings: Новый список упражнений
