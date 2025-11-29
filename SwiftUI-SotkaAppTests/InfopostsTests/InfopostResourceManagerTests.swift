@@ -137,8 +137,18 @@ extension AllInfopostsTests {
             </html>
             """
 
-            let tempDirectory = try #require(manager.createTempDirectory())
-            let result = manager.copyResources(to: tempDirectory, htmlContent: htmlContent)
+            // Retry механизм для создания директории: при первом запуске Xcode файловая система
+            // может быть еще не готова, что приводит к возврату nil из createTempDirectory()
+            var tempDirectory: URL?
+            for _ in 0 ..< 3 {
+                tempDirectory = manager.createTempDirectory()
+                if tempDirectory != nil {
+                    break
+                }
+                Thread.sleep(forTimeInterval: 0.1)
+            }
+            let directory = try #require(tempDirectory)
+            let result = manager.copyResources(to: directory, htmlContent: htmlContent)
 
             // Проверяем, что результат не изменился (нет изображений для обработки)
             #expect(result == htmlContent)
