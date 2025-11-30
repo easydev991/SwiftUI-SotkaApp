@@ -23,8 +23,8 @@ extension AllProgressTests {
                 pushups: 20,
                 squats: 30,
                 weight: 70.0,
-                createDate: DateFormatterService.stringFromFullDate(Date(), format: .serverDateTimeSec),
-                modifyDate: DateFormatterService.stringFromFullDate(Date(), format: .serverDateTimeSec),
+                createDate: Date(),
+                modifyDate: Date(),
                 photoFront: "https://example.com/photo_front.jpg",
                 photoBack: "https://example.com/photo_back.jpg",
                 photoSide: "https://example.com/photo_side.jpg"
@@ -48,8 +48,8 @@ extension AllProgressTests {
                 pushups: 20,
                 squats: 30,
                 weight: 70.0,
-                createDate: DateFormatterService.stringFromFullDate(Date(), format: .serverDateTimeSec),
-                modifyDate: DateFormatterService.stringFromFullDate(Date(), format: .serverDateTimeSec),
+                createDate: Date(),
+                modifyDate: Date(),
                 photoFront: "https://example.com/photo_front.jpg"
             )
 
@@ -71,8 +71,8 @@ extension AllProgressTests {
                 pushups: 20,
                 squats: 30,
                 weight: 70.0,
-                createDate: DateFormatterService.stringFromFullDate(Date(), format: .serverDateTimeSec),
-                modifyDate: DateFormatterService.stringFromFullDate(Date(), format: .serverDateTimeSec)
+                createDate: Date(),
+                modifyDate: Date()
             )
 
             let progress = UserProgress(from: serverResponse, user: user)
@@ -94,8 +94,8 @@ extension AllProgressTests {
                 pushups: 20,
                 squats: 30,
                 weight: 70.0,
-                createDate: DateFormatterService.stringFromFullDate(originalDate, format: .serverDateTimeSec),
-                modifyDate: DateFormatterService.stringFromFullDate(originalDate, format: .serverDateTimeSec),
+                createDate: originalDate,
+                modifyDate: originalDate,
                 photoFront: "https://example.com/photo_front.jpg"
             )
 
@@ -124,8 +124,8 @@ extension AllProgressTests {
                 pushups: 20,
                 squats: 30,
                 weight: 70.0,
-                createDate: DateFormatterService.stringFromFullDate(Date(), format: .serverDateTimeSec),
-                modifyDate: DateFormatterService.stringFromFullDate(Date(), format: .serverDateTimeSec),
+                createDate: Date(),
+                modifyDate: Date(),
                 photoFront: "https://example.com/photo_front.jpg",
                 photoBack: "https://example.com/photo_back.jpg",
                 photoSide: "https://example.com/photo_side.jpg"
@@ -149,8 +149,8 @@ extension AllProgressTests {
                 pushups: 20,
                 squats: 30,
                 weight: 70.0,
-                createDate: DateFormatterService.stringFromFullDate(Date(), format: .serverDateTimeSec),
-                modifyDate: DateFormatterService.stringFromFullDate(Date(), format: .serverDateTimeSec),
+                createDate: Date(),
+                modifyDate: Date(),
                 photoFront: "https://example.com/photo_front.jpg"
             )
 
@@ -171,8 +171,8 @@ extension AllProgressTests {
                 pushups: 20,
                 squats: 30,
                 weight: 70.0,
-                createDate: DateFormatterService.stringFromFullDate(Date(), format: .serverDateTimeSec),
-                modifyDate: DateFormatterService.stringFromFullDate(Date(), format: .serverDateTimeSec),
+                createDate: Date(),
+                modifyDate: Date(),
                 photoFront: "https://example.com/photo_front.jpg"
             )
 
@@ -229,8 +229,8 @@ extension AllProgressTests {
                 pushups: 20,
                 squats: 30,
                 weight: 70.0,
-                createDate: DateFormatterService.stringFromFullDate(Date(), format: .serverDateTimeSec),
-                modifyDate: DateFormatterService.stringFromFullDate(Date(), format: .serverDateTimeSec),
+                createDate: Date(),
+                modifyDate: Date(),
                 photoFront: nil,
                 photoBack: nil,
                 photoSide: nil
@@ -311,8 +311,8 @@ extension AllProgressTests {
                 pushups: 20,
                 squats: 30,
                 weight: 70.0,
-                createDate: DateFormatterService.stringFromFullDate(Date(), format: .serverDateTimeSec),
-                modifyDate: DateFormatterService.stringFromFullDate(Date(), format: .serverDateTimeSec),
+                createDate: Date(),
+                modifyDate: Date(),
                 photoFront: nil,
                 photoBack: nil,
                 photoSide: nil
@@ -361,8 +361,8 @@ extension AllProgressTests {
                 pushups: 20,
                 squats: 30,
                 weight: 70.0,
-                createDate: DateFormatterService.stringFromFullDate(Date(), format: .serverDateTimeSec),
-                modifyDate: DateFormatterService.stringFromFullDate(Date(), format: .serverDateTimeSec),
+                createDate: Date(),
+                modifyDate: Date(),
                 photoFront: nil,
                 photoBack: nil,
                 photoSide: nil

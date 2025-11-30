@@ -70,7 +70,7 @@ final class User {
             cityID: response.cityId,
             countryID: response.countryId,
             genderCode: response.gender,
-            birthDateIsoString: response.birthDate
+            birthDateIsoString: response.birthDateIsoString
         )
     }
 }

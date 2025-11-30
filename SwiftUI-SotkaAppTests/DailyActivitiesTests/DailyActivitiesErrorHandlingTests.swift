@@ -114,8 +114,8 @@ extension DailyActivitiesServiceTests {
             executeType: nil,
             trainType: nil,
             trainings: nil,
-            createDate: DateFormatterService.stringFromFullDate(Date().addingTimeInterval(-3600), format: .serverDateTimeSec),
-            modifyDate: DateFormatterService.stringFromFullDate(Date(), format: .serverDateTimeSec),
+            createDate: Date().addingTimeInterval(-3600),
+            modifyDate: Date(),
             duration: nil,
             comment: nil
         )
@@ -198,8 +198,8 @@ extension DailyActivitiesServiceTests {
             executeType: nil,
             trainType: nil,
             trainings: nil,
-            createDate: DateFormatterService.stringFromFullDate(Date().addingTimeInterval(-3600), format: .serverDateTimeSec),
-            modifyDate: DateFormatterService.stringFromFullDate(Date().addingTimeInterval(-1799), format: .serverDateTimeSec),
+            createDate: Date().addingTimeInterval(-3600),
+            modifyDate: Date().addingTimeInterval(-1799),
             duration: nil,
             comment: nil
         )

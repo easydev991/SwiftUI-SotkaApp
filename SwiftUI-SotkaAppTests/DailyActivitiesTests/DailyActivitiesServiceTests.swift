@@ -46,8 +46,8 @@ struct DailyActivitiesServiceTests {
             executeType: nil,
             trainType: nil,
             trainings: nil,
-            createDate: DateFormatterService.stringFromFullDate(Date(), format: .serverDateTimeSec),
-            modifyDate: DateFormatterService.stringFromFullDate(Date(), format: .serverDateTimeSec),
+            createDate: Date(),
+            modifyDate: Date(),
             duration: nil,
             comment: nil
         )
@@ -144,8 +144,8 @@ struct DailyActivitiesServiceTests {
             executeType: nil,
             trainType: nil,
             trainings: nil,
-            createDate: DateFormatterService.stringFromFullDate(localDate, format: .serverDateTimeSec),
-            modifyDate: DateFormatterService.stringFromFullDate(Date(), format: .serverDateTimeSec),
+            createDate: localDate,
+            modifyDate: Date(),
             duration: nil,
             comment: nil
         )
@@ -199,8 +199,8 @@ struct DailyActivitiesServiceTests {
             executeType: nil,
             trainType: nil,
             trainings: nil,
-            createDate: DateFormatterService.stringFromFullDate(Date(), format: .serverDateTimeSec),
-            modifyDate: DateFormatterService.stringFromFullDate(Date(), format: .serverDateTimeSec),
+            createDate: Date(),
+            modifyDate: Date(),
             duration: nil,
             comment: nil
         ))
@@ -252,8 +252,8 @@ struct DailyActivitiesServiceTests {
             executeType: nil,
             trainType: nil,
             trainings: nil,
-            createDate: DateFormatterService.stringFromFullDate(Date(), format: .serverDateTimeSec),
-            modifyDate: DateFormatterService.stringFromFullDate(Date(), format: .serverDateTimeSec),
+            createDate: Date(),
+            modifyDate: Date(),
             duration: nil,
             comment: nil
         )

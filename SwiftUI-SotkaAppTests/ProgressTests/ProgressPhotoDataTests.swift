@@ -90,14 +90,17 @@ extension AllProgressTests {
             let progress = createTestProgress(context: context)
             let originalLastModified = progress.lastModified
 
+            // Используем даты в будущем, чтобы они были больше originalLastModified
+            let createDate = Date().addingTimeInterval(3600) // +1 час
+            let modifyDate = Date().addingTimeInterval(7200) // +2 часа
             let response = ProgressResponse(
                 id: 1,
                 pullups: 10,
                 pushups: 20,
                 squats: 30,
                 weight: 70.0,
-                createDate: "2024-01-01T00:00:00Z",
-                modifyDate: "2024-01-02T00:00:00Z",
+                createDate: createDate,
+                modifyDate: modifyDate,
                 photoFront: "https://example.com/front.jpg",
                 photoBack: "https://example.com/back.jpg",
                 photoSide: "https://example.com/side.jpg"
@@ -115,13 +118,15 @@ extension AllProgressTests {
             let progress = createTestProgress(context: context)
             let originalLastModified = progress.lastModified
 
+            // Используем дату в будущем, чтобы она была больше originalLastModified
+            let createDate = Date().addingTimeInterval(3600) // +1 час
             let response = ProgressResponse(
                 id: 1,
                 pullups: 10,
                 pushups: 20,
                 squats: 30,
                 weight: 70.0,
-                createDate: "2024-01-01T00:00:00Z",
+                createDate: createDate,
                 modifyDate: nil,
                 photoFront: "https://example.com/front.jpg",
                 photoBack: "https://example.com/back.jpg",

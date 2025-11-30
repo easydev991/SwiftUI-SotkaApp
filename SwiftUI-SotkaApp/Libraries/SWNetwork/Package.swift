@@ -10,8 +10,12 @@ let package = Package(
     products: [
         .library(name: "SWNetwork", targets: ["SWNetwork"])
     ],
+    dependencies: [],
     targets: [
-        .target(name: "SWNetwork"),
+        .target(
+            name: "SWNetwork",
+            dependencies: []
+        ),
         .testTarget(
             name: "SWNetworkTests",
             dependencies: ["SWNetwork"]

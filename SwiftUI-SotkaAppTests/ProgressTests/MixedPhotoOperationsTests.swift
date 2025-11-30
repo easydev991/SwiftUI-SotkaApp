@@ -42,8 +42,8 @@ extension AllProgressTests {
                 pushups: 20,
                 squats: 30,
                 weight: 70.0,
-                createDate: "2024-01-01 12:00:00",
-                modifyDate: "2024-01-01 12:01:00",
+                createDate: Date(),
+                modifyDate: Date().addingTimeInterval(60),
                 photoFront: nil,
                 photoBack: nil,
                 photoSide: nil
@@ -103,8 +103,8 @@ extension AllProgressTests {
                 pushups: 20,
                 squats: 30,
                 weight: 70.0,
-                createDate: "2024-01-01 12:00:00",
-                modifyDate: "2024-01-01 12:01:00",
+                createDate: Date(),
+                modifyDate: Date().addingTimeInterval(60),
                 photoFront: nil,
                 photoBack: "https://example.com/new_back_photo.jpg",
                 photoSide: nil
@@ -207,8 +207,8 @@ extension AllProgressTests {
                 pushups: 20,
                 squats: 30,
                 weight: 70.0,
-                createDate: "2024-01-01 12:00:00",
-                modifyDate: "2024-01-01 12:01:00",
+                createDate: Date(),
+                modifyDate: Date().addingTimeInterval(60),
                 photoFront: nil,
                 photoBack: nil,
                 photoSide: nil
@@ -220,8 +220,8 @@ extension AllProgressTests {
                 pushups: 25,
                 squats: 35,
                 weight: 72.0,
-                createDate: "2024-01-01 12:00:00",
-                modifyDate: "2024-01-01 12:01:00",
+                createDate: Date(),
+                modifyDate: Date().addingTimeInterval(60),
                 photoFront: nil,
                 photoBack: "https://example.com/photo.jpg",
                 photoSide: nil
@@ -274,8 +274,8 @@ extension AllProgressTests {
                 pushups: 20,
                 squats: 30,
                 weight: 70.0,
-                createDate: "2024-01-01 12:00:00",
-                modifyDate: "2024-01-01 12:01:00"
+                createDate: Date(),
+                modifyDate: Date().addingTimeInterval(60)
             )
             mockClient.mockedProgressResponses = [serverResponse]
 
@@ -342,8 +342,8 @@ extension AllProgressTests {
                 pushups: 20,
                 squats: 30,
                 weight: 70.0,
-                createDate: "2024-01-01 12:00:00",
-                modifyDate: "2024-01-01 12:01:00",
+                createDate: Date(),
+                modifyDate: Date().addingTimeInterval(60),
                 photoFront: "https://example.com/photo.jpg"
             )
             mockClient.mockedProgressResponses = [serverResponse]
@@ -384,8 +384,8 @@ extension AllProgressTests {
                 pushups: 0,
                 squats: 0,
                 weight: 0.0,
-                createDate: "2024-01-01 12:00:00",
-                modifyDate: "2024-01-01 12:01:00"
+                createDate: Date(),
+                modifyDate: Date().addingTimeInterval(60)
             )
             mockClient.mockedProgressResponses = [serverResponse]
 
@@ -433,8 +433,8 @@ extension AllProgressTests {
                     pushups: dayId * 20,
                     squats: dayId * 30,
                     weight: Float(dayId) * 70.0,
-                    createDate: "2024-01-01 12:00:00",
-                    modifyDate: "2024-01-01 12:01:00"
+                    createDate: Date(),
+                    modifyDate: Date().addingTimeInterval(60)
                 )
             }
             mockClient.mockedProgressResponses = serverResponses

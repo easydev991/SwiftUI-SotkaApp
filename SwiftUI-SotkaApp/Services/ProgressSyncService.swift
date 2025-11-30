@@ -783,9 +783,7 @@ private extension ProgressSyncService {
         local.squats = server.squats
         local.weight = server.weight
         // Если modify_date равен null, используем create_date
-        local.lastModified = server.modifyDate.flatMap {
-            DateFormatterService.dateFromString($0, format: .serverDateTimeSec)
-        } ?? DateFormatterService.dateFromString(server.createDate, format: .serverDateTimeSec)
+        local.lastModified = server.modifyDate ?? server.createDate
         local.isSynced = true
         local.shouldDelete = false
     }
@@ -799,9 +797,7 @@ private extension ProgressSyncService {
             )
 
         // Если modify_date равен null, используем create_date
-        let serverModifyDate = server.modifyDate.flatMap {
-            DateFormatterService.dateFromString($0, format: .serverDateTimeSec)
-        } ?? DateFormatterService.dateFromString(server.createDate, format: .serverDateTimeSec)
+        let serverModifyDate = server.modifyDate ?? server.createDate
 
         // Сравниваем даты модификации
         let localDate = local.lastModified

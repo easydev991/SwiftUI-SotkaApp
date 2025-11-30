@@ -45,8 +45,8 @@ extension DailyActivitiesServiceTests {
             executeType: nil,
             trainType: nil,
             trainings: nil,
-            createDate: DateFormatterService.stringFromFullDate(localDate, format: .serverDateTimeSec),
-            modifyDate: DateFormatterService.stringFromFullDate(serverDate, format: .serverDateTimeSec),
+            createDate: localDate,
+            modifyDate: serverDate,
             duration: nil,
             comment: nil
         )
@@ -97,8 +97,8 @@ extension DailyActivitiesServiceTests {
             executeType: nil,
             trainType: nil,
             trainings: nil,
-            createDate: DateFormatterService.stringFromFullDate(Date().addingTimeInterval(-7200), format: .serverDateTimeSec),
-            modifyDate: DateFormatterService.stringFromFullDate(serverModifyDate, format: .serverDateTimeSec),
+            createDate: Date().addingTimeInterval(-7200),
+            modifyDate: serverModifyDate,
             duration: nil,
             comment: nil
         )
@@ -150,8 +150,6 @@ extension DailyActivitiesServiceTests {
         context.insert(activity)
         try context.save()
 
-        // Используем UTC для согласованности парсинга
-        let utcTimeZone = TimeZone(secondsFromGMT: 0)
         let serverResponse = DayResponse(
             id: 1,
             activityType: 1,
@@ -160,18 +158,8 @@ extension DailyActivitiesServiceTests {
             executeType: nil,
             trainType: nil,
             trainings: nil,
-            createDate: DateFormatterService.stringFromFullDate(
-                baseDate.addingTimeInterval(-14400),
-                format: .serverDateTimeSec,
-                timeZone: utcTimeZone,
-                iso: false
-            ),
-            modifyDate: DateFormatterService.stringFromFullDate(
-                serverModifyDate,
-                format: .serverDateTimeSec,
-                timeZone: utcTimeZone,
-                iso: false
-            ),
+            createDate: baseDate.addingTimeInterval(-14400),
+            modifyDate: serverModifyDate,
             duration: nil,
             comment: nil
         )
@@ -180,10 +168,7 @@ extension DailyActivitiesServiceTests {
         _ = try await service.syncDailyActivities(context: context)
 
         let updatedActivity = try #require(context.fetch(FetchDescriptor<DayActivity>()).first)
-        let parsedServerDate = DateFormatterService.dateFromString(
-            serverResponse.modifyDate ?? "",
-            format: .serverDateTimeSec
-        )
+        let parsedServerDate = serverResponse.modifyDate ?? .now
 
         // Проверяем разницу дат после синхронизации
         // Используем исходную локальную дату для сравнения, чтобы избежать потери точности при сохранении/извлечении
@@ -241,8 +226,8 @@ extension DailyActivitiesServiceTests {
             executeType: nil,
             trainType: nil,
             trainings: nil,
-            createDate: DateFormatterService.stringFromFullDate(Date().addingTimeInterval(-7200), format: .serverDateTimeSec),
-            modifyDate: DateFormatterService.stringFromFullDate(serverModifyDate, format: .serverDateTimeSec),
+            createDate: Date().addingTimeInterval(-7200),
+            modifyDate: serverModifyDate,
             duration: nil,
             comment: nil
         )
@@ -288,8 +273,8 @@ extension DailyActivitiesServiceTests {
             executeType: nil,
             trainType: nil,
             trainings: nil,
-            createDate: DateFormatterService.stringFromFullDate(Date(), format: .serverDateTimeSec),
-            modifyDate: DateFormatterService.stringFromFullDate(Date(), format: .serverDateTimeSec),
+            createDate: Date(),
+            modifyDate: Date(),
             duration: nil,
             comment: nil
         )
@@ -303,8 +288,8 @@ extension DailyActivitiesServiceTests {
             executeType: nil,
             trainType: nil,
             trainings: nil,
-            createDate: DateFormatterService.stringFromFullDate(Date(), format: .serverDateTimeSec),
-            modifyDate: DateFormatterService.stringFromFullDate(Date(), format: .serverDateTimeSec),
+            createDate: Date(),
+            modifyDate: Date(),
             duration: nil,
             comment: nil
         )
@@ -335,8 +320,8 @@ extension DailyActivitiesServiceTests {
             executeType: nil,
             trainType: nil,
             trainings: nil,
-            createDate: DateFormatterService.stringFromFullDate(Date().addingTimeInterval(-3600), format: .serverDateTimeSec),
-            modifyDate: DateFormatterService.stringFromFullDate(Date().addingTimeInterval(-1800), format: .serverDateTimeSec),
+            createDate: Date().addingTimeInterval(-3600),
+            modifyDate: Date().addingTimeInterval(-1800),
             duration: nil,
             comment: nil
         )

@@ -139,7 +139,7 @@ struct MainUserFormTests {
 
     @Test
     func isReadyToSave_city() {
-        let oldForm = makeForm(city: .init(id: "0"))
+        let oldForm = makeForm(city: .init(id: "0", name: "", lat: nil, lon: nil))
         let newForm = makeForm()
         #expect(newForm.isReadyToSave(comparedTo: oldForm))
     }
@@ -153,7 +153,7 @@ struct MainUserFormTests {
 
     @Test
     func shouldUpdateOnAppear() {
-        let form1 = makeForm(country: .init(cities: [], id: "1", name: ""), city: .init(id: "1"))
+        let form1 = makeForm(country: .init(cities: [], id: "1", name: ""), city: .init(id: "1", name: "", lat: nil, lon: nil))
         let form2 = makeForm(country: .init(cities: [], id: "1", name: "name"), city: .init(id: "1", name: "", lat: "", lon: ""))
         let form3 = makeForm(country: .init(cities: [], id: "1", name: ""), city: .init(id: "1", name: "name", lat: "", lon: ""))
         let form4 = makeForm(country: .init(cities: [], id: "1", name: "name"), city: .init(id: "1", name: "name", lat: "", lon: ""))

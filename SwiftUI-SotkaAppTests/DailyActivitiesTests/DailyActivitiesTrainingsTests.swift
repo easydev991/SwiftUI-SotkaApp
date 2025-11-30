@@ -87,8 +87,8 @@ extension DailyActivitiesServiceTests {
                 DayResponse.Training(typeId: 2, customTypeId: nil, count: 20, sortOrder: 0),
                 DayResponse.Training(typeId: 3, customTypeId: nil, count: 25, sortOrder: 1)
             ],
-            createDate: DateFormatterService.stringFromFullDate(Date().addingTimeInterval(-3600), format: .serverDateTimeSec),
-            modifyDate: DateFormatterService.stringFromFullDate(Date(), format: .serverDateTimeSec),
+            createDate: Date().addingTimeInterval(-3600),
+            modifyDate: Date(),
             duration: nil,
             comment: nil
         )
@@ -138,8 +138,8 @@ extension DailyActivitiesServiceTests {
             executeType: nil,
             trainType: nil,
             trainings: [DayResponse.Training(typeId: 1, customTypeId: nil, count: 10, sortOrder: 0)],
-            createDate: DateFormatterService.stringFromFullDate(Date(), format: .serverDateTimeSec),
-            modifyDate: DateFormatterService.stringFromFullDate(Date(), format: .serverDateTimeSec),
+            createDate: Date(),
+            modifyDate: Date(),
             duration: nil,
             comment: nil
         )
@@ -156,8 +156,8 @@ extension DailyActivitiesServiceTests {
                 DayResponse.Training(typeId: 1, customTypeId: nil, count: 10, sortOrder: 0),
                 DayResponse.Training(typeId: 2, customTypeId: nil, count: 15, sortOrder: 1)
             ],
-            createDate: DateFormatterService.stringFromFullDate(Date(), format: .serverDateTimeSec),
-            modifyDate: DateFormatterService.stringFromFullDate(Date(), format: .serverDateTimeSec),
+            createDate: Date(),
+            modifyDate: Date(),
             duration: nil,
             comment: nil
         )

@@ -13,10 +13,10 @@ struct ProgressResponse: Codable, Sendable, Hashable, Equatable {
     let squats: Int?
     /// Вес
     let weight: Float?
-    /// ISO дата создания
-    let createDate: String
-    /// ISO дата изменения
-    let modifyDate: String?
+    /// Дата создания в формате server date time
+    let createDate: Date
+    /// Дата изменения в формате server date time
+    let modifyDate: Date?
     /// URL фотографий прогресса
     let photoFront: String?
     let photoBack: String?
@@ -28,8 +28,8 @@ struct ProgressResponse: Codable, Sendable, Hashable, Equatable {
         pushups: Int? = nil,
         squats: Int? = nil,
         weight: Float? = nil,
-        createDate: String,
-        modifyDate: String?,
+        createDate: Date,
+        modifyDate: Date?,
         photoFront: String? = nil,
         photoBack: String? = nil,
         photoSide: String? = nil
@@ -46,16 +46,31 @@ struct ProgressResponse: Codable, Sendable, Hashable, Equatable {
         self.photoSide = photoSide
     }
 
+    enum CodingKeys: String, CodingKey {
+        case id
+        case pullups
+        case pushups
+        case squats
+        case weight
+        case createDate
+        case modifyDate
+        case photoFront
+        case photoBack
+        case photoSide
+    }
+
     init(from decoder: Decoder) throws {
         let container = try decoder.container(keyedBy: CodingKeys.self)
 
         self.id = try container.decodeIntOrString(.id)
-        self.pullups = container.decodeIntOrStringIfPresent(.pullups)
-        self.pushups = container.decodeIntOrStringIfPresent(.pushups)
-        self.squats = container.decodeIntOrStringIfPresent(.squats)
-        self.weight = container.decodeFloatOrStringIfPresent(.weight)
-        self.createDate = try container.decode(String.self, forKey: .createDate)
-        self.modifyDate = try container.decodeIfPresent(String.self, forKey: .modifyDate)
+        self.pullups = (try? container.decode(Int.self, forKey: .pullups)) ?? container.decodeIntOrStringIfPresent(.pullups)
+        self.pushups = (try? container.decode(Int.self, forKey: .pushups)) ?? container.decodeIntOrStringIfPresent(.pushups)
+        self.squats = (try? container.decode(Int.self, forKey: .squats)) ?? container.decodeIntOrStringIfPresent(.squats)
+        self.weight = (try? container.decode(Float.self, forKey: .weight)) ?? container.decodeFloatOrStringIfPresent(.weight)
+
+        self.createDate = try container.decode(Date.self, forKey: .createDate)
+        self.modifyDate = try? container.decodeIfPresent(Date.self, forKey: .modifyDate)
+
         self.photoFront = try container.decodeIfPresent(String.self, forKey: .photoFront)
         self.photoBack = try container.decodeIfPresent(String.self, forKey: .photoBack)
         self.photoSide = try container.decodeIfPresent(String.self, forKey: .photoSide)

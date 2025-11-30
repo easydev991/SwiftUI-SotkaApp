@@ -41,7 +41,7 @@ struct MainUserForm: Codable, Equatable, Sendable {
             birthDate: user.birthDate,
             gender: user.genderCode ?? 0,
             country: .init(cities: [], id: (user.countryId ?? 0).description, name: ""),
-            city: .init(id: (user.cityId ?? 0).description)
+            city: .init(id: (user.cityId ?? 0).description, name: "", lat: nil, lon: nil)
         )
     }
 }

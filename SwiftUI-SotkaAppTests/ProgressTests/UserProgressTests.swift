@@ -1031,16 +1031,18 @@ extension AllProgressTests {
         // MARK: - Convenience Initializers Tests
 
         @Test("init from ProgressResponse с полными данными")
-        func initFromProgressResponseWithCompleteData() {
+        func initFromProgressResponseWithCompleteData() throws {
             let user = User(id: 1)
+            let createDate = try #require(ISO8601DateFormatter().date(from: "2024-01-01T12:00:00Z"))
+            let modifyDate = try #require(ISO8601DateFormatter().date(from: "2024-01-02T12:00:00Z"))
             let response = ProgressResponse(
                 id: 1,
                 pullups: 10,
                 pushups: 20,
                 squats: 30,
                 weight: 70.5,
-                createDate: "2024-01-01 12:00:00",
-                modifyDate: "2024-01-02 12:00:00",
+                createDate: createDate,
+                modifyDate: modifyDate,
                 photoFront: "https://example.com/front.jpg",
                 photoBack: "https://example.com/back.jpg",
                 photoSide: "https://example.com/side.jpg"
@@ -1062,15 +1064,16 @@ extension AllProgressTests {
         }
 
         @Test("init from ProgressResponse с маппингом дня")
-        func initFromProgressResponseWithDayMapping() {
+        func initFromProgressResponseWithDayMapping() throws {
             let user = User(id: 1)
+            let createDate = try #require(ISO8601DateFormatter().date(from: "2024-01-01T12:00:00Z"))
             let response = ProgressResponse(
                 id: 99,
                 pullups: 15,
                 pushups: 25,
                 squats: 35,
                 weight: 75.0,
-                createDate: "2024-01-01 12:00:00",
+                createDate: createDate,
                 modifyDate: nil,
                 photoFront: nil,
                 photoBack: nil,
@@ -1092,16 +1095,18 @@ extension AllProgressTests {
         // MARK: - updateLastModified Tests
 
         @Test("updateLastModified с modifyDate")
-        func updateLastModifiedWithModifyDate() {
+        func updateLastModifiedWithModifyDate() throws {
             let progress = UserProgress(id: 1)
+            let createDate = try #require(ISO8601DateFormatter().date(from: "2024-01-01T12:00:00Z"))
+            let modifyDate = try #require(ISO8601DateFormatter().date(from: "2024-01-02T15:30:00Z"))
             let response = ProgressResponse(
                 id: 1,
                 pullups: 10,
                 pushups: 20,
                 squats: 30,
                 weight: 70.0,
-                createDate: "2024-01-01 12:00:00",
-                modifyDate: "2024-01-02 15:30:00",
+                createDate: createDate,
+                modifyDate: modifyDate,
                 photoFront: nil,
                 photoBack: nil,
                 photoSide: nil
@@ -1124,15 +1129,16 @@ extension AllProgressTests {
         }
 
         @Test("updateLastModified без modifyDate использует createDate")
-        func updateLastModifiedWithoutModifyDateUsesCreateDate() {
+        func updateLastModifiedWithoutModifyDateUsesCreateDate() throws {
             let progress = UserProgress(id: 1)
+            let createDate = try #require(ISO8601DateFormatter().date(from: "2024-01-01T12:00:00Z"))
             let response = ProgressResponse(
                 id: 1,
                 pullups: 10,
                 pushups: 20,
                 squats: 30,
                 weight: 70.0,
-                createDate: "2024-01-01 12:00:00",
+                createDate: createDate,
                 modifyDate: nil,
                 photoFront: nil,
                 photoBack: nil,

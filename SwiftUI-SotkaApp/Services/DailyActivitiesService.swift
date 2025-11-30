@@ -471,12 +471,8 @@ private extension DailyActivitiesService {
                         // Она будет обработана в downloadServerActivities
                         if local.shouldDelete {
                             logger.debug("Активность дня \(day) помечена на удаление, пропускаем обновление в applySyncEvents")
-                        } else if local.isSynced, let serverModifyDateString = server.modifyDate {
+                        } else if local.isSynced, let serverModifyDate = server.modifyDate {
                             // Проверяем, не новее ли локальная версия серверной для синхронизированных активностей
-                            let serverModifyDate = DateFormatterService.dateFromString(
-                                serverModifyDateString,
-                                format: .serverDateTimeSec
-                            )
                             // Сравниваем даты (как в эталоне CustomExercisesService)
                             if local.modifyDate > serverModifyDate {
                                 // Локальная версия новее серверной - сохраняем локальные изменения
@@ -554,14 +550,8 @@ private extension DailyActivitiesService {
         local.trainingTypeRaw = server.trainType
         local.duration = server.duration
         local.comment = server.comment
-        local.createDate = DateFormatterService.dateFromString(
-            server.createDate,
-            format: .serverDateTimeSec
-        )
-        local.modifyDate = DateFormatterService.dateFromString(
-            server.modifyDate,
-            format: .serverDateTimeSec
-        )
+        local.createDate = server.createDate ?? .now
+        local.modifyDate = server.modifyDate ?? .now
 
         // Обновление trainings: удаление старых (каскадное удаление через relationship)
         local.trainings.removeAll()
@@ -594,10 +584,7 @@ private extension DailyActivitiesService {
 
             for activityResponse in activities {
                 if let existingActivity = existingDict[activityResponse.id] {
-                    let serverModifyDate = DateFormatterService.dateFromString(
-                        activityResponse.modifyDate,
-                        format: .serverDateTimeSec
-                    )
+                    let serverModifyDate = activityResponse.modifyDate ?? activityResponse.createDate ?? .now
 
                     // Порядок проверок для разрешения конфликтов:
                     // 1. shouldDelete - пропуск обновления (элемент помечен на удаление)

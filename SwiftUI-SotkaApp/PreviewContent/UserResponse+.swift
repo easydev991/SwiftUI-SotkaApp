@@ -1,4 +1,7 @@
 #if DEBUG
+import Foundation
+import SWUtils
+
 extension UserResponse {
     static let preview = Self(
         id: 280084,
@@ -9,7 +12,7 @@ extension UserResponse {
         cityId: 1,
         countryId: 17,
         gender: 0,
-        birthDate: "1990-10-10"
+        birthDate: Calendar(identifier: .iso8601).date(from: DateComponents(year: 1990, month: 10, day: 10))
     )
 }
 #endif

@@ -1,20 +1,6 @@
 struct CityResponse: Codable, Identifiable, Hashable, Sendable {
-    let id, name, lat, lon: String
-
-    /// Инициализатор для профиля пользователя
-    init(id: String) {
-        self.id = id
-        self.name = ""
-        self.lat = ""
-        self.lon = ""
-    }
-
-    init(id: String, name: String, lat: String, lon: String) {
-        self.id = id
-        self.name = name
-        self.lat = lat
-        self.lon = lon
-    }
+    let id, name: String
+    let lat, lon: String?
 
     /// Москва
     static var defaultCity: Self {

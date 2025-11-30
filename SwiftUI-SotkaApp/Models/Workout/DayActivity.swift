@@ -68,14 +68,8 @@ final class DayActivity {
 
     /// Инициализатор из ответа сервера
     convenience init(from response: DayResponse, user: User? = nil) {
-        let createDate = DateFormatterService.dateFromString(
-            response.createDate,
-            format: .serverDateTimeSec
-        )
-        let modifyDate = DateFormatterService.dateFromString(
-            response.modifyDate,
-            format: .serverDateTimeSec
-        )
+        let createDate = response.createDate ?? .now
+        let modifyDate = response.modifyDate ?? .now
         self.init(
             day: response.id,
             activityTypeRaw: response.activityType,

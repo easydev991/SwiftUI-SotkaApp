@@ -50,6 +50,9 @@ public enum DateFormatterService {
         ISO8601DateFormatter().date(from: string ?? "") ?? .now
     }
 
+    /// Конвертирует строку в дату
+    ///
+    /// Возвращает `.now` для невалидной строки
     public static func dateFromString(
         _ string: String?,
         format: DateFormat,

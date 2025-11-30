@@ -1,6 +1,7 @@
 import Foundation
 import SwiftData
 @testable import SwiftUI_SotkaApp
+import SWUtils
 import Testing
 
 @Suite("Тесты для DayActivity и DayActivityTraining")
@@ -366,8 +367,8 @@ struct DayActivityTests {
                 .init(typeId: 0, customTypeId: nil, count: 5, sortOrder: 0),
                 .init(typeId: 3, customTypeId: nil, count: 10, sortOrder: 1)
             ],
-            createDate: "2024-01-01T12:00:00+00:00",
-            modifyDate: "2024-01-01T12:30:00+00:00",
+            createDate: DateFormatterService.dateFromString("2024-01-01T12:00:00", format: .serverDateTimeSec),
+            modifyDate: DateFormatterService.dateFromString("2024-01-01T12:30:00", format: .serverDateTimeSec),
             duration: 30,
             comment: "Test comment"
         )
@@ -395,8 +396,8 @@ struct DayActivityTests {
             executeType: nil,
             trainType: nil,
             trainings: nil,
-            createDate: "2024-01-01T12:00:00+00:00",
-            modifyDate: "2024-01-01T12:00:00+00:00",
+            createDate: DateFormatterService.dateFromString("2024-01-01T12:00:00", format: .serverDateTimeSec),
+            modifyDate: DateFormatterService.dateFromString("2024-01-01T12:00:00", format: .serverDateTimeSec),
             duration: nil,
             comment: nil
         )
@@ -421,8 +422,8 @@ struct DayActivityTests {
                 .init(typeId: 0, customTypeId: nil, count: 5, sortOrder: 0),
                 .init(typeId: 3, customTypeId: nil, count: 10, sortOrder: 1)
             ],
-            createDate: "2024-01-01T12:00:00+00:00",
-            modifyDate: "2024-01-01T12:00:00+00:00",
+            createDate: DateFormatterService.dateFromString("2024-01-01T12:00:00", format: .serverDateTimeSec),
+            modifyDate: DateFormatterService.dateFromString("2024-01-01T12:00:00", format: .serverDateTimeSec),
             duration: nil,
             comment: nil
         )

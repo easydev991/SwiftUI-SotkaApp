@@ -17,10 +17,10 @@ struct DayResponse: Codable, Sendable, Hashable, Equatable {
     let trainType: Int?
     /// Массив тренировок
     let trainings: [Training]?
-    /// ISO дата создания
-    let createDate: String?
-    /// ISO дата изменения
-    let modifyDate: String?
+    /// Дата создания в формате server date time
+    let createDate: Date?
+    /// Дата изменения в формате server date time
+    let modifyDate: Date?
     /// Продолжительность (в минутах/секундах — как на сервере)
     let duration: Int?
     /// Произвольный комментарий к дню
@@ -34,8 +34,8 @@ struct DayResponse: Codable, Sendable, Hashable, Equatable {
         executeType: Int? = nil,
         trainType: Int? = nil,
         trainings: [Training]? = nil,
-        createDate: String? = nil,
-        modifyDate: String? = nil,
+        createDate: Date? = nil,
+        modifyDate: Date? = nil,
         duration: Int? = nil,
         comment: String? = nil
     ) {
@@ -62,8 +62,8 @@ struct DayResponse: Codable, Sendable, Hashable, Equatable {
         self.executeType = container.decodeIntOrStringIfPresent(.executeType)
         self.trainType = container.decodeIntOrStringIfPresent(.trainType)
         self.duration = container.decodeIntOrStringIfPresent(.duration)
-        self.createDate = try container.decodeIfPresent(String.self, forKey: .createDate)
-        self.modifyDate = try container.decodeIfPresent(String.self, forKey: .modifyDate)
+        self.createDate = try? container.decodeIfPresent(Date.self, forKey: .createDate)
+        self.modifyDate = try? container.decodeIfPresent(Date.self, forKey: .modifyDate)
         self.comment = try container.decodeIfPresent(String.self, forKey: .comment)
         self.trainings = try container.decodeIfPresent([Training].self, forKey: .trainings)
     }

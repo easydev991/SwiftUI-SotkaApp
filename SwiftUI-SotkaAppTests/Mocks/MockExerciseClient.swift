@@ -1,5 +1,6 @@
 import Foundation
 @testable import SwiftUI_SotkaApp
+import SWUtils
 
 /// Mock клиент для тестирования логики пользовательских упражнений
 final class MockExerciseClient: ExerciseClient, @unchecked Sendable {
@@ -54,12 +55,16 @@ final class MockExerciseClient: ExerciseClient, @unchecked Sendable {
         }
 
         // Создаем ответ на основе запроса
+        let createDate = DateFormatterService.dateFromString(exercise.createDate, format: .serverDateTimeSec)
+        let modifyDate: Date? = exercise.modifyDate.map {
+            DateFormatterService.dateFromString($0, format: .serverDateTimeSec)
+        }
         let response = CustomExerciseResponse(
             id: exercise.id,
             name: exercise.name,
             imageId: exercise.imageId,
-            createDate: exercise.createDate,
-            modifyDate: exercise.modifyDate ?? exercise.createDate,
+            createDate: createDate,
+            modifyDate: modifyDate,
             isHidden: exercise.isHidden
         )
 

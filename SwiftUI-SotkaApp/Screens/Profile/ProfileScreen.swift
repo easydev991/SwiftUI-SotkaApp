@@ -167,7 +167,7 @@ private extension ProfileScreen {
             user.cityId = response.cityId
             user.countryId = response.countryId
             user.genderCode = response.gender
-            user.birthDateIsoString = response.birthDate
+            user.birthDateIsoString = response.birthDateIsoString
         } catch {
             SWAlert.shared.presentDefaultUIKit(error)
         }

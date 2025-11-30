@@ -10,8 +10,8 @@ struct ErrorResponse: Codable {
         self.errors = try container.decodeIfPresent([String].self, forKey: .errors) ?? []
         self.name = try container.decodeIfPresent(String.self, forKey: .name)
         self.message = try container.decodeIfPresent(String.self, forKey: .message)
-        self.code = try container.decodeIfPresent(Int.self, forKey: .code) ?? 0
-        self.status = try container.decodeIfPresent(Int.self, forKey: .status) ?? 0
+        self.code = (try? container.decode(Int.self, forKey: .code)) ?? 0
+        self.status = (try? container.decode(Int.self, forKey: .status)) ?? 0
     }
 
     init(

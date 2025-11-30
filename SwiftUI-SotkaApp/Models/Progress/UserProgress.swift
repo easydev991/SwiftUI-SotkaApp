@@ -90,9 +90,7 @@ final class UserProgress {
 
     /// Создает UserProgress из ProgressResponse
     convenience init(from response: ProgressResponse, user: User) {
-        let lastModified = response.modifyDate.flatMap {
-            DateFormatterService.dateFromString($0, format: .serverDateTimeSec)
-        } ?? DateFormatterService.dateFromString(response.createDate, format: .serverDateTimeSec)
+        let lastModified = response.modifyDate ?? response.createDate
         self.init(
             id: response.id,
             pullUps: response.pullups,
@@ -111,9 +109,7 @@ final class UserProgress {
 
     /// Создает UserProgress из ProgressResponse с маппингом дня
     convenience init(from response: ProgressResponse, user: User, internalDay: Int) {
-        let lastModified = response.modifyDate.flatMap {
-            DateFormatterService.dateFromString($0, format: .serverDateTimeSec)
-        } ?? DateFormatterService.dateFromString(response.createDate, format: .serverDateTimeSec)
+        let lastModified = response.modifyDate ?? response.createDate
         self.init(
             id: internalDay,
             pullUps: response.pullups,
@@ -274,9 +270,7 @@ extension UserProgress {
     ///
     /// Если `modify_date` равен `nil`, используем `create_date`
     func updateLastModified(from response: ProgressResponse) {
-        lastModified = response.modifyDate.flatMap {
-            DateFormatterService.dateFromString($0, format: .serverDateTimeSec)
-        } ?? DateFormatterService.dateFromString(response.createDate, format: .serverDateTimeSec)
+        lastModified = response.modifyDate ?? response.createDate
     }
 }
 

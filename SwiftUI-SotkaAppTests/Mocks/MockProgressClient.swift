@@ -70,7 +70,7 @@ final class MockProgressClient: ProgressClient, @unchecked Sendable {
             pushups: nil,
             squats: nil,
             weight: nil,
-            createDate: DateFormatterService.stringFromFullDate(Date(), format: .serverDateTimeSec),
+            createDate: Date(),
             modifyDate: nil
         )
     }
@@ -92,8 +92,8 @@ final class MockProgressClient: ProgressClient, @unchecked Sendable {
             pushups: progress.pushups,
             squats: progress.squats,
             weight: progress.weight,
-            createDate: DateFormatterService.stringFromFullDate(Date(), format: .serverDateTimeSec),
-            modifyDate: progress.modifyDate
+            createDate: Date(),
+            modifyDate: DateFormatterService.dateFromString(progress.modifyDate, format: .serverDateTimeSec)
         )
     }
 
@@ -116,8 +116,8 @@ final class MockProgressClient: ProgressClient, @unchecked Sendable {
             pushups: progress.pushups,
             squats: progress.squats,
             weight: progress.weight,
-            createDate: DateFormatterService.stringFromFullDate(Date(), format: .serverDateTimeSec),
-            modifyDate: progress.modifyDate,
+            createDate: Date(),
+            modifyDate: DateFormatterService.dateFromString(progress.modifyDate, format: .serverDateTimeSec),
             photoFront: progress.photos?["photo_front"] != nil ? "https://example.com/front.jpg" : nil,
             photoBack: progress.photos?["photo_back"] != nil ? "https://example.com/back.jpg" : nil,
             photoSide: progress.photos?["photo_side"] != nil ? "https://example.com/side.jpg" : nil

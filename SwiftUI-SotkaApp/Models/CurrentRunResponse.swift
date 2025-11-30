@@ -18,8 +18,8 @@ struct CurrentRunResponse: Decodable {
 
     init(from decoder: Decoder) throws {
         let container = try decoder.container(keyedBy: CodingKeys.self)
-        self.date = container.decodeISO8601DateIfPresent(.date)
-        self.maxForAllRunsDay = container.decodeIntOrNilIfPresent(.maxForAllRunsDay)
+        self.date = try container.decodeIfPresent(Date.self, forKey: .date)
+        self.maxForAllRunsDay = try? container.decode(Int.self, forKey: .maxForAllRunsDay)
     }
 
     init(date: Date? = nil, maxForAllRunsDay: Int? = nil) {

@@ -32,6 +32,7 @@ struct CustomExercisesServiceTests {
             modifyDate: Date().addingTimeInterval(-3600), // 1 час назад
             user: user
         )
+        localExercise.isSynced = true // Упражнение синхронизировано для проверки разрешения конфликта
         context.insert(localExercise)
         try context.save()
 
@@ -41,8 +42,8 @@ struct CustomExercisesServiceTests {
             id: "test-exercise",
             name: "Серверное название",
             imageId: 2,
-            createDate: DateFormatterService.stringFromFullDate(Date().addingTimeInterval(-7200), format: .serverDateTimeSec),
-            modifyDate: DateFormatterService.stringFromFullDate(serverModifyDate, format: .serverDateTimeSec)
+            createDate: Date().addingTimeInterval(-7200),
+            modifyDate: serverModifyDate
         )
         mockClient.mockedCustomExercises = [serverExerciseResponse]
 
@@ -154,8 +155,8 @@ struct CustomExercisesServiceTests {
             id: "new-exercise",
             name: "Серверное название",
             imageId: 2,
-            createDate: DateFormatterService.stringFromFullDate(Date().addingTimeInterval(-3600), format: .serverDateTimeSec),
-            modifyDate: DateFormatterService.stringFromFullDate(Date().addingTimeInterval(-1800), format: .serverDateTimeSec)
+            createDate: Date().addingTimeInterval(-3600),
+            modifyDate: Date().addingTimeInterval(-1800)
         )
         mockClient.mockedCustomExercises = [serverExerciseResponse]
 
@@ -256,8 +257,8 @@ struct CustomExercisesServiceTests {
             id: "test-exercise",
             name: "Серверное название (старое)",
             imageId: 2,
-            createDate: DateFormatterService.stringFromFullDate(Date().addingTimeInterval(-7200), format: .serverDateTimeSec),
-            modifyDate: DateFormatterService.stringFromFullDate(serverModifyDate, format: .serverDateTimeSec)
+            createDate: Date().addingTimeInterval(-7200),
+            modifyDate: serverModifyDate
         )
         mockClient.mockedCustomExercises = [serverExerciseResponse]
 
@@ -331,8 +332,8 @@ struct CustomExercisesServiceTests {
             id: "test-exercise",
             name: "Test Exercise",
             imageId: 1,
-            createDate: DateFormatterService.stringFromFullDate(localDate, format: .serverDateTimeSec),
-            modifyDate: DateFormatterService.stringFromFullDate(serverDate, format: .serverDateTimeSec)
+            createDate: localDate,
+            modifyDate: serverDate
         )
         mockClient.mockedCustomExercises = [serverResponse]
 
@@ -372,23 +373,12 @@ struct CustomExercisesServiceTests {
         context.insert(exercise)
         try context.save()
 
-        let utcTimeZone = TimeZone(secondsFromGMT: 0)
         let serverResponse = CustomExerciseResponse(
             id: "test-exercise",
             name: "Server Name",
             imageId: 2,
-            createDate: DateFormatterService.stringFromFullDate(
-                baseDate,
-                format: .serverDateTimeSec,
-                timeZone: utcTimeZone,
-                iso: false
-            ),
-            modifyDate: DateFormatterService.stringFromFullDate(
-                baseDate,
-                format: .serverDateTimeSec,
-                timeZone: utcTimeZone,
-                iso: false
-            )
+            createDate: baseDate,
+            modifyDate: baseDate
         )
         mockClient.mockedCustomExercises = [serverResponse]
 
@@ -432,8 +422,8 @@ struct CustomExercisesServiceTests {
             id: "test-exercise",
             name: "Test Exercise",
             imageId: 1,
-            createDate: DateFormatterService.stringFromFullDate(Date(), format: .serverDateTimeSec),
-            modifyDate: DateFormatterService.stringFromFullDate(Date(), format: .serverDateTimeSec)
+            createDate: Date(),
+            modifyDate: Date()
         )
         mockClient.mockedCustomExercises = [serverResponse]
 
@@ -513,8 +503,8 @@ struct CustomExercisesServiceTests {
             id: "test-exercise",
             name: "Updated Exercise",
             imageId: 2,
-            createDate: DateFormatterService.stringFromFullDate(Date().addingTimeInterval(-3600), format: .serverDateTimeSec),
-            modifyDate: DateFormatterService.stringFromFullDate(Date(), format: .serverDateTimeSec)
+            createDate: Date().addingTimeInterval(-3600),
+            modifyDate: Date()
         )
         mockClient.mockedCustomExercises = [serverResponse]
 
@@ -581,12 +571,16 @@ private class MockSWClient: ExerciseClient {
         if shouldThrowError {
             throw MockSWClient.MockError.demoError
         }
+        let createDate = DateFormatterService.dateFromString(exercise.createDate, format: .serverDateTimeSec)
+        let modifyDate: Date? = exercise.modifyDate.map {
+            DateFormatterService.dateFromString($0, format: .serverDateTimeSec)
+        }
         return CustomExerciseResponse(
             id: id,
             name: exercise.name,
             imageId: exercise.imageId,
-            createDate: exercise.createDate,
-            modifyDate: exercise.modifyDate ?? ""
+            createDate: createDate,
+            modifyDate: modifyDate
         )
     }
 

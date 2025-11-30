@@ -39,8 +39,8 @@ extension AllProgressTests {
                 pushups: 20,
                 squats: 30,
                 weight: 70.0,
-                createDate: DateFormatterService.stringFromFullDate(Date(), format: .serverDateTimeSec),
-                modifyDate: DateFormatterService.stringFromFullDate(Date(), format: .serverDateTimeSec)
+                createDate: Date(),
+                modifyDate: Date()
             )
             mockClient.mockedProgressResponses = [serverResponse]
 
@@ -92,8 +92,8 @@ extension AllProgressTests {
                 pushups: 25, // Изменено
                 squats: 35, // Изменено
                 weight: 72.0, // Изменено
-                createDate: DateFormatterService.stringFromFullDate(Date().addingTimeInterval(-7200), format: .serverDateTimeSec),
-                modifyDate: DateFormatterService.stringFromFullDate(Date(), format: .serverDateTimeSec) // Новее локального
+                createDate: Date().addingTimeInterval(-7200),
+                modifyDate: Date() // Новее локального
             )
             mockClient.mockedProgressResponses = [serverResponse]
 
@@ -146,12 +146,8 @@ extension AllProgressTests {
                 pushups: 99,
                 squats: 99,
                 weight: 99.0,
-                createDate: DateFormatterService.stringFromFullDate(
-                    Date().addingTimeInterval(-7200),
-                    format: .serverDateTimeSec,
-                    iso: false
-                ),
-                modifyDate: DateFormatterService.stringFromFullDate(serverModifyDate, format: .serverDateTimeSec, iso: false)
+                createDate: Date().addingTimeInterval(-7200),
+                modifyDate: serverModifyDate
             )
             mockClient.mockedProgressResponses = [serverResponse]
 
@@ -202,8 +198,8 @@ extension AllProgressTests {
                 pushups: 25,
                 squats: 35,
                 weight: 72.0,
-                createDate: DateFormatterService.stringFromFullDate(Date().addingTimeInterval(-7200), format: .serverDateTimeSec),
-                modifyDate: DateFormatterService.stringFromFullDate(serverModifyDate, format: .serverDateTimeSec)
+                createDate: Date().addingTimeInterval(-7200),
+                modifyDate: serverModifyDate
             )
             mockClient.mockedProgressResponses = [serverResponse]
 
@@ -278,8 +274,8 @@ extension AllProgressTests {
                 pushups: 25,
                 squats: 35,
                 weight: 72.0,
-                createDate: DateFormatterService.stringFromFullDate(Date(), format: .serverDateTimeSec),
-                modifyDate: DateFormatterService.stringFromFullDate(Date(), format: .serverDateTimeSec)
+                createDate: Date(),
+                modifyDate: Date()
             )
             mockClient.mockedProgressResponses = [serverResponse]
 
@@ -466,8 +462,8 @@ extension AllProgressTests {
                 pushups: 20,
                 squats: 30,
                 weight: 70.0,
-                createDate: DateFormatterService.stringFromFullDate(syncedProgress.lastModified, format: .serverDateTimeSec),
-                modifyDate: DateFormatterService.stringFromFullDate(syncedProgress.lastModified, format: .serverDateTimeSec)
+                createDate: syncedProgress.lastModified,
+                modifyDate: syncedProgress.lastModified
             )
             mockClient.mockedProgressResponses = [syncedProgressResponse]
 
@@ -523,9 +519,8 @@ extension AllProgressTests {
                 pushups: 99,
                 squats: 99,
                 weight: 99.0,
-                createDate: DateFormatterService.stringFromFullDate(Date().addingTimeInterval(-7200), format: .serverDateTimeSec),
-                modifyDate: DateFormatterService
-                    .stringFromFullDate(Date().addingTimeInterval(-3600), format: .serverDateTimeSec) // Старше локального
+                createDate: Date().addingTimeInterval(-7200),
+                modifyDate: Date().addingTimeInterval(-3600) // Старше локального
             )
             mockClient.mockedProgressResponses = [serverResponse]
 
@@ -641,8 +636,8 @@ extension AllProgressTests {
                 pushups: 20,
                 squats: 30,
                 weight: 70.0,
-                createDate: DateFormatterService.stringFromFullDate(Date(), format: .serverDateTimeSec),
-                modifyDate: DateFormatterService.stringFromFullDate(Date(), format: .serverDateTimeSec)
+                createDate: Date(),
+                modifyDate: Date()
             )
             mockClient.mockedProgressResponses = [serverResponse]
 
@@ -748,14 +743,16 @@ extension AllProgressTests {
 
             // Настраиваем мок для возврата серверных данных
             // Используем локальные URL вместо реальных серверных, чтобы избежать сетевых запросов
+            let createDate = try #require(ISO8601DateFormatter().date(from: "2025-10-24T10:39:51+03:00"))
+            let modifyDate = try #require(ISO8601DateFormatter().date(from: "2025-10-24T10:40:08+03:00"))
             let serverResponse = ProgressResponse(
                 id: 1,
                 pullups: 1,
                 pushups: 1,
                 squats: 1,
                 weight: 10.0,
-                createDate: "2025-10-24T10:39:51+03:00",
-                modifyDate: "2025-10-24T10:40:08+03:00",
+                createDate: createDate,
+                modifyDate: modifyDate,
                 photoFront: "https://example.com/front.jpg",
                 photoBack: "https://example.com/back.jpg"
             )
@@ -832,14 +829,17 @@ extension AllProgressTests {
 
             // Настраиваем мок для возврата обновленных серверных данных
             // Используем локальные URL вместо реальных серверных, чтобы избежать сетевых запросов
+            // Используем даты в будущем, чтобы серверные данные были новее локальных
+            let serverCreateDate = Date().addingTimeInterval(3600) // +1 час
+            let serverModifyDate = Date().addingTimeInterval(7200) // +2 часа
             let serverResponse = ProgressResponse(
                 id: 1,
                 pullups: 1,
                 pushups: 1,
                 squats: 1,
                 weight: 10.0,
-                createDate: "2025-10-24T10:39:51+03:00",
-                modifyDate: "2025-10-24T10:40:08+03:00",
+                createDate: serverCreateDate,
+                modifyDate: serverModifyDate,
                 photoFront: "https://example.com/front.jpg",
                 photoBack: "https://example.com/back.jpg"
             )
@@ -895,8 +895,8 @@ extension AllProgressTests {
                 pushups: 20,
                 squats: 30,
                 weight: 70.0,
-                createDate: DateFormatterService.stringFromFullDate(Date(), format: .serverDateTimeSec),
-                modifyDate: DateFormatterService.stringFromFullDate(Date(), format: .serverDateTimeSec)
+                createDate: Date(),
+                modifyDate: Date()
             )
             mockClient.mockedProgressResponses = [serverResponse]
 
@@ -978,8 +978,8 @@ extension AllProgressTests {
                 pushups: 20,
                 squats: 30,
                 weight: 70.0,
-                createDate: DateFormatterService.stringFromFullDate(Date(), format: .serverDateTimeSec),
-                modifyDate: DateFormatterService.stringFromFullDate(Date(), format: .serverDateTimeSec)
+                createDate: Date(),
+                modifyDate: Date()
             )
             let response2 = ProgressResponse(
                 id: 2,
@@ -987,8 +987,8 @@ extension AllProgressTests {
                 pushups: 25,
                 squats: 35,
                 weight: 75.0,
-                createDate: DateFormatterService.stringFromFullDate(Date().addingTimeInterval(-7200), format: .serverDateTimeSec),
-                modifyDate: DateFormatterService.stringFromFullDate(Date(), format: .serverDateTimeSec)
+                createDate: Date().addingTimeInterval(-7200),
+                modifyDate: Date()
             )
             mockClient.mockedProgressResponses = [response1, response2]
 
@@ -1054,8 +1054,8 @@ extension AllProgressTests {
                 pushups: 20,
                 squats: 30,
                 weight: 70.0,
-                createDate: DateFormatterService.stringFromFullDate(Date(), format: .serverDateTimeSec),
-                modifyDate: DateFormatterService.stringFromFullDate(Date(), format: .serverDateTimeSec)
+                createDate: Date(),
+                modifyDate: Date()
             )
             mockClient.mockedProgressResponses = [serverResponse]
 

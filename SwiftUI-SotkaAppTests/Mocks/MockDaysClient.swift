@@ -74,8 +74,8 @@ final class MockDaysClient: DaysClient, @unchecked Sendable {
                     sortOrder: nil
                 )
             },
-            createDate: day.createDate ?? DateFormatterService.stringFromFullDate(Date(), format: .serverDateTimeSec),
-            modifyDate: day.modifyDate ?? DateFormatterService.stringFromFullDate(Date(), format: .serverDateTimeSec),
+            createDate: day.createDate.flatMap { DateFormatterService.dateFromString($0, format: .serverDateTimeSec) } ?? Date(),
+            modifyDate: day.modifyDate.flatMap { DateFormatterService.dateFromString($0, format: .serverDateTimeSec) } ?? Date(),
             duration: day.duration,
             comment: day.comment
         )
@@ -110,8 +110,8 @@ final class MockDaysClient: DaysClient, @unchecked Sendable {
                     sortOrder: nil
                 )
             },
-            createDate: model.createDate ?? DateFormatterService.stringFromFullDate(Date(), format: .serverDateTimeSec),
-            modifyDate: model.modifyDate ?? DateFormatterService.stringFromFullDate(Date(), format: .serverDateTimeSec),
+            createDate: model.createDate.flatMap { DateFormatterService.dateFromString($0, format: .serverDateTimeSec) } ?? Date(),
+            modifyDate: model.modifyDate.flatMap { DateFormatterService.dateFromString($0, format: .serverDateTimeSec) } ?? Date(),
             duration: model.duration,
             comment: model.comment
         )

@@ -46,14 +46,12 @@ final class CustomExercise {
 
     /// Инициализатор из ответа сервера
     convenience init(from response: CustomExerciseResponse, user: User? = nil) {
-        let createDate = DateFormatterService.dateFromString(response.createDate, format: .serverDateTimeSec)
-        let modifyDate = DateFormatterService.dateFromString(response.modifyDate, format: .serverDateTimeSec)
         self.init(
             id: response.id,
             name: response.name,
             imageId: response.imageId,
-            createDate: createDate,
-            modifyDate: modifyDate,
+            createDate: response.createDate,
+            modifyDate: response.modifyDate ?? response.createDate,
             user: user
         )
         // Данные с сервера считаются синхронизированными

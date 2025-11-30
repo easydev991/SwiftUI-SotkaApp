@@ -348,7 +348,7 @@ private extension EditProfileScreen {
                 user.cityId = response.cityId
                 user.countryId = response.countryId
                 user.genderCode = response.gender
-                user.birthDateIsoString = response.birthDate
+                user.birthDateIsoString = response.birthDateIsoString
                 authHelper.updateAuthData(login: userForm.userName)
                 // Без ожидания не загружается аватарка на экране профиля
                 try await Task.sleep(for: .seconds(0.5))

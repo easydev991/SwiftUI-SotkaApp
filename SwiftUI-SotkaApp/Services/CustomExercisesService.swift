@@ -211,8 +211,8 @@ private extension CustomExercisesService {
                 // Обновляем локальные данные из ответа сервера
                 exercise.name = response.name
                 exercise.imageId = response.imageId
-                exercise.createDate = DateFormatterService.dateFromString(response.createDate, format: .serverDateTimeSec)
-                exercise.modifyDate = DateFormatterService.dateFromString(response.modifyDate, format: .serverDateTimeSec)
+                exercise.createDate = response.createDate
+                exercise.modifyDate = response.modifyDate ?? response.createDate
                 exercise.isSynced = true
                 exercise.shouldDelete = false
 
@@ -258,9 +258,7 @@ private extension CustomExercisesService {
 
             for exerciseResponse in exercises {
                 if let existingExercise = existingDict[exerciseResponse.id] {
-                    let serverModifyDate = DateFormatterService.dateFromString(
-                        exerciseResponse.modifyDate, format: .serverDateTimeSec
-                    )
+                    let serverModifyDate = exerciseResponse.modifyDate ?? exerciseResponse.createDate
 
                     // Порядок проверок для разрешения конфликтов:
                     // 1. shouldDelete - пропуск обновления (элемент помечен на удаление)
@@ -402,8 +400,8 @@ private extension CustomExercisesService {
     func updateLocalFromServer(_ local: CustomExercise, _ server: CustomExerciseResponse) {
         local.name = server.name
         local.imageId = server.imageId
-        local.createDate = DateFormatterService.dateFromString(server.createDate, format: .serverDateTimeSec)
-        local.modifyDate = DateFormatterService.dateFromString(server.modifyDate, format: .serverDateTimeSec)
+        local.createDate = server.createDate
+        local.modifyDate = server.modifyDate ?? server.createDate
         local.isSynced = true
         local.shouldDelete = false
     }
@@ -495,10 +493,7 @@ private extension CustomExercisesService {
                             logger.debug("Упражнение '\(local.name)' помечено на удаление, пропускаем обновление в applySyncEvents")
                         } else if local.isSynced {
                             // Проверяем, не новее ли локальная версия серверной для синхронизированных упражнений
-                            let serverModifyDate = DateFormatterService.dateFromString(
-                                server.modifyDate,
-                                format: .serverDateTimeSec
-                            )
+                            let serverModifyDate = server.modifyDate ?? server.createDate
                             // Сравниваем даты
                             if local.modifyDate > serverModifyDate {
                                 // Локальная версия новее серверной - сохраняем локальные изменения
