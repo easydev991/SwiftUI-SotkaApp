@@ -86,7 +86,15 @@
 		67569A282EDD9BBA0078089C /* Exceptions for "SwiftUI-SotkaApp" folder in "SotkaWatch Watch App" target */ = {
 			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
 			membershipExceptions = (
+				Models/DayCalculator.swift,
+				Models/SWSharedModels/Constants.swift,
+				Models/SWSharedModels/WorkoutData.swift,
 				Models/Workout/DayActivityType.swift,
+				Models/Workout/ExerciseExecutionType.swift,
+				Models/Workout/ExerciseType.swift,
+				Models/Workout/WorkoutPreviewTraining.swift,
+				Models/Workout/WorkoutResult.swift,
+				SupportingFiles/ExercisesAssets.xcassets,
 				SupportingFiles/Localizable.xcstrings,
 			);
 			target = 67156B3E2EDD853500334DEF /* SotkaWatch Watch App */;
@@ -571,6 +579,7 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_ENTITLEMENTS = "SotkaWatch Watch App/SotkaWatch Watch App.entitlements";
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_TEAM = 3PHS45582J;
@@ -604,6 +613,7 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_ENTITLEMENTS = "SotkaWatch Watch App/SotkaWatch Watch App.entitlements";
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_TEAM = 3PHS45582J;
@@ -856,6 +866,7 @@
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon1;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				ASSETCATALOG_COMPILER_INCLUDE_ALL_APPICON_ASSETS = YES;
+				CODE_SIGN_ENTITLEMENTS = "SwiftUI-SotkaApp/SwiftUI-SotkaApp.entitlements";
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_ASSET_PATHS = "SwiftUI-SotkaApp/PreviewContent";
@@ -897,6 +908,7 @@
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon1;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				ASSETCATALOG_COMPILER_INCLUDE_ALL_APPICON_ASSETS = YES;
+				CODE_SIGN_ENTITLEMENTS = "SwiftUI-SotkaApp/SwiftUI-SotkaApp.entitlements";
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_ASSET_PATHS = "SwiftUI-SotkaApp/PreviewContent";

@@ -20,3 +20,32 @@ extension Constants {
     static let workoutShopURL = URL(string: "https://workoutshop.ru/?utm_source=iOS&utm_medium=100&utm_campaign=NASTROIKI")
     static let githubPageURL = URL(string: "https://github.com/easydev991/SwiftUI-SotkaApp")
 }
+
+extension Constants {
+    /// Идентификатор App Group для обмена данными между основным приложением и Watch App
+    static let appGroupIdentifier = "group.com.sotka.app"
+    /// Ключ для статуса авторизации в UserDefaults
+    static let isAuthorizedKey = "isAuthorized"
+    /// Ключ для даты начала программы в UserDefaults
+    static let startDateKey = "WorkoutStartDate"
+    /// Ключ для времени отдыха между подходами/кругами в секундах
+    ///
+    /// Значение взял из старого приложения
+    static let restTimeKey = "WorkoutTimer"
+}
+
+extension Constants {
+    /// Команды для обмена данными между часами и `iPhone` через `WatchConnectivity`
+    enum WatchCommand: String {
+        // От часов к iPhone
+        case setActivity = "WATCH_COMMAND_SET_ACTIVITY"
+        case saveWorkout = "WATCH_COMMAND_SAVE_WORKOUT"
+        case getCurrentActivity = "WATCH_COMMAND_GET_CURRENT_ACTIVITY"
+        case getWorkoutData = "WATCH_COMMAND_GET_WORKOUT_DATA"
+
+        // От iPhone к часам
+        case currentActivity = "PHONE_COMMAND_CURRENT_ACTIVITY"
+        case sendWorkoutData = "PHONE_COMMAND_SEND_WORKOUT_DATA"
+        case authStatusChanged = "PHONE_COMMAND_AUTH_STATUS_CHANGED"
+    }
+}

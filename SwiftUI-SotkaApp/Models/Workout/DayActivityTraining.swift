@@ -84,6 +84,17 @@ extension DayActivityTraining {
             sortOrder: sortOrder
         )
     }
+
+    /// Преобразование в WorkoutPreviewTraining для использования в UI
+    var workoutPreviewTraining: WorkoutPreviewTraining {
+        .init(
+            id: UUID().uuidString,
+            count: count,
+            typeId: typeId,
+            customTypeId: customTypeId,
+            sortOrder: sortOrder
+        )
+    }
 }
 
 extension [DayActivityTraining] {

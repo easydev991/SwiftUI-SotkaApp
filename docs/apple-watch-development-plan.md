@@ -25,11 +25,10 @@
 - Минимальный UI для часов (ограниченный размер экрана)
 - Упрощенная логика тренировок (без сложных настроек)
 - **Часы не хранят данные локально** - все данные запрашиваются с iPhone и сохраняются через iPhone в SwiftData
-- **Статус авторизации** читается напрямую из UserDefaults (App Group), без отдельного кэширования на часах
-- **Текущий день** запрашивается с iPhone через WatchConnectivity в реальном времени, без кэширования
+- **Статус авторизации и `startDate`** читаются напрямую из App Group UserDefaults (см. раздел 1.3)
+- **Текущий день** вычисляется локально на часах из `startDate` с помощью `DayCalculator`
 - **iPhone приложение является единственным хранилищем данных** (SwiftData)
 - **Приложение для часов работает только после успешной авторизации в iPhone приложении**
-- **iPhone приложение является единственным источником истины для всех данных**
 
 ## Архитектура
 
@@ -37,52 +36,51 @@
 
 ```
 SotkaWatch Watch App/
-├── DTOs/
-│   ├── WorkoutResultDTO.swift          # DTO для передачи результата тренировки
-│   ├── WorkoutPreviewTrainingDTO.swift # DTO для передачи данных упражнений
-│   └── WorkoutDataDTO.swift            # DTO для передачи данных тренировки
-├── Services/
-│   ├── WatchConnectivityService.swift  # Сервис для связи с iPhone
-│   ├── WatchAuthService.swift          # Сервис для проверки авторизации
-│   └── WatchWorkoutService.swift       # Логика выполнения тренировки (UI логика)
-├── ViewModels/
-│   ├── HomeViewModel.swift             # ViewModel для главного экрана
-│   └── WorkoutViewModel.swift          # ViewModel для экрана тренировки
-├── Screens/
-│   ├── AuthRequiredView.swift          # Экран для неавторизованных пользователей
-│   ├── HomeView.swift                   # Главный экран часов
+├── Models/
+│   └── AuthState.swift                 # Модель состояния авторизации для Watch App ✅
+├── Views/
+│   ├── AuthRequiredView.swift          # Экран для неавторизованных пользователей ✅
+│   ├── HomeView.swift                  # Главный экран часов ✅
 │   ├── DayActivityView.swift           # Экран активности дня (выбор/отображение) ✅
 │   ├── DayActivitySelectionView.swift  # Выбор типа активности ✅
 │   ├── SelectedActivityView.swift      # Отображение выбранной активности ✅
 │   ├── WorkoutView.swift               # Экран выполнения тренировки (еще не создан)
 │   └── WorkoutRestTimerView.swift      # Таймер отдыха между кругами/подходами (еще не создан)
 └── Utilities/
-    └── WatchConstants.swift            # Константы для часов (enum команд WatchConnectivity)
+    └── WatchAppGroupHelper.swift       # Утилита для работы с App Group UserDefaults ✅
 
 Примечание: 
-- Модели данных используются из основного приложения (без изменений):
-  - Models/Workout/WorkoutResult.swift
-  - Models/Workout/WorkoutPreviewTraining.swift
-  - Models/Workout/DayActivityType.swift
-  - Models/Workout/ExerciseExecutionType.swift
-  - Models/Workout/ExerciseType.swift
-- DTO-структуры создаются отдельно для передачи данных через WatchConnectivity
-- Существующие модели не изменяются (не добавляется Codable)
+- Модели данных используются из основного приложения:
+  - Models/SWSharedModels/WorkoutData.swift (общая модель для передачи данных тренировки)
+  - Models/Workout/WorkoutResult.swift (добавлен Codable для передачи через WatchConnectivity)
+  - Models/Workout/WorkoutPreviewTraining.swift (добавлен Codable для передачи через WatchConnectivity)
+  - Models/Workout/DayActivityType.swift (используется rawValue для передачи)
+  - Models/Workout/ExerciseExecutionType.swift (используется rawValue для передачи)
+  - Models/Workout/ExerciseType.swift (добавлен в Watch App target для использования локализованных названий и иконок упражнений)
+- Локальные модели для Watch App размещаются в `Models/` (например, `AuthState`)
+- Простые структуры (не SwiftData) получают Codable для прямой передачи через WatchConnectivity
+- Модели с `@Model` (SwiftData) не используются напрямую на часах
+- Ассеты упражнений находятся в отдельном `ExercisesAssets.xcassets`, доступном обоим таргетам (основное приложение и Watch App)
 ```
 
 ### Технологии
 
 - **SwiftUI** - для UI (watchOS поддерживает SwiftUI)
 - **WatchConnectivity** - для связи с iPhone
-- **UserDefaults** (App Group) - только для чтения статуса авторизации (напрямую из основного приложения)
+- **UserDefaults** (App Group) - для чтения статуса авторизации и `startDate` (см. раздел 1.3)
+- **DayCalculator** - модель для вычисления текущего дня программы (переиспользуется из основного приложения)
 - **OSLog** - для логирования
 
 **Важно:** 
 - Часы не используют SwiftData или другое постоянное хранилище. Все данные запрашиваются с iPhone в реальном времени.
 - **Модели переиспользуются из основного приложения** - не создаем дубликаты моделей для часов.
-- **Существующие модели не изменяются** - не добавляем Codable к моделям.
-- **DTO-структуры** создаются отдельно для передачи данных через WatchConnectivity.
-- Модели с `@Model` (SwiftData) не используются напрямую на часах, только для преобразования в DTO.
+- **Простые структуры (не SwiftData)** получают Codable для прямой передачи через WatchConnectivity:
+  - `WorkoutResult` - добавлен Codable
+  - `WorkoutPreviewTraining` - добавлен Codable
+  - `DayActivityType` и `ExerciseExecutionType` - используют rawValue для передачи
+- **`ExerciseType`** добавлен в Watch App target для использования локализованных названий упражнений и иконок на экране тренировки
+- **Ассеты упражнений** находятся в отдельном `ExercisesAssets.xcassets`, доступном обоим таргетам (основное приложение и Watch App), что позволяет использовать иконки упражнений без дублирования
+- Модели с `@Model` (SwiftData) не используются напрямую на часах, только для преобразования в простые структуры.
 
 ### Обмен данными между часами и iPhone
 
@@ -93,27 +91,13 @@ SotkaWatch Watch App/
 - **Часы не хранят данные локально** - все данные запрашиваются с iPhone в реальном времени
 - **Все действия с часов передаются в iPhone** для сохранения в SwiftData
 - Связь выполняется через WatchConnectivity Framework
-- **Чтение статуса авторизации** напрямую из UserDefaults (App Group) - без отдельного кэширования на часах
-- **Текущий день** запрашивается с iPhone через WatchConnectivity в реальном времени, без кэширования
+- **Чтение статуса авторизации и `startDate`** напрямую из App Group UserDefaults (см. раздел 1.3)
+- **Текущий день** вычисляется локально на часах из `startDate` с помощью `DayCalculator`
+- **Уведомления об изменениях статуса авторизации:**
+  - iPhone отправляет команду `PHONE_COMMAND_AUTH_STATUS_CHANGED` при успешной авторизации или логауте
+  - Часы также проверяют статус авторизации при активации приложения (`scenePhase == .active`) для обеспечения актуальности данных даже при отсутствии связи
 
-**Команды синхронизации:**
-
-1. **От часов к iPhone:**
-   - `WATCH_COMMAND_SET_ACTIVITY` - установка типа активности для дня (сохранение в SwiftData)
-   - `WATCH_COMMAND_SAVE_WORKOUT` - сохранение результата тренировки (сохранение в SwiftData)
-   - `WATCH_COMMAND_GET_CURRENT_DAY` - запрос текущего дня программы
-   - `WATCH_COMMAND_GET_CURRENT_ACTIVITY` - запрос текущей активности дня
-   - `WATCH_COMMAND_GET_USER_DATA` - запрос данных пользователя (опционально)
-   - `WATCH_COMMAND_GET_WORKOUT_DATA` - запрос данных тренировки для дня
-   - **Примечание:** Команда `WATCH_COMMAND_CHECK_AUTH` не нужна, так как статус авторизации читается напрямую из UserDefaults (App Group)
-
-2. **От iPhone к часам:**
-   - `PHONE_COMMAND_USER_DATA` - данные пользователя (User, опционально)
-   - `PHONE_COMMAND_UPDATE_CURRENT_DAY` - обновление текущего дня
-   - `PHONE_COMMAND_CURRENT_ACTIVITY` - текущая активность дня
-   - `PHONE_COMMAND_SEND_WORKOUT_DATA` - отправка данных тренировки для дня
-   - `PHONE_COMMAND_LOGOUT` - команда выхода из аккаунта (опционально, так как статус обновляется в UserDefaults)
-   - **Примечание:** Команда `PHONE_COMMAND_AUTH_STATUS` не нужна, так как статус авторизации читается напрямую из UserDefaults (App Group)
+**Команды синхронизации:** (см. раздел "Команды WatchConnectivity" ниже)
 
 **Формат данных:**
 - JSON для передачи сложных структур
@@ -130,10 +114,7 @@ SotkaWatch Watch App/
    - Все строки для часов добавляются в этот же файл с префиксом `Watch.*`
    - Использование общего файла упрощает поддержку и позволяет переиспользовать общие строки
 
-2. **Локализация displayName для часов:**
-   - ✅ **Выполнено:** Создан файл `InfoPlist.xcstrings` для Watch App target
-   - ✅ **Выполнено:** Настроена локализация `CFBundleDisplayName` (название приложения на часах)
-   - ✅ **Выполнено:** Настроен Target Membership в Xcode
+2. **Локализация displayName для часов:** ✅ Выполнено (см. раздел 1.2)
 
 3. **Избежание дублей ключей:**
    - Перед добавлением новых ключей обязательно проверять существующие ключи в `Localizable.xcstrings`
@@ -150,267 +131,154 @@ SotkaWatch Watch App/
 ### Этап 1: Настройка проекта и инфраструктуры
 
 #### 1.1 Настройка Watch App Target
-- [ ] Проверить настройки Watch App в Xcode проекте
-- [ ] Настроить App Groups для обмена данными между iPhone и часами (см. детали в разделе 1.3)
-- [ ] Настроить WatchConnectivity capabilities
-- [ ] Настроить минимальную версию watchOS (совместимо с iOS 17.0+)
-- [ ] Добавить необходимые разрешения (если нужны)
-- [ ] Настроить OSLog для логирования на часах (русский язык в логах)
-- [ ] **Настроить Target Membership для общих моделей:**
-  - Добавить `Models/Workout/WorkoutResult.swift` в Watch App target
-  - Добавить `Models/Workout/WorkoutPreviewTraining.swift` в Watch App target
-  - Добавить `Models/Workout/DayActivityType.swift` в Watch App target
-  - Добавить `Models/Workout/ExerciseExecutionType.swift` в Watch App target
-  - Добавить `Models/Workout/ExerciseType.swift` в Watch App target (если нужен)
-  - Проверить, что зависимости (например, SWUtils) доступны для Watch App target
-- [ ] Проверить зависимости моделей:
-  - Убедиться, что все импорты доступны для Watch App (Foundation, SwiftUI и т.д.)
-  - Если модели используют SwiftData (@Model), они не нужны на часах напрямую
-  - Модели используются только для преобразования в DTO и обратно
-- [ ] **Доработать AuthHelper для использования App Group** (см. детали в разделе 1.3):
-  - Проверить, использует ли `AuthHelperImp` App Group для UserDefaults
-  - Если нет - доработать `AuthHelperImp` для использования `UserDefaults(suiteName: "group.com.sotka.app")` вместо `UserDefaults.standard`
-  - Убедиться, что ключ `isAuthorized` сохраняется в App Group UserDefaults
-  - Обновить тесты для AuthHelper (если нужно)
+- [x] Проверить настройки Watch App в Xcode проекте: ✅ Выполнено
+  - ✅ Минимальная версия watchOS: 10.0 (совместимо с iOS 17.0+)
+  - ✅ Bundle Identifier: `com.oleg991.SwiftUI-SotkaApp.watchkitapp`
+  - ✅ WKCompanionAppBundleIdentifier настроен правильно
+  - ✅ Entitlements подключены
+  - ✅ WatchConnectivity доступен (встроен в watchOS 10.0+)
+- [x] Настроить App Groups для обмена данными между iPhone и часами: ✅ Выполнено (см. детали в разделе 1.3)
+  - ✅ App Group `group.com.sotka.app` добавлен в `SwiftUI-SotkaApp.entitlements`
+  - ✅ App Group `group.com.sotka.app` добавлен в `SotkaWatch Watch App.entitlements`
+- [x] Настроить WatchConnectivity capabilities: ✅ Выполнено
+  - ✅ WatchConnectivity не требует специальных capabilities в entitlements - это встроенный фреймворк watchOS
+  - ✅ Доступен в watchOS 10.0+ (используется в коде без дополнительных настроек)
+- [x] Настроить минимальную версию watchOS (совместимо с iOS 17.0+): ✅ Выполнено
+  - ✅ `WATCHOS_DEPLOYMENT_TARGET = 10.0` (watchOS 10.0 соответствует iOS 17.0+)
+  - ✅ Настроено в Debug и Release конфигурациях
+- [x] Добавить необходимые разрешения (если нужны): ✅ Выполнено
+  - ✅ Для MVP функциональности (WatchConnectivity + App Groups) дополнительные разрешения не требуются
+  - ✅ App Groups уже настроены в entitlements
+  - ✅ WatchConnectivity работает без специальных разрешений
+- [x] Настроить OSLog для логирования на часах (русский язык в логах): ✅ Выполнено
+  - ✅ OSLog доступен на watchOS 10.0+ без дополнительных настроек
+  - ✅ Использование: `Logger(subsystem: Bundle.main.bundleIdentifier ?? "SotkaWatch", category: String(describing: ClassName.self))`
+  - ✅ Логирование на русском языке через строковые литералы (как в основном приложении)
+  - ✅ Пример: `logger.info("Статус авторизации изменился: \(isAuthorized)")`
+- [x] **Настроить Target Membership для общих моделей:** ✅ Выполнено
+  - ✅ Добавлен `Models/Workout/WorkoutResult.swift` в Watch App target
+  - ✅ Добавлен `Models/Workout/WorkoutPreviewTraining.swift` в Watch App target
+  - ✅ Добавлен `Models/Workout/DayActivityType.swift` в Watch App target (уже был добавлен ранее)
+  - ✅ Добавлен `Models/Workout/ExerciseExecutionType.swift` в Watch App target
+  - ✅ Зависимости (SWUtils, SWNetwork и т.д.) не требуются для этих моделей - они используют только Foundation и SwiftUI
+- [x] **Добавить `ExerciseType` в Watch App target:** ✅ Выполнено
+  - ✅ Добавлен `Models/Workout/ExerciseType.swift` в Target Membership для Watch App (через PBXFileSystemSynchronizedBuildFileExceptionSet)
+  - ✅ Необходим для отображения локализованных названий упражнений и иконок на экране тренировки
+  - ✅ Использует ассеты из `ExercisesAssets.xcassets` (см. раздел 1.4)
+- [x] Проверить зависимости моделей: ✅ Выполнено
+  - ✅ Все модели используют только стандартные импорты: `Foundation`, `SwiftUI`
+  - ✅ Все импорты доступны для Watch App (watchOS 10.0+)
+  - ✅ Модели не используют SwiftData (@Model) - они простые структуры и enum'ы
+  - ✅ Модели будут использоваться напрямую для передачи через WatchConnectivity (с Codable)
+  - ✅ `WorkoutPreviewTraining` имеет инициализатор из SwiftData модели (`DayActivityTraining`), но сама модель не использует SwiftData
+- [x] **Доработать AuthHelper для использования App Group:** ✅ Выполнено (см. детали в разделе 1.3)
+  - ✅ `AuthHelperImp` использует App Group через `Constants.appGroupIdentifier` (`group.com.sotka.app`)
+  - ✅ Используется `UserDefaults(suiteName: Constants.appGroupIdentifier)` вместо `UserDefaults.standard` с fallback на стандартный UserDefaults
+  - ✅ Ключ `isAuthorized` (Key.isAuthorized.rawValue) сохраняется в App Group UserDefaults
+  - ✅ Реализована автоматическая миграция данных из `UserDefaults.standard` в App Group при первом запуске
+  - ✅ Тесты обновлены в `AuthHelperTests.swift` (проверка работы с App Group, fallback, миграция)
 
 #### 1.2 Создание констант и утилит
-- [ ] Создать `WatchConstants.swift` - enum для команд WatchConnectivity
-  - Команды от часов к iPhone: `WATCH_COMMAND_SET_ACTIVITY`, `WATCH_COMMAND_SAVE_WORKOUT`, `WATCH_COMMAND_GET_CURRENT_DAY`, `WATCH_COMMAND_GET_CURRENT_ACTIVITY`, `WATCH_COMMAND_GET_WORKOUT_DATA`
-  - Команды от iPhone к часам: `PHONE_COMMAND_USER_DATA`, `PHONE_COMMAND_UPDATE_CURRENT_DAY`, `PHONE_COMMAND_CURRENT_ACTIVITY`, `PHONE_COMMAND_SEND_WORKOUT_DATA`, `PHONE_COMMAND_LOGOUT`
-  - **Примечание:** Команды `WATCH_COMMAND_CHECK_AUTH` и `PHONE_COMMAND_AUTH_STATUS` не нужны, так как статус авторизации читается напрямую из UserDefaults (App Group)
-- [ ] Создать утилиты для работы с UserDefaults (App Group) для чтения статуса авторизации (см. детали в разделе 1.3)
-- [x] **Настроить локализацию displayName для часов:** ✅ **Выполнено**
-  - ✅ Создан `InfoPlist.xcstrings` для Watch App target
-  - ✅ Добавлен ключ `CFBundleDisplayName` с локализованными значениями
-  - ✅ Настроен Target Membership для `InfoPlist.xcstrings` в Watch App target
-  - ✅ Настроено использование `InfoPlist.xcstrings` в build settings Watch App
+- [x] Создать `WatchConstants.swift` - enum для команд WatchConnectivity (см. раздел "Команды WatchConnectivity" в технических деталях): ✅ Выполнено (добавлен enum `Constants.WatchCommand` в `SwiftUI-SotkaApp/Models/SWSharedModels/Constants.swift`, доступен обоим таргетам - основному приложению и Watch App)
+- [x] Создать утилиты для работы с UserDefaults (App Group) для чтения статуса авторизации (см. детали в разделе 1.3): ✅ Выполнено (создан `Utilities/WatchAppGroupHelper.swift`)
+- [x] **Настроить локализацию displayName для часов:** ✅ Выполнено (создан `InfoPlist.xcstrings`, настроен Target Membership и build settings)
 
 #### 1.3 Настройка App Group для обмена данными между iPhone и часами
 
-**Цель:** Настроить App Group для обмена данными через UserDefaults между основным iOS-приложением и Watch App. Это необходимо для чтения статуса авторизации на часах без использования WatchConnectivity.
-
-**Шаги настройки в Xcode:**
-
-1. **Настройка App Group для основного iOS-приложения:**
-   - Открыть проект в Xcode
-   - Выбрать основной iOS target (SwiftUI-SotkaApp)
-   - Перейти в раздел "Signing & Capabilities"
-   - Нажать "+ Capability" и добавить "App Groups"
-   - Добавить новый App Group с идентификатором: `group.com.sotka.app`
-   - Убедиться, что App Group включен (галочка установлена)
-
-2. **Настройка App Group для Watch App:**
-   - Выбрать Watch App target (SotkaWatch Watch App)
-   - Перейти в раздел "Signing & Capabilities"
-   - Нажать "+ Capability" и добавить "App Groups"
-   - Добавить тот же App Group с идентификатором: `group.com.sotka.app`
-   - Убедиться, что App Group включен (галочка установлена)
-   - **Важно:** Идентификатор App Group должен быть одинаковым для обоих targets
-
-3. **Проверка настройки:**
-   - Убедиться, что оба target используют один и тот же App Group идентификатор
-   - Проверить, что App Group включен для обоих targets
-   - Убедиться, что оба target подписаны одним и тем же Team ID (для работы App Group)
-
-**Доработка AuthHelper для использования App Group:**
-
-- [ ] Проверить текущую реализацию `AuthHelperImp`:
-  - Открыть файл `Services/AuthHelper.swift`
-  - Проверить, использует ли класс `UserDefaults.standard` или `UserDefaults(suiteName:)`
-  - Если используется `UserDefaults.standard`, необходимо перейти на App Group
-
-- [ ] Доработать `AuthHelperImp`:
-  - Заменить `UserDefaults.standard` на `UserDefaults(suiteName: "group.com.sotka.app")`
-  - Убедиться, что используется безопасное извлечение (проверка на nil)
-  - Убедиться, что ключ `isAuthorized` сохраняется в App Group UserDefaults
-  - Проверить, что все операции с UserDefaults используют App Group
-
-- [ ] Обновить тесты для AuthHelper:
-  - Обновить моки UserDefaults в тестах для использования App Group
-  - Добавить тесты для проверки работы с App Group UserDefaults
-  - Добавить тесты для обработки случая, когда App Group недоступен
+- [x] ✅ Выполнено: App Group `group.com.sotka.app` настроен в обоих targets, `AuthHelper` и `StatusManager` переведены на App Group с автоматической миграцией, добавлена константа `Constants.appGroupIdentifier`
 
 **Создание утилит для работы с App Group на часах:**
 
-- [ ] Создать утилиты для чтения статуса авторизации:
-  - Создать файл в папке `SotkaWatch Watch App/Utilities/` (например, `WatchAppGroupHelper.swift` или добавить в существующий файл утилит)
-  - Реализовать функцию/метод для чтения статуса авторизации из App Group UserDefaults
-  - Использовать `UserDefaults(suiteName: "group.com.sotka.app")` для доступа к App Group
-  - Использовать тот же ключ, что и в `AuthHelperImp` (Key.isAuthorized.rawValue)
-  - Реализовать безопасное извлечение значения (возвращать `false` если значение отсутствует или App Group недоступен)
-  - Добавить логирование через OSLog на русском языке для отладки
+- [x] ✅ Выполнено: Создан файл `WatchAppGroupHelper.swift` в папке `SotkaWatch Watch App/Utilities/` - структура с вычисляемыми свойствами:
+  - ✅ `isAuthorized: Bool` - статус авторизации из App Group UserDefaults
+  - ✅ `startDate: Date?` - дата начала программы из App Group UserDefaults
+  - ✅ `currentDay: Int?` - текущий день программы, вычисленный из `startDate` через `DayCalculator`
+  - ✅ Инициализатор с опциональным параметром `userDefaults` для тестирования
+  - ✅ Логирование через OSLog на русском языке
+  - ✅ Тесты созданы в `WatchAppGroupHelperTests.swift`
 
-- [ ] Принципы работы утилит:
-  - Утилиты должны только читать данные из App Group UserDefaults
-  - Не кэшировать статус отдельно - всегда читать напрямую из UserDefaults
-  - Обрабатывать случаи, когда App Group недоступен (возвращать `false` для статуса авторизации)
-  - Использовать безопасное извлечение опционалов (без force unwrap)
+- [x] ✅ Принципы работы утилит реализованы:
+  - ✅ Утилиты только читают данные из App Group UserDefaults
+  - ✅ Не кэшируют данные отдельно - всегда читают напрямую из UserDefaults
+  - ✅ Обрабатывают случаи, когда App Group недоступен (возвращают значения по умолчанию)
+  - ✅ Используют безопасное извлечение опционалов (без force unwrap)
+  - ✅ **Текущий день вычисляется локально** на часах из `startDate` с помощью `DayCalculator`, без запросов к iPhone
 
 **Важные замечания:**
 
-- **App Group идентификатор:** `group.com.sotka.app` (должен быть одинаковым для обоих targets)
-- **Ключ для статуса авторизации:** Должен совпадать с ключом в `AuthHelperImp` (Key.isAuthorized.rawValue)
-- **Безопасность:** Всегда проверять доступность App Group перед использованием
-- **Синхронизация:** Статус авторизации обновляется в App Group UserDefaults через `AuthHelper` на iPhone, часы читают его напрямую без дополнительной синхронизации
-- **Офлайн-режим:** При отсутствии App Group или значения в нем, часы должны считать пользователя неавторизованным
+- **App Group идентификатор:** `group.com.sotka.app` (используется `Constants.appGroupIdentifier`)
+- **Ключи:** `isAuthorized` (`Constants.isAuthorizedKey`), `startDate` (`Constants.startDateKey`), `restTime` (`Constants.restTimeKey`)
+- **Синхронизация:** Статус авторизации, `startDate` и `restTime` читаются напрямую из App Group UserDefaults, синхронизация через WatchConnectivity не требуется
+- **Текущий день:** Вычисляется локально на часах из `startDate` с помощью `DayCalculator`
 
-**Связь с другими компонентами:**
+**Доработка для времени отдыха (restTime):**
 
-- Утилиты для чтения статуса авторизации будут использоваться в `WatchAuthService` (см. раздел 3.1)
-- `AuthHelperImp` на iPhone будет записывать статус авторизации в App Group UserDefaults
-- Часы будут читать статус авторизации напрямую из App Group без использования WatchConnectivity
+- [x] ✅ Выполнено: Добавлен ключ `restTimeKey` в `Constants`, обновлен `AppSettings` для сохранения в App Group с миграцией, добавлено чтение `restTime` в `WatchAppGroupHelper`, обновлен `WatchWorkoutService.getRestTime()` для использования App Group, созданы тесты
 
-### Этап 2: Модели данных (DTO) и тесты для них
+#### 1.4 Настройка ассетов упражнений для Watch App
+- [x] **Создать `ExercisesAssets.xcassets` и настроить Target Membership:** ✅ Выполнено
+  - ✅ Создан `SupportingFiles/ExercisesAssets.xcassets`, папка `Exercises` перемещена из основного `Assets.xcassets`
+  - ✅ Добавлен в Target Membership для обоих таргетов (`SwiftUI-SotkaApp` и `SotkaWatch Watch App`)
+  - ✅ Ассеты доступны в Watch App через `ExerciseType.image` без дублирования
 
-#### 2.1 Создание DTO-структур (TDD подход)
-- [ ] **Написать тесты для `WorkoutResultDTO`:**
-  - Тест преобразования `WorkoutResult` → `WorkoutResultDTO`
-  - Тест преобразования `WorkoutResultDTO` → `WorkoutResult`
-  - Тест сериализации/десериализации JSON
-  - Тест с nil значениями (duration может быть nil)
-- [ ] **Реализовать `WorkoutResultDTO.swift`:**
-  - Codable структура с полями: `count: Int`, `duration: Int?`
-  - Метод `init(from: WorkoutResult)`
-  - Метод `toWorkoutResult() -> WorkoutResult`
-  - Безопасное извлечение опционалов (без force unwrap)
-- [ ] **Написать тесты для `WorkoutPreviewTrainingDTO`:**
-  - Тест преобразования `WorkoutPreviewTraining` → `WorkoutPreviewTrainingDTO`
-  - Тест преобразования `WorkoutPreviewTrainingDTO` → `WorkoutPreviewTraining`
-  - Тест сериализации/десериализации JSON
-  - Тест с опциональными полями (count, typeId, customTypeId, sortOrder)
-- [ ] **Реализовать `WorkoutPreviewTrainingDTO.swift`:**
-  - Codable структура с полями: `id: String`, `count: Int?`, `typeId: Int?`, `customTypeId: String?`, `sortOrder: Int?`
-  - Метод `init(from: WorkoutPreviewTraining)`
-  - Метод `toWorkoutPreviewTraining() -> WorkoutPreviewTraining`
-  - Безопасное извлечение опционалов
-- [ ] **Написать тесты для `WorkoutDataDTO`:**
-  - Тест создания DTO с данными тренировки
-  - Тест сериализации/десериализации JSON
-  - Тест преобразования `executionType` (Int) ↔ `ExerciseExecutionType`
-  - Тест с пустым массивом trainings
-  - Тест с опциональным plannedCount
-- [ ] **Реализовать `WorkoutDataDTO.swift`:**
-  - Codable структура с полями: `day: Int`, `executionType: Int`, `trainings: [WorkoutPreviewTrainingDTO]`, `plannedCount: Int?`
-  - Метод `toExerciseExecutionType() -> ExerciseExecutionType?` (безопасное преобразование)
-  - Безопасное извлечение опционалов
+### Этап 2: Добавление Codable к моделям и тесты
 
-#### 2.2 Локализация для DTO (если нужна)
-- [ ] Добавить строки локализации в `Localizable.xcstrings` для ошибок преобразования DTO (если нужны)
-- [ ] Добавить переводы на русский и английский языки
-- [ ] Установить статус новых переводов: `"state" : "needs_review"`
+#### 2.1 Добавление Codable к простым структурам (TDD подход)
+- [x] **Добавлен Codable к `WorkoutResult` и `WorkoutPreviewTraining`:** Обе структуры теперь поддерживают сериализацию/десериализацию JSON с безопасным извлечением опционалов. Созданы тесты для проверки корректности работы Codable.
+- [x] **Создана структура `WorkoutData`:** Codable структура для передачи данных тренировки между iPhone и Apple Watch, размещена в `Models/SWSharedModels/WorkoutData.swift` с вычисляемым свойством `exerciseExecutionType` для безопасного преобразования.
+- [x] **Добавлено вычисляемое свойство `workoutData` в `DayActivity`:** Преобразует SwiftData модель в Codable структуру для передачи на Apple Watch, возвращает `nil` для не-тренировочных активностей. Созданы тесты для проверки корректности преобразования.
 
-#### 2.3 Настройка локализации для Watch App
-- [ ] **Использование общего файла локализации:**
-  - Файл `SupportingFiles/Localizable.xcstrings` уже добавлен в Watch App target (настроено ранее ✅)
-  - Все строки для часов добавляются в этот же файл с префиксом `Watch.*`
-  - **Важно:** Перед добавлением новых ключей проверять существующие ключи, чтобы не создавать дубли
-- [ ] **Проверка существующих ключей локализации:**
-  - Использовать существующие ключи там, где возможно:
-    - `Home.Activity` - для "Активность" (уже существует)
-    - `.workoutDay`, `.stretchDay`, `.restDay`, `.sickDay` - для типов активности (используются в `DayActivityType`)
-    - Проверить наличие ключей для "День", "Тренировка", "Круг" и других общих терминов
-  - Добавлять новые ключи только если они специфичны для часов и не существуют в основном приложении
-  - **Примечание:** Локализация displayName для часов уже настроена (раздел 1.2) через `InfoPlist.xcstrings` ✅
+#### 2.2 Настройка локализации для Watch App
+- [ ] Следовать принципам локализации из раздела "Принципы локализации для Watch App" (см. выше)
 
 ### Этап 3: Сервисы и тесты для них
 
-#### 3.1 WatchAuthService (TDD подход)
-- [ ] **Написать тесты для `WatchAuthService`:**
-  - Тест чтения статуса авторизации из UserDefaults (App Group)
-  - Тест проверки статуса авторизации при отсутствии значения в UserDefaults
-  - Тест обработки команды `PHONE_COMMAND_LOGOUT` от iPhone (обновление статуса)
-  - Тест обработки случая, когда App Group UserDefaults недоступен
-  - Тест использования правильного ключа для чтения статуса (совпадает с ключом в AuthHelper)
-- [ ] **Реализовать `WatchAuthService.swift`:**
-  - Класс для управления авторизацией на часах
-  - Использование `UserDefaults(suiteName: "group.com.sotka.app")` для чтения статуса авторизации
-  - Метод `checkAuthStatus() -> Bool` - чтение статуса авторизации напрямую из UserDefaults (App Group)
-    - Использовать тот же ключ, что и в `AuthHelperImp` (Key.isAuthorized.rawValue)
-    - Возвращать `false` если значение отсутствует или App Group недоступен
-  - Обработка команды `PHONE_COMMAND_LOGOUT` от iPhone (опционально, так как статус обновится в UserDefaults автоматически)
-  - Логирование через OSLog на русском языке
-  - Безопасное извлечение опционалов
-  - **Важно:** Не кэшировать статус отдельно - читать напрямую из UserDefaults (App Group)
+#### 3.1 WatchAuthService ✅
+- [x] Реализован сервис с использованием `@Observable` (современный подход вместо `@Published`)
+- [x] Все тесты написаны и проходят
 
-#### 3.2 WatchConnectivityService (TDD подход)
-- [ ] **Написать тесты для `WatchConnectivityService`:**
-  - Тест инициализации WCSession
-  - Тест проверки доступности сессии
-  - Тест отправки типа активности
-  - Тест отправки результата тренировки
-  - Тест запроса текущего дня
-  - Тест запроса текущей активности
-  - Тест запроса данных тренировки
-  - Тест обработки ответов от iPhone (мок WCSession)
-  - Тест обработки ошибок связи
-  - Тест преобразования моделей в DTO и обратно
-  - Тест сериализации/десериализации JSON
-- [ ] **Реализовать `WatchConnectivityService.swift`:**
-  - Класс для связи с iPhone через WatchConnectivity
-  - Реализация `WCSessionDelegate` для часов
-  - Методы запроса данных с iPhone:
-    - `requestCurrentDay() async throws -> Int`
-    - `requestCurrentActivity(day: Int) async throws -> DayActivityType?`
-    - `requestWorkoutData(day: Int) async throws -> WorkoutDataDTO`
-  - Методы отправки действий на iPhone:
-    - `sendActivityType(day: Int, activityType: DayActivityType) async throws`
-    - `sendWorkoutResult(day: Int, result: WorkoutResult, executionType: ExerciseExecutionType) async throws`
-  - Обработка ответов от iPhone через делегат
-  - Преобразование моделей ↔ DTO
-  - Сериализация/десериализация JSON
-  - Логирование через OSLog на русском языке
-  - Безопасное извлечение опционалов
-  - Обработка ошибок связи и недоступности iPhone
-  - **Примечание:** Проверка статуса авторизации выполняется через `WatchAuthService`, который читает из UserDefaults (App Group), а не через WatchConnectivity
+#### 3.2 WatchConnectivityService ✅
+- [x] Реализован сервис с `WCSessionDelegate` (через extension)
+- [x] Реализован dependency injection через `WCSessionProtocol` для тестирования
+- [x] Все тесты написаны (инициализация, обработка команд, ошибки, успешные сценарии, сериализация)
 
-#### 3.3 WatchWorkoutService (TDD подход)
-- [ ] **Написать тесты для `WatchWorkoutService`:**
-  - Тест инициализации тренировки из `WorkoutDataDTO`
-  - Тест отслеживания прогресса тренировки
-  - Тест завершения круга/подхода
-  - Тест завершения тренировки
-  - Тест прерывания тренировки
-  - Тест формирования `WorkoutResult` из прогресса
-  - Тест обработки отсутствия данных тренировки
-- [ ] **Реализовать `WatchWorkoutService.swift`:**
-  - Класс для логики выполнения тренировки на часах
-  - Инициализация из `WorkoutDataDTO`
-  - Отслеживание прогресса: текущий круг/подход, завершенные круги/подходы, время тренировки, время отдыха
-  - Метод `completeRound()` - завершение круга/подхода
-  - Метод `getRestTime() -> Int?` - получение времени отдыха между кругами/подходами (из настроек или параметров тренировки)
-  - Метод `finishWorkout() -> WorkoutResult` - завершение тренировки и формирование результата
-  - Метод `cancelWorkout()` - прерывание тренировки
-  - Логирование через OSLog на русском языке
-  - Безопасное извлечение опционалов
+#### 3.3 WatchWorkoutService ✅
+- [x] Реализован сервис
+- [x] Все тесты написаны и проходят
+- [x] Метод `getRestTime()` получает значение из App Group UserDefaults через `WatchAppGroupHelper` (см. раздел 1.3) ✅ Выполнено
 
 ### Этап 4: ViewModels и тесты для них
+
+**Примечание:** ViewModels будут размещаться в папке `SotkaWatch Watch App/ViewModels/` при реализации.
 
 #### 4.1 HomeViewModel (TDD подход)
 - [ ] **Написать тесты для `HomeViewModel`:**
   - Тест инициализации ViewModel
   - Тест проверки авторизации при загрузке данных
-  - Тест загрузки текущего дня с iPhone (мок WatchConnectivityService)
+  - Тест проверки авторизации при смене `scenePhase` на `.active` (мок WatchAuthService)
+  - Тест вычисления текущего дня из `startDate` (мок утилит для чтения App Group UserDefaults)
   - Тест загрузки текущей активности дня (мок WatchConnectivityService)
   - Тест выбора типа активности (отправка на iPhone)
   - Тест начала тренировки (запрос данных тренировки)
-  - Тест обработки команды выхода из аккаунта
   - Тест обработки ошибок связи с iPhone
-  - Тест обновления данных при получении команды от iPhone (обновление текущего дня через `PHONE_COMMAND_UPDATE_CURRENT_DAY`)
-- [ ] **Реализовать `HomeViewModel.swift`:**
+  - Тест обработки случая, когда `startDate` отсутствует в App Group (текущий день = `nil`)
+  - Тест чтения актуального значения `startDate` из App Group UserDefaults при каждом вычислении текущего дня
+  - Тест реакции на изменения статуса авторизации через `WatchAuthService.isAuthorized` (подписка на @Published)
+- [ ] **Реализовать `HomeViewModel.swift` в `SotkaWatch Watch App/ViewModels/`:**
   - @Observable класс для главного экрана
-  - Зависимости через конструктор: `WatchAuthService`, `WatchConnectivityService`
+  - Зависимости через конструктор: `WatchAuthService`, `WatchConnectivityService`, утилиты для чтения App Group UserDefaults
   - Состояние: `isLoading: Bool`, `error: Error?`, `currentDay: Int?`, `currentActivity: DayActivityType?`, `isAuthorized: Bool`
-  - Метод `loadData() async` - загрузка данных (проверка авторизации, запрос текущего дня с iPhone через `WatchConnectivityService.requestCurrentDay()`, запрос активности)
-    - **Важно:** Текущий день запрашивается с iPhone в реальном времени, без кэширования в UserDefaults
+  - Подписка на `WatchAuthService.isAuthorized` (@Published) для автоматического обновления статуса авторизации при получении команды `PHONE_COMMAND_AUTH_STATUS_CHANGED`
+  - Метод `loadData() async` - загрузка данных (проверка авторизации, вычисление текущего дня из `startDate` через App Group, запрос активности)
+  - Метод `checkAuthStatusOnActivation() async` - проверка статуса авторизации при активации приложения (вызывается из `task(id: scenePhase)` в View)
   - Метод `selectActivity(_ activityType: DayActivityType) async` - выбор активности (отправка на iPhone)
   - Метод `startWorkout() async` - начало тренировки (запрос данных тренировки)
-  - Метод `handleLogout()` - обработка выхода из аккаунта
   - Логирование через OSLog на русском языке
   - Безопасное извлечение опционалов
 
 #### 4.2 WorkoutViewModel (TDD подход)
 - [ ] **Написать тесты для `WorkoutViewModel`:**
-  - Тест инициализации из `WorkoutDataDTO`
+  - Тест инициализации из `WorkoutData`
   - Тест отслеживания прогресса тренировки
   - Тест завершения круга/подхода
   - Тест запуска таймера отдыха после завершения круга/подхода
@@ -420,11 +288,11 @@ SotkaWatch Watch App/
   - Тест прерывания тренировки
   - Тест обработки ошибок при отправке результата
   - Тест обновления UI при изменении прогресса
-- [ ] **Реализовать `WorkoutViewModel.swift`:**
+- [ ] **Реализовать `WorkoutViewModel.swift` в `SotkaWatch Watch App/ViewModels/`:**
   - @Observable класс для экрана тренировки
   - Зависимости через конструктор: `WatchWorkoutService`, `WatchConnectivityService`
   - Состояние: `currentRound: Int`, `completedRounds: Int`, `duration: TimeInterval`, `isFinished: Bool`, `error: Error?`, `showRestTimer: Bool`, `restTime: Int`
-  - Инициализация из `WorkoutDataDTO`
+  - Инициализация из `WorkoutData`
   - Метод `completeRound()` - завершение круга/подхода (запускает таймер отдыха, если есть время отдыха)
   - Метод `handleRestTimerFinish(force: Bool)` - обработка завершения таймера отдыха
   - Метод `checkAndHandleExpiredRestTimer()` - проверка истекшего таймера при активации приложения
@@ -440,95 +308,54 @@ SotkaWatch Watch App/
   - Тест инициализации WCSession
   - Тест обработки команды `WATCH_COMMAND_SET_ACTIVITY` (мок DailyActivitiesService)
   - Тест обработки команды `WATCH_COMMAND_SAVE_WORKOUT` (мок DailyActivitiesService)
-  - Тест обработки команды `WATCH_COMMAND_GET_CURRENT_DAY` (мок StatusManager)
   - Тест обработки команды `WATCH_COMMAND_GET_CURRENT_ACTIVITY` (мок DailyActivitiesService)
   - Тест обработки команды `WATCH_COMMAND_GET_WORKOUT_DATA` (мок WorkoutProgramCreator)
-  - Тест отправки обновлений на часы (при изменении дня)
+  - Тест отправки обновлений на часы (при изменении активности дня)
+  - Тест отправки команды `PHONE_COMMAND_AUTH_STATUS_CHANGED` при успешной авторизации (мок AuthHelper)
+  - Тест отправки команды `PHONE_COMMAND_AUTH_STATUS_CHANGED` при логауте (мок AuthHelper)
   - Тест обработки ошибок (неавторизованный пользователь, отсутствие данных)
-  - **Примечание:** Команда `WATCH_COMMAND_CHECK_AUTH` больше не нужна, так как статус авторизации читается напрямую из UserDefaults (App Group)
+  - **Примечание:** Команды проверки авторизации и получения текущего дня не нужны (см. раздел 1.3)
 - [ ] **Реализовать `WatchConnectivityManager.swift` в основном приложении:**
   - Класс для связи с часами через WatchConnectivity
   - Реализация `WCSessionDelegate` для iPhone
   - Интеграция с `DailyActivitiesService` для сохранения активности и результата тренировки
-  - Интеграция с `StatusManager` или `DayCalculator` для получения текущего дня
+  - Интеграция с `StatusManager` для работы с данными программы
   - Интеграция с `WorkoutProgramCreator` для получения данных тренировки
+  - Интеграция с `AuthHelper` для отслеживания изменений статуса авторизации:
+    - Подписка на изменения `AuthHelper.isAuthorized` (@Published) или использование callback/делегата
+    - При успешной авторизации (`saveAuthData`) → отправка команды `PHONE_COMMAND_AUTH_STATUS_CHANGED` с `isAuthorized: true`
+    - При логауте (`triggerLogout`) → отправка команды `PHONE_COMMAND_AUTH_STATUS_CHANGED` с `isAuthorized: false`
   - Обработка команд от часов:
     - `WATCH_COMMAND_SET_ACTIVITY` → сохранение через `DailyActivitiesService.set(_:for:context:)`
-    - `WATCH_COMMAND_SAVE_WORKOUT` → преобразование DTO в модель, сохранение через `DailyActivitiesService.createDailyActivity(_:context:)`
-    - `WATCH_COMMAND_GET_CURRENT_DAY` → получение из `StatusManager` или `DayCalculator`
+    - `WATCH_COMMAND_SAVE_WORKOUT` → сохранение через `DailyActivitiesService.createDailyActivity(_:context:)`
     - `WATCH_COMMAND_GET_CURRENT_ACTIVITY` → получение из SwiftData через `DailyActivitiesService`
-    - `WATCH_COMMAND_GET_WORKOUT_DATA` → получение через `WorkoutProgramCreator`, преобразование в DTO
+    - `WATCH_COMMAND_GET_WORKOUT_DATA` → получение через `WorkoutProgramCreator`, преобразование в `WorkoutData`
   - Отправка обновлений на часы:
-    - При изменении текущего дня → отправка обновленного дня
     - При изменении активности дня → отправка обновленной активности
-  - **Примечание:** Статус авторизации обновляется в UserDefaults (App Group) через `AuthHelper`, часы читают его напрямую, поэтому команда `WATCH_COMMAND_CHECK_AUTH` не нужна
-  - Преобразование моделей ↔ DTO
-  - Сериализация/десериализация JSON
+    - При изменении статуса авторизации → отправка команды `PHONE_COMMAND_AUTH_STATUS_CHANGED`
+  - Метод `sendAuthStatusChanged(_ isAuthorized: Bool)` - отправка команды `PHONE_COMMAND_AUTH_STATUS_CHANGED` на часы
+  - **Примечание:** Статус авторизации и `startDate` читаются напрямую из App Group (см. раздел 1.3). Команда `PHONE_COMMAND_AUTH_STATUS_CHANGED` используется для оперативного уведомления часов об изменениях статуса авторизации
+  - Сериализация/десериализация JSON через Codable
   - Логирование через OSLog на русском языке
   - Безопасное извлечение опционалов
 
 ### Этап 6: UI экранов (реализуется в последнюю очередь)
 
 #### 6.1 Экран авторизации
-- [x] Создать `AuthRequiredView.swift`:
-  - Экран для неавторизованных пользователей
-  - Отображение сообщения о необходимости авторизации в iPhone приложении
-  - Кнопка "Проверить авторизацию" для повторной проверки
-  - Индикатор проверки авторизации
-  - Локализованные строки в `Localizable.xcstrings` (общий файл, уже настроен ✅):
-    - `Watch.AuthRequired.Message` - сообщение о необходимости авторизации (новый ключ)
-    - `Watch.AuthRequired.CheckButton` - кнопка проверки (новый ключ)
-    - `Watch.AuthRequired.Checking` - индикатор проверки (новый ключ)
-    - `Watch.AuthRequired.Error` - сообщение об ошибке авторизации (новый ключ)
-  - Добавить переводы на русский и английский языки ✅
-  - Установить статус новых переводов: `"state" : "needs_review"` ✅
-  - Минималистичный дизайн для часов ✅
+- [x] Создать `AuthRequiredView.swift`: ✅ Выполнено (экран для неавторизованных пользователей, локализация добавлена)
 - [ ] Использовать `AuthRequiredView` в нужных местах приложения:
   - Передавать в экран соответствующий статус авторизации
   - Интегрировать в навигационную структуру приложения
 
 #### 6.2 Главный экран
-- [x] Создать `HomeView.swift` (частично реализовано):
-  - ✅ Главный экран часов (только для авторизованных)
-  - ✅ Проверка авторизации перед отображением контента
-  - ✅ Отображение текущего дня программы
-  - ✅ Отображение текущей активности дня (если установлена)
-  - ✅ Кнопка выбора активности (реализована через `DayActivityView`)
-  - ✅ Отображение выбранной активности (реализовано через `SelectedActivityView`)
-  - ✅ Возможность изменения активности (реализовано через NavigationLink в `SelectedActivityView`)
+- [x] Создать `HomeView.swift`: ✅ Частично выполнено (основной функционал реализован, локализация добавлена)
   - [ ] **Логика открытия экрана тренировки:**
     - При выборе активности `.workout` (из `DayActivitySelectionView` или изменении на `.workout` из `SelectedActivityView`) автоматически открывать `WorkoutView`
     - Интегрировать открытие `WorkoutView` в обработку `onSelect` callback в `DayActivityView`
-  - ✅ Индикатор синхронизации с iPhone
-  - ✅ Индикатор загрузки
-  - ✅ Обработка ошибок связи
-  - ✅ Локализованные строки в `Localizable.xcstrings` (общий файл):
-    - Использовать существующий ключ `Home.Activity` для "Активность" (не создавать дубль)
-    - Проверить наличие ключа для "День" - если есть, использовать его, иначе добавить `Watch.Home.Day`
-    - `Watch.Home.SelectActivity` - "Выбрать активность" (новый ключ, специфичен для часов)
-    - `Watch.Home.StartWorkout` - "Начать тренировку" (новый ключ, специфичен для часов)
-    - `Watch.Home.Syncing` - "Синхронизация..." (новый ключ, специфичен для часов)
-    - `Watch.Home.Error` - "Ошибка связи с iPhone" (новый ключ, специфичен для часов)
-  - ✅ Добавить переводы на русский и английский языки
-  - ✅ Установить статус новых переводов: `"state" : "needs_review"`
-  - ✅ Минималистичный дизайн для часов
 
 #### 6.3 Экран выбора активности
-- [x] **Создать экран выбора активности:** ✅ **Выполнено** - `DayActivitySelectionView.swift` уже создан
-  - ✅ Экран выбора активности реализован
-  - ✅ Отображение 4 вариантов активности через `DayActivityType.allCases`:
-    - Тренировка (workout) - синий цвет, иконка "figure.play"
-    - Растяжка (stretch) - фиолетовый цвет, иконка "figure.flexibility"
-    - Отдых (rest) - зеленый цвет, иконка "chair.lounge"
-    - Болезнь (sick) - красный цвет, иконка "medical.thermometer"
-  - ✅ Использует `activity.localizedTitle` для локализации (использует существующие ключи `.workoutDay`, `.stretchDay`, `.restDay`, `.sickDay`)
-  - ✅ Использует `activity.image` и `activity.color` из `DayActivityType`
-  - ✅ Callback `onSelect` для обработки выбора активности
-- [x] **Базовый UI для выбора и изменения активности:** ✅ **Выполнено**
-  - ✅ `DayActivityView` - основной экран, который показывает либо `SelectedActivityView` (если активность выбрана), либо `DayActivitySelectionView` (если не выбрана)
-  - ✅ `SelectedActivityView` - отображает выбранную активность с кнопкой редактирования (NavigationLink к `DayActivitySelectionView`)
-  - ✅ `DayActivitySelectionView` - отображает список всех активностей для выбора
-  - ✅ Возможность изменения ранее выбранной активности на другую через кнопку редактирования
+- [x] **Создать экран выбора активности:** ✅ Выполнено (`DayActivitySelectionView.swift` с 4 вариантами активности)
+- [x] **Базовый UI для выбора и изменения активности:** ✅ Выполнено (`DayActivityView`, `SelectedActivityView`, `DayActivitySelectionView`)
 - [ ] **Доработать `SelectedActivityView` для отображения данных тренировки (TODO в коде):**
   - **Важно:** Это экран результата тренировки - после завершения тренировки пользователь возвращается сюда и видит результат выполненной тренировки
   - Для кейса `.workout` отобразить данные тренировки аналогично `DayActivityContentView` + `DayActivityCommentView` (как в основном приложении)
@@ -558,7 +385,7 @@ SotkaWatch Watch App/
   - **Важно:** Экран открывается автоматически при выборе активности `.workout` (из `SelectedActivityView` или `DayActivitySelectionView`)
   - Экран выполнения тренировки
   - Упрощенный интерфейс для часов:
-    - Отображение текущего упражнения
+    - Отображение текущего упражнения (название через `ExerciseType.localizedTitle` или `ExerciseType.makeLocalizedTitle`, иконка через `ExerciseType.image` из `ExercisesAssets.xcassets`)
     - Отображение текущего круга/подхода
     - Кнопка "Завершить круг/подход"
     - Кнопка "Завершить тренировку"
@@ -601,6 +428,10 @@ SotkaWatch Watch App/
   - Переход на `AuthRequiredView` если не авторизован
   - Переход на `HomeView` если авторизован
   - Настройка NavigationStack для навигации между экранами
+  - **Проверка статуса авторизации при активации приложения:**
+    - Использовать модификатор `.task(id: scenePhase)` для отслеживания изменений `scenePhase`
+    - При переходе `scenePhase` в `.active` вызывать `HomeViewModel.checkAuthStatusOnActivation()` для проверки актуального статуса авторизации из App Group UserDefaults
+    - Это обеспечивает получение актуального статуса авторизации даже если команда `PHONE_COMMAND_AUTH_STATUS_CHANGED` не была доставлена (например, при отсутствии связи)
 - [ ] Настроить навигацию:
   - Простая навигация между экранами
   - Кнопка "Назад" на каждом экране (где нужно)
@@ -666,100 +497,75 @@ SotkaWatch Watch App/
 
 ### Модели данных
 
-#### DTO-структуры для передачи данных
+#### Модели с Codable для передачи данных
 
-**WorkoutResultDTO** (новая структура для передачи):
+**WorkoutResult** (обновлена для поддержки Codable):
 ```swift
-// SotkaWatch Watch App/DTOs/WorkoutResultDTO.swift
-struct WorkoutResultDTO: Codable {
+// Models/Workout/WorkoutResult.swift
+struct WorkoutResult: Equatable, Codable {
     let count: Int
     let duration: Int?
-    
-    init(from result: WorkoutResult) {
-        self.count = result.count
-        self.duration = result.duration
-    }
-    
-    func toWorkoutResult() -> WorkoutResult {
-        WorkoutResult(count: count, duration: duration)
-    }
 }
 ```
 
-**WorkoutPreviewTrainingDTO** (новая структура для передачи):
+**WorkoutPreviewTraining** (обновлена для поддержки Codable):
 ```swift
-// SotkaWatch Watch App/DTOs/WorkoutPreviewTrainingDTO.swift
-struct WorkoutPreviewTrainingDTO: Codable {
+// Models/Workout/WorkoutPreviewTraining.swift
+struct WorkoutPreviewTraining: Equatable, Identifiable, Codable {
     let id: String
     let count: Int?
     let typeId: Int?
     let customTypeId: String?
     let sortOrder: Int?
-    
-    init(from training: WorkoutPreviewTraining) {
-        self.id = training.id
-        self.count = training.count
-        self.typeId = training.typeId
-        self.customTypeId = training.customTypeId
-        self.sortOrder = training.sortOrder
-    }
-    
-    func toWorkoutPreviewTraining() -> WorkoutPreviewTraining {
-        WorkoutPreviewTraining(
-            id: id,
-            count: count,
-            typeId: typeId,
-            customTypeId: customTypeId,
-            sortOrder: sortOrder
-        )
-    }
+    // ... остальные методы и свойства
 }
 ```
 
-**WorkoutDataDTO** (новая структура для передачи полных данных тренировки):
+**WorkoutData** (новая структура для передачи полных данных тренировки):
 ```swift
-// SotkaWatch Watch App/DTOs/WorkoutDataDTO.swift
-struct WorkoutDataDTO: Codable {
+// Models/Workout/WorkoutData.swift
+struct WorkoutData: Codable {
     let day: Int
     let executionType: Int  // ExerciseExecutionType.rawValue
-    let trainings: [WorkoutPreviewTrainingDTO]
+    let trainings: [WorkoutPreviewTraining]
     let plannedCount: Int?
     
-    // Методы преобразования в модели (если нужны на часах)
-    func toExerciseExecutionType() -> ExerciseExecutionType? {
+    // Вычисляемое свойство для преобразования executionType в enum
+    var exerciseExecutionType: ExerciseExecutionType? {
         ExerciseExecutionType(rawValue: executionType)
     }
 }
 ```
 
 **Примечание:**
-- Существующие модели (`WorkoutResult`, `WorkoutPreviewTraining`, `DayActivityType`, `ExerciseExecutionType`) **не изменяются**
-- DTO-структуры создаются отдельно и используются только для передачи данных через WatchConnectivity
-- Преобразование между моделями и DTO выполняется в `WatchConnectivityService`
+- Простые структуры (`WorkoutResult`, `WorkoutPreviewTraining`) получают Codable для прямой передачи через WatchConnectivity
+- Enum'ы (`DayActivityType`, `ExerciseExecutionType`) передаются через rawValue (Int)
+- `WorkoutData` - новая структура для передачи полных данных тренировки, размещается в общих моделях
+- `ExerciseType` добавлен в Watch App target для использования локализованных названий упражнений и иконок на экране тренировки
+- Ассеты упражнений находятся в отдельном `ExercisesAssets.xcassets`, доступном обоим таргетам, что позволяет использовать иконки упражнений без дублирования
+- Модели с `@Model` (SwiftData) не используются напрямую на часах, только для преобразования в простые структуры
 
 ### Команды WatchConnectivity
 
 ```swift
-enum WatchCommand: String {
-    // От часов к iPhone
-    case getUserData = "WATCH_COMMAND_GET_USER_DATA"
-    case setActivity = "WATCH_COMMAND_SET_ACTIVITY"
-    case saveWorkout = "WATCH_COMMAND_SAVE_WORKOUT"
-    case getCurrentDay = "WATCH_COMMAND_GET_CURRENT_DAY"
-    case getCurrentActivity = "WATCH_COMMAND_GET_CURRENT_ACTIVITY"
-    case getWorkoutData = "WATCH_COMMAND_GET_WORKOUT_DATA"
-    
-    // От iPhone к часам
-    case userData = "PHONE_COMMAND_USER_DATA"
-    case updateCurrentDay = "PHONE_COMMAND_UPDATE_CURRENT_DAY"
-    case currentActivity = "PHONE_COMMAND_CURRENT_ACTIVITY"
-    case sendWorkoutData = "PHONE_COMMAND_SEND_WORKOUT_DATA"
-    case logout = "PHONE_COMMAND_LOGOUT"
-    
-    // Примечание: Команды checkAuth и authStatus не нужны,
-    // так как статус авторизации читается напрямую из UserDefaults (App Group)
+extension Constants {
+    /// Команды для обмена данными между часами и iPhone через WatchConnectivity
+    enum WatchCommand: String {
+        // От часов к iPhone
+        case setActivity = "WATCH_COMMAND_SET_ACTIVITY"
+        case saveWorkout = "WATCH_COMMAND_SAVE_WORKOUT"
+        case getCurrentActivity = "WATCH_COMMAND_GET_CURRENT_ACTIVITY"
+        case getWorkoutData = "WATCH_COMMAND_GET_WORKOUT_DATA"
+        
+        // От iPhone к часам
+        case currentActivity = "PHONE_COMMAND_CURRENT_ACTIVITY"
+        case sendWorkoutData = "PHONE_COMMAND_SEND_WORKOUT_DATA"
+        case authStatusChanged = "PHONE_COMMAND_AUTH_STATUS_CHANGED"
+    }
 }
 ```
+
+**Примечание:** Enum `Constants.WatchCommand` находится в файле `SwiftUI-SotkaApp/Models/SWSharedModels/Constants.swift` и доступен обоим таргетам (основному приложению и Watch App).
 
 ### Формат сообщений WatchConnectivity
 
@@ -785,38 +591,9 @@ enum WatchCommand: String {
     "trainingType": 1
 }
 ```
-*Примечание: `result` содержит сериализованный `WorkoutResultDTO` в JSON формате*
+*Примечание: `result` содержит сериализованный `WorkoutResult` (Codable) в JSON формате*
 
-**Запрос текущего дня:**
-```json
-{
-    "command": "WATCH_COMMAND_GET_CURRENT_DAY"
-}
-```
-
-**Ответ с текущим днем:**
-```json
-{
-    "command": "PHONE_COMMAND_UPDATE_CURRENT_DAY",
-    "currentDay": 42,
-    "startDate": "2024-01-01T00:00:00Z"
-}
-```
-
-**Примечание:** Команды проверки авторизации (`WATCH_COMMAND_CHECK_AUTH` и `PHONE_COMMAND_AUTH_STATUS`) не нужны, так как статус авторизации читается напрямую из UserDefaults (App Group) через `WatchAuthService`.
-
-**Ответ с данными пользователя (опционально, если нужны для отображения):**
-```json
-{
-    "command": "PHONE_COMMAND_USER_DATA",
-    "user": {
-        "id": 123,
-        "userName": "username",
-        "email": "user@example.com",
-        "fullName": "Full Name"
-    }
-}
-```
+**Примечание:** Команды проверки авторизации и получения/обновления текущего дня не нужны (см. раздел 1.3). Команды для получения данных пользователя также не нужны - часы не отображают данные пользователя (имя, email и т.д.).
 
 **Ответ с текущей активностью дня:**
 ```json
@@ -829,13 +606,14 @@ enum WatchCommand: String {
 }
 ```
 
-**Команда выхода из аккаунта (опционально):**
+**Уведомление об изменении статуса авторизации:**
 ```json
 {
-    "command": "PHONE_COMMAND_LOGOUT"
+    "command": "PHONE_COMMAND_AUTH_STATUS_CHANGED",
+    "isAuthorized": true
 }
 ```
-*Примечание: Команда `PHONE_COMMAND_LOGOUT` опциональна, так как статус авторизации обновляется в UserDefaults (App Group) через `AuthHelper`, и часы автоматически получают актуальный статус при следующей проверке.*
+*Примечание: Команда отправляется при успешной авторизации (`isAuthorized: true`) или при логауте (`isAuthorized: false`). Часы также проверяют статус авторизации при активации приложения через `task(id: scenePhase)` для обеспечения актуальности данных даже при отсутствии связи.*
 
 ## Риски и митигация
 
@@ -866,10 +644,10 @@ enum WatchCommand: String {
 ## Приоритеты разработки
 
 ### Высокий приоритет (MVP)
-1. **Создание DTO-структур** для передачи данных
+1. **Добавление Codable к простым моделям** для передачи данных
 2. **Проверка авторизации и блокировка функционала без авторизации**
-3. **Запрос данных с iPhone** (текущий день, активность, данные пользователя)
-4. **Отправка действий в iPhone** для сохранения в SwiftData (с преобразованием в DTO)
+3. **Запрос данных с iPhone** (текущий день, активность, данные тренировки)
+4. **Отправка действий в iPhone** для сохранения в SwiftData (с использованием Codable моделей)
 5. Главный экран с отображением текущего дня (только для авторизованных)
 6. Выбор типа активности (сохранение через iPhone)
 7. Обработка отсутствия связи с iPhone
@@ -914,7 +692,7 @@ enum WatchCommand: String {
 - Пример: `@{@"command": @"0", @"days": jsonString}`
 
 **Новое приложение:**
-- Используются **DTO-структуры с Codable** для передачи данных
+- Используются **модели с Codable** для прямой передачи данных (без DTO)
 - Команды передаются как **строковые enum** (WatchCommand: "WATCH_COMMAND_GET_TRAIN_LIST")
 - Данные сериализуются через JSONEncoder/JSONDecoder
 - Пример: `{"command": "WATCH_COMMAND_SAVE_WORKOUT", "result": {...}}`
@@ -930,9 +708,8 @@ enum WatchCommand: String {
 
 **Новое приложение:**
 - Расширенный набор команд с явными названиями
-- Отдельные команды для проверки авторизации, получения данных пользователя
-- Более детальное разделение команд (отдельно для активности, тренировки, данных пользователя)
-- Команда выхода из аккаунта (`PHONE_COMMAND_LOGOUT`)
+- Более детальное разделение команд (отдельно для активности и тренировки)
+- **Примечание:** Команды проверки авторизации и выхода из аккаунта не нужны, так как статус авторизации читается напрямую из App Group UserDefaults (см. раздел 1.3). Команды для получения данных пользователя также не нужны - часы не отображают данные пользователя.
 
 ### Авторизация
 
@@ -944,7 +721,7 @@ enum WatchCommand: String {
 - **Обязательная проверка авторизации** при запуске приложения на часах
 - Блокировка функционала без авторизации
 - Экран `AuthRequiredView` для неавторизованных пользователей
-- Синхронизация данных пользователя между iPhone и часами
+- Статус авторизации читается напрямую из App Group UserDefaults (см. раздел 1.3)
 
 ### Обработка данных тренировки
 
@@ -954,7 +731,7 @@ enum WatchCommand: String {
 - Локальное сохранение на часах перед синхронизацией
 
 **Новое приложение:**
-- Данные тренировки передаются через DTO (`WorkoutDataDTO`, `WorkoutResultDTO`)
+- Данные тренировки передаются через модели с Codable (`WorkoutData`, `WorkoutResult`)
 - Сохранение происходит по одной активности/тренировке
 - Немедленная передача в iPhone без локального сохранения
 
@@ -984,7 +761,7 @@ enum WatchCommand: String {
 - Swift 6.0
 - SwiftData на iPhone (не используется на часах)
 - SwiftUI для часов
-- Codable DTO-структуры для передачи данных
+- Codable модели для прямой передачи данных (без DTO)
 
 ### Преимущества нового подхода
 
@@ -1004,7 +781,7 @@ enum WatchCommand: String {
 4. **Современные технологии:**
    - SwiftUI вместо WatchKit
    - SwiftData вместо CoreData
-   - Codable вместо ручной сериализации JSON
+   - Codable модели вместо ручной сериализации JSON и DTO
 
 ### Недостатки нового подхода
 
@@ -1025,20 +802,21 @@ enum WatchCommand: String {
 Этот план описывает детальную разработку приложения для Apple Watch с сокращенным функционалом по сравнению с основным iOS-приложением. Основные компоненты:
 
 1. **Авторизация** - проверка статуса авторизации и блокировка функционала без авторизации
-2. **Запрос данных с iPhone** - все данные запрашиваются с iPhone в реальном времени
-3. **Сохранение через iPhone** - все действия передаются в iPhone для сохранения в SwiftData
-4. **Главный экран** - отображение текущего дня и активности (только для авторизованных)
-5. **Выбор активности** - выбор типа активности из 4 вариантов (сохранение через iPhone)
-6. **Выполнение тренировки** - упрощенный интерфейс для выполнения тренировки (данные с iPhone, сохранение через iPhone)
+2. **Локальное вычисление текущего дня** - вычисляется локально на часах из `startDate` с помощью `DayCalculator` (см. раздел 1.3)
+3. **Запрос данных с iPhone** - данные активности и тренировок запрашиваются с iPhone в реальном времени
+4. **Сохранение через iPhone** - все действия передаются в iPhone для сохранения в SwiftData
+5. **Главный экран** - отображение текущего дня и активности (только для авторизованных)
+6. **Выбор активности** - выбор типа активности из 4 вариантов (сохранение через iPhone)
+7. **Выполнение тренировки** - упрощенный интерфейс для выполнения тренировки (данные с iPhone, сохранение через iPhone)
 
 ### Ключевые принципы
 
 - **iPhone приложение - единственное хранилище данных**: все данные хранятся только на iPhone в SwiftData, часы не хранят данные локально
 - **Часы как клиент**: часы запрашивают данные с iPhone и отправляют действия для сохранения, не хранят данные самостоятельно
 - **Обязательная авторизация**: приложение для часов работает только после успешной авторизации в iPhone приложении
-- **Чтение статуса авторизации**: напрямую из UserDefaults (App Group), без отдельного кэширования на часах
-- **Текущий день**: запрашивается с iPhone через WatchConnectivity в реальном времени, без кэширования
-- **Безопасность**: при выходе из аккаунта на iPhone статус обновляется в UserDefaults, часы автоматически получают актуальный статус
+- **Чтение статуса авторизации и `startDate`**: напрямую из App Group UserDefaults (см. раздел 1.3)
+- **Текущий день**: вычисляется локально на часах из `startDate` с помощью `DayCalculator`
+- **Безопасность**: при выходе из аккаунта статус обновляется в App Group UserDefaults
 - **Обработка офлайн-режима**: при отсутствии связи с iPhone показывать сообщение об ошибке, не выполнять действия, требующие сохранения
 
 Приложение для часов работает как клиент iPhone приложения, запрашивая данные и отправляя действия для сохранения. Все данные хранятся только на iPhone в SwiftData, что упрощает архитектуру и исключает конфликты данных.

@@ -25,7 +25,7 @@ final class StatusManager {
         get {
             access(keyPath: \.startDate)
             let storedTime = defaults.double(
-                forKey: Key.startDate.rawValue
+                forKey: Constants.startDateKey
             )
             guard storedTime != 0 else {
                 logger.debug("Обратились к startDate, но он не был установлен")
@@ -38,10 +38,10 @@ final class StatusManager {
                 if let newValue {
                     defaults.set(
                         newValue.timeIntervalSinceReferenceDate,
-                        forKey: Key.startDate.rawValue
+                        forKey: Constants.startDateKey
                     )
                 } else {
-                    defaults.removeObject(forKey: Key.startDate.rawValue)
+                    defaults.removeObject(forKey: Constants.startDateKey)
                 }
             }
         }
@@ -83,14 +83,23 @@ final class StatusManager {
         progressSyncService: ProgressSyncService,
         dailyActivitiesService: DailyActivitiesService,
         statusClient: StatusClient,
-        userDefaults: UserDefaults = UserDefaults.standard
+        userDefaults: UserDefaults? = nil
     ) {
         self.customExercisesService = customExercisesService
         self.infopostsService = infopostsService
         self.progressSyncService = progressSyncService
         self.dailyActivitiesService = dailyActivitiesService
         self.statusClient = statusClient
-        self.defaults = userDefaults
+        if let userDefaults {
+            self.defaults = userDefaults
+            migrateStartDateFromStandardUserDefaults(to: userDefaults)
+        } else if let appGroupDefaults = UserDefaults(suiteName: Constants.appGroupIdentifier) {
+            self.defaults = appGroupDefaults
+            migrateStartDateFromStandardUserDefaults(to: appGroupDefaults)
+        } else {
+            logger.error("App Group '\(Constants.appGroupIdentifier)' недоступен, используется стандартный UserDefaults")
+            self.defaults = UserDefaults.standard
+        }
     }
 
     /// Получает статус прохождения пользователя
@@ -269,16 +278,31 @@ extension StatusManager {
 
 private extension StatusManager {
     enum Key: String {
-        /// Дата начала сотки
-        ///
-        /// Значение взял из старого приложения
-        case startDate = "WorkoutStartDate"
         /// Максимальный день, до которого доступны инфопосты
         ///
         /// Значение взял из старого приложения
         case maxReadInfoPostDay = "WorkoutMaxReadInfoPostDay"
         /// Признак успешной первичной загрузки данных
         case didLoadInitialData = "DidLoadInitialData"
+        /// Флаг завершения миграции startDate в App Group
+        case migrationStartDateCompleted = "migrationStartDateToAppGroupCompleted"
+    }
+
+    /// Миграция данных startDate из UserDefaults.standard в App Group UserDefaults
+    func migrateStartDateFromStandardUserDefaults(to appGroupDefaults: UserDefaults) {
+        if appGroupDefaults.bool(forKey: Key.migrationStartDateCompleted.rawValue) {
+            return
+        }
+        let standardDefaults = UserDefaults.standard
+        let key = Constants.startDateKey
+        let hasDataInStandard = standardDefaults.object(forKey: key) != nil
+        let hasDataInAppGroup = appGroupDefaults.object(forKey: key) != nil
+        if hasDataInStandard, !hasDataInAppGroup {
+            let startDateValue = standardDefaults.double(forKey: key)
+            appGroupDefaults.set(startDateValue, forKey: key)
+            logger.info("Выполнена миграция startDate из UserDefaults.standard в App Group: \(startDateValue)")
+        }
+        appGroupDefaults.set(true, forKey: Key.migrationStartDateCompleted.rawValue)
     }
 }
 

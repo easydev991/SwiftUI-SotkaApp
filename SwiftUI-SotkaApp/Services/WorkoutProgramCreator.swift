@@ -26,7 +26,7 @@ struct WorkoutProgramCreator {
         self.executionType = executionType
         self.count = dayActivity.count
         self.plannedCount = dayActivity.plannedCount ?? Self.calculatePlannedCircles(for: dayActivity.day, executionType: executionType)
-        self.trainings = dayActivity.trainings.map { WorkoutPreviewTraining(from: $0) }
+        self.trainings = dayActivity.trainings.map(\.workoutPreviewTraining)
         self.comment = dayActivity.comment
     }
 

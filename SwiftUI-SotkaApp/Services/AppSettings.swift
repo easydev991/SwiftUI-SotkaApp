@@ -18,8 +18,17 @@ final class AppSettings {
     var showNotificationError = false
     var notificationError: NotificationError?
 
-    init(userDefaults: UserDefaults = UserDefaults.standard) {
-        self.defaults = userDefaults
+    init(userDefaults: UserDefaults? = nil) {
+        if let userDefaults {
+            self.defaults = userDefaults
+            migrateRestTimeFromStandardUserDefaults(to: userDefaults)
+        } else if let appGroupDefaults = UserDefaults(suiteName: Constants.appGroupIdentifier) {
+            self.defaults = appGroupDefaults
+            migrateRestTimeFromStandardUserDefaults(to: appGroupDefaults)
+        } else {
+            logger.warning("App Group '\(Constants.appGroupIdentifier)' недоступен, используется стандартный UserDefaults")
+            self.defaults = UserDefaults.standard
+        }
     }
 
     var appTheme: AppTheme {
@@ -133,12 +142,12 @@ final class AppSettings {
     var restTime: Int {
         get {
             access(keyPath: \.restTime)
-            let storedValue = defaults.integer(forKey: Key.restTime.rawValue)
+            let storedValue = defaults.integer(forKey: Constants.restTimeKey)
             return storedValue == 0 ? Constants.defaultRestTime : storedValue
         }
         set {
             withMutation(keyPath: \.restTime) {
-                defaults.set(newValue, forKey: Key.restTime.rawValue)
+                defaults.set(newValue, forKey: Constants.restTimeKey)
             }
         }
     }
@@ -263,10 +272,6 @@ private extension AppSettings {
         ///
         /// Значение взял из старого приложения
         case vibrate = "WorkoutPlayVibrate"
-        /// Время отдыха между подходами/кругами (в секундах)
-        ///
-        /// Значение взял из старого приложения
-        case restTime = "WorkoutTimer"
         /// Мелодия для уведомления об окончании отдыха
         case timerSound = "WorkoutTimerSound"
         /// Идентификатор для ежедневного уведомления
@@ -329,5 +334,28 @@ private extension AppSettings {
         components.hour = 19
         components.minute = 0
         return Calendar.current.date(from: components) ?? .now
+    }
+
+    enum MigrationKey: String {
+        case migrationRestTimeCompleted = "migrationRestTimeToAppGroupCompleted"
+    }
+
+    /// Миграция данных restTime из UserDefaults.standard в App Group UserDefaults
+    func migrateRestTimeFromStandardUserDefaults(to appGroupDefaults: UserDefaults) {
+        if appGroupDefaults.bool(forKey: MigrationKey.migrationRestTimeCompleted.rawValue) {
+            return
+        }
+        let standardDefaults = UserDefaults.standard
+        let key = Constants.restTimeKey
+        let hasDataInStandard = standardDefaults.object(forKey: key) != nil
+        let hasDataInAppGroup = appGroupDefaults.object(forKey: key) != nil
+        if hasDataInStandard, !hasDataInAppGroup {
+            let restTimeValue = standardDefaults.integer(forKey: key)
+            if restTimeValue != 0 {
+                appGroupDefaults.set(restTimeValue, forKey: key)
+                logger.info("Выполнена миграция restTime из UserDefaults.standard в App Group: \(restTimeValue)")
+            }
+        }
+        appGroupDefaults.set(true, forKey: MigrationKey.migrationRestTimeCompleted.rawValue)
     }
 }
