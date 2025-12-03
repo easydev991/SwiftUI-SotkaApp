@@ -13,15 +13,15 @@ final class WatchWorkoutService {
     private(set) var completedRounds = 0
     private(set) var workoutStartTime: Date?
     private(set) var isCancelled = false
-    private let appGroupHelper: WatchAppGroupHelper
+    private let appGroupHelper: any WatchAppGroupHelperProtocol
 
     /// Инициализация из WorkoutData
     /// - Parameters:
     ///   - workoutData: Данные тренировки
     ///   - appGroupHelper: Хелпер для чтения данных из App Group UserDefaults (по умолчанию создается новый экземпляр)
-    init(workoutData: WorkoutData, appGroupHelper: WatchAppGroupHelper = WatchAppGroupHelper()) {
+    init(workoutData: WorkoutData, appGroupHelper: (any WatchAppGroupHelperProtocol)? = nil) {
         self.workoutData = workoutData
-        self.appGroupHelper = appGroupHelper
+        self.appGroupHelper = appGroupHelper ?? WatchAppGroupHelper()
         self.workoutStartTime = Date()
         logger.info("Инициализирована тренировка дня \(workoutData.day)")
     }

@@ -1,0 +1,24 @@
+{
+  "configurations" : [
+    {
+      "id" : "BFA1E186-07C6-4E09-A6B6-EC9778051517",
+      "name" : "Configuration 1",
+      "options" : {
+
+      }
+    }
+  ],
+  "defaultOptions" : {
+
+  },
+  "testTargets" : [
+    {
+      "target" : {
+        "containerPath" : "container:SwiftUI-SotkaApp.xcodeproj",
+        "identifier" : "67156B4A2EDD853600334DEF",
+        "name" : "SotkaWatch Watch AppTests"
+      }
+    }
+  ],
+  "version" : 1
+}
