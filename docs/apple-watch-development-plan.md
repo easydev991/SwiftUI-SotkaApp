@@ -94,7 +94,7 @@ SotkaWatch Watch App/
 - **Чтение статуса авторизации и `startDate`** напрямую из App Group UserDefaults (см. раздел 1.3)
 - **Текущий день** вычисляется локально на часах из `startDate` с помощью `DayCalculator`
 - **Уведомления об изменениях статуса авторизации:**
-  - iPhone отправляет команду `PHONE_COMMAND_AUTH_STATUS_CHANGED` при успешной авторизации или логауте
+  - iPhone отправляет команду `PHONE_COMMAND_AUTH_STATUS_CHANGED` только при логауте (при авторизации часы читают статус из App Group UserDefaults)
   - Часы также проверяют статус авторизации при активации приложения (`scenePhase == .active`) для обеспечения актуальности данных даже при отсутствии связи
 
 **Команды синхронизации:** (см. раздел "Команды WatchConnectivity" ниже)
@@ -308,41 +308,31 @@ SotkaWatch Watch App/
 
 ### Этап 5: Интеграция с основным приложением (iPhone)
 
-#### 5.1 WatchConnectivityManager на iPhone (TDD подход)
-- [ ] **Написать тесты для `WatchConnectivityManager`:**
-  - Тест инициализации WCSession
-  - Тест обработки команды `WATCH_COMMAND_SET_ACTIVITY` (мок DailyActivitiesService)
-  - Тест обработки команды `WATCH_COMMAND_SAVE_WORKOUT` (мок DailyActivitiesService)
-  - Тест обработки команды `WATCH_COMMAND_GET_CURRENT_ACTIVITY` (мок DailyActivitiesService)
-  - Тест обработки команды `WATCH_COMMAND_GET_WORKOUT_DATA` (мок WorkoutProgramCreator)
-  - Тест отправки обновлений на часы (при изменении активности дня)
-  - Тест отправки команды `PHONE_COMMAND_AUTH_STATUS_CHANGED` при успешной авторизации (мок AuthHelper)
-  - Тест отправки команды `PHONE_COMMAND_AUTH_STATUS_CHANGED` при логауте (мок AuthHelper)
-  - Тест обработки ошибок (неавторизованный пользователь, отсутствие данных)
-  - **Примечание:** Команды проверки авторизации и получения текущего дня не нужны (см. раздел 1.3)
-- [ ] **Реализовать `WatchConnectivityManager.swift` в основном приложении:**
-  - Класс для связи с часами через WatchConnectivity
-  - Реализация `WCSessionDelegate` для iPhone
-  - Интеграция с `DailyActivitiesService` для сохранения активности и результата тренировки
-  - Интеграция с `StatusManager` для работы с данными программы
-  - Интеграция с `WorkoutProgramCreator` для получения данных тренировки
-  - Интеграция с `AuthHelper` для отслеживания изменений статуса авторизации:
-    - Подписка на изменения `AuthHelper.isAuthorized` (@Published) или использование callback/делегата
-    - При успешной авторизации (`saveAuthData`) → отправка команды `PHONE_COMMAND_AUTH_STATUS_CHANGED` с `isAuthorized: true`
-    - При логауте (`triggerLogout`) → отправка команды `PHONE_COMMAND_AUTH_STATUS_CHANGED` с `isAuthorized: false`
-  - Обработка команд от часов:
-    - `WATCH_COMMAND_SET_ACTIVITY` → сохранение через `DailyActivitiesService.set(_:for:context:)`
-    - `WATCH_COMMAND_SAVE_WORKOUT` → сохранение через `DailyActivitiesService.createDailyActivity(_:context:)`
-    - `WATCH_COMMAND_GET_CURRENT_ACTIVITY` → получение из SwiftData через `DailyActivitiesService`
-    - `WATCH_COMMAND_GET_WORKOUT_DATA` → получение через `WorkoutProgramCreator`, преобразование в `WorkoutData`
-  - Отправка обновлений на часы:
-    - При изменении активности дня → отправка обновленной активности
-    - При изменении статуса авторизации → отправка команды `PHONE_COMMAND_AUTH_STATUS_CHANGED`
-  - Метод `sendAuthStatusChanged(_ isAuthorized: Bool)` - отправка команды `PHONE_COMMAND_AUTH_STATUS_CHANGED` на часы
-  - **Примечание:** Статус авторизации и `startDate` читаются напрямую из App Group (см. раздел 1.3). Команда `PHONE_COMMAND_AUTH_STATUS_CHANGED` используется для оперативного уведомления часов об изменениях статуса авторизации
-  - Сериализация/десериализация JSON через Codable
-  - Логирование через OSLog на русском языке
-  - Безопасное извлечение опционалов
+#### 5.1 WatchConnectivityManager на iPhone ✅ Выполнено
+- [x] **Написаны тесты для `WatchConnectivityManager`** (17 тестов, все проходят):
+  - Инициализация WCSession, обработка команд от часов, проверка конфликтов, обработка ошибок, отправка обновлений
+- [x] **Реализован `WatchConnectivityManager` как вложенный класс в `StatusManager`**:
+  - Класс `StatusManager.WatchConnectivityManager` с очередью запросов для решения проблем с actor isolation
+  - Обработка команд: `WATCH_COMMAND_SET_ACTIVITY`, `WATCH_COMMAND_SAVE_WORKOUT`, `WATCH_COMMAND_GET_CURRENT_ACTIVITY`, `WATCH_COMMAND_GET_WORKOUT_DATA`
+  - Проверка конфликтов при изменении активности (защита незавершенных тренировок)
+  - Отправка обновлений на часы через `PHONE_COMMAND_CURRENT_ACTIVITY` и `PHONE_COMMAND_AUTH_STATUS_CHANGED` (только при логауте)
+  - Метод `processPendingRequests(context:)` для обработки всех накопленных запросов от часов
+  - Интеграция в `SwiftUI_SotkaAppApp` через `.onChange(of: pendingRequestsCount)` с вызовом `processPendingRequests(context:)`
+  - Сериализация/десериализация JSON через Codable, логирование через OSLog на русском языке
+
+**Примечание о WCSessionDelegate для watchOS:**
+⚠️ **ВАЖНО:** В приложении для часов (`WatchConnectivityService`) НЕЛЬЗЯ добавлять методы `sessionDidBecomeInactive` и `sessionDidDeactivate`, даже если Cursor IDE показывает ошибку о несоответствии протоколу. Эти методы помечены как `unavailable` на watchOS и не требуются протоколом `WCSessionDelegate` для watchOS. В Xcode проект компилируется без этих методов. Это известный баг в Cursor IDE, который неправильно требует эти методы. Добавление этих методов с `@available(watchOS, unavailable)` ломает сборку watchOS таргета.
+
+**Решение проблемы с actor isolation:**
+Использована очередь запросов (`pendingRequests`) для безопасной обработки сообщений от часов:
+- Методы делегата `nonisolated` добавляют запросы в очередь через `Task { @MainActor in }`
+- Метод `processPendingRequests(context:)` обрабатывает все накопленные запросы с доступом к `ModelContext` на `MainActor`
+- Вызов `processPendingRequests(context:)` происходит во вьюхе через `.onChange(of: pendingRequestsCount)`
+- Упрощенные предикаты без сравнения `user?.id`, фильтрация по пользователю вручную после fetch
+
+**Управление статусом авторизации:**
+- При авторизации: часы читают статус напрямую из App Group UserDefaults (команда не требуется)
+- При логауте: отправка команды `PHONE_COMMAND_AUTH_STATUS_CHANGED` с `isAuthorized: false` в `StatusManager.didLogout()` для оперативного уведомления часов
 
 ### Этап 6: UI экранов (реализуется в последнюю очередь)
 
@@ -436,7 +426,8 @@ SotkaWatch Watch App/
   - **Проверка статуса авторизации при активации приложения:**
     - Использовать модификатор `.task(id: scenePhase)` для отслеживания изменений `scenePhase`
     - При переходе `scenePhase` в `.active` вызывать `HomeViewModel.checkAuthStatusOnActivation()` для проверки актуального статуса авторизации из App Group UserDefaults
-    - Это обеспечивает получение актуального статуса авторизации даже если команда `PHONE_COMMAND_AUTH_STATUS_CHANGED` не была доставлена (например, при отсутствии связи)
+    - Это обеспечивает получение актуального статуса авторизации даже если команда `PHONE_COMMAND_AUTH_STATUS_CHANGED` не была доставлена при логауте (например, при отсутствии связи)
+    - При авторизации часы читают статус из App Group UserDefaults, команда не требуется
 - [ ] Настроить навигацию:
   - Простая навигация между экранами
   - Кнопка "Назад" на каждом экране (где нужно)

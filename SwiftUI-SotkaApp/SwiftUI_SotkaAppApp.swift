@@ -128,6 +128,10 @@ struct SwiftUI_SotkaAppApp: App {
                 guard newPhase == .active else { return }
                 countriesService.update(modelContainer.mainContext)
             }
+            .onChange(of: statusManager.watchConnectivityManager.pendingRequestsCount) { _, _ in
+                guard authHelper.isAuthorized else { return }
+                statusManager.watchConnectivityManager.processPendingRequests(context: modelContainer.mainContext)
+            }
             .task {
                 #if DEBUG
                 if ProcessInfo.processInfo.arguments.contains("UITest") {

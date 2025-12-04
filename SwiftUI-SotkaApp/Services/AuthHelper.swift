@@ -7,6 +7,8 @@ import SWKeychain
 protocol AuthHelper: AnyObject, Sendable {
     /// Токен авторизации для запросов к серверу
     var authToken: String? { get }
+    /// Статус авторизации
+    var isAuthorized: Bool { get }
     /// Логаут с удалением всех данных пользователя
     func triggerLogout()
 }
