@@ -370,30 +370,136 @@ SotkaWatch Watch App/
     - ✅ Реализован метод `deleteActivity` в `HomeViewModel`
   - [ ] **Реализовать редактирование тренировки:**
     - Добавить замыкание `onEditWorkout: (Int, WorkoutData) -> Void` в инициализатор `SelectedActivityView`
-    - Создать экран редактирования тренировки (аналог `WorkoutPreviewScreen` из основного приложения)
-    - Вызывать `onEditWorkout(dayNumber, workoutData)` при нажатии на кнопку редактирования для тренировки
-    - Для не-тренировочных активностей использовать существующий `DayActivitySelectionView`
+    - Вызывать `onEditWorkout(dayNumber, workoutData)` при нажатии на кнопку редактирования для тренировки (убрать TODO на строке 140 в `SelectedActivityView`)
+    - Для не-тренировочных активностей редактирование уже реализовано через `DayActivitySelectionView` (NavigationLink на строках 145-152)
   - [ ] **Получить данные тренировки для текущего дня:**
-    - Реализовать загрузку данных через `WatchConnectivityService.requestWorkoutData(day:)` или из сохраненной активности
-    - Добавить состояние загрузки и обработку ошибок
-    - Передавать загруженные данные в `SelectedActivityView` через параметры `workoutData`, `workoutExecutionCount`, `workoutComment`
+    - **Текущее состояние:** В `DayActivityView` на строках 19-21 передаются `nil` для `workoutData`, `workoutExecutionCount`, `comment`
+    - **Требуется:** Расширить `HomeViewModel` для загрузки данных тренировки:
+      - Добавить свойства `workoutData: WorkoutData?`, `workoutExecutionCount: Int?`, `workoutComment: String?` в `HomeViewModel`
+      - В методе `loadData()` при наличии активности типа `.workout` загружать данные через `connectivityService.requestWorkoutData(day:)`
+      - Добавить состояние загрузки и обработку ошибок для данных тренировки
+    - **Требуется:** Передавать загруженные данные в `DayActivityView` и далее в `SelectedActivityView`:
+      - Добавить параметры `workoutData`, `workoutExecutionCount`, `comment` в `DayActivityView`
+      - Передавать эти параметры из `HomeView` через `viewModel.workoutData`, `viewModel.workoutExecutionCount`, `viewModel.workoutComment`
+      - Передавать эти параметры в `SelectedActivityView` (уже поддерживается в инициализаторе)
+    - **Примечание:** Метод `startWorkout()` в `HomeViewModel` уже запрашивает `WorkoutData`, но используется только для начала тренировки, не для отображения в `SelectedActivityView`
 - [ ] **Реализовать логику выбора/изменения активности:**
-  - В `HomeView` передать реальную выбранную активность для текущего дня (убрать TODO)
-  - Реализовать обработку выбора активности через `onSelect` callback в `DayActivityView`:
-    - Вызов `HomeViewModel.selectActivity(_:)` для отправки на iPhone через `WatchConnectivityService`
-    - Показ индикатора отправки активности на iPhone
-    - Обработка ошибок связи
-    - **Важно:** Если выбранная активность = `.workout`, открыть экран выполнения тренировки (`WorkoutView`) после успешного сохранения
-    - Если выбранная активность != `.workout`, остаться на текущем экране (обновить отображение)
-  - Локализованные строки для индикаторов и ошибок в `Localizable.xcstrings` (общий файл):
-    - `Watch.Activity.Saving` - "Сохранение..." (новый ключ, специфичен для часов)
-    - `Watch.Activity.Error` - "Ошибка сохранения" (новый ключ, специфичен для часов)
-  - Добавить переводы на русский и английский языки
-  - Установить статус новых переводов: `"state" : "needs_review"`
+  - ✅ **Выполнено:** В `HomeView` передается реальная выбранная активность для текущего дня (`selectedActivity: viewModel.currentActivity` на строке 21)
+  - ✅ **Выполнено:** Реализована обработка выбора активности через `onSelect` callback в `DayActivityView` (строки 10-13 в `HomeView`)
+  - ✅ **Выполнено:** Вызов `HomeViewModel.selectActivity(_:)` для отправки на iPhone через `WatchConnectivityService` (строки 89-111 в `HomeViewModel`)
+  - ✅ **Выполнено:** Показ индикатора отправки активности на iPhone (строки 34-40 в `HomeView` через `viewModel.isLoading`)
+  - ✅ **Выполнено:** Обработка ошибок связи (строки 19, 51-52 в `HomeViewModel`, строки 51-52 в `HomeView`)
+  - ✅ **Выполнено:** Если выбранная активность = `.workout`, открыть экран превью тренировки (`WorkoutPreviewView`) после успешного сохранения:
+    - ✅ Реализовано через `.fullScreenCover(isPresented: $showEditWorkout)` в `HomeView` или `DayActivityView`
+    - ✅ В `HomeViewModel.selectActivity(_:)` после успешной отправки проверяется, если `activityType == .workout`, устанавливается флаг для открытия экрана
+    - ✅ Загрузка данных тренировки через `connectivityService.requestWorkoutData(day:)` перед открытием `WorkoutPreviewView`
+    - ✅ Передача `workoutData` в `WorkoutPreviewView`
+    - **Важно:** `WorkoutPreviewView` всегда должен идти до экрана тренировки (`WorkoutView`)
+    - С `WorkoutPreviewView` пользователь может перейти к экрану выполнения тренировки (`WorkoutView`) через кнопку "Начать тренировку"
+  - ✅ **Выполнено:** Если выбранная активность != `.workout`, остаться на текущем экране (обновление отображения происходит автоматически через `viewModel.currentActivity`)
+  - [ ] **Требуется:** Локализованные строки для индикаторов и ошибок в `Localizable.xcstrings` (общий файл):
+    - `Watch.Activity.Saving` - "Сохранение..." (новый ключ, специфичен для часов) - **Примечание:** Сейчас используется общий индикатор загрузки через `ProgressView()`, можно добавить текстовую подсказку
+    - `Watch.Activity.Error` - "Ошибка сохранения" (новый ключ, специфичен для часов) - **Примечание:** Сейчас ошибки обрабатываются через `viewModel.error`, но не отображаются в UI
+    - Добавить переводы на русский и английский языки
+    - Установить статус новых переводов: `"state" : "needs_review"`
+
+#### 6.3.1 Экран превью тренировки (упрощенная версия для часов)
+- [ ] **Создать `WorkoutPreviewView.swift` (упрощенная версия `WorkoutPreviewScreen`):**
+  - **Структура экрана:**
+    - NavigationStack с заголовком (номер дня)
+    - VStack с упрощенной версткой для маленького экрана часов:
+      - `executionTypePicker` (если нужно показывать) - перед списком упражнений
+      - ScrollView со списком упражнений и другими секциями
+      - Spacer()
+      - Кнопки внизу экрана: "Начать тренировку" и "Сохранить как пройденную"
+    - **Toolbar кнопка редактирования:**
+      - В `toolbar` (`.topBarTrailing`) добавить кнопку с иконкой `pencil` для редактирования порядка и набора упражнений
+      - По нажатию на кнопку показывать модальное окно `WorkoutEditView` (аналогично `WorkoutExerciseEditorScreen` из основного приложения)
+      - `WorkoutEditView` должен быть без `customExercisesSection` (для первой итерации, для простоты)
+  - **Обязательные секции (те же, что и в `WorkoutPreviewScreen`):**
+    - **`executionTypePicker`** (сегментированный контрол для выбора типа выполнения):
+      - Показывается перед списком упражнений
+      - Логика показа аналогична `WorkoutPreviewScreen.shouldShowExecutionTypePicker()`:
+        - Показывается только если данные загружены (dayNumber установлен и trainings не пустой)
+        - Показывается только для не пройденных дней (если активность найдена)
+        - Показывается только если доступно больше одного типа выполнения (`availableExecutionTypes.count > 1`)
+      - Используется сегментированный стиль (`.pickerStyle(.segmented)`) для часов
+      - При изменении типа выполнения вызывается `viewModel.updateExecutionType(newValue)` для пересчета упражнений
+      - Доступные типы берутся из `viewModel.availableExecutionTypes`
+    - Список упражнений из `WorkoutData.trainings`
+    - Отображение планового количества кругов/подходов (если применимо)
+    - Выбор времени отдыха (если применимо)
+    - Редактор комментария (если применимо)
+  - **Отображение упражнений:**
+    - Список упражнений из `WorkoutData.trainings`
+    - Для каждого упражнения:
+      - Иконка упражнения через `ExerciseType.image` (из `ExercisesAssets.xcassets`)
+      - Название упражнения через `ExerciseType.localizedTitle` или `ExerciseType.makeLocalizedTitle(day:executionType:sortOrder:)`
+      - **Использовать стандартный `Picker` для часов** (`.pickerStyle(.wheel)`) для изменения количества повторений:
+        - Диапазон значений: от 0 до разумного максимума (например, 0...100)
+        - Текущее значение: `training.count ?? 0`
+        - При изменении значения обновлять `training.count` через ViewModel
+        - **При выборе 0 повторений:** удалять это упражнение из списка на этом экране
+    - Отображение типа выполнения (`ExerciseExecutionType`) с количеством кругов/подходов (если применимо)
+  - **Кнопки управления:**
+    - Кнопка "Начать тренировку" (`onStartWorkout: () -> Void`):
+      - Переход к экрану выполнения тренировки (`WorkoutView`) через `fullScreenCover` или `NavigationLink`
+      - Передача данных тренировки: `dayNumber`, `executionType`, `trainings`, `plannedCount`
+    - Кнопка "Сохранить как пройденную" (`onSaveAsPassed: () -> Void`):
+      - Сохранение тренировки через `WatchConnectivityService.sendWorkoutResult(day:result:executionType:)`
+      - Отправка результата с текущими значениями `count` из упражнений
+      - Закрытие экрана редактирования после успешного сохранения
+  - **Упрощения по сравнению с `WorkoutPreviewScreen`:**
+    - Убрать поле для комментария (можно добавить позже при необходимости)
+    - Убрать Picker для времени отдыха (использовать значение из App Group UserDefaults)
+    - Редактирование списка упражнений доступно через кнопку редактирования в toolbar (открывает `WorkoutEditView` без `customExercisesSection` для первой итерации)
+    - Упростить отображение планового количества кругов/подходов (только чтение, без редактирования)
+  - **ViewModel для экрана превью:**
+    - Создать `WorkoutPreviewViewModel` (TDD подход):
+      - Инициализация из `WorkoutData`
+      - Состояние:
+        - Массив упражнений с возможностью изменения `count`
+        - `selectedExecutionType: ExerciseExecutionType?` - выбранный тип выполнения
+        - `availableExecutionTypes: [ExerciseExecutionType]` - доступные типы выполнения
+      - Метод `shouldShowExecutionTypePicker(day:isPassed:) -> Bool` для определения, нужно ли показывать пикер:
+        - Показывается только если данные загружены (dayNumber установлен и trainings не пустой)
+        - Показывается только для не пройденных дней (если `isPassed == false`)
+        - Показывается только если доступно больше одного типа выполнения
+      - Метод `updateExecutionType(_:)` для обновления типа выполнения и пересчета упражнений (аналогично `WorkoutPreviewViewModel.updateExecutionType()`)
+      - Метод `updateTrainingCount(id:count:)` для обновления количества повторений
+      - Метод `removeTraining(id:)` для удаления упражнения из списка (при выборе 0 повторений)
+      - Метод `buildWorkoutResult() -> WorkoutResult` для создания результата тренировки из текущих значений
+      - Метод `buildWorkoutData() -> WorkoutData` для получения обновленных данных тренировки
+  - **Интеграция:**
+    - **Важно:** `WorkoutPreviewView` всегда должен идти до экрана тренировки (`WorkoutView`)
+    - **Сценарий 1:** Если активность для дня еще не выбрана и пользователь выбирает `.workout`:
+      - ✅ Реализовано: В `HomeViewModel.selectActivity(_:)` после успешной отправки активности `.workout` загружаются данные тренировки через `connectivityService.requestWorkoutData(day:)`
+      - При загрузке данных тренировки также получать информацию о доступных типах выполнения (`availableExecutionTypes`) и статусе пройденности дня (`isPassed`) для правильной работы `executionTypePicker`
+      - ✅ Реализовано: Открытие `WorkoutPreviewView` с загруженными данными через `.fullScreenCover(isPresented: $showEditWorkout)` в `HomeView` или `DayActivityView`
+      - Пользователь может выбрать тип выполнения (если доступно), настроить количество повторений и начать тренировку или сохранить как пройденную
+    - **Сценарий 2:** Если активность `.workout` уже выбрана и пользователь нажимает кнопку редактирования в `SelectedActivityView`:
+      - В `SelectedActivityView` добавить замыкание `onEditWorkout: (Int, WorkoutData) -> Void`
+      - Вызывать `onEditWorkout(dayNumber, workoutData)` при нажатии на кнопку редактирования (убрать TODO на строке 140)
+      - При открытии `WorkoutPreviewView` также получать информацию о доступных типах выполнения (`availableExecutionTypes`) и статусе пройденности дня (`isPassed`) для правильной работы `executionTypePicker`
+      - Открыть `WorkoutPreviewView` с переданными данными через `.fullScreenCover(isPresented: $showEditWorkout)` в `HomeView` или `DayActivityView`
+    - ✅ Реализовано: В `HomeView` или `DayActivityView` открытие `WorkoutPreviewView` обрабатывается через `.fullScreenCover(isPresented: $showEditWorkout)`
+    - ✅ Реализовано: Передача `workoutData` из `HomeViewModel` в `WorkoutPreviewView`
+  - **Локализация:**
+    - Использовать существующие ключи из основного приложения где возможно:
+      - `.workoutPreviewStartTraining` для "Начать тренировку"
+      - `.workoutPreviewSaveAsPassed` для "Сохранить как пройденную"
+    - Добавить новые ключи только если они специфичны для часов и не существуют
+    - Добавить переводы на русский и английский языки
+    - Установить статус новых переводов: `"state" : "needs_review"`
+  - **Примечание:** Экран превью тренировки открывается в двух случаях:
+    1. При выборе активности `.workout` для дня (если активность еще не выбрана) - после успешного сохранения активности
+    2. При нажатии на кнопку редактирования в `SelectedActivityView` для уже выбранной тренировки
+    - Для не-тренировочных активностей редактирование уже реализовано через `DayActivitySelectionView` (NavigationLink на строках 145-152)
 
 #### 6.4 Экран выполнения тренировки
 - [ ] **Создать `WorkoutView.swift`:**
-  - **Важно:** Экран открывается автоматически при выборе активности `.workout` (из `SelectedActivityView` или `DayActivitySelectionView`)
+  - **Важно:** Экран открывается только из `WorkoutPreviewView` при нажатии на кнопку "Начать тренировку"
+  - **Важно:** `WorkoutPreviewView` всегда должен идти до экрана тренировки - пользователь не может попасть на `WorkoutView` напрямую, минуя экран превью
   - Экран выполнения тренировки
   - Упрощенный интерфейс для часов:
     - Отображение текущего упражнения (название через `ExerciseType.localizedTitle` или `ExerciseType.makeLocalizedTitle`, иконка через `ExerciseType.image` из `ExercisesAssets.xcassets`)

@@ -13,7 +13,8 @@ struct SotkaWatchApp: App {
 
     var body: some Scene {
         WindowGroup {
-            HomeView(viewModel: viewModel)
+            HomeView()
+                .environment(viewModel)
                 .task {
                     await viewModel.loadData()
                 }

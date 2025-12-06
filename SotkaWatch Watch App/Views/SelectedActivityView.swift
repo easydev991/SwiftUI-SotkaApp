@@ -137,7 +137,7 @@ private extension SelectedActivityView {
     var editButton: some View {
         if mode.isWorkout {
             Button {
-                // TODO: вернуть наружу новое замыкание для перехода на экран изменения тренировки (его пока нет)
+                onSelect(.workout)
             } label: {
                 Image(systemName: "pencil")
             }

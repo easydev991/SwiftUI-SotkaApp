@@ -1,15 +1,21 @@
 import SwiftUI
 
 struct HomeView: View {
-    let viewModel: HomeViewModel
+    @Environment(HomeViewModel.self) private var viewModel
+    @State private var showEditWorkout = false
+    private var dayNumber: Int? { viewModel.currentDay }
 
     var body: some View {
         ZStack {
-            if viewModel.isAuthorized, let dayNumber = viewModel.currentDay {
+            if viewModel.isAuthorized, let dayNumber {
                 DayActivityView(
                     onSelect: { activity in
-                        Task {
-                            await viewModel.selectActivity(activity)
+                        if activity == .workout {
+                            showEditWorkout = true
+                        } else {
+                            Task {
+                                await viewModel.selectActivity(activity)
+                            }
                         }
                     },
                     onDelete: { day in
@@ -23,9 +29,7 @@ struct HomeView: View {
             } else {
                 AuthRequiredView(
                     checkAuthAction: {
-                        Task {
-                            await viewModel.loadData()
-                        }
+                        Task { await viewModel.loadData() }
                     },
                     state: authState
                 )
@@ -39,6 +43,11 @@ struct HomeView: View {
             }
         }
         .animation(.default, value: viewModel.isAuthorized)
+        .fullScreenCover(isPresented: $showEditWorkout) {
+            if let dayNumber {
+                EmptyView() // TODO: экран WorkoutPreviewView
+            }
+        }
     }
 }
 
@@ -64,7 +73,8 @@ private extension HomeView {
         authService: authService,
         connectivityService: connectivityService
     )
-    HomeView(viewModel: viewModel)
+    HomeView()
+        .environment(viewModel)
 }
 
 #Preview("Авторизован") {
@@ -80,7 +90,8 @@ private extension HomeView {
         connectivityService: connectivityService,
         appGroupHelper: appGroupHelper
     )
-    HomeView(viewModel: viewModel)
+    HomeView()
+        .environment(viewModel)
         .task {
             await viewModel.loadData()
         }
