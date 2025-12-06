@@ -432,6 +432,7 @@ extension StatusManager {
         case saveWorkout(day: Int, result: WorkoutResult, executionType: ExerciseExecutionType)
         case getCurrentActivity(day: Int, replyHandler: ([String: Any]) -> Void)
         case getWorkoutData(day: Int, replyHandler: ([String: Any]) -> Void)
+        case deleteActivity(day: Int)
     }
 
     /// Менеджер для связи с Apple Watch через WatchConnectivity
@@ -508,6 +509,8 @@ extension StatusManager {
                 case let .getWorkoutData(day, replyHandler):
                     let reply = handleGetWorkoutData(day: day, context: context)
                     replyHandler(reply)
+                case let .deleteActivity(day):
+                    _ = handleDeleteActivity(day: day, context: context)
                 }
             }
         }
@@ -746,6 +749,47 @@ extension StatusManager {
             return messageToSend
         }
 
+        /// Обрабатывает запрос удаления активности
+        /// - Parameters:
+        ///   - day: Номер дня
+        ///   - context: Контекст SwiftData
+        /// - Returns: Ответ для часов (если нужен)
+        @MainActor
+        func handleDeleteActivity(day: Int, context: ModelContext) -> [String: Any] {
+            guard let statusManager else {
+                watchConnectivityLogger.error("StatusManager недоступен для удаления активности дня")
+                return ["error": "StatusManager недоступен"]
+            }
+
+            guard let user = try? context.fetch(FetchDescriptor<User>()).first else {
+                watchConnectivityLogger.error("Пользователь не найден для удаления активности")
+                return ["error": "Пользователь не найден"]
+            }
+
+            // Получение активности для удаления
+            let userId = user.id
+            let predicate = #Predicate<DayActivity> { activity in
+                activity.day == day && !activity.shouldDelete
+            }
+            let descriptor = FetchDescriptor<DayActivity>(predicate: predicate)
+            let allActivities = (try? context.fetch(descriptor)) ?? []
+            guard let activity = allActivities.first(where: { $0.user?.id == userId }) else {
+                watchConnectivityLogger.warning("Активность дня \(day) не найдена для удаления")
+                // Отправляем обновление на часы (активность уже удалена или не существует)
+                sendCurrentActivity(day: day, context: context)
+                return [:]
+            }
+
+            // Удаление через DailyActivitiesService
+            statusManager.dailyActivitiesService.deleteDailyActivity(activity, context: context)
+            watchConnectivityLogger.info("Активность дня \(day) помечена для удаления")
+
+            // Отправка обновленной активности на часы (nil означает, что активность удалена)
+            sendCurrentActivity(day: day, context: context)
+
+            return [:]
+        }
+
         // MARK: - Отправка обновлений на часы
 
         /// Отправляет обновленную активность дня на часы
@@ -898,6 +942,14 @@ private extension StatusManager.WatchConnectivityManager {
             } else {
                 watchConnectivityLogger.warning("Команда getWorkoutData без replyHandler")
             }
+
+        case .deleteActivity:
+            guard let day = message["day"] as? Int else {
+                watchConnectivityLogger.error("Неверный формат команды удаления активности: \(message)")
+                replyHandler?(["error": "Неверный формат команды"])
+                return
+            }
+            pendingRequests.append(.deleteActivity(day: day))
 
         case .currentActivity, .sendWorkoutData, .authStatusChanged:
             watchConnectivityLogger.warning("Команда \(commandString) не должна приходить от часов")

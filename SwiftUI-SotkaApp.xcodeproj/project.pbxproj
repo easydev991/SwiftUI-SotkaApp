@@ -582,6 +582,7 @@
 				CODE_SIGN_ENTITLEMENTS = "SotkaWatch Watch App/SotkaWatch Watch App.entitlements";
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_ASSET_PATHS = "\"SotkaWatch Watch App/PreviewContent\"";
 				DEVELOPMENT_TEAM = 3PHS45582J;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
@@ -616,6 +617,7 @@
 				CODE_SIGN_ENTITLEMENTS = "SotkaWatch Watch App/SotkaWatch Watch App.entitlements";
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_ASSET_PATHS = "\"SotkaWatch Watch App/PreviewContent\"";
 				DEVELOPMENT_TEAM = 3PHS45582J;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;

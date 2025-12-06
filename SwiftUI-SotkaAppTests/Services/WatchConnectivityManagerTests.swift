@@ -47,6 +47,8 @@ struct WatchConnectivityManagerTests {
             case let .getWorkoutData(day, replyHandler):
                 let reply = manager.handleGetWorkoutData(day: day, context: context)
                 replyHandler(reply)
+            case let .deleteActivity(day):
+                _ = manager.handleDeleteActivity(day: day, context: context)
             }
         }
         manager.pendingRequests = []
@@ -79,10 +81,13 @@ struct WatchConnectivityManagerTests {
         let context = container.mainContext
         _ = try createTestUser(in: context)
 
+        // Сохраняем statusManager, чтобы он не был освобожден (manager хранит weak ссылку)
         let (statusManager, manager) = try createStatusManagerWithMockSession(
             mockSession: mockSession,
             container: container
         )
+        // Убеждаемся, что statusManager не освобожден
+        _ = statusManager
 
         // Симулируем добавление запроса в очередь напрямую
         manager.pendingRequests.append(.setActivity(day: 5, activityType: .stretch))
@@ -634,6 +639,160 @@ struct WatchConnectivityManagerTests {
         #expect(command == Constants.WatchCommand.authStatusChanged.rawValue)
         let isAuthorized = try #require(sentMessage["isAuthorized"] as? Bool)
         #expect(!isAuthorized)
+    }
+
+    @Test("Успешно помечает активность для удаления")
+    func successfullyMarksActivityForDeletion() throws {
+        let mockSession = MockWCSession(isReachable: true)
+        let container = try createTestModelContainer()
+        let context = container.mainContext
+        let user = try createTestUser(in: context)
+
+        let existingActivity = DayActivity(
+            day: 5,
+            activityTypeRaw: DayActivityType.stretch.rawValue,
+            count: nil,
+            plannedCount: nil,
+            executeTypeRaw: nil,
+            trainingTypeRaw: nil,
+            duration: nil,
+            comment: nil,
+            createDate: .now,
+            modifyDate: .now,
+            user: user
+        )
+        context.insert(existingActivity)
+        try context.save()
+
+        let (statusManager, manager) = try createStatusManagerWithMockSession(
+            mockSession: mockSession,
+            container: container
+        )
+        _ = statusManager
+
+        manager.pendingRequests.append(.deleteActivity(day: 5))
+
+        processPendingRequests(manager: manager, context: context)
+
+        let activities = try context.fetch(FetchDescriptor<DayActivity>())
+        let activity = activities.first { $0.day == 5 }
+        let deletedActivity = try #require(activity)
+        #expect(deletedActivity.shouldDelete)
+        #expect(!deletedActivity.isSynced)
+    }
+
+    @Test("Обрабатывает ошибку при отсутствии пользователя при удалении активности")
+    func handlesErrorWhenUserNotFoundForDeleteActivity() throws {
+        let mockSession = MockWCSession(isReachable: true)
+        let container = try createTestModelContainer()
+        let context = container.mainContext
+
+        let (statusManager, manager) = try createStatusManagerWithMockSession(
+            mockSession: mockSession,
+            container: container
+        )
+        _ = statusManager
+
+        manager.pendingRequests.append(.deleteActivity(day: 5))
+
+        var reply: [String: Any] = [:]
+        let requests = manager.pendingRequests
+        for request in requests {
+            if case let .deleteActivity(day) = request {
+                reply = manager.handleDeleteActivity(day: day, context: context)
+            }
+        }
+        manager.pendingRequests = []
+
+        let error = try #require(reply["error"] as? String)
+        #expect(error.contains("Пользователь") || error.contains("пользователь"))
+    }
+
+    @Test("Возвращает пустой ответ если активность не найдена при удалении")
+    func returnsEmptyResponseWhenActivityNotFoundForDeletion() throws {
+        let mockSession = MockWCSession(isReachable: true)
+        let container = try createTestModelContainer()
+        let context = container.mainContext
+        _ = try createTestUser(in: context)
+
+        let (statusManager, manager) = try createStatusManagerWithMockSession(
+            mockSession: mockSession,
+            container: container
+        )
+        _ = statusManager
+
+        manager.pendingRequests.append(.deleteActivity(day: 5))
+
+        var reply: [String: Any] = [:]
+        let requests = manager.pendingRequests
+        for request in requests {
+            if case let .deleteActivity(day) = request {
+                reply = manager.handleDeleteActivity(day: day, context: context)
+            }
+        }
+        manager.pendingRequests = []
+
+        #expect(reply.isEmpty)
+    }
+
+    @Test("Удаляет активность только для текущего пользователя")
+    func deletesActivityOnlyForCurrentUser() throws {
+        let mockSession = MockWCSession(isReachable: true)
+        let container = try createTestModelContainer()
+        let context = container.mainContext
+        let user1 = try createTestUser(in: context, id: 1)
+        let user2 = User(id: 2, userName: "user2", fullName: "User 2", email: "user2@test.com")
+        context.insert(user2)
+        try context.save()
+
+        let activityForUser1 = DayActivity(
+            day: 5,
+            activityTypeRaw: DayActivityType.stretch.rawValue,
+            count: nil,
+            plannedCount: nil,
+            executeTypeRaw: nil,
+            trainingTypeRaw: nil,
+            duration: nil,
+            comment: nil,
+            createDate: .now,
+            modifyDate: .now,
+            user: user1
+        )
+        context.insert(activityForUser1)
+
+        let activityForUser2 = DayActivity(
+            day: 5,
+            activityTypeRaw: DayActivityType.rest.rawValue,
+            count: nil,
+            plannedCount: nil,
+            executeTypeRaw: nil,
+            trainingTypeRaw: nil,
+            duration: nil,
+            comment: nil,
+            createDate: .now,
+            modifyDate: .now,
+            user: user2
+        )
+        context.insert(activityForUser2)
+        try context.save()
+
+        let (statusManager, manager) = try createStatusManagerWithMockSession(
+            mockSession: mockSession,
+            container: container
+        )
+        _ = statusManager
+
+        manager.pendingRequests.append(.deleteActivity(day: 5))
+
+        processPendingRequests(manager: manager, context: context)
+
+        let activities = try context.fetch(FetchDescriptor<DayActivity>())
+        let user1Activity = activities.first { $0.day == 5 && $0.user?.id == 1 }
+        let user2Activity = activities.first { $0.day == 5 && $0.user?.id == 2 }
+        let deletedActivity = try #require(user1Activity)
+        let notDeletedActivity = try #require(user2Activity)
+        #expect(deletedActivity.shouldDelete)
+        #expect(!notDeletedActivity.shouldDelete)
     }
 
     // MARK: - Helper Methods

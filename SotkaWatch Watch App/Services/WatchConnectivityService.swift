@@ -187,6 +187,31 @@ final class WatchConnectivityService: NSObject {
             }
         }
     }
+
+    /// Удаление активности дня (отправка на iPhone)
+    /// - Parameter day: Номер дня программы
+    func deleteActivity(day: Int) async throws {
+        guard let sessionProtocol, sessionProtocol.isReachable else {
+            throw WatchConnectivityError.sessionUnavailable
+        }
+
+        let message: [String: Any] = [
+            "command": Constants.WatchCommand.deleteActivity.rawValue,
+            "day": day
+        ]
+
+        logger.info("Отправка команды удаления активности дня \(day) на iPhone")
+
+        try await withCheckedThrowingContinuation { continuation in
+            sessionProtocol.sendMessage(message) { _ in
+                self.logger.info("Команда удаления активности успешно отправлена на iPhone")
+                continuation.resume()
+            } errorHandler: { error in
+                self.logger.error("Ошибка отправки команды удаления активности: \(error.localizedDescription)")
+                continuation.resume(throwing: error)
+            }
+        }
+    }
 }
 
 extension WatchConnectivityService: WCSessionDelegate {
@@ -229,7 +254,7 @@ private extension WatchConnectivityService {
         case .currentActivity, .sendWorkoutData:
             // Эти команды обрабатываются через replyHandler в методах запроса
             break
-        case .setActivity, .saveWorkout, .getCurrentActivity, .getWorkoutData:
+        case .setActivity, .saveWorkout, .getCurrentActivity, .getWorkoutData, .deleteActivity:
             // Эти команды отправляются с часов, не обрабатываются здесь
             break
         }

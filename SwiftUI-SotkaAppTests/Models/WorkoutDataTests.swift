@@ -126,7 +126,7 @@ struct WorkoutDataTests {
     }
 
     @Test("Должен обрабатывать опциональный plannedCount")
-    func handlesOptionalPlannedCount() {
+    func handlesOptionalPlannedCount() throws {
         let workoutDataWithNil = WorkoutData(
             day: 1,
             executionType: 0,
@@ -143,7 +143,7 @@ struct WorkoutDataTests {
             plannedCount: 3
         )
 
-        let plannedCount = try? workoutDataWithValue.plannedCount
+        let plannedCount = try #require(workoutDataWithValue.plannedCount)
         #expect(plannedCount == 3)
     }
 

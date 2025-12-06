@@ -351,16 +351,32 @@ SotkaWatch Watch App/
 #### 6.3 Экран выбора активности
 - [x] **Создать экран выбора активности:** ✅ Выполнено (`DayActivitySelectionView.swift` с 4 вариантами активности)
 - [x] **Базовый UI для выбора и изменения активности:** ✅ Выполнено (`DayActivityView`, `SelectedActivityView`, `DayActivitySelectionView`)
-- [ ] **Доработать `SelectedActivityView` для отображения данных тренировки (TODO в коде):**
-  - **Важно:** Это экран результата тренировки - после завершения тренировки пользователь возвращается сюда и видит результат выполненной тренировки
-  - Для кейса `.workout` отобразить данные тренировки аналогично `DayActivityContentView` + `DayActivityCommentView` (как в основном приложении)
-  - Отобразить информацию о выполненной тренировке:
-    - Тип выполнения (`ExerciseExecutionType`) с количеством кругов/подходов
-    - Список упражнений (`DayActivityTraining`) с количеством повторений для каждого
-    - Комментарий пользователя (если есть)
-  - Получить данные тренировки для текущего дня через `WatchConnectivityService.requestWorkoutData(day:)` или из сохраненной активности (`DayActivity`)
-  - Адаптировать отображение для маленького экрана часов (упрощенный формат)
-  - После завершения тренировки в `WorkoutView` пользователь возвращается в `SelectedActivityView` и видит результат выполненной тренировки
+- [x] **Доработать `SelectedActivityView` для отображения данных тренировки:** ✅ Выполнено
+  - ✅ Создана верстка для отображения данных тренировки через `WatchDayActivityTrainingView` и `WatchDayActivityCommentView`
+  - ✅ Реализован enum `Mode` для разделения логики отображения тренировки и других активностей
+  - ✅ Добавлены toolbar кнопки для редактирования и удаления активности
+  - ✅ Адаптировано отображение для маленького экрана часов (упрощенный формат)
+  - [x] **Добавить unit-тесты для `SelectedActivityView.Mode`:** ✅ Выполнено
+    - ✅ Тесты для инициализатора `Mode.init(activity:data:executionCount:)`
+    - ✅ Тесты для вычисляемых свойств `isWorkout` и `activity`
+    - ✅ Проверка корректного создания `.workout` и `.nonWorkout` кейсов
+  - [x] **Реализовать удаление активности:** ✅ Выполнено
+    - ✅ Добавлено замыкание `onDelete: (Int) -> Void` в инициализатор `SelectedActivityView`
+    - ✅ Реализован вызов `onDelete(dayNumber)` при подтверждении удаления в `deleteButton`
+    - ✅ Интегрировано с `HomeViewModel` для отправки команды удаления на iPhone через `WatchConnectivityService`
+    - ✅ Добавлена команда `deleteActivity` в `Constants.WatchCommand`
+    - ✅ Реализован метод `deleteActivity` в `WatchConnectivityService` и протокол
+    - ✅ Добавлена обработка команды `deleteActivity` в `StatusManager` на стороне iPhone
+    - ✅ Реализован метод `deleteActivity` в `HomeViewModel`
+  - [ ] **Реализовать редактирование тренировки:**
+    - Добавить замыкание `onEditWorkout: (Int, WorkoutData) -> Void` в инициализатор `SelectedActivityView`
+    - Создать экран редактирования тренировки (аналог `WorkoutPreviewScreen` из основного приложения)
+    - Вызывать `onEditWorkout(dayNumber, workoutData)` при нажатии на кнопку редактирования для тренировки
+    - Для не-тренировочных активностей использовать существующий `DayActivitySelectionView`
+  - [ ] **Получить данные тренировки для текущего дня:**
+    - Реализовать загрузку данных через `WatchConnectivityService.requestWorkoutData(day:)` или из сохраненной активности
+    - Добавить состояние загрузки и обработку ошибок
+    - Передавать загруженные данные в `SelectedActivityView` через параметры `workoutData`, `workoutExecutionCount`, `workoutComment`
 - [ ] **Реализовать логику выбора/изменения активности:**
   - В `HomeView` передать реальную выбранную активность для текущего дня (убрать TODO)
   - Реализовать обработку выбора активности через `onSelect` callback в `DayActivityView`:

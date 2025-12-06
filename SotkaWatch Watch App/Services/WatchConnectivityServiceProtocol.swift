@@ -7,6 +7,7 @@ protocol WatchConnectivityServiceProtocol {
     func requestCurrentActivity(day: Int) async throws -> DayActivityType?
     func requestWorkoutData(day: Int) async throws -> WorkoutData
     func sendWorkoutResult(day: Int, result: WorkoutResult, executionType: ExerciseExecutionType) async throws
+    func deleteActivity(day: Int) async throws
 }
 
 /// WatchConnectivityService соответствует протоколу

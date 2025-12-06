@@ -129,9 +129,12 @@ struct WatchConnectivityServiceTests {
 
         #expect(mockSession.sentMessages.count == 1)
         let message = try #require(mockSession.sentMessages.first)
-        #expect(message["command"] as? String == Constants.WatchCommand.setActivity.rawValue)
-        #expect(message["day"] as? Int == 5)
-        #expect(message["activityType"] as? Int == DayActivityType.workout.rawValue)
+        let command = try #require(message["command"] as? String)
+        #expect(command == Constants.WatchCommand.setActivity.rawValue)
+        let day = try #require(message["day"] as? Int)
+        #expect(day == 5)
+        let activityType = try #require(message["activityType"] as? Int)
+        #expect(activityType == DayActivityType.workout.rawValue)
     }
 
     @Test("Успешно отправляет результат тренировки")
@@ -145,11 +148,15 @@ struct WatchConnectivityServiceTests {
 
         #expect(mockSession.sentMessages.count == 1)
         let message = try #require(mockSession.sentMessages.first)
-        #expect(message["command"] as? String == Constants.WatchCommand.saveWorkout.rawValue)
-        #expect(message["day"] as? Int == 5)
-        #expect(message["executionType"] as? Int == ExerciseExecutionType.cycles.rawValue)
+        let command = try #require(message["command"] as? String)
+        #expect(command == Constants.WatchCommand.saveWorkout.rawValue)
+        let day = try #require(message["day"] as? Int)
+        #expect(day == 5)
+        let executionType = try #require(message["executionType"] as? Int)
+        #expect(executionType == ExerciseExecutionType.cycles.rawValue)
         let resultJSON = try #require(message["result"] as? [String: Any])
-        #expect(resultJSON["count"] as? Int == 4)
+        let count = try #require(resultJSON["count"] as? Int)
+        #expect(count == 4)
     }
 
     @Test("Успешно запрашивает текущую активность")
@@ -166,8 +173,10 @@ struct WatchConnectivityServiceTests {
 
         #expect(mockSession.sentMessages.count == 1)
         let message = try #require(mockSession.sentMessages.first)
-        #expect(message["command"] as? String == Constants.WatchCommand.getCurrentActivity.rawValue)
-        #expect(message["day"] as? Int == 5)
+        let command = try #require(message["command"] as? String)
+        #expect(command == Constants.WatchCommand.getCurrentActivity.rawValue)
+        let day = try #require(message["day"] as? Int)
+        #expect(day == 5)
         let receivedActivityType = try #require(activityType)
         #expect(receivedActivityType == .workout)
     }
@@ -220,8 +229,10 @@ struct WatchConnectivityServiceTests {
 
         #expect(mockSession.sentMessages.count == 1)
         let message = try #require(mockSession.sentMessages.first)
-        #expect(message["command"] as? String == Constants.WatchCommand.getWorkoutData.rawValue)
-        #expect(message["day"] as? Int == 5)
+        let command = try #require(message["command"] as? String)
+        #expect(command == Constants.WatchCommand.getWorkoutData.rawValue)
+        let day = try #require(message["day"] as? Int)
+        #expect(day == 5)
         #expect(receivedWorkoutData.day == 5)
         #expect(receivedWorkoutData.trainings.count == 1)
         #expect(receivedWorkoutData.plannedCount == 4)
@@ -237,6 +248,46 @@ struct WatchConnectivityServiceTests {
 
         await #expect(throws: WatchConnectivityError.self) {
             try await service.sendActivityType(day: 5, activityType: .workout)
+        }
+    }
+
+    @Test("Успешно отправляет команду удаления активности")
+    func successfullySendsDeleteActivityCommand() async throws {
+        let authService = try WatchAuthService(userDefaults: MockUserDefaults.create())
+        let mockSession = MockWCSession(isReachable: true)
+        let service = WatchConnectivityService(authService: authService, sessionProtocol: mockSession)
+
+        try await service.deleteActivity(day: 5)
+
+        #expect(mockSession.sentMessages.count == 1)
+        let message = try #require(mockSession.sentMessages.first)
+        let command = try #require(message["command"] as? String)
+        #expect(command == Constants.WatchCommand.deleteActivity.rawValue)
+        let day = try #require(message["day"] as? Int)
+        #expect(day == 5)
+    }
+
+    @Test("Выбрасывает ошибку при удалении активности когда сессия недоступна")
+    func throwsErrorWhenSessionUnavailableForDeleteActivity() async throws {
+        let authService = try WatchAuthService(userDefaults: MockUserDefaults.create())
+        let mockSession = MockWCSession(isReachable: false)
+        let service = WatchConnectivityService(authService: authService, sessionProtocol: mockSession)
+
+        await #expect(throws: WatchConnectivityError.self) {
+            try await service.deleteActivity(day: 5)
+        }
+    }
+
+    @Test("Выбрасывает ошибку при ошибке отправки команды удаления")
+    func throwsErrorWhenDeleteActivityMessageSendFails() async throws {
+        let authService = try WatchAuthService(userDefaults: MockUserDefaults.create())
+        let mockSession = MockWCSession(isReachable: true)
+        mockSession.shouldSucceed = false
+        mockSession.mockError = WatchConnectivityError.sessionUnavailable
+        let service = WatchConnectivityService(authService: authService, sessionProtocol: mockSession)
+
+        await #expect(throws: WatchConnectivityError.self) {
+            try await service.deleteActivity(day: 5)
         }
     }
 }

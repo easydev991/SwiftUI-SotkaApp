@@ -266,4 +266,114 @@ struct HomeViewModelTests {
 
         #expect(viewModel.isAuthorized)
     }
+
+    @Test("Удаляет активность дня")
+    func deletesActivityForDay() async throws {
+        let startDate = Calendar.current.date(byAdding: .day, value: -5, to: Date.now) ?? Date.now
+        let authService = MockWatchAuthService(isAuthorized: true)
+        let connectivityService = MockWatchConnectivityService()
+        connectivityService.mockCurrentActivity = .workout
+        let appGroupHelper = MockWatchAppGroupHelper(
+            isAuthorized: true,
+            startDate: startDate
+        )
+
+        let viewModel = HomeViewModel(
+            authService: authService,
+            connectivityService: connectivityService,
+            appGroupHelper: appGroupHelper
+        )
+
+        await viewModel.loadData()
+        let currentDay = try #require(viewModel.currentDay)
+        #expect(viewModel.currentActivity == .workout)
+
+        await viewModel.deleteActivity(day: currentDay)
+
+        let deletedDay = try #require(connectivityService.deletedActivityDay)
+        #expect(deletedDay == currentDay)
+        #expect(viewModel.currentActivity == nil)
+    }
+
+    @Test("Обновляет currentActivity на nil после успешного удаления текущего дня")
+    func updatesCurrentActivityToNilAfterSuccessfulDeletionOfCurrentDay() async throws {
+        let startDate = Calendar.current.date(byAdding: .day, value: -5, to: Date.now) ?? Date.now
+        let authService = MockWatchAuthService(isAuthorized: true)
+        let connectivityService = MockWatchConnectivityService()
+        connectivityService.mockCurrentActivity = .rest
+        let appGroupHelper = MockWatchAppGroupHelper(
+            isAuthorized: true,
+            startDate: startDate
+        )
+
+        let viewModel = HomeViewModel(
+            authService: authService,
+            connectivityService: connectivityService,
+            appGroupHelper: appGroupHelper
+        )
+
+        await viewModel.loadData()
+        let currentDay = try #require(viewModel.currentDay)
+        #expect(viewModel.currentActivity == .rest)
+
+        await viewModel.deleteActivity(day: currentDay)
+
+        #expect(viewModel.currentActivity == nil)
+    }
+
+    @Test("Не обновляет currentActivity при удалении другого дня")
+    func doesNotUpdateCurrentActivityWhenDeletingOtherDay() async throws {
+        let startDate = Calendar.current.date(byAdding: .day, value: -5, to: Date.now) ?? Date.now
+        let authService = MockWatchAuthService(isAuthorized: true)
+        let connectivityService = MockWatchConnectivityService()
+        connectivityService.mockCurrentActivity = .workout
+        let appGroupHelper = MockWatchAppGroupHelper(
+            isAuthorized: true,
+            startDate: startDate
+        )
+
+        let viewModel = HomeViewModel(
+            authService: authService,
+            connectivityService: connectivityService,
+            appGroupHelper: appGroupHelper
+        )
+
+        await viewModel.loadData()
+        let currentDay = try #require(viewModel.currentDay)
+        #expect(viewModel.currentActivity == .workout)
+
+        let otherDay = currentDay + 1
+        await viewModel.deleteActivity(day: otherDay)
+
+        #expect(viewModel.currentActivity == .workout)
+        let deletedDay = try #require(connectivityService.deletedActivityDay)
+        #expect(deletedDay == otherDay)
+    }
+
+    @Test("Обрабатывает ошибки при удалении активности")
+    func handlesErrorsWhenDeletingActivity() async throws {
+        let startDate = Calendar.current.date(byAdding: .day, value: -5, to: Date.now) ?? Date.now
+        let authService = MockWatchAuthService(isAuthorized: true)
+        let connectivityService = MockWatchConnectivityService()
+        connectivityService.shouldSucceed = false
+        connectivityService.mockError = WatchConnectivityError.sessionUnavailable
+        let appGroupHelper = MockWatchAppGroupHelper(
+            isAuthorized: true,
+            startDate: startDate
+        )
+
+        let viewModel = HomeViewModel(
+            authService: authService,
+            connectivityService: connectivityService,
+            appGroupHelper: appGroupHelper
+        )
+
+        await viewModel.loadData()
+        let currentDay = try #require(viewModel.currentDay)
+
+        await viewModel.deleteActivity(day: currentDay)
+
+        let error = try #require(viewModel.error)
+        #expect(error is WatchConnectivityError)
+    }
 }

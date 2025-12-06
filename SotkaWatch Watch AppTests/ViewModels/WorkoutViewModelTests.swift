@@ -108,17 +108,13 @@ struct WorkoutViewModelTests {
             plannedCount: 4
         )
         let mockAppGroupHelper = MockWatchAppGroupHelper(restTime: 0)
-        let userDefaults = try MockUserDefaults.create()
-        let appGroupHelper = WatchAppGroupHelper(userDefaults: userDefaults)
-        let workoutService = WatchWorkoutService(workoutData: workoutData, appGroupHelper: appGroupHelper)
+        let workoutService = WatchWorkoutService(workoutData: workoutData, appGroupHelper: mockAppGroupHelper)
         let connectivityService = MockWatchConnectivityService()
 
         let viewModel = WorkoutViewModel(
             workoutService: workoutService,
             connectivityService: connectivityService
         )
-
-        viewModel.restTime = 0
 
         viewModel.completeRound()
 

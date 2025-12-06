@@ -3,6 +3,7 @@ import SwiftUI
 struct DayActivityView: View {
     private let activities = DayActivityType.allCases
     let onSelect: (DayActivityType) -> Void
+    let onDelete: (Int) -> Void
     let dayNumber: Int
     let selectedActivity: DayActivityType?
 
@@ -12,7 +13,12 @@ struct DayActivityView: View {
                 if let selectedActivity {
                     SelectedActivityView(
                         activity: selectedActivity,
-                        onSelect: onSelect
+                        onSelect: onSelect,
+                        onDelete: onDelete,
+                        dayNumber: dayNumber,
+                        workoutData: nil,
+                        workoutExecutionCount: nil,
+                        comment: nil
                     )
                 } else {
                     DayActivitySelectionView(
@@ -32,6 +38,7 @@ struct DayActivityView: View {
         onSelect: {
             print("Выбрали активность \($0)")
         },
+        onDelete: { _ in },
         dayNumber: 10,
         selectedActivity: nil
     )
@@ -44,6 +51,7 @@ struct DayActivityView: View {
             print("Выбрали активность \($0)")
             activity = $0
         },
+        onDelete: { _ in },
         dayNumber: 10,
         selectedActivity: activity
     )

@@ -1,7 +1,7 @@
 import Foundation
 
 /// Структура для передачи данных тренировки между iPhone и Apple Watch
-struct WorkoutData: Codable {
+struct WorkoutData: Codable, Equatable {
     /// Номер дня программы
     let day: Int
     /// Тип выполнения упражнений (ExerciseExecutionType.rawValue)

@@ -42,6 +42,7 @@ extension Constants {
         case saveWorkout = "WATCH_COMMAND_SAVE_WORKOUT"
         case getCurrentActivity = "WATCH_COMMAND_GET_CURRENT_ACTIVITY"
         case getWorkoutData = "WATCH_COMMAND_GET_WORKOUT_DATA"
+        case deleteActivity = "WATCH_COMMAND_DELETE_ACTIVITY"
 
         // От iPhone к часам
         case currentActivity = "PHONE_COMMAND_CURRENT_ACTIVITY"

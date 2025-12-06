@@ -1,38 +1,88 @@
 import SwiftUI
 
 struct HomeView: View {
-    @State private var authState = AuthState.idle
-    let isAuthorized: Bool
-    private let dayNumber = 1 // TODO: заглушка, заменить реальными данными
+    let viewModel: HomeViewModel
 
     var body: some View {
         ZStack {
-            if isAuthorized {
+            if viewModel.isAuthorized, let dayNumber = viewModel.currentDay {
                 DayActivityView(
                     onSelect: { activity in
-                        print("Выбрали активность \(activity)")
+                        Task {
+                            await viewModel.selectActivity(activity)
+                        }
+                    },
+                    onDelete: { day in
+                        Task {
+                            await viewModel.deleteActivity(day: day)
+                        }
                     },
                     dayNumber: dayNumber,
-                    selectedActivity: nil // TODO: передать реальную выбранную активность для текущего дня
+                    selectedActivity: viewModel.currentActivity
                 )
             } else {
                 AuthRequiredView(
                     checkAuthAction: {
-                        print("TODO: проверить статус авторизации")
-                        authState = .loading
+                        Task {
+                            await viewModel.loadData()
+                        }
                     },
                     state: authState
                 )
             }
         }
-        .animation(.default, value: isAuthorized)
+        .opacity(viewModel.isLoading ? 0.5 : 1)
+        .disabled(viewModel.isLoading)
+        .overlay {
+            if viewModel.isLoading {
+                ProgressView()
+            }
+        }
+        .animation(.default, value: viewModel.isAuthorized)
     }
 }
 
+private extension HomeView {
+    var authState: AuthState {
+        if viewModel.isAuthorized {
+            .idle
+        } else if viewModel.isLoading {
+            .loading
+        } else if viewModel.error != nil {
+            .error
+        } else {
+            .idle
+        }
+    }
+}
+
+#if DEBUG
 #Preview("Неавторизован") {
-    HomeView(isAuthorized: false)
+    let authService = PreviewWatchAuthService(isAuthorized: false)
+    let connectivityService = PreviewWatchConnectivityService()
+    let viewModel = HomeViewModel(
+        authService: authService,
+        connectivityService: connectivityService
+    )
+    HomeView(viewModel: viewModel)
 }
 
 #Preview("Авторизован") {
-    HomeView(isAuthorized: true)
+    let startDate = Calendar.current.date(byAdding: .day, value: -5, to: Date.now) ?? Date.now
+    let authService = PreviewWatchAuthService(isAuthorized: true)
+    let connectivityService = PreviewWatchConnectivityService()
+    let appGroupHelper = PreviewWatchAppGroupHelper(
+        isAuthorized: true,
+        startDate: startDate
+    )
+    let viewModel = HomeViewModel(
+        authService: authService,
+        connectivityService: connectivityService,
+        appGroupHelper: appGroupHelper
+    )
+    HomeView(viewModel: viewModel)
+        .task {
+            await viewModel.loadData()
+        }
 }
+#endif

@@ -136,4 +136,27 @@ final class HomeViewModel {
             return nil
         }
     }
+
+    /// Удаление активности дня (отправка на iPhone)
+    /// - Parameter day: Номер дня программы
+    func deleteActivity(day: Int) async {
+        isLoading = true
+        error = nil
+
+        defer {
+            isLoading = false
+        }
+
+        do {
+            try await connectivityService.deleteActivity(day: day)
+            // После успешного удаления обновляем текущую активность
+            if day == currentDay {
+                currentActivity = nil
+            }
+            logger.info("Активность дня \(day) успешно удалена")
+        } catch {
+            logger.error("Ошибка удаления активности дня \(day): \(error.localizedDescription)")
+            self.error = error
+        }
+    }
 }
