@@ -24,7 +24,10 @@ struct HomeView: View {
                         }
                     },
                     dayNumber: dayNumber,
-                    selectedActivity: viewModel.currentActivity
+                    selectedActivity: viewModel.currentActivity,
+                    workoutData: viewModel.workoutData,
+                    workoutExecutionCount: viewModel.workoutExecutionCount,
+                    comment: viewModel.workoutComment
                 )
             } else {
                 AuthRequiredView(

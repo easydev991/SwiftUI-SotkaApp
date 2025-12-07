@@ -30,13 +30,17 @@ final class PreviewWatchConnectivityService: WatchConnectivityServiceProtocol {
         nil
     }
 
-    func requestWorkoutData(day: Int) async throws -> WorkoutData {
+    func requestWorkoutData(day: Int) async throws -> WorkoutDataResponse {
         // Заглушка для превью
-        WorkoutData(
-            day: day,
-            executionType: 0,
-            trainings: [],
-            plannedCount: 4
+        WorkoutDataResponse(
+            workoutData: WorkoutData(
+                day: day,
+                executionType: 0,
+                trainings: [],
+                plannedCount: 4
+            ),
+            executionCount: nil,
+            comment: nil
         )
     }
 

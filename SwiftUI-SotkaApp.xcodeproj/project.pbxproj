@@ -89,6 +89,7 @@
 				Models/DayCalculator.swift,
 				Models/SWSharedModels/Constants.swift,
 				Models/SWSharedModels/WorkoutData.swift,
+				Models/SWSharedModels/WorkoutDataResponse.swift,
 				Models/Workout/DayActivityType.swift,
 				Models/Workout/ExerciseExecutionType.swift,
 				Models/Workout/ExerciseType.swift,

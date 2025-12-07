@@ -104,6 +104,92 @@ struct HomeViewModelTests {
         #expect(currentActivity == .workout)
     }
 
+    @Test("Загружает данные тренировки при активности типа workout")
+    func loadsWorkoutDataWhenActivityIsWorkout() async throws {
+        let startDate = Calendar.current.date(byAdding: .day, value: -5, to: Date.now) ?? Date.now
+        let authService = MockWatchAuthService(isAuthorized: true)
+        let connectivityService = MockWatchConnectivityService()
+        connectivityService.mockCurrentActivity = .workout
+        let workoutData = WorkoutData(
+            day: 5,
+            executionType: 0,
+            trainings: [],
+            plannedCount: 4
+        )
+        connectivityService.mockWorkoutData = workoutData
+        connectivityService.mockWorkoutExecutionCount = 3
+        connectivityService.mockWorkoutComment = "Отличная тренировка!"
+        let appGroupHelper = MockWatchAppGroupHelper(
+            isAuthorized: true,
+            startDate: startDate
+        )
+
+        let viewModel = HomeViewModel(
+            authService: authService,
+            connectivityService: connectivityService,
+            appGroupHelper: appGroupHelper
+        )
+
+        await viewModel.loadData()
+
+        let loadedWorkoutData = try #require(viewModel.workoutData)
+        #expect(loadedWorkoutData.day == workoutData.day)
+        let executionCount = try #require(viewModel.workoutExecutionCount)
+        #expect(executionCount == 3)
+        let comment = try #require(viewModel.workoutComment)
+        #expect(comment == "Отличная тренировка!")
+    }
+
+    @Test("Не загружает данные тренировки при активности не типа workout")
+    func doesNotLoadWorkoutDataWhenActivityIsNotWorkout() async throws {
+        let startDate = Calendar.current.date(byAdding: .day, value: -5, to: Date.now) ?? Date.now
+        let authService = MockWatchAuthService(isAuthorized: true)
+        let connectivityService = MockWatchConnectivityService()
+        connectivityService.mockCurrentActivity = .rest
+        let appGroupHelper = MockWatchAppGroupHelper(
+            isAuthorized: true,
+            startDate: startDate
+        )
+
+        let viewModel = HomeViewModel(
+            authService: authService,
+            connectivityService: connectivityService,
+            appGroupHelper: appGroupHelper
+        )
+
+        await viewModel.loadData()
+
+        #expect(viewModel.workoutData == nil)
+        #expect(viewModel.workoutExecutionCount == nil)
+        #expect(viewModel.workoutComment == nil)
+    }
+
+    @Test("Обрабатывает ошибки при загрузке данных тренировки")
+    func handlesErrorsWhenLoadingWorkoutData() async throws {
+        let startDate = Calendar.current.date(byAdding: .day, value: -5, to: Date.now) ?? Date.now
+        let authService = MockWatchAuthService(isAuthorized: true)
+        let connectivityService = MockWatchConnectivityService()
+        connectivityService.mockCurrentActivity = .workout
+        connectivityService.shouldSucceed = false
+        connectivityService.mockError = WatchConnectivityError.sessionUnavailable
+        let appGroupHelper = MockWatchAppGroupHelper(
+            isAuthorized: true,
+            startDate: startDate
+        )
+
+        let viewModel = HomeViewModel(
+            authService: authService,
+            connectivityService: connectivityService,
+            appGroupHelper: appGroupHelper
+        )
+
+        await viewModel.loadData()
+
+        let error = try #require(viewModel.error)
+        #expect(error is WatchConnectivityError)
+        #expect(viewModel.workoutData == nil)
+    }
+
     @Test("Отправляет тип активности на iPhone")
     func sendsActivityTypeToiPhone() async throws {
         let startDate = Calendar.current.date(byAdding: .day, value: -5, to: Date.now) ?? Date.now

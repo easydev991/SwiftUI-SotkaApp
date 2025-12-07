@@ -15,10 +15,13 @@ final class HomeViewModel {
     @ObservationIgnored private let connectivityService: any WatchConnectivityServiceProtocol
     @ObservationIgnored private let appGroupHelper: any WatchAppGroupHelperProtocol
 
-    var isLoading = false
-    var error: Error?
-    var currentDay: Int?
-    var currentActivity: DayActivityType?
+    private(set) var isLoading = false
+    private(set) var error: Error?
+    private(set) var currentDay: Int?
+    private(set) var currentActivity: DayActivityType?
+    private(set) var workoutData: WorkoutData?
+    private(set) var workoutExecutionCount: Int?
+    private(set) var workoutComment: String?
     var isAuthorized: Bool {
         authService.isAuthorized
     }
@@ -55,22 +58,37 @@ final class HomeViewModel {
         let currentDayValue = appGroupHelper.currentDay
         currentDay = currentDayValue
 
-        guard let day = currentDayValue else {
+        guard let currentDayValue else {
             logger.warning("Не удалось вычислить текущий день: startDate отсутствует в App Group")
             return
         }
 
         do {
-            let activity = try await connectivityService.requestCurrentActivity(day: day)
+            let activity = try await connectivityService.requestCurrentActivity(day: currentDayValue)
             currentActivity = activity
-            if let activity {
-                logger.info("Загружена активность дня \(day): \(activity.rawValue)")
+
+            if let activity, activity == .workout {
+                logger.info("Загружена активность дня \(currentDayValue): \(activity.rawValue)")
+                // Загружаем данные тренировки, если активность типа .workout
+                do {
+                    let response = try await connectivityService.requestWorkoutData(day: currentDayValue)
+                    workoutData = response.workoutData
+                    workoutExecutionCount = response.executionCount
+                    workoutComment = response.comment
+                    logger.info("Загружены данные тренировки для дня \(currentDayValue)")
+                } catch {
+                    logger.error("Ошибка загрузки данных тренировки дня \(currentDayValue): \(error.localizedDescription)")
+                    // Не устанавливаем error здесь, чтобы не перезаписать ошибку загрузки активности
+                    // Не очищаем данные тренировки при ошибке - оставляем старые данные
+                }
             } else {
-                logger.info("Активность дня \(day) не установлена")
+                logger.info("Активность дня \(currentDayValue) не установлена")
+                clearWorkoutData()
             }
         } catch {
-            logger.error("Ошибка загрузки активности дня \(day): \(error.localizedDescription)")
+            logger.error("Ошибка загрузки активности дня \(currentDayValue): \(error.localizedDescription)")
             self.error = error
+            clearWorkoutData()
         }
     }
 
@@ -127,9 +145,9 @@ final class HomeViewModel {
         }
 
         do {
-            let workoutData = try await connectivityService.requestWorkoutData(day: day)
+            let response = try await connectivityService.requestWorkoutData(day: day)
             logger.info("Получены данные тренировки для дня \(day)")
-            return workoutData
+            return response.workoutData
         } catch {
             logger.error("Ошибка запроса данных тренировки: \(error.localizedDescription)")
             self.error = error
@@ -158,5 +176,13 @@ final class HomeViewModel {
             logger.error("Ошибка удаления активности дня \(day): \(error.localizedDescription)")
             self.error = error
         }
+    }
+}
+
+private extension HomeViewModel {
+    func clearWorkoutData() {
+        workoutData = nil
+        workoutExecutionCount = nil
+        workoutComment = nil
     }
 }

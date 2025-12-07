@@ -368,21 +368,26 @@ SotkaWatch Watch App/
     - ✅ Реализован метод `deleteActivity` в `WatchConnectivityService` и протокол
     - ✅ Добавлена обработка команды `deleteActivity` в `StatusManager` на стороне iPhone
     - ✅ Реализован метод `deleteActivity` в `HomeViewModel`
-  - [ ] **Реализовать редактирование тренировки:**
-    - Добавить замыкание `onEditWorkout: (Int, WorkoutData) -> Void` в инициализатор `SelectedActivityView`
-    - Вызывать `onEditWorkout(dayNumber, workoutData)` при нажатии на кнопку редактирования для тренировки (убрать TODO на строке 140 в `SelectedActivityView`)
-    - Для не-тренировочных активностей редактирование уже реализовано через `DayActivitySelectionView` (NavigationLink на строках 145-152)
-  - [ ] **Получить данные тренировки для текущего дня:**
-    - **Текущее состояние:** В `DayActivityView` на строках 19-21 передаются `nil` для `workoutData`, `workoutExecutionCount`, `comment`
-    - **Требуется:** Расширить `HomeViewModel` для загрузки данных тренировки:
-      - Добавить свойства `workoutData: WorkoutData?`, `workoutExecutionCount: Int?`, `workoutComment: String?` в `HomeViewModel`
-      - В методе `loadData()` при наличии активности типа `.workout` загружать данные через `connectivityService.requestWorkoutData(day:)`
-      - Добавить состояние загрузки и обработку ошибок для данных тренировки
-    - **Требуется:** Передавать загруженные данные в `DayActivityView` и далее в `SelectedActivityView`:
-      - Добавить параметры `workoutData`, `workoutExecutionCount`, `comment` в `DayActivityView`
-      - Передавать эти параметры из `HomeView` через `viewModel.workoutData`, `viewModel.workoutExecutionCount`, `viewModel.workoutComment`
-      - Передавать эти параметры в `SelectedActivityView` (уже поддерживается в инициализаторе)
-    - **Примечание:** Метод `startWorkout()` в `HomeViewModel` уже запрашивает `WorkoutData`, но используется только для начала тренировки, не для отображения в `SelectedActivityView`
+  - [x] **Реализовать редактирование тренировки:**
+    - ✅ **Выполнено:** Кнопка редактирования для тренировки реализована в `SelectedActivityView` (строки 138-143)
+    - ✅ **Выполнено:** При нажатии на кнопку редактирования вызывается `onSelect(.workout)`, который обрабатывается в `HomeView` (строки 12-19)
+    - ✅ **Выполнено:** В `HomeView` открывается `fullScreenCover` с `showEditWorkout` при выборе активности `.workout` (строки 49-53)
+    - ✅ **Выполнено:** Для не-тренировочных активностей редактирование реализовано через `DayActivitySelectionView` (NavigationLink на строках 145-152 в `SelectedActivityView`)
+    - [ ] **Осталось:** Подключить экран превью тренировки (`WorkoutPreviewView`) к навигации - заменить `EmptyView` на строке 51 в `HomeView` на реальный экран (см. раздел 6.3.1)
+  - [x] **Получить данные тренировки для текущего дня:**
+    - ✅ **Выполнено:** Расширен `HomeViewModel` для загрузки данных тренировки:
+      - ✅ Добавлены свойства `workoutData: WorkoutData?`, `workoutExecutionCount: Int?`, `workoutComment: String?` в `HomeViewModel`
+      - ✅ В методе `loadData()` при наличии активности типа `.workout` загружаются данные через `connectivityService.requestWorkoutData(day:)`
+      - ✅ Добавлена обработка ошибок для данных тренировки (данные не очищаются при ошибке загрузки)
+    - ✅ **Выполнено:** Передаются загруженные данные в `DayActivityView` и далее в `SelectedActivityView`:
+      - ✅ Добавлены параметры `workoutData`, `workoutExecutionCount`, `comment` в `DayActivityView`
+      - ✅ Параметры передаются из `HomeView` через `viewModel.workoutData`, `viewModel.workoutExecutionCount`, `viewModel.workoutComment`
+      - ✅ Параметры передаются в `SelectedActivityView` (уже поддерживается в инициализаторе)
+    - ✅ **Выполнено:** Расширен протокол `WatchConnectivityServiceProtocol` для возврата `WorkoutDataResponse` вместо `WorkoutData`
+    - ✅ **Выполнено:** Создана структура `WorkoutDataResponse` с полями `workoutData`, `executionCount`, `comment`
+    - ✅ **Выполнено:** Обновлен `StatusManager.handleGetWorkoutData` для отправки полных данных (включая `count` и `comment`)
+    - ✅ **Выполнено:** Логика создания сообщения для WatchConnectivity вынесена в `WorkoutDataResponse.makeMessageForWatch(command:)`
+    - ✅ **Выполнено:** Написаны тесты для новой функциональности
 - [ ] **Реализовать логику выбора/изменения активности:**
   - ✅ **Выполнено:** В `HomeView` передается реальная выбранная активность для текущего дня (`selectedActivity: viewModel.currentActivity` на строке 21)
   - ✅ **Выполнено:** Реализована обработка выбора активности через `onSelect` callback в `DayActivityView` (строки 10-13 в `HomeView`)

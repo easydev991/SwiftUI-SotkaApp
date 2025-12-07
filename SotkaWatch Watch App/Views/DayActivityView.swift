@@ -6,6 +6,9 @@ struct DayActivityView: View {
     let onDelete: (Int) -> Void
     let dayNumber: Int
     let selectedActivity: DayActivityType?
+    let workoutData: WorkoutData?
+    let workoutExecutionCount: Int?
+    let comment: String?
 
     var body: some View {
         NavigationStack {
@@ -16,9 +19,9 @@ struct DayActivityView: View {
                         onSelect: onSelect,
                         onDelete: onDelete,
                         dayNumber: dayNumber,
-                        workoutData: nil,
-                        workoutExecutionCount: nil,
-                        comment: nil
+                        workoutData: workoutData,
+                        workoutExecutionCount: workoutExecutionCount,
+                        comment: comment
                     )
                 } else {
                     DayActivitySelectionView(
@@ -40,7 +43,10 @@ struct DayActivityView: View {
         },
         onDelete: { _ in },
         dayNumber: 10,
-        selectedActivity: nil
+        selectedActivity: nil,
+        workoutData: nil,
+        workoutExecutionCount: nil,
+        comment: nil
     )
 }
 
@@ -53,6 +59,9 @@ struct DayActivityView: View {
         },
         onDelete: { _ in },
         dayNumber: 10,
-        selectedActivity: activity
+        selectedActivity: activity,
+        workoutData: nil,
+        workoutExecutionCount: nil,
+        comment: nil
     )
 }

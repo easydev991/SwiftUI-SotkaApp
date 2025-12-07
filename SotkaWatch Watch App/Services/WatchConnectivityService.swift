@@ -150,8 +150,8 @@ final class WatchConnectivityService: NSObject {
 
     /// Запрос данных тренировки с iPhone
     /// - Parameter day: Номер дня программы
-    /// - Returns: Данные тренировки
-    func requestWorkoutData(day: Int) async throws -> WorkoutData {
+    /// - Returns: Полные данные тренировки (WorkoutData, executionCount, comment)
+    func requestWorkoutData(day: Int) async throws -> WorkoutDataResponse {
         guard let sessionProtocol, sessionProtocol.isReachable else {
             throw WatchConnectivityError.sessionUnavailable
         }
@@ -174,9 +174,9 @@ final class WatchConnectivityService: NSObject {
                 do {
                     let jsonData = try JSONSerialization.data(withJSONObject: reply)
                     let decoder = JSONDecoder()
-                    let workoutData = try decoder.decode(WorkoutData.self, from: jsonData)
+                    let response = try decoder.decode(WorkoutDataResponse.self, from: jsonData)
                     self.logger.info("Получены данные тренировки дня \(day)")
-                    continuation.resume(returning: workoutData)
+                    continuation.resume(returning: response)
                 } catch {
                     self.logger.error("Ошибка десериализации данных тренировки: \(error.localizedDescription)")
                     continuation.resume(throwing: WatchConnectivityError.deserializationError)

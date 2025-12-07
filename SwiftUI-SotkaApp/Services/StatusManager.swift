@@ -723,22 +723,24 @@ extension StatusManager {
                 workoutData = data
             }
 
-            // Сериализация WorkoutData в JSON
-            guard let jsonData = try? JSONEncoder().encode(workoutData),
-                  let jsonObject = try? JSONSerialization.jsonObject(with: jsonData) as? [String: Any]
-            else {
-                watchConnectivityLogger.error("Ошибка сериализации данных тренировки")
+            // Получаем count и comment из существующей активности
+            let executionCount = existingActivity?.count
+            let comment = existingActivity?.comment
+
+            // Создаем ответ с полными данными
+            let response = WorkoutDataResponse(
+                workoutData: workoutData,
+                executionCount: executionCount,
+                comment: comment
+            )
+
+            // Создаем сообщение для отправки на часы
+            guard let messageToSend = response.makeMessageForWatch(
+                command: Constants.WatchCommand.sendWorkoutData.rawValue
+            ) else {
+                watchConnectivityLogger.error("Ошибка сериализации ответа с данными тренировки")
                 return ["error": "Ошибка сериализации данных"]
             }
-
-            // Отправка данных на часы через sendMessage (асинхронно)
-            let messageToSend: [String: Any] = [
-                "command": Constants.WatchCommand.sendWorkoutData.rawValue,
-                "day": workoutData.day,
-                "executionType": workoutData.executionType,
-                "trainings": jsonObject["trainings"] as? [[String: Any]] ?? [],
-                "plannedCount": workoutData.plannedCount as Any
-            ]
 
             if sessionProtocol.isReachable {
                 sessionProtocol.sendMessage(messageToSend, replyHandler: nil) { error in

@@ -8,6 +8,8 @@ final class MockWatchConnectivityService: WatchConnectivityServiceProtocol {
     var mockError: Error?
     var mockCurrentActivity: DayActivityType?
     var mockWorkoutData: WorkoutData?
+    var mockWorkoutExecutionCount: Int?
+    var mockWorkoutComment: String?
 
     private(set) var sentActivityType: (day: Int, activityType: DayActivityType)?
     private(set) var requestedCurrentActivityDay: Int?
@@ -30,7 +32,7 @@ final class MockWatchConnectivityService: WatchConnectivityServiceProtocol {
         return mockCurrentActivity
     }
 
-    func requestWorkoutData(day: Int) async throws -> WorkoutData {
+    func requestWorkoutData(day: Int) async throws -> WorkoutDataResponse {
         requestedWorkoutDataDay = day
         if !shouldSucceed {
             throw mockError ?? WatchConnectivityError.sessionUnavailable
@@ -38,7 +40,11 @@ final class MockWatchConnectivityService: WatchConnectivityServiceProtocol {
         guard let mockWorkoutData else {
             throw WatchConnectivityError.invalidResponse
         }
-        return mockWorkoutData
+        return WorkoutDataResponse(
+            workoutData: mockWorkoutData,
+            executionCount: mockWorkoutExecutionCount,
+            comment: mockWorkoutComment
+        )
     }
 
     func sendWorkoutResult(day: Int, result: WorkoutResult, executionType: ExerciseExecutionType) async throws {

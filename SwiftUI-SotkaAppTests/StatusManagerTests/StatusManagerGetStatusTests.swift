@@ -447,6 +447,7 @@ extension StatusManagerTests {
                 await statusManager.getStatus(context: context)
             }
 
+            // Состояние устанавливается синхронно в начале метода getStatus
             try await Task.sleep(nanoseconds: 10_000_000)
 
             #expect(statusManager.state.isSyncing)

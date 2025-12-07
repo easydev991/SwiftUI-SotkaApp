@@ -215,17 +215,22 @@ struct WatchConnectivityServiceTests {
             trainings: trainings,
             plannedCount: 4
         )
+        let response = WorkoutDataResponse(
+            workoutData: workoutData,
+            executionCount: 3,
+            comment: "Отличная тренировка!"
+        )
 
         let encoder = JSONEncoder()
-        let workoutDataJSON = try JSONSerialization.jsonObject(with: encoder.encode(workoutData)) as? [String: Any]
+        let responseJSON = try JSONSerialization.jsonObject(with: encoder.encode(response)) as? [String: Any]
 
         mockSession.mockReply = [
             "command": Constants.WatchCommand.sendWorkoutData.rawValue
-        ].merging(workoutDataJSON ?? [:]) { _, new in new }
+        ].merging(responseJSON ?? [:]) { _, new in new }
 
         let service = WatchConnectivityService(authService: authService, sessionProtocol: mockSession)
 
-        let receivedWorkoutData = try await service.requestWorkoutData(day: 5)
+        let receivedResponse = try await service.requestWorkoutData(day: 5)
 
         #expect(mockSession.sentMessages.count == 1)
         let message = try #require(mockSession.sentMessages.first)
@@ -233,9 +238,13 @@ struct WatchConnectivityServiceTests {
         #expect(command == Constants.WatchCommand.getWorkoutData.rawValue)
         let day = try #require(message["day"] as? Int)
         #expect(day == 5)
-        #expect(receivedWorkoutData.day == 5)
-        #expect(receivedWorkoutData.trainings.count == 1)
-        #expect(receivedWorkoutData.plannedCount == 4)
+        #expect(receivedResponse.workoutData.day == 5)
+        #expect(receivedResponse.workoutData.trainings.count == 1)
+        #expect(receivedResponse.workoutData.plannedCount == 4)
+        let executionCount = try #require(receivedResponse.executionCount)
+        #expect(executionCount == 3)
+        let comment = try #require(receivedResponse.comment)
+        #expect(comment == "Отличная тренировка!")
     }
 
     @Test("Выбрасывает ошибку при ошибке отправки сообщения")
