@@ -19,6 +19,7 @@ struct WorkoutProgramCreator {
         Self.defaultExecutionType(for: day)
     }
 
+    #if !os(watchOS)
     /// Инициализатор из DayActivity (для загрузки существующей активности)
     init(from dayActivity: DayActivity) {
         self.day = dayActivity.day
@@ -29,6 +30,7 @@ struct WorkoutProgramCreator {
         self.trainings = dayActivity.trainings.map(\.workoutPreviewTraining)
         self.comment = dayActivity.comment
     }
+    #endif
 
     /// Инициализатор для нового дня (создает данные с дефолтными значениями)
     init(day: Int, executionType: ExerciseExecutionType? = nil) {
@@ -154,6 +156,7 @@ struct WorkoutProgramCreator {
         )
     }
 
+    #if !os(watchOS)
     var dayActivity: DayActivity {
         let activity = DayActivity(
             day: day,
@@ -178,6 +181,7 @@ struct WorkoutProgramCreator {
 
         return activity
     }
+    #endif
 
     // MARK: - Приватные статические методы для генерации (используются внутри структуры)
     private static func generateExercises(for day: Int, executionType: ExerciseExecutionType) -> [WorkoutPreviewTraining] {

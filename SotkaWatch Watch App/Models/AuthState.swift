@@ -7,8 +7,8 @@ enum AuthState: Equatable {
 
     var localizedTitle: String {
         switch self {
-        case .idle, .loading: String(localized: "Watch.AuthRequired.Message")
-        case .error: String(localized: "Watch.AuthRequired.Error")
+        case .idle, .loading: String(localized: .watchAuthRequiredMessage)
+        case .error: String(localized: .watchAuthRequiredError)
         }
     }
 

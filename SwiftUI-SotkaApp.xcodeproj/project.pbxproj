@@ -95,6 +95,8 @@
 				Models/Workout/ExerciseType.swift,
 				Models/Workout/WorkoutPreviewTraining.swift,
 				Models/Workout/WorkoutResult.swift,
+				Screens/Profile/Journal/Views/ActivityRowView.swift,
+				Services/WorkoutProgramCreator.swift,
 				SupportingFiles/ExercisesAssets.xcassets,
 				SupportingFiles/Localizable.xcstrings,
 			);
@@ -657,7 +659,7 @@
 				PRODUCT_BUNDLE_IDENTIFIER = "com.oleg991.SwiftUI-SotkaApp.SotkaWatch-Watch-AppTests";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SDKROOT = watchos;
-				STRING_CATALOG_GENERATE_SYMBOLS = NO;
+				STRING_CATALOG_GENERATE_SYMBOLS = YES;
 				SWIFT_APPROACHABLE_CONCURRENCY = YES;
 				SWIFT_EMIT_LOC_STRINGS = NO;
 				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
@@ -680,7 +682,7 @@
 				PRODUCT_BUNDLE_IDENTIFIER = "com.oleg991.SwiftUI-SotkaApp.SotkaWatch-Watch-AppTests";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SDKROOT = watchos;
-				STRING_CATALOG_GENERATE_SYMBOLS = NO;
+				STRING_CATALOG_GENERATE_SYMBOLS = YES;
 				SWIFT_APPROACHABLE_CONCURRENCY = YES;
 				SWIFT_EMIT_LOC_STRINGS = NO;
 				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
@@ -702,7 +704,7 @@
 				PRODUCT_BUNDLE_IDENTIFIER = "com.oleg991.SwiftUI-SotkaApp.SotkaWatch-Watch-AppUITests";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SDKROOT = watchos;
-				STRING_CATALOG_GENERATE_SYMBOLS = NO;
+				STRING_CATALOG_GENERATE_SYMBOLS = YES;
 				SWIFT_APPROACHABLE_CONCURRENCY = YES;
 				SWIFT_EMIT_LOC_STRINGS = NO;
 				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
@@ -724,7 +726,7 @@
 				PRODUCT_BUNDLE_IDENTIFIER = "com.oleg991.SwiftUI-SotkaApp.SotkaWatch-Watch-AppUITests";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SDKROOT = watchos;
-				STRING_CATALOG_GENERATE_SYMBOLS = NO;
+				STRING_CATALOG_GENERATE_SYMBOLS = YES;
 				SWIFT_APPROACHABLE_CONCURRENCY = YES;
 				SWIFT_EMIT_LOC_STRINGS = NO;
 				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;

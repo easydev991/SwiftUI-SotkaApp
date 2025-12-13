@@ -21,6 +21,7 @@ struct ActivityRowView: View {
                 .foregroundStyle(.blue)
             Text(title)
                 .frame(maxWidth: .infinity, alignment: .leading)
+                .multilineTextAlignment(.leading)
             if let count {
                 Text("\(count)")
             }

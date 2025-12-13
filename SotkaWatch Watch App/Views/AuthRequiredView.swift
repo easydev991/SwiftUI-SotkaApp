@@ -8,9 +8,9 @@ struct AuthRequiredView: View {
         VStack(spacing: 0) {
             Text(state.localizedTitle).bold()
             if state.isLoading {
-                ProgressView("Watch.AuthRequired.Checking")
+                ProgressView(.watchAuthRequiredChecking)
             } else {
-                Button("Watch.AuthRequired.CheckButton", action: checkAuthAction)
+                Button(.watchAuthRequiredCheckButton, action: checkAuthAction)
                     .padding(.top, 20)
             }
         }
