@@ -317,82 +317,184 @@ SotkaWatch Watch App/
     - Установить статус новых переводов: `"state" : "needs_review"`
 
 #### 6.3.1 Экран превью тренировки (упрощенная версия для часов)
-- [ ] **Создать `WorkoutPreviewView.swift` (упрощенная версия `WorkoutPreviewScreen`):**
+- [x] **Создать `WorkoutPreviewView.swift` (упрощенная версия `WorkoutPreviewScreen`):**
+  - **Архитектурный принцип:** Вся бизнес-логика должна быть в ViewModel, View только отображает данные и вызывает методы ViewModel (по аналогии с `WorkoutPreviewScreen`)
   - **Отличия для первой итерации часов:**
-    - При настройке 0 повторов для упражнения - удалять его с экрана на часах
+    - ✅ При настройке 0 повторов для упражнения - удалять его с экрана на часах (реализовано в `makeTrainingRowView`, но логика удаления должна быть в ViewModel)
     - Остальная логика остается по аналогии с основным приложением
   - **Структура экрана:**
-    - NavigationStack с заголовком (номер дня)
-    - VStack с упрощенной версткой для маленького экрана часов:
-      - `executionTypePicker` (если нужно показывать) - перед списком упражнений
-      - ScrollView со списком упражнений и другими секциями
-      - Spacer()
-      - Кнопки внизу экрана: "Начать тренировку" и "Сохранить как пройденную"
-    - **Toolbar кнопка редактирования:**
-      - В `toolbar` (`.topBarTrailing`) добавить кнопку с иконкой `pencil` для редактирования порядка и набора упражнений
-      - По нажатию на кнопку показывать модальное окно `WorkoutEditView` (аналогично `WorkoutExerciseEditorScreen` из основного приложения)
-      - `WorkoutEditView` должен быть без `customExercisesSection` (для первой итерации, для простоты)
+    - ✅ NavigationStack с заголовком (номер дня через `.day(number:)`)
+    - ✅ ScrollView с VStack (spacing: 8) для упрощенной верстки для маленького экрана часов:
+      - ✅ `executionTypePicker` (если нужно показывать) - перед списком упражнений
+      - ✅ Divider после executionTypePicker
+      - ✅ `workoutContentView` со списком упражнений и другими секциями
+      - ✅ `bottomButtonsView` с кнопками внизу экрана
+    - ✅ **Инициализация ViewModel:**
+      - ✅ View вызывает `viewModel.loadData(day:)` в `.task` (аналогично `HomeView`)
+      - ✅ ViewModel сам получает данные через свои зависимости:
+        - `connectivityService.requestWorkoutData(day:)` для получения `WorkoutDataResponse`
+        - `appGroupHelper.restTime` для получения времени отдыха из App Group UserDefaults
+      - **Примечание:** View не получает данные напрямую через сервисы - это ответственность ViewModel. View только вызывает метод ViewModel для загрузки данных
+    - ✅ **Toolbar кнопка редактирования:**
+      - ✅ В `toolbar` (`.topBarTrailing`) добавлена кнопка с иконкой `pencil` для редактирования порядка и набора упражнений
+      - ✅ Показывается кнопка только если `viewModel.shouldShowEditButton` (computed property в ViewModel, аналогично `WorkoutPreviewScreen`)
+      - ✅ По нажатию на кнопку показывается модальное окно через `.sheet(isPresented: $showEditView)`
+      - [ ] **TODO:** Реализовать `WorkoutEditView` (без `customExercisesSection` для первой итерации) - сейчас показывается `ProgressView()` заглушка
+      - [ ] **TODO:** Передавать `viewModel` в `WorkoutEditView` (аналогично `WorkoutExerciseEditorScreen(viewModel: viewModel)`)
   - **Обязательные секции (те же, что и в `WorkoutPreviewScreen`):**
-    - **`executionTypePicker`** (сегментированный контрол для выбора типа выполнения):
-      - Показывается перед списком упражнений
-      - Логика показа аналогична `WorkoutPreviewScreen.shouldShowExecutionTypePicker()`:
-        - Показывается только если данные загружены (dayNumber установлен и trainings не пустой)
-        - Показывается только для не пройденных дней (если активность найдена)
-        - Показывается только если доступно больше одного типа выполнения (`availableExecutionTypes.count > 1`)
-      - Используется сегментированный стиль (`.pickerStyle(.segmented)`) для часов
-      - При изменении типа выполнения вызывается `viewModel.updateExecutionType(newValue)` для пересчета упражнений
-      - Доступные типы берутся из `viewModel.availableExecutionTypes`
-    - Список упражнений из `WorkoutData.trainings`
-    - Отображение планового количества кругов/подходов (если применимо)
-    - Выбор времени отдыха (если применимо)
-    - Редактор комментария (если применимо)
-  - **Отображение упражнений:**
-    - Список упражнений из `WorkoutData.trainings`
-    - Для каждого упражнения:
-      - Иконка упражнения через `ExerciseType.image` (из `ExercisesAssets.xcassets`)
-      - Название упражнения через `ExerciseType.localizedTitle` или `ExerciseType.makeLocalizedTitle(day:executionType:sortOrder:)`
-      - **Использовать стандартный `Picker` для часов** (`.pickerStyle(.wheel)`) для изменения количества повторений:
-        - Диапазон значений: от 0 до разумного максимума (например, 0...100)
-        - Текущее значение: `training.count ?? 0`
-        - При изменении значения обновлять `training.count` через ViewModel
-        - **При выборе 0 повторений:** удалять это упражнение из списка на этом экране (отличие для первой итерации часов)
-    - Отображение типа выполнения (`ExerciseExecutionType`) с количеством кругов/подходов (если применимо)
-  - **Кнопки управления:**
-    - Кнопка "Начать тренировку" (`onStartWorkout: () -> Void`):
-      - Переход к экрану выполнения тренировки (`WorkoutView`) через `fullScreenCover` или `NavigationLink`
-      - Передача данных тренировки: `dayNumber`, `executionType`, `trainings`, `plannedCount`
-    - Кнопка "Сохранить как пройденную" (`onSaveAsPassed: () -> Void`):
-      - Сохранение тренировки через `WatchConnectivityService.sendWorkoutResult(day:result:executionType:)`
-      - Отправка результата с текущими значениями `count` из упражнений
-      - Закрытие экрана редактирования после успешного сохранения
-  - **Упрощения по сравнению с `WorkoutPreviewScreen`:**
-    - Убрать поле для комментария (можно добавить позже при необходимости)
-    - Picker для времени отдыха:
-      - Использовать значение из App Group UserDefaults как стартовое значение
-      - Диапазон значений должен быть таким же, как в основном приложении
-      - Позволяет изменять время отдыха на часах (аналогично основному приложению)
-    - Редактирование списка упражнений доступно через кнопку редактирования в toolbar (открывает `WorkoutEditView` без `customExercisesSection` для первой итерации)
-    - Отображение планового количества кругов/подходов:
-      - Использовать степпер (Stepper) по аналогии с основным приложением
-      - Позволяет изменять плановое количество кругов/подходов по той же логике, что и в основном приложении
-  - **ViewModel для экрана превью:**
-    - Создать `WorkoutPreviewViewModel` (TDD подход):
-      - Инициализация из `WorkoutData`
-      - Состояние:
-        - Массив упражнений с возможностью изменения `count`
-        - `selectedExecutionType: ExerciseExecutionType?` - выбранный тип выполнения
-        - `availableExecutionTypes: [ExerciseExecutionType]` - доступные типы выполнения
-        - `plannedCount: Int?` - плановое количество кругов/подходов (с возможностью изменения через степпер)
-      - Метод `shouldShowExecutionTypePicker(day:isPassed:) -> Bool` для определения, нужно ли показывать пикер:
+    - ✅ **`executionTypePicker`** (контрол для выбора типа выполнения):
+      - ✅ Показывается перед списком упражнений через `@ViewBuilder`
+      - ✅ Логика показа вызывает `viewModel.shouldShowExecutionTypePicker(day:isPassed:)` (аналогично `WorkoutPreviewScreen`)
         - Показывается только если данные загружены (dayNumber установлен и trainings не пустой)
         - Показывается только для не пройденных дней (если `isPassed == false`)
         - Показывается только если доступно больше одного типа выполнения
-      - Метод `updateExecutionType(_:)` для обновления типа выполнения и пересчета упражнений (аналогично `WorkoutPreviewViewModel.updateExecutionType()`)
-      - Метод `updateTrainingCount(id:count:)` для обновления количества повторений
-      - Метод `removeTraining(id:)` для удаления упражнения из списка (при выборе 0 повторений)
-      - Метод `updatePlannedCount(_:)` для обновления планового количества кругов/подходов (аналогично основному приложению)
-      - Метод `buildWorkoutResult() -> WorkoutResult` для создания результата тренировки из текущих значений
-      - Метод `buildWorkoutData() -> WorkoutData` для получения обновленных данных тренировки
+      - ✅ Используется стиль `.pickerStyle(.navigationLink)` для часов (вместо `.segmented` как планировалось, т.к. `.navigationLink` лучше подходит для часов)
+      - ✅ При изменении типа выполнения вызывается `viewModel.updateExecutionType(with: newValue)` (аналогично `WorkoutPreviewScreen`)
+      - ✅ Доступные типы берутся из `viewModel.availableExecutionTypes` (из ViewModel, а не из локального состояния)
+    - ✅ Список упражнений из `viewModel.trainings` через `LazyVStack` (из ViewModel, а не из локального состояния)
+    - ✅ Отображение планового количества кругов/подходов через `makePlannedCountView` (если `viewModel.selectedExecutionType` установлен)
+    - ✅ Выбор времени отдыха через `makeRestTimePicker` (если `viewModel.selectedExecutionType` установлен и `!viewModel.wasOriginallyPassed`)
+    - [ ] **TODO:** Редактор комментария через `TextFieldLink` (для часов):
+      - [ ] **TODO:** Показывать редактор комментария только если `viewModel.canEditComment` (computed property в ViewModel, аналогично `WorkoutPreviewScreen`)
+      - [ ] **TODO:** Использовать `TextFieldLink` для редактирования комментария (вместо `SWTextEditor` как в основном приложении)
+      - [ ] **TODO:** При изменении значения вызывать `viewModel.updateComment(newValue)` (аналогично `WorkoutPreviewScreen`)
+      - [ ] **TODO:** Использовать `viewModel.comment` для отображения текущего значения комментария
+      - [ ] **TODO:** Использовать placeholder `.dayActivityCommentPlaceholder` для пустого комментария
+      - [ ] **TODO:** Добавить `Divider` перед редактором комментария (аналогично `WorkoutPreviewScreen`)
+  - **Отображение упражнений:**
+    - ✅ Список упражнений из `viewModel.trainings` через `visibleTrainings` (фильтрует упражнения с `count > 0`, логика фильтрации в View)
+    - ✅ Для каждого упражнения через `makeTrainingRowView`:
+      - ✅ Иконка упражнения через `ExerciseType.image` (из `makeExerciseImage`) - логика отображения остается в View
+      - ✅ Название упражнения через `ExerciseType.makeLocalizedTitle(day:executionType:sortOrder:)` или `ExerciseType.localizedTitle` (из `makeExerciseTitle`) - логика отображения остается в View
+      - ✅ **Используется `NavigationLink` + `WorkoutStepperView`** для изменения количества повторений:
+        - Диапазон значений: от 1 (через параметр `from: 1` в `WorkoutStepperView`)
+        - Текущее значение: `training.count ?? 0` (из `viewModel.trainings`)
+        - ✅ При изменении значения вызывается `viewModel.updateTrainingCount(for:newValue:)` (логика обновления в ViewModel)
+        - ✅ **При выборе 0 повторений:** логика удаления реализована в ViewModel (через `updateTrainingCount` с удалением упражнения из списка)
+      - ✅ Отображение через `WatchActivityRowView` с иконкой, названием и количеством
+    - ✅ Отображение типа выполнения (`ExerciseExecutionType`) с количеством кругов/подходов через `makePlannedCountView`:
+      - ✅ Используется `viewModel.displayExecutionType(for:)` для получения типа выполнения для отображения
+      - ✅ Используется `viewModel.displayedCount` для отображения количества
+      - ✅ Вызывается `viewModel.updatePlannedCount(for: newValue)` при изменении
+  - **Кнопки управления:**
+    - ✅ Используется `WorkoutPreviewButtonsView` для отображения кнопок управления (аналогично основному приложению)
+    - ✅ Кнопка "Начать тренировку" (`onStartTraining: () -> Void`):
+      - ✅ Переход к экрану выполнения тренировки через `.fullScreenCover(isPresented: $showWorkoutView)`
+      - [ ] **TODO:** Реализовать `WorkoutView` - сейчас показывается `ProgressView()` заглушка
+      - [ ] **TODO:** Передавать данные из ViewModel в `WorkoutView`: `viewModel.buildWorkoutData()` или отдельные свойства
+      - [ ] **TODO:** Передавать `onWorkoutCompleted` callback, который вызывает `viewModel.handleWorkoutResult(result)` (аналогично `WorkoutPreviewScreen`)
+    - ✅ Кнопка "Сохранить как пройденную" (`onSave: () -> Void`):
+      - ✅ Вызывается `viewModel.saveTrainingAsPassed()` (аналогично `WorkoutPreviewScreen.saveTrainingAsPassed()`)
+      - ✅ ViewModel реализует сохранение через `WatchConnectivityService.sendWorkoutResult(day:result:executionType:)`
+      - ✅ ViewModel строит `WorkoutResult` из текущих значений через `buildWorkoutResult()`
+    - ✅ Передаются реальные данные в `WorkoutPreviewButtonsView` из ViewModel (аналогично `WorkoutPreviewScreen`):
+      - ✅ `isPassed: viewModel.wasOriginallyPassed` - флаг, был ли день изначально пройден
+      - ✅ `hasChanges: viewModel.hasChanges` - флаг, были ли внесены изменения в тренировку (computed property в ViewModel)
+      - ✅ `isWorkoutCompleted: viewModel.isWorkoutCompleted` - флаг, завершена ли тренировка
+      - **Примечание:** Все эти данные находятся в ViewModel, View только передает их в компонент
+  - **Упрощения по сравнению с `WorkoutPreviewScreen`:**
+    - [ ] **TODO:** Редактор комментария через `TextFieldLink` (см. раздел "Обязательные секции" выше)
+    - ✅ Picker для времени отдыха через `makeRestTimePicker`:
+      - ✅ Используется `viewModel.restTime` (из ViewModel, а не из локального состояния)
+      - ✅ Диапазон значений из `Constants.restPickerOptions` (аналогично основному приложению)
+      - ✅ Используется `.pickerStyle(.navigationLink)` для часов
+      - ✅ Показывается пикер времени отдыха только если `!viewModel.wasOriginallyPassed` по аналогии с `WorkoutPreviewScreen`
+      - ✅ При изменении значения вызывается `viewModel.updateRestTime(newValue)` (аналогично `WorkoutPreviewScreen`)
+    - ✅ Редактирование списка упражнений доступно через кнопку редактирования в toolbar (открывает `WorkoutEditView` без `customExercisesSection` для первой итерации)
+    - ✅ Отображение планового количества кругов/подходов:
+      - ✅ Используется `NavigationLink` + `WorkoutStepperView` (вместо `Stepper` как планировалось, т.к. `WorkoutStepperView` лучше подходит для часов)
+      - ✅ Позволяет изменять плановое количество кругов/подходов через вызов `viewModel.updatePlannedCount(for: newValue)` (аналогично `WorkoutPreviewScreen`)
+      - ✅ Отключено для типа `.turbo` через `.disabled(viewModel.isPlannedCountDisabled)` (computed property в ViewModel)
+  - **ViewModel для экрана превью:**
+    - ✅ Создан `WorkoutPreviewViewModel` (TDD подход) - реализован полностью
+    - ✅ **Реализация ViewModel (по аналогии с `WorkoutPreviewViewModel` и `HomeViewModel`):**
+      - **Архитектурный принцип:** Вся бизнес-логика должна быть в ViewModel, View только отображает данные и вызывает методы ViewModel
+      - **Зависимости (через конструктор):**
+        - `connectivityService: any WatchConnectivityServiceProtocol` - сервис связи с iPhone для получения данных тренировки
+        - `appGroupHelper: any WatchAppGroupHelperProtocol` - хелпер для чтения данных из App Group UserDefaults (для получения `restTime`)
+      - **Инициализация:**
+        - Инициализатор принимает зависимости: `init(connectivityService:any WatchConnectivityServiceProtocol, appGroupHelper:any WatchAppGroupHelperProtocol?)`
+        - По умолчанию `appGroupHelper` создается как `WatchAppGroupHelper()` (аналогично `HomeViewModel`)
+      - **Метод загрузки данных:**
+        - `loadData(day: Int) async` - загружает данные тренировки и инициализирует ViewModel:
+          - Вызывает `connectivityService.requestWorkoutData(day:)` для получения `WorkoutDataResponse`
+          - Получает `restTime` через `appGroupHelper.restTime`
+          - Вызывает внутренний метод `updateData(workoutDataResponse:restTime:)` для инициализации всех свойств
+          - Устанавливает `isLoading` и обрабатывает ошибки
+      - **Внутренний метод инициализации:**
+        - `updateData(workoutDataResponse: WorkoutDataResponse, restTime: Int)` - инициализирует/обновляет данные ViewModel:
+          - Принимает `workoutDataResponse: WorkoutDataResponse` от `connectivityService.requestWorkoutData(day:)`:
+            - `workoutDataResponse.workoutData` - данные тренировки (содержит `day`, `executionType`, `trainings`, `plannedCount`)
+            - `workoutDataResponse.executionCount` - фактическое количество выполнений из `DayActivity.count` (используется для инициализации `count`)
+            - `workoutDataResponse.comment` - комментарий к тренировке из `DayActivity.comment` (используется для инициализации `comment`)
+          - Принимает `restTime: Int` от `appGroupHelper.restTime` (время отдыха из App Group UserDefaults)
+          - Инициализирует все свойства ViewModel из полученных данных:
+            - `dayNumber` из `workoutData.day`
+            - `selectedExecutionType` из `workoutData.exerciseExecutionType`
+            - `availableExecutionTypes` вычисляется на основе `dayNumber` (аналогично `WorkoutProgramCreator`)
+            - `trainings` из `workoutData.trainings`
+            - `count` из `workoutDataResponse.executionCount` (фактическое количество выполнений)
+            - `plannedCount` из `workoutData.plannedCount`
+            - `restTime` из параметра `restTime`
+            - `comment` из `workoutDataResponse.comment`
+            - `wasOriginallyPassed` вычисляется на основе `count != nil` (если `count` установлен, значит день был пройден)
+          - Создает `originalSnapshot` для отслеживания изменений (для вычисления `hasChanges`)
+      - **Состояние (State):**
+        - `private(set) var isLoading = false` - флаг загрузки данных (аналогично `HomeViewModel`)
+        - `private(set) var error: Error?` - ошибка загрузки данных или валидации
+        - `dayNumber: Int` - номер дня программы
+        - `selectedExecutionType: ExerciseExecutionType?` - выбранный тип выполнения
+        - `availableExecutionTypes: [ExerciseExecutionType]` - доступные типы выполнения
+        - `trainings: [WorkoutPreviewTraining]` - массив упражнений с возможностью изменения `count`
+        - `count: Int?` - фактическое количество кругов/подходов (после выполнения тренировки)
+        - `plannedCount: Int?` - плановое количество кругов/подходов
+        - `restTime: Int` - время отдыха между подходами/кругами (в секундах)
+        - `wasOriginallyPassed: Bool` - флаг, был ли день изначально пройден (для определения, нужно ли показывать пикер времени отдыха)
+        - `isWorkoutCompleted: Bool` - флаг, завершена ли тренировка (устанавливается после выполнения тренировки)
+        - `workoutDuration: Int?` - длительность выполненной тренировки в секундах
+        - `error: TrainingError?` - ошибка валидации при сохранении (может быть объединено с общим `error`)
+        - `@ObservationIgnored private var originalSnapshot: DataSnapshot?` - снимок исходных данных для отслеживания изменений
+      - **Вычисляемые свойства (Computed Properties):**
+        - ✅ `isPlannedCountDisabled: Bool` - определяет, должен ли степпер для `plannedCount` быть отключен (для `.turbo` типа)
+        - ✅ `displayedCount: Int?` - отображаемое количество кругов/подходов (`count ?? plannedCount`)
+        - ✅ `shouldShowEditButton: Bool` - определяет, нужно ли показывать кнопку редактирования упражнений (только для `.cycles` и `.sets`)
+        - ✅ `hasChanges: Bool` - определяет, были ли внесены изменения после первоначальной загрузки (сравнение с `originalSnapshot`)
+        - ✅ `selectedExecutionTypeForPicker: ExerciseExecutionType` - выбранный тип выполнения для Picker (неопциональное значение)
+        - [ ] **TODO:** `canEditComment: Bool` - определяет, можно ли редактировать комментарий (только если `isWorkoutCompleted || wasOriginallyPassed`, аналогично `WorkoutPreviewScreen`)
+      - **Методы (вся бизнес-логика в ViewModel):**
+        - ✅ `shouldShowExecutionTypePicker(day: Int, isPassed: Bool) -> Bool` - определяет, нужно ли показывать пикер типа выполнения:
+          - Показывается только если данные загружены (dayNumber установлен и trainings не пустой)
+          - Показывается только для не пройденных дней (если `isPassed == false`)
+          - Показывается только если доступно больше одного типа выполнения
+        - ✅ `updateExecutionType(with newType: ExerciseExecutionType)` - обновление типа выполнения и пересчет упражнений (аналогично `WorkoutPreviewViewModel.updateExecutionType()`)
+        - ✅ `updatePlannedCount(id: String, action: TrainingRowAction)` - обновление количества повторений для конкретной тренировки или `plannedCount` (аналогично `WorkoutPreviewViewModel.updatePlannedCount()`)
+        - ✅ `updatePlannedCount(for newValue: Int)` - обновление планового количества кругов/подходов напрямую по новому значению
+        - ✅ `updateTrainingCount(for trainingId: String, newValue: Int)` - обновление количества повторений для конкретной тренировки с удалением при count = 0
+        - ✅ `updateRestTime(_ newValue: Int)` - обновление времени отдыха между подходами/кругами
+        - ✅ `updateTrainings(_ newTrainings: [WorkoutPreviewTraining])` - обновление списка упражнений тренировки (пересчитывает sortOrder)
+        - ✅ `displayExecutionType(for executionType: ExerciseExecutionType) -> ExerciseExecutionType` - получение типа выполнения для отображения (для турбо-режима использует `getEffectiveExecutionType`)
+        - ✅ `buildWorkoutResult() -> WorkoutResult` - создание результата тренировки из текущих значений (для отправки на iPhone)
+        - ✅ `buildWorkoutData() -> WorkoutData` - получение обновленных данных тренировки (для передачи в `WorkoutView`)
+        - ✅ `handleWorkoutResult(_ result: WorkoutResult)` - обработка результата тренировки после выполнения (устанавливает `count`, `workoutDuration`, `isWorkoutCompleted`)
+        - ✅ `saveTrainingAsPassed()` - сохранение тренировки через `WatchConnectivityService.sendWorkoutResult()` (аналогично `WorkoutPreviewViewModel.saveTrainingAsPassed()`, но для часов)
+        - [ ] **TODO:** `updateComment(_ newComment: String?)` - обновление комментария тренировки (для использования с `TextFieldLink`)
+      - **Внутренние структуры:**
+        - `DataSnapshot: Equatable` - снимок данных для отслеживания изменений (используется для вычисления `hasChanges`)
+        - `TrainingError: Error, LocalizedError, Equatable` - ошибки валидации при сохранении тренировки
+      - **Интеграция с View:**
+        - View должна использовать `@State private var viewModel = WorkoutPreviewViewModel(connectivityService:appGroupHelper:)` (аналогично `HomeViewModel`)
+        - View должна передавать зависимости в ViewModel через конструктор:
+          - `WatchConnectivityService` - для запроса данных тренировки с iPhone
+          - `WatchAppGroupHelper` - для получения `restTime` из App Group UserDefaults (опционально, по умолчанию создается новый экземпляр)
+        - View должна в `.onAppear` или `.task` вызывать `await viewModel.loadData(day:)` (аналогично `HomeView`)
+        - ViewModel сам получает данные через свои зависимости и инициализирует себя
+        - View должна вызывать методы ViewModel для всех действий пользователя (обновление значений, сохранение и т.д.)
+        - View должна получать все данные для отображения из ViewModel (через свойства ViewModel, а не из локального `@State`)
+        - View должна передавать данные из ViewModel в дочерние компоненты (`WorkoutPreviewButtonsView`, `WorkoutStepperView` и т.д.)
+        - View не должна содержать бизнес-логику (только логику отображения)
+        - View должна использовать Binding для двусторонней связи с ViewModel (например, `Binding(get: { viewModel.restTime }, set: { viewModel.updateRestTime($0) })`)
+        - View должна обрабатывать ошибки из ViewModel (через `viewModel.error`, аналогично `WorkoutPreviewScreen`)
+        - View должна отображать состояние загрузки (через `viewModel.isLoading`, аналогично `HomeViewModel`)
   - **Интеграция:**
     - **Важно:** `WorkoutPreviewView` всегда должен идти до экрана тренировки (`WorkoutView`)
     - **Сценарий 1:** Если активность для дня еще не выбрана и пользователь выбирает `.workout`:

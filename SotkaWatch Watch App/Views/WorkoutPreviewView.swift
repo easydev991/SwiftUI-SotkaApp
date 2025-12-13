@@ -5,29 +5,27 @@ struct WorkoutPreviewView: View {
     // MARK: - Properties
 
     let dayNumber: Int
-    let workoutData: WorkoutData?
-
-    // MARK: - State (заглушки для верстки)
-
-    @State private var selectedExecutionType: ExerciseExecutionType?
-    @State private var availableExecutionTypes: [ExerciseExecutionType] = []
-    @State private var trainings: [WorkoutPreviewTraining] = []
-    @State private var plannedCount: Int?
-    @State private var restTime: Int = Constants.defaultRestTime
+    @State private var viewModel: WorkoutPreviewViewModel
     @State private var showEditView = false
     @State private var showWorkoutView = false
 
-    // MARK: - Callbacks (заглушки для верстки)
-
-    var onStartWorkout: (() -> Void)?
-    var onSaveAsPassed: (() -> Void)?
-    var onUpdateExecutionType: ((ExerciseExecutionType) -> Void)?
-    var onUpdateTrainingCount: ((String, Int) -> Void)?
-    var onUpdatePlannedCount: ((Int) -> Void)?
-    var onUpdateRestTime: ((Int) -> Void)?
-    var shouldShowExecutionTypePicker: Bool {
-        guard !trainings.isEmpty else { return false }
-        return availableExecutionTypes.count > 1
+    /// Инициализатор
+    /// - Parameters:
+    ///   - dayNumber: Номер дня программы
+    ///   - connectivityService: Сервис связи с iPhone
+    ///   - appGroupHelper: Хелпер для чтения данных из App Group UserDefaults (опционально)
+    init(
+        dayNumber: Int,
+        connectivityService: any WatchConnectivityServiceProtocol,
+        appGroupHelper: (any WatchAppGroupHelperProtocol)? = nil
+    ) {
+        self.dayNumber = dayNumber
+        _viewModel = State(
+            initialValue: .init(
+                connectivityService: connectivityService,
+                appGroupHelper: appGroupHelper
+            )
+        )
     }
 
     var body: some View {
@@ -35,15 +33,16 @@ struct WorkoutPreviewView: View {
             ScrollView {
                 VStack(spacing: 8) {
                     executionTypePicker
-                    Divider()
                     workoutContentView
                     bottomButtonsView
                 }
             }
             .navigationTitle(.day(number: dayNumber))
             .toolbar {
-                ToolbarItem(placement: .topBarTrailing) {
-                    editButton
+                if viewModel.shouldShowEditButton {
+                    ToolbarItem(placement: .topBarTrailing) {
+                        editButton
+                    }
                 }
             }
             .sheet(isPresented: $showEditView) {
@@ -54,9 +53,27 @@ struct WorkoutPreviewView: View {
                 // TODO: WorkoutView
                 ProgressView()
             }
+            .alert(
+                isPresented: .init(
+                    get: { viewModel.error != nil },
+                    set: { if !$0 { viewModel.error = nil } }
+                ),
+                error: viewModel.error
+            ) {
+                Button(.ok, role: .cancel) {
+                    viewModel.error = nil
+                }
+            }
         }
-        .onAppear {
-            setupInitialData()
+        .opacity(viewModel.isLoading ? 0.5 : 1)
+        .disabled(viewModel.isLoading)
+        .overlay {
+            if viewModel.isLoading {
+                ProgressView()
+            }
+        }
+        .task {
+            await viewModel.loadData(day: dayNumber)
         }
     }
 }
@@ -74,17 +91,14 @@ private extension WorkoutPreviewView {
 
     @ViewBuilder
     var executionTypePicker: some View {
-        if shouldShowExecutionTypePicker {
-            Picker(.exerciseExecutionType, selection: .init(
-                get: { selectedExecutionType },
+        if viewModel.shouldShowExecutionTypePicker(day: dayNumber, isPassed: viewModel.wasOriginallyPassed) {
+            Picker(.exerciseExecutionType, selection: Binding(
+                get: { viewModel.selectedExecutionTypeForPicker },
                 set: { newValue in
-                    selectedExecutionType = newValue
-                    if let newValue {
-                        onUpdateExecutionType?(newValue)
-                    }
+                    viewModel.updateExecutionType(with: newValue)
                 }
             )) {
-                ForEach(availableExecutionTypes, id: \.self) { type in
+                ForEach(viewModel.availableExecutionTypes, id: \.self) { type in
                     Text(type.localizedTitle).tag(type)
                 }
             }
@@ -97,20 +111,18 @@ private extension WorkoutPreviewView {
             ForEach(visibleTrainings) { training in
                 makeTrainingRowView(for: training)
             }
-            if let selectedExecutionType {
+            if let selectedExecutionType = viewModel.selectedExecutionType {
                 Divider()
                 makePlannedCountView(for: selectedExecutionType)
-                // TODO: пикер времени показываем только если !wasOriginallyPassed по аналогии с WorkoutPreviewScreen
-                makeRestTimePicker(
-                    .init(
-                        get: { restTime },
-                        set: { newValue in
-                            restTime = newValue
-                            onUpdateRestTime?(newValue)
-                        }
+                if !viewModel.wasOriginallyPassed {
+                    Divider()
+                    makeRestTimePicker(
+                        .init(
+                            get: { viewModel.restTime },
+                            set: { viewModel.updateRestTime($0) }
+                        )
                     )
-                )
-                Divider()
+                }
             }
         }
     }
@@ -119,23 +131,12 @@ private extension WorkoutPreviewView {
         let value = Binding(
             get: { training.count ?? 0 },
             set: { newValue in
-                if newValue == 0 {
-                    // Удаляем упражнение из списка (отличие для первой итерации часов)
-                    if let index = trainings.firstIndex(where: { $0.id == training.id }) {
-                        trainings.remove(at: index)
-                    }
-                } else {
-                    // Обновляем count для упражнения
-                    if let index = trainings.firstIndex(where: { $0.id == training.id }) {
-                        trainings[index] = trainings[index].withCount(newValue)
-                    }
-                    onUpdateTrainingCount?(training.id, newValue)
-                }
+                viewModel.updateTrainingCount(for: training.id, newValue: newValue)
             }
         )
         let title = makeExerciseTitle(for: training)
         return NavigationLink(destination: WorkoutStepperView(value: value, from: 1, title: title)) {
-            ActivityRowView(
+            WatchActivityRowView(
                 image: makeExerciseImage(for: training),
                 title: title,
                 count: training.count
@@ -145,21 +146,20 @@ private extension WorkoutPreviewView {
 
     func makePlannedCountView(for executionType: ExerciseExecutionType) -> some View {
         let value = Binding(
-            get: { plannedCount ?? 1 },
+            get: { viewModel.displayedCount ?? 1 },
             set: { newValue in
-                plannedCount = newValue
-                onUpdatePlannedCount?(newValue)
+                viewModel.updatePlannedCount(for: newValue)
             }
         )
-        let title = executionType.localizedTitle
+        let title = viewModel.displayExecutionType(for: executionType).localizedTitle
         return NavigationLink(destination: WorkoutStepperView(value: value, from: 1, title: title)) {
-            ActivityRowView(
-                image: WorkoutProgramCreator.getEffectiveExecutionType(for: dayNumber, executionType: executionType).image,
+            WatchActivityRowView(
+                image: viewModel.displayExecutionType(for: executionType).image,
                 title: title,
-                count: plannedCount
+                count: viewModel.displayedCount
             )
         }
-        .disabled(executionType == .turbo)
+        .disabled(viewModel.isPlannedCountDisabled)
     }
 
     func makeRestTimePicker(_ value: Binding<Int>) -> some View {
@@ -174,18 +174,19 @@ private extension WorkoutPreviewView {
     }
 
     var bottomButtonsView: some View {
-        VStack(spacing: 8) {
-            Button(.workoutPreviewStartTraining) {
+        WorkoutPreviewButtonsView(
+            isPassed: viewModel.wasOriginallyPassed,
+            hasChanges: viewModel.hasChanges,
+            isWorkoutCompleted: viewModel.isWorkoutCompleted,
+            onSave: {
+                Task {
+                    await viewModel.saveTrainingAsPassed()
+                }
+            },
+            onStartTraining: {
                 showWorkoutView = true
-                onStartWorkout?()
             }
-            .buttonStyle(.borderedProminent)
-
-            Button(.workoutPreviewSaveAsPassed) {
-                onSaveAsPassed?()
-            }
-            .buttonStyle(.bordered)
-        }
+        )
     }
 }
 
@@ -193,7 +194,7 @@ private extension WorkoutPreviewView {
 
 private extension WorkoutPreviewView {
     var visibleTrainings: [WorkoutPreviewTraining] {
-        trainings.filter { ($0.count ?? 0) > 0 }
+        viewModel.trainings.filter { ($0.count ?? 0) > 0 }
     }
 
     func makeExerciseImage(for training: WorkoutPreviewTraining) -> Image {
@@ -207,7 +208,7 @@ private extension WorkoutPreviewView {
     func makeExerciseTitle(for training: WorkoutPreviewTraining) -> String {
         if let typeId = training.typeId,
            let exerciseType = ExerciseType(rawValue: typeId),
-           let selectedExecutionType {
+           let selectedExecutionType = viewModel.selectedExecutionType {
             return exerciseType.makeLocalizedTitle(
                 dayNumber,
                 executionType: selectedExecutionType,
@@ -219,56 +220,16 @@ private extension WorkoutPreviewView {
         }
         return String(localized: .exerciseTypeUnknown)
     }
-
-    func setupInitialData() {
-        // Инициализация данных из workoutData
-        if let workoutData {
-            selectedExecutionType = workoutData.exerciseExecutionType
-            trainings = workoutData.trainings
-            plannedCount = workoutData.plannedCount
-
-            // Заполняем availableExecutionTypes (заглушка)
-            if workoutData.day > 49 {
-                availableExecutionTypes = [.cycles, .sets]
-                if workoutData.day >= 92 {
-                    availableExecutionTypes.append(.turbo)
-                }
-            } else {
-                availableExecutionTypes = [.cycles]
-            }
-        }
-    }
 }
 
 // MARK: - Preview
 
 #if DEBUG
 #Preview {
-    let workoutData = WorkoutData(
-        day: 50,
-        executionType: 0,
-        trainings: [
-            WorkoutPreviewTraining(
-                id: "1",
-                count: 10,
-                typeId: 0,
-                customTypeId: nil,
-                sortOrder: 0
-            ),
-            WorkoutPreviewTraining(
-                id: "2",
-                count: 15,
-                typeId: 3,
-                customTypeId: nil,
-                sortOrder: 1
-            )
-        ],
-        plannedCount: 4
-    )
-
+    let connectivityService = PreviewWatchConnectivityService()
     WorkoutPreviewView(
         dayNumber: 50,
-        workoutData: workoutData
+        connectivityService: connectivityService
     )
 }
 #endif

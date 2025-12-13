@@ -209,7 +209,6 @@ private extension WorkoutPreviewScreen {
             isPassed: viewModel.wasOriginallyPassed,
             hasChanges: viewModel.hasChanges,
             isWorkoutCompleted: viewModel.isWorkoutCompleted,
-            showCommentField: viewModel.isWorkoutCompleted,
             onSave: {
                 viewModel.saveTrainingAsPassed(
                     activitiesService: activitiesService,
