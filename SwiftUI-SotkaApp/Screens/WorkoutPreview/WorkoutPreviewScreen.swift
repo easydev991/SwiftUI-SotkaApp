@@ -129,8 +129,8 @@ private extension WorkoutPreviewScreen {
     func makeTrainingRowView(for training: WorkoutPreviewTraining) -> some View {
         TrainingRowView(
             id: training.id,
-            image: exerciseImage(for: training),
-            title: exerciseTitle(for: training),
+            image: makeExerciseImage(for: training),
+            title: makeExerciseTitle(for: training),
             count: training.count,
             onAction: { id, action in
                 viewModel.updatePlannedCount(id: id, action: action)
@@ -177,7 +177,7 @@ private extension WorkoutPreviewScreen {
         .focused($isCommentFocused)
     }
 
-    func exerciseImage(for training: WorkoutPreviewTraining) -> Image {
+    func makeExerciseImage(for training: WorkoutPreviewTraining) -> Image {
         if let customTypeId = training.customTypeId,
            let customExercise = CustomExercise.fetch(by: customTypeId, in: modelContext) {
             customExercise.image
@@ -189,7 +189,7 @@ private extension WorkoutPreviewScreen {
         }
     }
 
-    func exerciseTitle(for training: WorkoutPreviewTraining) -> String {
+    func makeExerciseTitle(for training: WorkoutPreviewTraining) -> String {
         if let customTypeId = training.customTypeId,
            let customExercise = CustomExercise.fetch(by: customTypeId, in: modelContext) {
             return customExercise.name

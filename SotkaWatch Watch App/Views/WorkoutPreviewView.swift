@@ -133,10 +133,10 @@ private extension WorkoutPreviewView {
                 }
             }
         )
-        let title = exerciseTitle(for: training)
+        let title = makeExerciseTitle(for: training)
         return NavigationLink(destination: WorkoutStepperView(value: value, from: 1, title: title)) {
             ActivityRowView(
-                image: exerciseImage(for: training),
+                image: makeExerciseImage(for: training),
                 title: title,
                 count: training.count
             )
@@ -196,7 +196,7 @@ private extension WorkoutPreviewView {
         trainings.filter { ($0.count ?? 0) > 0 }
     }
 
-    func exerciseImage(for training: WorkoutPreviewTraining) -> Image {
+    func makeExerciseImage(for training: WorkoutPreviewTraining) -> Image {
         if let typeId = training.typeId,
            let exerciseType = ExerciseType(rawValue: typeId) {
             return exerciseType.image
@@ -204,7 +204,7 @@ private extension WorkoutPreviewView {
         return Image(systemName: "questionmark.circle")
     }
 
-    func exerciseTitle(for training: WorkoutPreviewTraining) -> String {
+    func makeExerciseTitle(for training: WorkoutPreviewTraining) -> String {
         if let typeId = training.typeId,
            let exerciseType = ExerciseType(rawValue: typeId),
            let selectedExecutionType {
@@ -217,7 +217,7 @@ private extension WorkoutPreviewView {
                   let exerciseType = ExerciseType(rawValue: typeId) {
             return exerciseType.localizedTitle
         }
-        return "Неизвестное упражнение"
+        return String(localized: .exerciseTypeUnknown)
     }
 
     func setupInitialData() {
