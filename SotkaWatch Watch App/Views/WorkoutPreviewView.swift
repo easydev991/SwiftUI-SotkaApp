@@ -9,6 +9,9 @@ struct WorkoutPreviewView: View {
     @State private var showEditView = false
     @State private var showWorkoutView = false
 
+    @ObservationIgnored private let connectivityService: any WatchConnectivityServiceProtocol
+    @ObservationIgnored private let appGroupHelper: any WatchAppGroupHelperProtocol
+
     /// Инициализатор
     /// - Parameters:
     ///   - dayNumber: Номер дня программы
@@ -20,10 +23,12 @@ struct WorkoutPreviewView: View {
         appGroupHelper: (any WatchAppGroupHelperProtocol)? = nil
     ) {
         self.dayNumber = dayNumber
+        self.connectivityService = connectivityService
+        self.appGroupHelper = appGroupHelper ?? WatchAppGroupHelper()
         _viewModel = State(
             initialValue: .init(
                 connectivityService: connectivityService,
-                appGroupHelper: appGroupHelper
+                appGroupHelper: self.appGroupHelper
             )
         )
     }
@@ -50,8 +55,20 @@ struct WorkoutPreviewView: View {
                 ProgressView()
             }
             .fullScreenCover(isPresented: $showWorkoutView) {
-                // TODO: WorkoutView
-                ProgressView()
+                if let executionType = viewModel.selectedExecutionType {
+                    WorkoutView(
+                        dayNumber: dayNumber,
+                        executionType: executionType,
+                        trainings: viewModel.trainings,
+                        plannedCount: viewModel.plannedCount,
+                        restTime: viewModel.restTime,
+                        connectivityService: connectivityService,
+                        appGroupHelper: appGroupHelper,
+                        onWorkoutCompleted: { result in
+                            viewModel.handleWorkoutResult(result)
+                        }
+                    )
+                }
             }
             .alert(
                 isPresented: .init(
@@ -134,10 +151,13 @@ private extension WorkoutPreviewView {
                 viewModel.updateTrainingCount(for: training.id, newValue: newValue)
             }
         )
-        let title = makeExerciseTitle(for: training)
+        let title = training.makeExerciseTitle(
+            dayNumber: dayNumber,
+            selectedExecutionType: viewModel.selectedExecutionType
+        )
         return NavigationLink(destination: WorkoutStepperView(value: value, from: 1, title: title)) {
             WatchActivityRowView(
-                image: makeExerciseImage(for: training),
+                image: training.exerciseImage,
                 title: title,
                 count: training.count
             )
@@ -197,29 +217,32 @@ private extension WorkoutPreviewView {
         viewModel.trainings.filter { ($0.count ?? 0) > 0 }
     }
 
-    func makeExerciseImage(for training: WorkoutPreviewTraining) -> Image {
-        if let typeId = training.typeId,
-           let exerciseType = ExerciseType(rawValue: typeId) {
-            return exerciseType.image
-        }
-        return Image(systemName: "questionmark.circle")
-    }
-
-    func makeExerciseTitle(for training: WorkoutPreviewTraining) -> String {
-        if let typeId = training.typeId,
-           let exerciseType = ExerciseType(rawValue: typeId),
-           let selectedExecutionType = viewModel.selectedExecutionType {
-            return exerciseType.makeLocalizedTitle(
-                dayNumber,
-                executionType: selectedExecutionType,
-                sortOrder: training.sortOrder
-            )
-        } else if let typeId = training.typeId,
-                  let exerciseType = ExerciseType(rawValue: typeId) {
-            return exerciseType.localizedTitle
-        }
-        return String(localized: .exerciseTypeUnknown)
-    }
+//    func makeExerciseImage(for training: WorkoutPreviewTraining) -> Image {
+//        if let typeId = training.typeId,
+//           let exerciseType = ExerciseType(rawValue: typeId) {
+//            return exerciseType.image
+//        }
+//        return Image(systemName: "questionmark.circle")
+//    }
+//
+//    func makeExerciseTitle(
+//        for training: WorkoutPreviewTraining,
+//        selectedExecutionType: ExerciseExecutionType?
+//    ) -> String {
+//        if let typeId = training.typeId,
+//           let exerciseType = ExerciseType(rawValue: typeId),
+//           let selectedExecutionType {
+//            return exerciseType.makeLocalizedTitle(
+//                dayNumber,
+//                executionType: selectedExecutionType,
+//                sortOrder: training.sortOrder
+//            )
+//        } else if let typeId = training.typeId,
+//                  let exerciseType = ExerciseType(rawValue: typeId) {
+//            return exerciseType.localizedTitle
+//        }
+//        return String(localized: .exerciseTypeUnknown)
+//    }
 }
 
 // MARK: - Preview

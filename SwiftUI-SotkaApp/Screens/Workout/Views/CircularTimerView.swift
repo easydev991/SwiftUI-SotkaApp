@@ -1,4 +1,3 @@
-import SWDesignSystem
 import SwiftUI
 
 struct CircularTimerView: View {
@@ -42,7 +41,7 @@ private extension CircularTimerView {
         Circle()
             .trim(from: 0, to: 1.0 - progress)
             .stroke(
-                Color.swAccent,
+                Color.blue,
                 style: StrokeStyle(lineWidth: 8, lineCap: .round)
             )
             .rotationEffect(.degrees(-90))

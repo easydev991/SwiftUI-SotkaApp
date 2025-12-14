@@ -112,14 +112,16 @@ final class WorkoutScreenViewModel {
             let setsPerExercise = isTurboWithSets ? 1 : (plannedCount ?? 0)
 
             if setsPerExercise > 0 {
+                var setNumber = 1
                 for _ in trainings {
-                    for j in 1 ... setsPerExercise {
+                    for _ in 1 ... setsPerExercise {
                         stepStates.append(
                             WorkoutStepState(
-                                step: .exercise(.sets, number: j),
+                                step: .exercise(.sets, number: setNumber),
                                 state: .inactive
                             )
                         )
+                        setNumber += 1
                     }
                 }
             }
