@@ -1,18 +1,17 @@
 import SwiftUI
 
 struct SelectedActivityView: View {
+    @Environment(\.currentDay) private var currentDay
     @State private var shouldShowDeleteConfirmation = false
     private let mode: Mode
     private let comment: String?
     private let onSelect: (DayActivityType) -> Void
     private let onDelete: (Int) -> Void
-    private let dayNumber: Int
 
     init(
         activity: DayActivityType,
         onSelect: @escaping (DayActivityType) -> Void,
         onDelete: @escaping (Int) -> Void,
-        dayNumber: Int,
         workoutData: WorkoutData?,
         workoutExecutionCount: Int?,
         comment: String?
@@ -25,7 +24,6 @@ struct SelectedActivityView: View {
         self.comment = comment
         self.onSelect = onSelect
         self.onDelete = onDelete
-        self.dayNumber = dayNumber
     }
 
     var body: some View {
@@ -126,10 +124,10 @@ private extension SelectedActivityView {
             titleVisibility: .visible
         ) {
             Button(.journalDelete, role: .destructive) {
-                onDelete(dayNumber)
+                onDelete(currentDay)
             }
         } message: {
-            Text(.journalDeleteEntryMessage(dayNumber))
+            Text(.journalDeleteEntryMessage(currentDay))
         }
     }
 
@@ -160,25 +158,25 @@ private extension SelectedActivityView {
             activity: .rest,
             onSelect: { _ in },
             onDelete: { _ in },
-            dayNumber: 10,
             workoutData: nil,
             workoutExecutionCount: nil,
             comment: nil
         )
+        .currentDay(10)
     }
 }
 
-#Preview("Отдых с комметом") {
+#Preview("Отдых с комментом") {
     NavigationStack {
         SelectedActivityView(
             activity: .rest,
             onSelect: { _ in },
             onDelete: { _ in },
-            dayNumber: 10,
             workoutData: nil,
             workoutExecutionCount: nil,
             comment: "Отлично отдыхается сегодня, как же классно отдохнуть!"
         )
+        .currentDay(10)
     }
 }
 
@@ -188,7 +186,6 @@ private extension SelectedActivityView {
             activity: .workout,
             onSelect: { _ in },
             onDelete: { _ in },
-            dayNumber: 10,
             workoutData: .init(
                 day: 10,
                 executionType: ExerciseExecutionType.cycles.rawValue,
@@ -210,5 +207,6 @@ private extension SelectedActivityView {
             comment: "Отличная тренировка!"
         )
         .navigationTitle(.day(number: 2))
+        .currentDay(2)
     }
 }

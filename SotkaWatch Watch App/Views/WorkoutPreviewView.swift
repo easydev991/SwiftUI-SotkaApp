@@ -4,31 +4,23 @@ import SwiftUI
 struct WorkoutPreviewView: View {
     // MARK: - Properties
 
-    let dayNumber: Int
+    @Environment(\.currentDay) private var currentDay
     @State private var viewModel: WorkoutPreviewViewModel
     @State private var showEditView = false
     @State private var showWorkoutView = false
 
-    @ObservationIgnored private let connectivityService: any WatchConnectivityServiceProtocol
-    @ObservationIgnored private let appGroupHelper: any WatchAppGroupHelperProtocol
-
     /// Инициализатор
     /// - Parameters:
-    ///   - dayNumber: Номер дня программы
     ///   - connectivityService: Сервис связи с iPhone
     ///   - appGroupHelper: Хелпер для чтения данных из App Group UserDefaults (опционально)
     init(
-        dayNumber: Int,
         connectivityService: any WatchConnectivityServiceProtocol,
         appGroupHelper: (any WatchAppGroupHelperProtocol)? = nil
     ) {
-        self.dayNumber = dayNumber
-        self.connectivityService = connectivityService
-        self.appGroupHelper = appGroupHelper ?? WatchAppGroupHelper()
         _viewModel = State(
             initialValue: .init(
                 connectivityService: connectivityService,
-                appGroupHelper: self.appGroupHelper
+                appGroupHelper: appGroupHelper ?? WatchAppGroupHelper()
             )
         )
     }
@@ -42,7 +34,7 @@ struct WorkoutPreviewView: View {
                     bottomButtonsView
                 }
             }
-            .navigationTitle(.day(number: dayNumber))
+            .navigationTitle(.day(number: currentDay))
             .toolbar {
                 if viewModel.shouldShowEditButton {
                     ToolbarItem(placement: .topBarTrailing) {
@@ -51,19 +43,17 @@ struct WorkoutPreviewView: View {
                 }
             }
             .sheet(isPresented: $showEditView) {
-                // TODO: WorkoutEditView (без customExercisesSection для первой итерации)
-                ProgressView()
+                WorkoutEditView(viewModel: viewModel)
             }
             .fullScreenCover(isPresented: $showWorkoutView) {
                 if let executionType = viewModel.selectedExecutionType {
                     WorkoutView(
-                        dayNumber: dayNumber,
                         executionType: executionType,
                         trainings: viewModel.trainings,
                         plannedCount: viewModel.plannedCount,
                         restTime: viewModel.restTime,
-                        connectivityService: connectivityService,
-                        appGroupHelper: appGroupHelper,
+                        connectivityService: viewModel.connectivityService,
+                        appGroupHelper: viewModel.appGroupHelper,
                         onWorkoutCompleted: { result in
                             viewModel.handleWorkoutResult(result)
                         }
@@ -90,7 +80,7 @@ struct WorkoutPreviewView: View {
             }
         }
         .task {
-            await viewModel.loadData(day: dayNumber)
+            await viewModel.loadData(day: currentDay)
         }
     }
 }
@@ -108,7 +98,7 @@ private extension WorkoutPreviewView {
 
     @ViewBuilder
     var executionTypePicker: some View {
-        if viewModel.shouldShowExecutionTypePicker(day: dayNumber, isPassed: viewModel.wasOriginallyPassed) {
+        if viewModel.shouldShowExecutionTypePicker(day: currentDay, isPassed: viewModel.wasOriginallyPassed) {
             Picker(.exerciseExecutionType, selection: Binding(
                 get: { viewModel.selectedExecutionTypeForPicker },
                 set: { newValue in
@@ -125,20 +115,20 @@ private extension WorkoutPreviewView {
 
     var workoutContentView: some View {
         LazyVStack(spacing: 8) {
-            ForEach(visibleTrainings) { training in
+            ForEach(viewModel.visibleTrainings) { training in
                 makeTrainingRowView(for: training)
             }
             if let selectedExecutionType = viewModel.selectedExecutionType {
                 Divider()
                 makePlannedCountView(for: selectedExecutionType)
                 if !viewModel.wasOriginallyPassed {
-                    Divider()
                     makeRestTimePicker(
                         .init(
                             get: { viewModel.restTime },
                             set: { viewModel.updateRestTime($0) }
                         )
                     )
+                    Divider()
                 }
             }
         }
@@ -152,7 +142,7 @@ private extension WorkoutPreviewView {
             }
         )
         let title = training.makeExerciseTitle(
-            dayNumber: dayNumber,
+            dayNumber: currentDay,
             selectedExecutionType: viewModel.selectedExecutionType
         )
         return NavigationLink(destination: WorkoutStepperView(value: value, from: 1, title: title)) {
@@ -167,9 +157,7 @@ private extension WorkoutPreviewView {
     func makePlannedCountView(for executionType: ExerciseExecutionType) -> some View {
         let value = Binding(
             get: { viewModel.displayedCount ?? 1 },
-            set: { newValue in
-                viewModel.updatePlannedCount(for: newValue)
-            }
+            set: viewModel.updatePlannedCount
         )
         let title = viewModel.displayExecutionType(for: executionType).localizedTitle
         return NavigationLink(destination: WorkoutStepperView(value: value, from: 1, title: title)) {
@@ -210,49 +198,11 @@ private extension WorkoutPreviewView {
     }
 }
 
-// MARK: - Helper Methods
-
-private extension WorkoutPreviewView {
-    var visibleTrainings: [WorkoutPreviewTraining] {
-        viewModel.trainings.filter { ($0.count ?? 0) > 0 }
-    }
-
-//    func makeExerciseImage(for training: WorkoutPreviewTraining) -> Image {
-//        if let typeId = training.typeId,
-//           let exerciseType = ExerciseType(rawValue: typeId) {
-//            return exerciseType.image
-//        }
-//        return Image(systemName: "questionmark.circle")
-//    }
-//
-//    func makeExerciseTitle(
-//        for training: WorkoutPreviewTraining,
-//        selectedExecutionType: ExerciseExecutionType?
-//    ) -> String {
-//        if let typeId = training.typeId,
-//           let exerciseType = ExerciseType(rawValue: typeId),
-//           let selectedExecutionType {
-//            return exerciseType.makeLocalizedTitle(
-//                dayNumber,
-//                executionType: selectedExecutionType,
-//                sortOrder: training.sortOrder
-//            )
-//        } else if let typeId = training.typeId,
-//                  let exerciseType = ExerciseType(rawValue: typeId) {
-//            return exerciseType.localizedTitle
-//        }
-//        return String(localized: .exerciseTypeUnknown)
-//    }
-}
-
-// MARK: - Preview
-
 #if DEBUG
 #Preview {
-    let connectivityService = PreviewWatchConnectivityService()
     WorkoutPreviewView(
-        dayNumber: 50,
-        connectivityService: connectivityService
+        connectivityService: PreviewWatchConnectivityService()
     )
+    .currentDay(50)
 }
 #endif

@@ -86,6 +86,7 @@
 		67569A282EDD9BBA0078089C /* Exceptions for "SwiftUI-SotkaApp" folder in "SotkaWatch Watch App" target */ = {
 			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
 			membershipExceptions = (
+				Extensions/CurrentDayEnvironmentKey.swift,
 				Models/DayCalculator.swift,
 				Models/SWSharedModels/Constants.swift,
 				Models/SWSharedModels/WorkoutData.swift,
@@ -102,6 +103,7 @@
 				"PreviewContent/WorkoutPreviewTraining+.swift",
 				Screens/Profile/Journal/Views/ActivityRowView.swift,
 				Screens/Workout/Views/CircularTimerView.swift,
+				Screens/WorkoutPreview/Views/WorkoutExerciseEditorRowView.swift,
 				Screens/WorkoutPreview/Views/WorkoutPreviewButtonsView.swift,
 				Services/WorkoutProgramCreator.swift,
 				SupportingFiles/ExercisesAssets.xcassets,

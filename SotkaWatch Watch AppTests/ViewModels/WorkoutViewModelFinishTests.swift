@@ -34,7 +34,7 @@ struct WorkoutViewModelFinishTests {
             }
         }
 
-        await viewModel.finishWorkout()
+        _ = await viewModel.finishWorkout()
 
         let sentResult = try #require(connectivityService.sentWorkoutResult)
         #expect(sentResult.day == 1)
@@ -71,7 +71,7 @@ struct WorkoutViewModelFinishTests {
             viewModel.handleRestTimerFinish(force: false)
         }
 
-        viewModel.cancelWorkout()
+        _ = viewModel.cancelWorkout()
 
         let result = viewModel.getWorkoutResult(interrupt: true)
         let workoutResult = try #require(result)
@@ -147,7 +147,7 @@ struct WorkoutViewModelFinishTests {
             }
         }
 
-        await viewModel.finishWorkout()
+        _ = await viewModel.finishWorkout()
 
         let error = try #require(viewModel.error)
         #expect(error is WatchConnectivityError)

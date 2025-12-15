@@ -2,19 +2,28 @@ import SwiftUI
 
 struct WorkoutStepperView: View {
     @Environment(\.dismiss) private var dismiss
-    @Binding var value: Int
-    let from: Int
-    let title: String
+    @State private var localValue: Int
+    @Binding private var value: Int
+    private let from: Int
+    private let title: String
+
+    init(value: Binding<Int>, from: Int, title: String) {
+        self._value = value
+        self._localValue = .init(wrappedValue: value.wrappedValue)
+        self.from = from
+        self.title = title
+    }
 
     var body: some View {
         VStack(spacing: 16) {
             Stepper(
-                value: $value,
+                value: $localValue,
                 in: from ... Int.max
             ) {
-                Text(value.description)
+                Text(localValue.description)
             }
             Button(.done) {
+                value = localValue
                 dismiss()
             }
         }

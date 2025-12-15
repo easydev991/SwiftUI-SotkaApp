@@ -1,22 +1,21 @@
 import SwiftUI
 
 struct WorkoutView: View {
+    @Environment(\.currentDay) private var currentDay
     @Environment(\.dismiss) private var dismiss
     @Environment(\.scenePhase) private var scenePhase
 
     @State private var viewModel: WorkoutViewModel
     @State private var showStopWorkoutConfirmation = false
 
-    let dayNumber: Int
-    let executionType: ExerciseExecutionType
-    let trainings: [WorkoutPreviewTraining]
-    let plannedCount: Int?
-    let restTime: Int
-    let onWorkoutCompleted: (WorkoutResult) -> Void
+    private let executionType: ExerciseExecutionType
+    private let trainings: [WorkoutPreviewTraining]
+    private let plannedCount: Int?
+    private let restTime: Int
+    private let onWorkoutCompleted: (WorkoutResult) -> Void
 
     /// Инициализатор
     /// - Parameters:
-    ///   - dayNumber: Номер дня программы
     ///   - executionType: Тип выполнения тренировки
     ///   - trainings: Массив упражнений
     ///   - plannedCount: Плановое количество кругов/подходов
@@ -25,7 +24,6 @@ struct WorkoutView: View {
     ///   - appGroupHelper: Хелпер для чтения данных из App Group UserDefaults (опционально)
     ///   - onWorkoutCompleted: Callback при завершении тренировки
     init(
-        dayNumber: Int,
         executionType: ExerciseExecutionType,
         trainings: [WorkoutPreviewTraining],
         plannedCount: Int?,
@@ -34,7 +32,6 @@ struct WorkoutView: View {
         appGroupHelper: (any WatchAppGroupHelperProtocol)? = nil,
         onWorkoutCompleted: @escaping (WorkoutResult) -> Void
     ) {
-        self.dayNumber = dayNumber
         self.executionType = executionType
         self.trainings = trainings
         self.plannedCount = plannedCount
@@ -58,7 +55,7 @@ struct WorkoutView: View {
                         case .warmUp:
                             warmUpView
                         case let .exercise(executionType, number):
-                            exerciseView(executionType: executionType, number: number)
+                            makeExerciseView(executionType: executionType, number: number)
                         case .coolDown:
                             coolDownView
                         }
@@ -76,7 +73,7 @@ struct WorkoutView: View {
             }
             .onAppear {
                 viewModel.setupWorkoutData(
-                    dayNumber: dayNumber,
+                    dayNumber: currentDay,
                     executionType: executionType,
                     trainings: trainings,
                     plannedCount: plannedCount,
@@ -127,10 +124,10 @@ private extension WorkoutView {
         }
     }
 
-    func exerciseView(executionType: ExerciseExecutionType, number: Int) -> some View {
+    func makeExerciseView(executionType: ExerciseExecutionType, number: Int) -> some View {
         let effectiveType = viewModel.getEffectiveExecutionType()
         let currentTrainings: [WorkoutPreviewTraining]
-
+        // TODO: вынести эту логику во вьюмодель и написать тесты, а тут просто обращаться к вьюмодели
         if effectiveType == .cycles {
             currentTrainings = viewModel.trainings
         } else {
@@ -148,7 +145,7 @@ private extension WorkoutView {
                     ActivityRowView(
                         image: training.exerciseImage,
                         title: training.makeExerciseTitle(
-                            dayNumber: dayNumber,
+                            dayNumber: currentDay,
                             selectedExecutionType: executionType
                         ),
                         count: training.count
@@ -159,7 +156,7 @@ private extension WorkoutView {
                     ActivityRowView(
                         image: training.exerciseImage,
                         title: training.makeExerciseTitle(
-                            dayNumber: dayNumber,
+                            dayNumber: currentDay,
                             selectedExecutionType: executionType
                         ),
                         count: training.count
@@ -210,7 +207,6 @@ private extension WorkoutView {
 #Preview("Подход") {
     let connectivityService = PreviewWatchConnectivityService()
     WorkoutView(
-        dayNumber: 2,
         executionType: .sets,
         trainings: .previewSets,
         plannedCount: 2,
@@ -218,12 +214,12 @@ private extension WorkoutView {
         connectivityService: connectivityService,
         onWorkoutCompleted: { _ in }
     )
+    .currentDay(2)
 }
 
 #Preview("Круг") {
     let connectivityService = PreviewWatchConnectivityService()
     WorkoutView(
-        dayNumber: 3,
         executionType: .cycles,
         trainings: .previewCycles,
         plannedCount: 4,
@@ -231,4 +227,5 @@ private extension WorkoutView {
         connectivityService: connectivityService,
         onWorkoutCompleted: { _ in }
     )
+    .currentDay(2)
 }

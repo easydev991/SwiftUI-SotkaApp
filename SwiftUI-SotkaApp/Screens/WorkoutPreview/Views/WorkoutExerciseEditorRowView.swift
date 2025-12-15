@@ -26,9 +26,11 @@ struct WorkoutExerciseEditorRowView: View {
                 title: title,
                 count: nil
             )
+            #if !os(watchOS)
             if mode == .removable {
                 dragHandle
             }
+            #endif
         }
     }
 
@@ -39,7 +41,11 @@ struct WorkoutExerciseEditorRowView: View {
         ) {
             Image(systemName: mode.systemImageName)
                 .symbolVariant(.circle.fill)
+            #if os(watchOS)
+                .foregroundStyle(mode == .removable ? .red : .blue)
+            #else
                 .foregroundStyle(mode == .removable ? .red : .accentColor)
+            #endif
                 .font(.title3)
         }
         .buttonStyle(.plain)

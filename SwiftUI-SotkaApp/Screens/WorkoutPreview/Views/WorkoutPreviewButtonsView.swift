@@ -24,12 +24,14 @@ struct WorkoutPreviewButtonsView: View {
         VStack(spacing: 12) {
             Button(.workoutPreviewStartTraining, action: onStartTraining)
             #if os(watchOS)
+                .tint(.blue)
                 .buttonStyle(.borderedProminent)
             #else
                 .buttonStyle(SWButtonStyle(mode: .filled, size: .large))
             #endif
             Button(.workoutPreviewSaveAsPassed, action: onSave)
             #if os(watchOS)
+                .tint(.blue)
                 .buttonStyle(.bordered)
             #else
                 .buttonStyle(SWButtonStyle(mode: .tinted, size: .large))
@@ -41,6 +43,7 @@ struct WorkoutPreviewButtonsView: View {
         HStack(spacing: 12) {
             Button(.workoutPreviewSave, action: onSave)
             #if os(watchOS)
+                .tint(.blue)
                 .buttonStyle(.borderedProminent)
             #else
                 .buttonStyle(SWButtonStyle(mode: .filled, size: .large))
@@ -53,6 +56,7 @@ struct WorkoutPreviewButtonsView: View {
     private var workoutCompletedButtons: some View {
         Button(.workoutPreviewSave, action: onSave)
         #if os(watchOS)
+            .tint(.blue)
             .buttonStyle(.borderedProminent)
         #else
             .buttonStyle(SWButtonStyle(mode: .filled, size: .large))

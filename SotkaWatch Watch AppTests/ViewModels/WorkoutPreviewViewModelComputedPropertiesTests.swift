@@ -163,5 +163,87 @@ extension WorkoutPreviewViewModelTests {
 
             #expect(viewModel.hasChanges)
         }
+
+        @Test("Должен возвращать только упражнения с count > 0")
+        @MainActor
+        func returnsOnlyTrainingsWithCountGreaterThanZero() {
+            let connectivityService = MockWatchConnectivityService()
+            let appGroupHelper = MockWatchAppGroupHelper(restTime: 60)
+            let viewModel = WorkoutPreviewViewModel(
+                connectivityService: connectivityService,
+                appGroupHelper: appGroupHelper
+            )
+
+            viewModel.trainings = [
+                WorkoutPreviewTraining(count: 5, typeId: ExerciseType.pullups.rawValue, sortOrder: 0),
+                WorkoutPreviewTraining(count: 3, typeId: ExerciseType.pushups.rawValue, sortOrder: 1),
+                WorkoutPreviewTraining(count: 0, typeId: ExerciseType.squats.rawValue, sortOrder: 2),
+                WorkoutPreviewTraining(count: nil, typeId: ExerciseType.austrPullups.rawValue, sortOrder: 3)
+            ]
+
+            let visibleTrainings = viewModel.visibleTrainings
+
+            #expect(visibleTrainings.count == 2)
+            #expect(visibleTrainings[0].count == 5)
+            #expect(visibleTrainings[1].count == 3)
+        }
+
+        @Test("Должен возвращать пустой список если все упражнения имеют count == 0 или nil")
+        @MainActor
+        func returnsEmptyListWhenAllTrainingsHaveZeroOrNilCount() {
+            let connectivityService = MockWatchConnectivityService()
+            let appGroupHelper = MockWatchAppGroupHelper(restTime: 60)
+            let viewModel = WorkoutPreviewViewModel(
+                connectivityService: connectivityService,
+                appGroupHelper: appGroupHelper
+            )
+
+            viewModel.trainings = [
+                WorkoutPreviewTraining(count: 0, typeId: ExerciseType.pullups.rawValue, sortOrder: 0),
+                WorkoutPreviewTraining(count: nil, typeId: ExerciseType.pushups.rawValue, sortOrder: 1)
+            ]
+
+            let visibleTrainings = viewModel.visibleTrainings
+
+            #expect(visibleTrainings.isEmpty)
+        }
+
+        @Test("Должен возвращать все упражнения если все имеют count > 0")
+        @MainActor
+        func returnsAllTrainingsWhenAllHaveCountGreaterThanZero() {
+            let connectivityService = MockWatchConnectivityService()
+            let appGroupHelper = MockWatchAppGroupHelper(restTime: 60)
+            let viewModel = WorkoutPreviewViewModel(
+                connectivityService: connectivityService,
+                appGroupHelper: appGroupHelper
+            )
+
+            viewModel.trainings = [
+                WorkoutPreviewTraining(count: 5, typeId: ExerciseType.pullups.rawValue, sortOrder: 0),
+                WorkoutPreviewTraining(count: 3, typeId: ExerciseType.pushups.rawValue, sortOrder: 1),
+                WorkoutPreviewTraining(count: 10, typeId: ExerciseType.squats.rawValue, sortOrder: 2)
+            ]
+
+            let visibleTrainings = viewModel.visibleTrainings
+
+            #expect(visibleTrainings.count == 3)
+        }
+
+        @Test("Должен возвращать пустой список если trainings пуст")
+        @MainActor
+        func returnsEmptyListWhenTrainingsIsEmpty() {
+            let connectivityService = MockWatchConnectivityService()
+            let appGroupHelper = MockWatchAppGroupHelper(restTime: 60)
+            let viewModel = WorkoutPreviewViewModel(
+                connectivityService: connectivityService,
+                appGroupHelper: appGroupHelper
+            )
+
+            viewModel.trainings = []
+
+            let visibleTrainings = viewModel.visibleTrainings
+
+            #expect(visibleTrainings.isEmpty)
+        }
     }
 }

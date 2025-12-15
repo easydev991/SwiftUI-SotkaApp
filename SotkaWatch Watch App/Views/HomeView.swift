@@ -3,11 +3,10 @@ import SwiftUI
 struct HomeView: View {
     @Environment(HomeViewModel.self) private var viewModel
     @State private var showEditWorkout = false
-    private var dayNumber: Int? { viewModel.currentDay }
 
     var body: some View {
         ZStack {
-            if viewModel.isAuthorized, let dayNumber {
+            if viewModel.isAuthorized {
                 DayActivityView(
                     onSelect: { activity in
                         if activity == .workout {
@@ -23,7 +22,6 @@ struct HomeView: View {
                             await viewModel.deleteActivity(day: day)
                         }
                     },
-                    dayNumber: dayNumber,
                     selectedActivity: viewModel.currentActivity,
                     workoutData: viewModel.workoutData,
                     workoutExecutionCount: viewModel.workoutExecutionCount,
@@ -47,9 +45,10 @@ struct HomeView: View {
         }
         .animation(.default, value: viewModel.isAuthorized)
         .fullScreenCover(isPresented: $showEditWorkout) {
-            if let dayNumber {
-                EmptyView() // TODO: экран WorkoutPreviewView
-            }
+            WorkoutPreviewView(
+                connectivityService: viewModel.connectivityService,
+                appGroupHelper: viewModel.appGroupHelper
+            )
         }
     }
 }

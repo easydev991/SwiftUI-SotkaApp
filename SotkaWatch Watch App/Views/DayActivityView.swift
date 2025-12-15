@@ -1,10 +1,10 @@
 import SwiftUI
 
 struct DayActivityView: View {
+    @Environment(\.currentDay) private var currentDay
     private let activities = DayActivityType.allCases
     let onSelect: (DayActivityType) -> Void
     let onDelete: (Int) -> Void
-    let dayNumber: Int
     let selectedActivity: DayActivityType?
     let workoutData: WorkoutData?
     let workoutExecutionCount: Int?
@@ -18,7 +18,6 @@ struct DayActivityView: View {
                         activity: selectedActivity,
                         onSelect: onSelect,
                         onDelete: onDelete,
-                        dayNumber: dayNumber,
                         workoutData: workoutData,
                         workoutExecutionCount: workoutExecutionCount,
                         comment: comment
@@ -31,7 +30,7 @@ struct DayActivityView: View {
                 }
             }
             .animation(.default, value: selectedActivity)
-            .navigationTitle(.day(number: dayNumber))
+            .navigationTitle(.day(number: currentDay))
         }
     }
 }
@@ -42,12 +41,12 @@ struct DayActivityView: View {
             print("Выбрали активность \($0)")
         },
         onDelete: { _ in },
-        dayNumber: 10,
         selectedActivity: nil,
         workoutData: nil,
         workoutExecutionCount: nil,
         comment: nil
     )
+    .currentDay(10)
 }
 
 #Preview("День 10 с выбранной активностью") {
@@ -58,10 +57,10 @@ struct DayActivityView: View {
             activity = $0
         },
         onDelete: { _ in },
-        dayNumber: 10,
         selectedActivity: activity,
         workoutData: nil,
         workoutExecutionCount: nil,
         comment: nil
     )
+    .currentDay(10)
 }

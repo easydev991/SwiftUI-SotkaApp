@@ -16,20 +16,20 @@ final class WorkoutViewModel {
     @ObservationIgnored private let connectivityService: any WatchConnectivityServiceProtocol
     @ObservationIgnored private let appGroupHelper: any WatchAppGroupHelperProtocol
 
-    var dayNumber = 1
-    var executionType: ExerciseExecutionType = .cycles
-    var trainings: [WorkoutPreviewTraining] = []
-    var plannedCount: Int?
-    var restTime: Int = Constants.defaultRestTime
+    private(set) var dayNumber = 1
+    private(set) var executionType: ExerciseExecutionType = .cycles
+    private(set) var trainings: [WorkoutPreviewTraining] = []
+    private(set) var plannedCount: Int?
+    private(set) var restTime: Int = Constants.defaultRestTime
 
     var stepStates: [WorkoutStepState] = []
-    var currentStepIndex = 0
+    private(set) var currentStepIndex = 0
 
     var showTimer = false
 
-    @ObservationIgnored var workoutStartTime: Date?
-    @ObservationIgnored var totalRestTime = 0
-    @ObservationIgnored var currentRestStartTime: Date?
+    @ObservationIgnored private(set) var workoutStartTime: Date?
+    @ObservationIgnored private(set) var totalRestTime = 0
+    @ObservationIgnored private(set) var currentRestStartTime: Date?
 
     var currentStep: WorkoutStep? {
         guard currentStepIndex < stepStates.count else { return nil }
@@ -289,7 +289,7 @@ final class WorkoutViewModel {
         showTimer = false
         currentRestStartTime = nil
         logger.info("Тренировка прервана")
-        
+
         return getWorkoutResult(interrupt: true)
     }
 

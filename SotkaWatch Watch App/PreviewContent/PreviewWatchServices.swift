@@ -22,21 +22,19 @@ final class PreviewWatchAuthService: WatchAuthServiceProtocol {
 @MainActor
 final class PreviewWatchConnectivityService: WatchConnectivityServiceProtocol {
     func sendActivityType(day _: Int, activityType _: DayActivityType) async throws {
-        // Заглушка для превью
+        print("Заглушка sendActivityType")
     }
 
     func requestCurrentActivity(day _: Int) async throws -> DayActivityType? {
-        // Заглушка для превью
-        nil
+        .workout
     }
 
     func requestWorkoutData(day: Int) async throws -> WorkoutDataResponse {
-        // Заглушка для превью
         WorkoutDataResponse(
-            workoutData: WorkoutData(
+            workoutData: .init(
                 day: day,
                 executionType: 0,
-                trainings: [],
+                trainings: .previewSets,
                 plannedCount: 4
             ),
             executionCount: nil,
@@ -45,11 +43,11 @@ final class PreviewWatchConnectivityService: WatchConnectivityServiceProtocol {
     }
 
     func sendWorkoutResult(day _: Int, result _: WorkoutResult, executionType _: ExerciseExecutionType) async throws {
-        // Заглушка для превью
+        print("Заглушка sendWorkoutResult")
     }
 
     func deleteActivity(day _: Int) async throws {
-        // Заглушка для превью
+        print("Заглушка deleteActivity")
     }
 }
 

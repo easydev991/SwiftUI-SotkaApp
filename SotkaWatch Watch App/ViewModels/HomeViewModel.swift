@@ -12,8 +12,8 @@ final class HomeViewModel {
     )
 
     @ObservationIgnored private let authService: any WatchAuthServiceProtocol
-    @ObservationIgnored private let connectivityService: any WatchConnectivityServiceProtocol
-    @ObservationIgnored private let appGroupHelper: any WatchAppGroupHelperProtocol
+    @ObservationIgnored let connectivityService: any WatchConnectivityServiceProtocol
+    @ObservationIgnored let appGroupHelper: any WatchAppGroupHelperProtocol
 
     private(set) var isLoading = false
     private(set) var error: Error?

@@ -15,6 +15,7 @@ struct SotkaWatchApp: App {
         WindowGroup {
             HomeView()
                 .environment(viewModel)
+                .currentDay(viewModel.currentDay)
                 .task {
                     await viewModel.loadData()
                 }

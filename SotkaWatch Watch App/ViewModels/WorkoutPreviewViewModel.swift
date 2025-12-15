@@ -11,8 +11,8 @@ final class WorkoutPreviewViewModel {
         category: String(describing: WorkoutPreviewViewModel.self)
     )
 
-    @ObservationIgnored private let connectivityService: any WatchConnectivityServiceProtocol
-    @ObservationIgnored private let appGroupHelper: any WatchAppGroupHelperProtocol
+    @ObservationIgnored let connectivityService: any WatchConnectivityServiceProtocol
+    @ObservationIgnored let appGroupHelper: any WatchAppGroupHelperProtocol
 
     // MARK: - State
 
@@ -20,15 +20,15 @@ final class WorkoutPreviewViewModel {
     private(set) var isLoading = false
     var error: TrainingError?
     private(set) var wasOriginallyPassed = false
-    var dayNumber = 1
+    private(set) var dayNumber = 1
     var selectedExecutionType: ExerciseExecutionType?
-    var availableExecutionTypes: [ExerciseExecutionType] = []
+    private(set) var availableExecutionTypes: [ExerciseExecutionType] = []
     var trainings: [WorkoutPreviewTraining] = []
     var count: Int?
     var plannedCount: Int?
-    var restTime = Constants.defaultRestTime
-    var comment: String?
-    var isWorkoutCompleted = false
+    private(set) var restTime = Constants.defaultRestTime
+    private(set) var comment: String?
+    private(set) var isWorkoutCompleted = false
     var workoutDuration: Int?
 
     /// Определяет, должен ли степпер для `plannedCount` быть отключен
@@ -66,6 +66,27 @@ final class WorkoutPreviewViewModel {
             comment: comment
         )
         return currentSnapshot != originalSnapshot
+    }
+
+    /// Отфильтрованные упражнения с count > 0
+    ///
+    /// Возвращает только те упражнения, у которых count больше 0 (исключает упражнения с count == 0 или count == nil)
+    var visibleTrainings: [WorkoutPreviewTraining] {
+        trainings.filter { ($0.count ?? 0) > 0 }
+    }
+
+    /// Определяет, можно ли удалить упражнение
+    ///
+    /// Возвращает true если упражнений больше 1, иначе false
+    var canRemoveExercise: Bool {
+        trainings.count > 1
+    }
+
+    /// Отфильтрованные упражнения для редактирования (без турбо-упражнений)
+    ///
+    /// Возвращает только те упражнения, которые не являются турбо-упражнениями
+    var editableTrainings: [WorkoutPreviewTraining] {
+        trainings.filter { !$0.isTurboExercise }
     }
 
     // MARK: - Initialization
@@ -313,6 +334,92 @@ final class WorkoutPreviewViewModel {
             trainings: trainings,
             plannedCount: plannedCount
         )
+    }
+
+    /// Добавляет стандартное упражнение в список тренировок
+    /// - Parameter exerciseType: Тип упражнения для добавления
+    func addStandardExercise(_ exerciseType: ExerciseType) {
+        let newExercise = WorkoutPreviewTraining(
+            count: 5,
+            typeId: exerciseType.rawValue,
+            customTypeId: nil,
+            sortOrder: nil
+        )
+        trainings.append(newExercise)
+        logger.info("Добавлено стандартное упражнение: \(exerciseType.localizedTitle)")
+    }
+
+    /// Удаляет упражнение из списка тренировок
+    ///
+    /// Удаление происходит только если упражнений больше 1
+    /// - Parameter exercise: Упражнение для удаления
+    func removeExercise(_ exercise: WorkoutPreviewTraining) {
+        guard trainings.count > 1 else {
+            logger.info("Нельзя удалить упражнение: осталось только одно упражнение")
+            return
+        }
+        trainings.removeAll { $0.id == exercise.id }
+        logger.info("Упражнение \(exercise.id) удалено из списка")
+    }
+
+    /// Изменяет порядок упражнений в списке
+    /// - Parameters:
+    ///   - source: Индексы исходных позиций
+    ///   - destination: Целевая позиция
+    func moveExercise(from source: IndexSet, to destination: Int) {
+        var items = trainings
+        var sourceIndices = source.sorted(by: >)
+
+        for sourceIndex in sourceIndices {
+            guard sourceIndex < items.count else { continue }
+            let item = items.remove(at: sourceIndex)
+            let insertIndex = destination > sourceIndex ? destination - 1 : destination
+            items.insert(item, at: min(insertIndex, items.count))
+        }
+
+        trainings = items
+        logger.info("Изменен порядок упражнений")
+    }
+
+    /// Обновляет количество повторений для упражнения по индексу
+    ///
+    /// Если количество становится 0 и упражнений больше 1, упражнение удаляется
+    /// - Parameters:
+    ///   - index: Индекс упражнения в массиве trainings
+    ///   - amount: Изменение количества (положительное для увеличения, отрицательное для уменьшения)
+    func updateTrainingCount(at index: Int, amount: Int) {
+        guard index < trainings.count else {
+            logger.warning("Индекс \(index) выходит за границы массива trainings")
+            return
+        }
+
+        var updatedTraining = trainings[index]
+        let currentCount = updatedTraining.count ?? 0
+        let newCount = max(0, currentCount + amount)
+
+        if newCount == 0, trainings.count > 1 {
+            removeTraining(at: index)
+        } else {
+            updatedTraining = updatedTraining.withCount(newCount)
+            trainings[index] = updatedTraining
+            logger.info("Обновлено количество повторений для упражнения \(index): \(newCount)")
+        }
+    }
+
+    /// Инициализирует редактируемый список упражнений
+    ///
+    /// Возвращает список упражнений без турбо-упражнений
+    /// - Returns: Отфильтрованный список упражнений для редактирования
+    func initializeEditableExercises() -> [WorkoutPreviewTraining] {
+        editableTrainings
+    }
+
+    /// Удаляет тренировку по индексу
+    /// - Parameter index: Индекс тренировки для удаления
+    private func removeTraining(at index: Int) {
+        guard index < trainings.count else { return }
+        trainings.remove(at: index)
+        logger.info("Тренировка \(index) удалена из списка")
     }
 
     /// Сохранение тренировки через WatchConnectivityService
