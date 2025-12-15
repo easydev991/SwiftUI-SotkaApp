@@ -14,7 +14,7 @@ final class MockWatchConnectivityService: WatchConnectivityServiceProtocol {
     private(set) var sentActivityType: (day: Int, activityType: DayActivityType)?
     private(set) var requestedCurrentActivityDay: Int?
     private(set) var requestedWorkoutDataDay: Int?
-    private(set) var sentWorkoutResult: (day: Int, result: WorkoutResult, executionType: ExerciseExecutionType)?
+    private(set) var sentWorkoutResult: (day: Int, result: WorkoutResult, executionType: ExerciseExecutionType, comment: String?)?
     private(set) var deletedActivityDay: Int?
 
     func sendActivityType(day: Int, activityType: DayActivityType) async throws {
@@ -47,8 +47,8 @@ final class MockWatchConnectivityService: WatchConnectivityServiceProtocol {
         )
     }
 
-    func sendWorkoutResult(day: Int, result: WorkoutResult, executionType: ExerciseExecutionType) async throws {
-        sentWorkoutResult = (day, result, executionType)
+    func sendWorkoutResult(day: Int, result: WorkoutResult, executionType: ExerciseExecutionType, comment: String?) async throws {
+        sentWorkoutResult = (day, result, executionType, comment)
         if !shouldSucceed {
             throw mockError ?? WatchConnectivityError.sessionUnavailable
         }

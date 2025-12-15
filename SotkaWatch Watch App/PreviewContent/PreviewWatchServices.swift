@@ -42,7 +42,7 @@ final class PreviewWatchConnectivityService: WatchConnectivityServiceProtocol {
         )
     }
 
-    func sendWorkoutResult(day _: Int, result _: WorkoutResult, executionType _: ExerciseExecutionType) async throws {
+    func sendWorkoutResult(day _: Int, result _: WorkoutResult, executionType _: ExerciseExecutionType, comment _: String?) async throws {
         print("Заглушка sendWorkoutResult")
     }
 

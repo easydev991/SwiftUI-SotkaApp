@@ -232,55 +232,30 @@ SotkaWatch Watch App/
 - [x] ✅ `AuthRequiredView` создан и интегрирован
 
 #### 6.2 Главный экран ✅ Выполнено
-- [x] ✅ `HomeView` создан с полным функционалом: отображение активности дня, выбор активности, открытие экрана превью тренировки через `.fullScreenCover`, передача зависимостей через Environment
+- [x] ✅ `HomeView` создан: отображение активности дня, выбор активности, открытие экрана превью тренировки через `.fullScreenCover`, передача зависимостей через Environment
 
 #### 6.3 Экран выбора активности ✅ Выполнено
 - [x] ✅ Созданы экраны: `DayActivitySelectionView`, `DayActivityView`, `SelectedActivityView` с полным функционалом
-- [x] ✅ Реализовано отображение данных тренировки, редактирование и удаление активности, загрузка данных тренировки через `WorkoutDataResponse`
-- [x] ✅ Логика выбора/изменения активности реализована с обработкой ошибок и индикаторами загрузки
+- [x] ✅ Реализовано отображение данных тренировки, редактирование и удаление активности, загрузка данных через `WorkoutDataResponse`
+- [x] ✅ Логика выбора/изменения активности с обработкой ошибок и индикаторами загрузки
 - [ ] **TODO:** Добавить локализованные строки для индикаторов и ошибок (`Watch.Activity.Saving`, `Watch.Activity.Error`) в `Localizable.xcstrings`
 
 #### 6.3.1 Экран превью тренировки ✅ Выполнено
 - [x] ✅ `WorkoutPreviewView` создан с полной интеграцией с `WorkoutPreviewViewModel`
-- [x] ✅ Реализованы все секции: `executionTypePicker`, список упражнений, `plannedCount`, `restTime`, кнопки управления
-- [x] ✅ Toolbar кнопка редактирования реализована (открывает sheet)
-- [x] ✅ `WorkoutEditView` создан с базовой структурой UI (без `customExercisesSection` для первой итерации)
-- [x] ✅ Рефакторинг `WorkoutEditView` - перенос логики в ViewModel:
-  - [x] ✅ Добавлены методы редактирования в `WorkoutPreviewViewModel`:
-    - [x] ✅ `canRemoveExercise` computed property (проверка, что упражнений больше 1)
-    - [x] ✅ `editableTrainings` computed property (фильтрация турбо-упражнений из `trainings`)
-    - [x] ✅ `addStandardExercise(_ exerciseType: ExerciseType)` метод для добавления стандартного упражнения
-    - [x] ✅ `removeExercise(_ exercise: WorkoutPreviewTraining)` метод для удаления упражнения (с проверкой минимального количества)
-    - [x] ✅ `moveExercise(from source: IndexSet, to destination: Int)` метод для изменения порядка упражнений
-    - [x] ✅ `updateTrainingCount(at index: Int, amount: Int)` метод для изменения количества повторений
-    - [x] ✅ `initializeEditableExercises()` метод для инициализации редактируемого списка
-  - [x] ✅ Рефакторинг `WorkoutEditView`:
-    - [x] ✅ Изменена сигнатура: принимает `viewModel: WorkoutPreviewViewModel` вместо `@Binding var trainings`
-    - [x] ✅ Используется локальное состояние `@State private var editableExercises` для редактирования
-    - [x] ✅ При сохранении вызывается `viewModel.updateTrainings(editableExercises)`
-    - [x] ✅ Реализована секция `dayExercisesSection` с отображением текущих упражнений (аналогично `WorkoutExerciseEditorScreen.dayExercisesSection`)
-    - [x] ✅ Реализована секция `standardExercisesSection` с кнопками добавления стандартных упражнений (аналогично `WorkoutExerciseEditorScreen.standardExercisesSection`)
-    - [x] ✅ Секция `customExercisesSection` отсутствует (не нужна для первой итерации часов)
-    - [x] ✅ Используется `WorkoutExerciseEditorRowView` из основного приложения (с поддержкой watchOS через условную компиляцию) для отображения упражнений с кнопками удаления/добавления
-    - [x] ✅ Добавлена поддержка перетаскивания для изменения порядка упражнений (`.onMove`)
-    - [x] ✅ Обновлена интеграция в `WorkoutPreviewView`: передается `viewModel` вместо `$viewModel.trainings`
-- [x] ✅ `WorkoutPreviewViewModel` реализован полностью с методами загрузки данных, обновления значений, сохранения (включая `updateTrainings(_ newTrainings: [WorkoutPreviewTraining])`)
-- [x] ✅ Интеграция с View: View получает данные из ViewModel, вызывает методы ViewModel, передает зависимости в `WorkoutView`
-- [x] ✅ Открытие экрана реализовано в двух сценариях: выбор активности `.workout` и редактирование существующей тренировки
-- [ ] **TODO:** Редактор комментария через `TextFieldLink`:
-  - [ ] Добавить `canEditComment` computed property в ViewModel
-  - [ ] Реализовать `updateComment(_ newComment: String?)` метод
-  - [ ] Добавить `TextFieldLink` в View с placeholder `.dayActivityCommentPlaceholder`
+- [x] ✅ Реализованы секции: `executionTypePicker`, список упражнений, `plannedCount`, `restTime`, кнопки управления
+- [x] ✅ `WorkoutEditView` создан с редактированием упражнений (добавление/удаление стандартных упражнений, изменение порядка, изменение количества повторений)
+- [x] ✅ Логика редактирования перенесена в `WorkoutPreviewViewModel` (методы: `addStandardExercise`, `removeExercise`, `moveExercise`, `updateTrainingCount`, `initializeEditableExercises`)
+- [x] ✅ Редактор комментария через `TextFieldLink` реализован (`canEditComment`, `updateComment` в ViewModel, секция комментария в View)
+- [x] ✅ Интеграция с сохранением: комментарий передается через `WatchConnectivityService.sendWorkoutResult` и сохраняется в `handleSaveWorkout` на iPhone
 
 #### 6.4 Экран выполнения тренировки ✅ Выполнено
 - [x] ✅ `WorkoutView` создан с полной интеграцией с `WorkoutViewModel`
 - [x] ✅ Реализовано отображение текущего этапа тренировки (разминка, упражнение, заминка), кнопки управления, таймер отдыха
-- [x] ✅ Модели `WorkoutStep`, `WorkoutState`, `WorkoutStepState` добавлены в Watch App target для идентичной логики тренировки
-- [x] ✅ `WorkoutViewModel` реализован полностью: инициализация этапов, управление состоянием, завершение тренировки, уведомления об отдыхе
+- [x] ✅ Модели `WorkoutStep`, `WorkoutState`, `WorkoutStepState` добавлены в Watch App target
+- [x] ✅ `WorkoutViewModel` реализован: инициализация этапов, управление состоянием, завершение тренировки, уведомления об отдыхе
+- [x] ✅ `WorkoutRestTimerView` создан с интеграцией `CircularTimerView`, обработкой фонового режима
+- [x] ✅ Обработка ошибок через `viewModel.error` с отображением через `.alert`
 - **Отличия от основного приложения:** На часах отображается только текущий этап тренировки, а не вся тренировка сразу
-- [x] ✅ `WorkoutRestTimerView` создан с интеграцией `CircularTimerView`, обработкой фонового режима, планированием уведомлений об отдыхе
-- [x] ✅ Обработка ошибок реализована через `viewModel.error` с отображением через `.alert`
-- [x] ✅ Локализованные строки добавлены для заголовков (`.workoutViewSet`, `.workoutViewCycle`)
 - [ ] **TODO:** Проверить и добавить недостающие локализованные строки (`Watch.Workout.*`), добавить переводы на русский и английский
 
 #### 6.5 Навигация и главный файл приложения ✅ Выполнено
@@ -306,7 +281,7 @@ SotkaWatch Watch App/
 #### 8.1 Интеграционные тесты
 - [ ] Тесты синхронизации между часами и iPhone (моки)
 - [ ] Тесты обработки команд WatchConnectivity
-- [ ] Тесты офлайн-работы (отсутствие связи с iPhone)
+- [ ] Тесты обработки ошибок при отсутствии связи с iPhone (показ сообщений об ошибках, блокировка действий)
 
 #### 8.2 UI-тесты (опционально)
 - [ ] Тесты основных сценариев использования
@@ -317,7 +292,7 @@ SotkaWatch Watch App/
 #### 8.3 Тестирование на устройствах
 - [ ] Тестирование на реальных часах (разные модели)
 - [ ] Тестирование синхронизации между часами и iPhone
-- [ ] Тестирование офлайн-работы
+- [ ] Тестирование обработки ошибок при отсутствии связи с iPhone
 - [ ] Тестирование производительности
 
 #### 8.4 Документация
@@ -335,7 +310,7 @@ SotkaWatch Watch App/
 #### 8.6 Финальная проверка
 - [ ] Проверка всех функций
 - [ ] Проверка синхронизации
-- [ ] Проверка офлайн-работы
+- [ ] Проверка обработки ошибок при отсутствии связи с iPhone
 - [ ] Проверка на разных моделях часов
 - [ ] Проверка локализации (русский и английский)
 - [ ] Проверка логирования (русский язык)
@@ -448,10 +423,12 @@ extension Constants {
         "duration": 1800
     },
     "executionType": 0,
-    "trainingType": 1
+    "comment": "Отличная тренировка!"
 }
 ```
-*Примечание: `result` содержит сериализованный `WorkoutResult` (Codable) в JSON формате*
+*Примечания:*
+- `result` содержит сериализованный `WorkoutResult` (Codable) в JSON формате
+- `comment` - опциональное поле (может отсутствовать или быть `null`), содержит комментарий к тренировке
 
 **Удаление активности:**
 ```json

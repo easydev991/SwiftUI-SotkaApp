@@ -6,7 +6,6 @@ struct WorkoutPreviewView: View {
 
     @Environment(\.currentDay) private var currentDay
     @State private var viewModel: WorkoutPreviewViewModel
-    @State private var showEditView = false
     @State private var showWorkoutView = false
 
     /// Инициализатор
@@ -42,9 +41,6 @@ struct WorkoutPreviewView: View {
                     }
                 }
             }
-            .sheet(isPresented: $showEditView) {
-                WorkoutEditView(viewModel: viewModel)
-            }
             .fullScreenCover(isPresented: $showWorkoutView) {
                 if let executionType = viewModel.selectedExecutionType {
                     WorkoutView(
@@ -56,6 +52,7 @@ struct WorkoutPreviewView: View {
                         appGroupHelper: viewModel.appGroupHelper,
                         onWorkoutCompleted: { result in
                             viewModel.handleWorkoutResult(result)
+                            showWorkoutView = false
                         }
                     )
                 }
@@ -89,9 +86,7 @@ struct WorkoutPreviewView: View {
 
 private extension WorkoutPreviewView {
     var editButton: some View {
-        Button {
-            showEditView = true
-        } label: {
+        NavigationLink(destination: WorkoutEditView(viewModel: viewModel)) {
             Image(systemName: "pencil")
         }
     }
@@ -128,6 +123,10 @@ private extension WorkoutPreviewView {
                             set: { viewModel.updateRestTime($0) }
                         )
                     )
+                    Divider()
+                }
+                if viewModel.canEditComment {
+                    commentEditor
                     Divider()
                 }
             }
@@ -179,6 +178,25 @@ private extension WorkoutPreviewView {
             Label(.workoutPreviewRestTimePicker, systemImage: "timer")
         }
         .pickerStyle(.navigationLink)
+    }
+
+    var commentEditor: some View {
+        TextFieldLink(prompt: Text(.dayActivityCommentPlaceholder)) {
+            HStack {
+                Image(systemName: "text.bubble")
+                if let comment = viewModel.comment, !comment.isEmpty {
+                    Text(comment)
+                        .lineLimit(2)
+                        .foregroundStyle(.secondary)
+                } else {
+                    Text(.dayActivityCommentPlaceholder)
+                        .foregroundStyle(.secondary)
+                }
+            }
+            .multilineTextAlignment(.leading)
+        } onSubmit: { text in
+            viewModel.updateComment(text.isEmpty ? nil : text)
+        }
     }
 
     var bottomButtonsView: some View {

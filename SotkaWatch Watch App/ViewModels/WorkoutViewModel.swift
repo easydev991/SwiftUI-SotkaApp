@@ -253,11 +253,9 @@ final class WorkoutViewModel {
         handleRestTimerFinish(force: true)
     }
 
-    /// Завершение тренировки (формирование результата, отправка на iPhone)
+    /// Завершение тренировки (формирование результата)
     /// - Returns: Результат тренировки или `nil` если тренировка не завершена
-    func finishWorkout() async -> WorkoutResult? {
-        let effectiveExecutionType = getEffectiveExecutionType()
-
+    func finishWorkout() -> WorkoutResult? {
         guard let result = getWorkoutResult(interrupt: false) else {
             logger.error("Не удалось получить результат тренировки")
             error = WatchConnectivityError.invalidResponse
@@ -265,19 +263,6 @@ final class WorkoutViewModel {
         }
 
         logger.info("Тренировка завершена: количество кругов/подходов \(result.count), длительность \(result.duration ?? 0) секунд")
-
-        do {
-            try await connectivityService.sendWorkoutResult(
-                day: dayNumber,
-                result: result,
-                executionType: effectiveExecutionType
-            )
-            logger.info("Результат тренировки успешно отправлен на iPhone")
-        } catch {
-            logger.error("Ошибка отправки результата тренировки на iPhone: \(error.localizedDescription)")
-            self.error = error
-            return nil
-        }
 
         return result
     }

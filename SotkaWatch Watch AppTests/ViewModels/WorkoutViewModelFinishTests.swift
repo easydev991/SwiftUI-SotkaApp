@@ -4,8 +4,8 @@ import Testing
 
 @MainActor
 struct WorkoutViewModelFinishTests {
-    @Test("Должен завершать тренировку и отправлять результат на iPhone")
-    func finishWorkout() async throws {
+    @Test("Должен завершать тренировку и возвращать результат")
+    func finishWorkout() throws {
         let connectivityService = MockWatchConnectivityService()
         let appGroupHelper = MockWatchAppGroupHelper(restTime: 60)
         let viewModel = WorkoutViewModel(
@@ -34,12 +34,12 @@ struct WorkoutViewModelFinishTests {
             }
         }
 
-        _ = await viewModel.finishWorkout()
-
-        let sentResult = try #require(connectivityService.sentWorkoutResult)
-        #expect(sentResult.day == 1)
-        #expect(sentResult.result.count == 2)
-        #expect(sentResult.executionType == .cycles)
+        let result = viewModel.finishWorkout()
+        let workoutResult = try #require(result)
+        #expect(workoutResult.count == 2)
+        #expect(workoutResult.duration != nil)
+        #expect(viewModel.error == nil)
+        #expect(connectivityService.sentWorkoutResult == nil)
     }
 
     @Test("Должен прерывать тренировку и создавать результат с interrupt")
@@ -115,11 +115,9 @@ struct WorkoutViewModelFinishTests {
         #expect(workoutResult.duration != nil)
     }
 
-    @Test("Должен обрабатывать ошибки при отправке результата")
-    func handlesErrorsWhenSendingResult() async throws {
+    @Test("Должен возвращать nil и устанавливать error если тренировка не завершена")
+    func returnsNilWhenWorkoutNotCompleted() throws {
         let connectivityService = MockWatchConnectivityService()
-        connectivityService.shouldSucceed = false
-        connectivityService.mockError = WatchConnectivityError.sessionUnavailable
         let appGroupHelper = MockWatchAppGroupHelper(restTime: 60)
         let viewModel = WorkoutViewModel(
             connectivityService: connectivityService,
@@ -138,17 +136,12 @@ struct WorkoutViewModelFinishTests {
             restTime: 60
         )
 
-        for _ in 0 ..< viewModel.stepStates.count {
-            if viewModel.currentStep != nil {
-                viewModel.completeCurrentStep()
-                if viewModel.showTimer {
-                    viewModel.handleRestTimerFinish(force: false)
-                }
-            }
-        }
+        // Не завершаем все этапы тренировки
+        viewModel.completeCurrentStep()
 
-        _ = await viewModel.finishWorkout()
+        let result = viewModel.finishWorkout()
 
+        #expect(result == nil)
         let error = try #require(viewModel.error)
         #expect(error is WatchConnectivityError)
     }

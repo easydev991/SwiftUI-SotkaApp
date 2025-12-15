@@ -76,7 +76,7 @@ struct WatchConnectivityServiceTests {
         let result = WorkoutResult(count: 4, duration: 1800)
 
         await #expect(throws: WatchConnectivityError.self) {
-            try await service.sendWorkoutResult(day: 5, result: result, executionType: .cycles)
+            try await service.sendWorkoutResult(day: 5, result: result, executionType: .cycles, comment: nil)
         }
     }
 
@@ -144,7 +144,7 @@ struct WatchConnectivityServiceTests {
         let service = WatchConnectivityService(authService: authService, sessionProtocol: mockSession)
         let result = WorkoutResult(count: 4, duration: 1800)
 
-        try await service.sendWorkoutResult(day: 5, result: result, executionType: .cycles)
+        try await service.sendWorkoutResult(day: 5, result: result, executionType: .cycles, comment: nil)
 
         #expect(mockSession.sentMessages.count == 1)
         let message = try #require(mockSession.sentMessages.first)
@@ -157,6 +157,36 @@ struct WatchConnectivityServiceTests {
         let resultJSON = try #require(message["result"] as? [String: Any])
         let count = try #require(resultJSON["count"] as? Int)
         #expect(count == 4)
+    }
+
+    @Test("Успешно отправляет результат тренировки с комментарием")
+    func successfullySendsWorkoutResultWithComment() async throws {
+        let authService = try WatchAuthService(userDefaults: MockUserDefaults.create())
+        let mockSession = MockWCSession(isReachable: true)
+        let service = WatchConnectivityService(authService: authService, sessionProtocol: mockSession)
+        let result = WorkoutResult(count: 4, duration: 1800)
+
+        try await service.sendWorkoutResult(day: 5, result: result, executionType: .cycles, comment: "Отличная тренировка!")
+
+        #expect(mockSession.sentMessages.count == 1)
+        let message = try #require(mockSession.sentMessages.first)
+        let command = try #require(message["command"] as? String)
+        #expect(command == Constants.WatchCommand.saveWorkout.rawValue)
+        let comment = try #require(message["comment"] as? String)
+        #expect(comment == "Отличная тренировка!")
+    }
+
+    @Test("Не добавляет поле comment в сообщение если комментарий nil")
+    func doesNotAddCommentFieldWhenCommentIsNil() async throws {
+        let authService = try WatchAuthService(userDefaults: MockUserDefaults.create())
+        let mockSession = MockWCSession(isReachable: true)
+        let service = WatchConnectivityService(authService: authService, sessionProtocol: mockSession)
+        let result = WorkoutResult(count: 4, duration: 1800)
+
+        try await service.sendWorkoutResult(day: 5, result: result, executionType: .cycles, comment: nil)
+
+        let message = try #require(mockSession.sentMessages.first)
+        #expect(message["comment"] == nil)
     }
 
     @Test("Успешно запрашивает текущую активность")

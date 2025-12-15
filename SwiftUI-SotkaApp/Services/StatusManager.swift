@@ -429,7 +429,7 @@ extension StatusManager {
     /// Типы запросов от часов для обработки в очереди
     enum WatchRequest {
         case setActivity(day: Int, activityType: DayActivityType)
-        case saveWorkout(day: Int, result: WorkoutResult, executionType: ExerciseExecutionType)
+        case saveWorkout(day: Int, result: WorkoutResult, executionType: ExerciseExecutionType, comment: String?)
         case getCurrentActivity(day: Int, replyHandler: ([String: Any]) -> Void)
         case getWorkoutData(day: Int, replyHandler: ([String: Any]) -> Void)
         case deleteActivity(day: Int)
@@ -496,11 +496,12 @@ extension StatusManager {
                 switch request {
                 case let .setActivity(day, activityType):
                     _ = handleSetActivity(day: day, activityType: activityType, context: context)
-                case let .saveWorkout(day, result, executionType):
+                case let .saveWorkout(day, result, executionType, comment):
                     _ = handleSaveWorkout(
                         day: day,
                         result: result,
                         executionType: executionType,
+                        comment: comment,
                         context: context
                     )
                 case let .getCurrentActivity(day, replyHandler):
@@ -595,6 +596,7 @@ extension StatusManager {
             day: Int,
             result: WorkoutResult,
             executionType: ExerciseExecutionType,
+            comment: String?,
             context: ModelContext
         ) -> [String: Any] {
             guard let statusManager else {
@@ -624,6 +626,7 @@ extension StatusManager {
                 activity.count = result.count
                 activity.duration = result.duration
                 activity.executeTypeRaw = executionType.rawValue
+                activity.comment = comment
                 activity.modifyDate = .now
                 activity.isSynced = false
             } else {
@@ -632,8 +635,12 @@ extension StatusManager {
                 activity = creator.dayActivity
                 activity.count = result.count
                 activity.duration = result.duration
+                activity.comment = comment
                 activity.user = user
             }
+
+            let commentInfo = comment != nil ? ", комментарий: \(comment!)" : ""
+            watchConnectivityLogger.info("Сохранение тренировки: день \(day), количество \(result.count)\(commentInfo)")
 
             // Сохранение через DailyActivitiesService
             statusManager.dailyActivitiesService.createDailyActivity(activity, context: context)
@@ -919,7 +926,8 @@ private extension StatusManager.WatchConnectivityManager {
             }
 
             let executionType = ExerciseExecutionType(rawValue: executionTypeRaw) ?? .cycles
-            pendingRequests.append(.saveWorkout(day: day, result: result, executionType: executionType))
+            let comment = message["comment"] as? String
+            pendingRequests.append(.saveWorkout(day: day, result: result, executionType: executionType, comment: comment))
 
         case .getCurrentActivity:
             guard let day = message["day"] as? Int else {

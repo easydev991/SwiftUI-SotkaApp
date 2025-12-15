@@ -27,7 +27,7 @@ final class WorkoutPreviewViewModel {
     var count: Int?
     var plannedCount: Int?
     private(set) var restTime = Constants.defaultRestTime
-    private(set) var comment: String?
+    var comment: String?
     private(set) var isWorkoutCompleted = false
     var workoutDuration: Int?
 
@@ -52,6 +52,13 @@ final class WorkoutPreviewViewModel {
     var shouldShowEditButton: Bool {
         guard let executionType = selectedExecutionType else { return false }
         return executionType == .cycles || executionType == .sets
+    }
+
+    /// Определяет, можно ли редактировать комментарий
+    ///
+    /// Комментарий можно редактировать только для завершенных тренировок или изначально пройденных дней
+    var canEditComment: Bool {
+        isWorkoutCompleted || wasOriginallyPassed
     }
 
     /// Определяет, были ли внесены изменения после первоначальной загрузки
@@ -248,6 +255,13 @@ final class WorkoutPreviewViewModel {
         restTime = newValue
     }
 
+    /// Обновляет комментарий тренировки
+    /// - Parameter newComment: Новый комментарий (`nil` для удаления)
+    func updateComment(_ newComment: String?) {
+        comment = newComment
+        logger.info("Комментарий обновлен")
+    }
+
     /// Обновляет список упражнений тренировки
     ///
     /// Пересчитывает `sortOrder` на основе порядка в массиве
@@ -275,7 +289,7 @@ final class WorkoutPreviewViewModel {
         WorkoutProgramCreator.getEffectiveExecutionType(for: dayNumber, executionType: executionType)
     }
 
-    /// Обработка результата тренировки
+    /// Обработка результата тренировки и автоматическое сохранение
     /// - Parameter result: Результат выполнения тренировки
     func handleWorkoutResult(_ result: WorkoutResult) {
         if result.count == 0 {
@@ -347,38 +361,6 @@ final class WorkoutPreviewViewModel {
         )
         trainings.append(newExercise)
         logger.info("Добавлено стандартное упражнение: \(exerciseType.localizedTitle)")
-    }
-
-    /// Удаляет упражнение из списка тренировок
-    ///
-    /// Удаление происходит только если упражнений больше 1
-    /// - Parameter exercise: Упражнение для удаления
-    func removeExercise(_ exercise: WorkoutPreviewTraining) {
-        guard trainings.count > 1 else {
-            logger.info("Нельзя удалить упражнение: осталось только одно упражнение")
-            return
-        }
-        trainings.removeAll { $0.id == exercise.id }
-        logger.info("Упражнение \(exercise.id) удалено из списка")
-    }
-
-    /// Изменяет порядок упражнений в списке
-    /// - Parameters:
-    ///   - source: Индексы исходных позиций
-    ///   - destination: Целевая позиция
-    func moveExercise(from source: IndexSet, to destination: Int) {
-        var items = trainings
-        var sourceIndices = source.sorted(by: >)
-
-        for sourceIndex in sourceIndices {
-            guard sourceIndex < items.count else { continue }
-            let item = items.remove(at: sourceIndex)
-            let insertIndex = destination > sourceIndex ? destination - 1 : destination
-            items.insert(item, at: min(insertIndex, items.count))
-        }
-
-        trainings = items
-        logger.info("Изменен порядок упражнений")
     }
 
     /// Обновляет количество повторений для упражнения по индексу
@@ -458,11 +440,13 @@ final class WorkoutPreviewViewModel {
             try await connectivityService.sendWorkoutResult(
                 day: dayNumber,
                 result: result,
-                executionType: executionType
+                executionType: executionType,
+                comment: comment
             )
 
             let dayNumber = dayNumber
-            logger.info("Тренировка для дня \(dayNumber) сохранена")
+            let commentInfo = comment != nil ? ", комментарий: \(comment!)" : ""
+            logger.info("Тренировка для дня \(dayNumber) сохранена\(commentInfo)")
         } catch {
             logger.error("Ошибка отправки результата тренировки на iPhone: \(error.localizedDescription)")
         }

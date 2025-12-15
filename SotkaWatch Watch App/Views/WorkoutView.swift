@@ -86,11 +86,8 @@ struct WorkoutView: View {
             }
             .onChange(of: viewModel.isWorkoutCompleted) { _, isCompleted in
                 guard isCompleted else { return }
-                Task {
-                    if let result = await viewModel.finishWorkout() {
-                        onWorkoutCompleted(result)
-                        dismiss()
-                    }
+                if let result = viewModel.finishWorkout() {
+                    onWorkoutCompleted(result)
                 }
             }
             .fullScreenCover(isPresented: $viewModel.showTimer) {
@@ -194,7 +191,6 @@ private extension WorkoutView {
                 if let result = viewModel.cancelWorkout() {
                     onWorkoutCompleted(result)
                 }
-                dismiss()
             }
         } message: {
             Text(.workoutScreenStopWorkoutMessage)

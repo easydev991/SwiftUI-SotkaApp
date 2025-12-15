@@ -39,8 +39,8 @@ struct WatchConnectivityManagerTests {
             switch request {
             case let .setActivity(day, activityType):
                 _ = manager.handleSetActivity(day: day, activityType: activityType, context: context)
-            case let .saveWorkout(day, result, executionType):
-                _ = manager.handleSaveWorkout(day: day, result: result, executionType: executionType, context: context)
+            case let .saveWorkout(day, result, executionType, comment):
+                _ = manager.handleSaveWorkout(day: day, result: result, executionType: executionType, comment: comment, context: context)
             case let .getCurrentActivity(day, replyHandler):
                 let reply = manager.handleGetCurrentActivity(day: day, context: context)
                 replyHandler(reply)
@@ -293,7 +293,7 @@ struct WatchConnectivityManagerTests {
         let result = WorkoutResult(count: 4, duration: 1800)
 
         // Симулируем добавление запроса в очередь напрямую
-        manager.pendingRequests.append(.saveWorkout(day: 5, result: result, executionType: .cycles))
+        manager.pendingRequests.append(.saveWorkout(day: 5, result: result, executionType: .cycles, comment: nil))
 
         // Обрабатываем запросы из очереди
         processPendingRequests(manager: manager, context: context)
@@ -306,6 +306,115 @@ struct WatchConnectivityManagerTests {
         #expect(savedActivity.count == 4)
         let duration = try #require(savedActivity.duration)
         #expect(duration == 1800)
+    }
+
+    @Test("Успешно сохраняет комментарий при создании новой активности")
+    func successfullySavesCommentWhenCreatingNewActivity() throws {
+        let mockSession = MockWCSession(isReachable: true)
+        let container = try createTestModelContainer()
+        let context = container.mainContext
+        _ = try createTestUser(in: context)
+
+        let (statusManager, manager) = try createStatusManagerWithMockSession(
+            mockSession: mockSession,
+            container: container
+        )
+        _ = statusManager
+
+        let result = WorkoutResult(count: 4, duration: 1800)
+
+        manager.pendingRequests.append(.saveWorkout(day: 5, result: result, executionType: .cycles, comment: "Отличная тренировка!"))
+
+        processPendingRequests(manager: manager, context: context)
+
+        let activities = try context.fetch(FetchDescriptor<DayActivity>())
+        let activity = activities.first { $0.day == 5 }
+        let savedActivity = try #require(activity)
+        let comment = try #require(savedActivity.comment)
+        #expect(comment == "Отличная тренировка!")
+    }
+
+    @Test("Успешно обновляет комментарий при обновлении существующей активности")
+    func successfullyUpdatesCommentWhenUpdatingExistingActivity() throws {
+        let mockSession = MockWCSession(isReachable: true)
+        let container = try createTestModelContainer()
+        let context = container.mainContext
+        let user = try createTestUser(in: context)
+
+        let existingActivity = DayActivity(
+            day: 5,
+            activityTypeRaw: DayActivityType.workout.rawValue,
+            count: 3,
+            plannedCount: 4,
+            executeTypeRaw: ExerciseExecutionType.cycles.rawValue,
+            trainingTypeRaw: nil,
+            duration: 1500,
+            comment: "Старый комментарий",
+            createDate: .now,
+            modifyDate: .now,
+            user: user
+        )
+        context.insert(existingActivity)
+        try context.save()
+
+        let (statusManager, manager) = try createStatusManagerWithMockSession(
+            mockSession: mockSession,
+            container: container
+        )
+        _ = statusManager
+
+        let result = WorkoutResult(count: 4, duration: 1800)
+
+        manager.pendingRequests.append(.saveWorkout(day: 5, result: result, executionType: .cycles, comment: "Новый комментарий"))
+
+        processPendingRequests(manager: manager, context: context)
+
+        let activities = try context.fetch(FetchDescriptor<DayActivity>())
+        let activity = activities.first { $0.day == 5 }
+        let savedActivity = try #require(activity)
+        let comment = try #require(savedActivity.comment)
+        #expect(comment == "Новый комментарий")
+    }
+
+    @Test("Удаляет комментарий при передаче nil")
+    func deletesCommentWhenNilPassed() throws {
+        let mockSession = MockWCSession(isReachable: true)
+        let container = try createTestModelContainer()
+        let context = container.mainContext
+        let user = try createTestUser(in: context)
+
+        let existingActivity = DayActivity(
+            day: 5,
+            activityTypeRaw: DayActivityType.workout.rawValue,
+            count: 3,
+            plannedCount: 4,
+            executeTypeRaw: ExerciseExecutionType.cycles.rawValue,
+            trainingTypeRaw: nil,
+            duration: 1500,
+            comment: "Существующий комментарий",
+            createDate: .now,
+            modifyDate: .now,
+            user: user
+        )
+        context.insert(existingActivity)
+        try context.save()
+
+        let (statusManager, manager) = try createStatusManagerWithMockSession(
+            mockSession: mockSession,
+            container: container
+        )
+        _ = statusManager
+
+        let result = WorkoutResult(count: 4, duration: 1800)
+
+        manager.pendingRequests.append(.saveWorkout(day: 5, result: result, executionType: .cycles, comment: nil))
+
+        processPendingRequests(manager: manager, context: context)
+
+        let activities = try context.fetch(FetchDescriptor<DayActivity>())
+        let activity = activities.first { $0.day == 5 }
+        let savedActivity = try #require(activity)
+        #expect(savedActivity.comment == nil)
     }
 
     @Test("Обрабатывает ошибку при отсутствии пользователя при сохранении тренировки")
@@ -324,14 +433,20 @@ struct WatchConnectivityManagerTests {
         let result = WorkoutResult(count: 4, duration: 1800)
 
         // Симулируем добавление запроса в очередь напрямую
-        manager.pendingRequests.append(.saveWorkout(day: 5, result: result, executionType: .cycles))
+        manager.pendingRequests.append(.saveWorkout(day: 5, result: result, executionType: .cycles, comment: nil))
 
         // Обрабатываем запросы из очереди
         var reply: [String: Any] = [:]
         let requests = manager.pendingRequests
         for request in requests {
-            if case let .saveWorkout(day, result, executionType) = request {
-                reply = manager.handleSaveWorkout(day: day, result: result, executionType: executionType, context: context)
+            if case let .saveWorkout(day, result, executionType, comment) = request {
+                reply = manager.handleSaveWorkout(
+                    day: day,
+                    result: result,
+                    executionType: executionType,
+                    comment: comment,
+                    context: context
+                )
             }
         }
         manager.pendingRequests = []

@@ -34,6 +34,7 @@ extension WorkoutPreviewViewModelTests {
             #expect(sentResult.result.count == 5)
             let executionType = try #require(viewModel.selectedExecutionType)
             #expect(sentResult.executionType == executionType)
+            #expect(sentResult.comment == nil)
         }
 
         @Test("Должен устанавливать count = plannedCount если count == nil")
@@ -162,6 +163,65 @@ extension WorkoutPreviewViewModelTests {
             let sentResult = try #require(connectivityService.sentWorkoutResult)
             let duration = try #require(sentResult.result.duration)
             #expect(duration == 180)
+        }
+
+        @Test("Должен передавать комментарий при сохранении тренировки")
+        @MainActor
+        func passesCommentWhenSavingWorkout() async throws {
+            let connectivityService = MockWatchConnectivityService()
+            let appGroupHelper = MockWatchAppGroupHelper(restTime: 60)
+            let viewModel = WorkoutPreviewViewModel(
+                connectivityService: connectivityService,
+                appGroupHelper: appGroupHelper
+            )
+
+            let workoutData = WorkoutData(
+                day: 50,
+                executionType: ExerciseExecutionType.cycles.rawValue,
+                trainings: [
+                    WorkoutPreviewTraining(count: 5, typeId: ExerciseType.pullups.rawValue, sortOrder: 0)
+                ],
+                plannedCount: 4
+            )
+            connectivityService.mockWorkoutData = workoutData
+            await viewModel.loadData(day: 50)
+
+            viewModel.comment = "Отличная тренировка!"
+            viewModel.plannedCount = 5
+            await viewModel.saveTrainingAsPassed()
+
+            let sentResult = try #require(connectivityService.sentWorkoutResult)
+            let comment = try #require(sentResult.comment)
+            #expect(comment == "Отличная тренировка!")
+        }
+
+        @Test("Должен передавать nil для комментария если комментарий не установлен")
+        @MainActor
+        func passesNilForCommentWhenCommentNotSet() async throws {
+            let connectivityService = MockWatchConnectivityService()
+            let appGroupHelper = MockWatchAppGroupHelper(restTime: 60)
+            let viewModel = WorkoutPreviewViewModel(
+                connectivityService: connectivityService,
+                appGroupHelper: appGroupHelper
+            )
+
+            let workoutData = WorkoutData(
+                day: 50,
+                executionType: ExerciseExecutionType.cycles.rawValue,
+                trainings: [
+                    WorkoutPreviewTraining(count: 5, typeId: ExerciseType.pullups.rawValue, sortOrder: 0)
+                ],
+                plannedCount: 4
+            )
+            connectivityService.mockWorkoutData = workoutData
+            await viewModel.loadData(day: 50)
+
+            viewModel.comment = nil
+            viewModel.plannedCount = 5
+            await viewModel.saveTrainingAsPassed()
+
+            let sentResult = try #require(connectivityService.sentWorkoutResult)
+            #expect(sentResult.comment == nil)
         }
     }
 }

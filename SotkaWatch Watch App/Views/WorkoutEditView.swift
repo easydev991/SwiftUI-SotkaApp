@@ -12,29 +12,20 @@ struct WorkoutEditView: View {
     @State private var editableExercises: [WorkoutPreviewTraining] = []
 
     var body: some View {
-        NavigationStack {
-            List {
-                dayExercisesSection
-                standardExercisesSection
-            }
-            .navigationTitle(.workoutExerciseEditorTitle)
-            .navigationBarTitleDisplayMode(.inline)
-            .toolbar {
-                ToolbarItem(placement: .topBarLeading) {
-                    Button {
-                        dismiss()
-                    } label: {
-                        Image(systemName: "xmark")
-                    }
-                }
-                ToolbarItem(placement: .topBarTrailing) {
-                    Button(action: saveChanges) {
-                        Image(systemName: "checkmark")
-                    }
-                }
-            }
-            .onAppear(perform: initializeEditableExercises)
+        List {
+            dayExercisesSection
+            standardExercisesSection
         }
+        .navigationTitle(.workoutExerciseEditorTitle)
+        .navigationBarTitleDisplayMode(.inline)
+        .toolbar {
+            ToolbarItem(placement: .topBarTrailing) {
+                Button(action: saveChanges) {
+                    Image(systemName: "checkmark")
+                }
+            }
+        }
+        .onAppear(perform: initializeEditableExercises)
     }
 
     // MARK: - Private Views
@@ -117,6 +108,8 @@ struct WorkoutEditView: View {
         connectivityService: PreviewWatchConnectivityService(),
         appGroupHelper: PreviewWatchAppGroupHelper()
     )
-    WorkoutEditView(viewModel: viewModel)
+    NavigationStack {
+        WorkoutEditView(viewModel: viewModel)
+    }
 }
 #endif

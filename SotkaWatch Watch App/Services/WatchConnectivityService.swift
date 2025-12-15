@@ -79,7 +79,8 @@ final class WatchConnectivityService: NSObject {
     ///   - day: Номер дня программы
     ///   - result: Результат тренировки
     ///   - executionType: Тип выполнения упражнений
-    func sendWorkoutResult(day: Int, result: WorkoutResult, executionType: ExerciseExecutionType) async throws {
+    ///   - comment: Комментарий к тренировке (опционально)
+    func sendWorkoutResult(day: Int, result: WorkoutResult, executionType: ExerciseExecutionType, comment: String?) async throws {
         guard let sessionProtocol, sessionProtocol.isReachable else {
             throw WatchConnectivityError.sessionUnavailable
         }
@@ -90,14 +91,19 @@ final class WatchConnectivityService: NSObject {
             throw WatchConnectivityError.serializationError
         }
 
-        let message: [String: Any] = [
+        var message: [String: Any] = [
             "command": Constants.WatchCommand.saveWorkout.rawValue,
             "day": day,
             "result": resultJSON,
             "executionType": executionType.rawValue
         ]
 
-        logger.info("Отправка результата тренировки на iPhone: день \(day), количество \(result.count)")
+        if let comment {
+            message["comment"] = comment
+        }
+
+        let commentInfo = comment != nil ? ", комментарий: \(comment!)" : ""
+        logger.info("Отправка результата тренировки на iPhone: день \(day), количество \(result.count)\(commentInfo)")
 
         try await withCheckedThrowingContinuation { continuation in
             sessionProtocol.sendMessage(message) { _ in
