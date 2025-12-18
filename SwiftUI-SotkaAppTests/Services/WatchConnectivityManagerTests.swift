@@ -10,8 +10,7 @@ struct WatchConnectivityManagerTests {
     // MARK: - Helper Methods
 
     private func createStatusManagerWithMockSession(
-        mockSession: MockWCSession,
-        container _: ModelContainer
+        mockSession: MockWCSession
     ) throws -> (StatusManager, StatusManager.WatchConnectivityManager) {
         let mockDaysClient = MockDaysClient()
         let statusManager = try MockStatusManager.create(
@@ -57,11 +56,10 @@ struct WatchConnectivityManagerTests {
     @Test("Инициализирует WCSession при создании")
     func initializesWCSessionOnCreation() async throws {
         let mockSession = MockWCSession(isReachable: true)
-        let container = try createTestModelContainer()
+
         // Сохраняем statusManager, чтобы он не был освобожден
         let (statusManager, manager) = try createStatusManagerWithMockSession(
-            mockSession: mockSession,
-            container: container
+            mockSession: mockSession
         )
 
         // Убеждаемся, что statusManager не освобожден
@@ -83,8 +81,7 @@ struct WatchConnectivityManagerTests {
 
         // Сохраняем statusManager, чтобы он не был освобожден (manager хранит weak ссылку)
         let (statusManager, manager) = try createStatusManagerWithMockSession(
-            mockSession: mockSession,
-            container: container
+            mockSession: mockSession
         )
         // Убеждаемся, что statusManager не освобожден
         _ = statusManager
@@ -111,8 +108,7 @@ struct WatchConnectivityManagerTests {
 
         // Сохраняем statusManager, чтобы он не был освобожден
         let (statusManager, manager) = try createStatusManagerWithMockSession(
-            mockSession: mockSession,
-            container: container
+            mockSession: mockSession
         )
         _ = statusManager // Убеждаемся, что statusManager не освобожден
 
@@ -138,8 +134,7 @@ struct WatchConnectivityManagerTests {
 
         // Сохраняем statusManager, чтобы он не был освобожден
         let (statusManager, manager) = try createStatusManagerWithMockSession(
-            mockSession: mockSession,
-            container: container
+            mockSession: mockSession
         )
         _ = statusManager // Убеждаемся, что statusManager не освобожден
 
@@ -181,8 +176,7 @@ struct WatchConnectivityManagerTests {
 
         // Сохраняем statusManager, чтобы он не был освобожден
         let (statusManager, manager) = try createStatusManagerWithMockSession(
-            mockSession: mockSession,
-            container: container
+            mockSession: mockSession
         )
         _ = statusManager // Убеждаемся, что statusManager не освобожден
 
@@ -228,8 +222,7 @@ struct WatchConnectivityManagerTests {
 
         // Сохраняем statusManager, чтобы он не был освобожден
         let (statusManager, manager) = try createStatusManagerWithMockSession(
-            mockSession: mockSession,
-            container: container
+            mockSession: mockSession
         )
         _ = statusManager // Убеждаемся, что statusManager не освобожден
 
@@ -254,8 +247,7 @@ struct WatchConnectivityManagerTests {
 
         // Сохраняем statusManager, чтобы он не был освобожден
         let (statusManager, manager) = try createStatusManagerWithMockSession(
-            mockSession: mockSession,
-            container: container
+            mockSession: mockSession
         )
         _ = statusManager // Убеждаемся, что statusManager не освобожден
 
@@ -285,8 +277,7 @@ struct WatchConnectivityManagerTests {
 
         // Сохраняем statusManager, чтобы он не был освобожден
         let (statusManager, manager) = try createStatusManagerWithMockSession(
-            mockSession: mockSession,
-            container: container
+            mockSession: mockSession
         )
         _ = statusManager // Убеждаемся, что statusManager не освобожден
 
@@ -316,8 +307,7 @@ struct WatchConnectivityManagerTests {
         _ = try createTestUser(in: context)
 
         let (statusManager, manager) = try createStatusManagerWithMockSession(
-            mockSession: mockSession,
-            container: container
+            mockSession: mockSession
         )
         _ = statusManager
 
@@ -358,8 +348,7 @@ struct WatchConnectivityManagerTests {
         try context.save()
 
         let (statusManager, manager) = try createStatusManagerWithMockSession(
-            mockSession: mockSession,
-            container: container
+            mockSession: mockSession
         )
         _ = statusManager
 
@@ -400,8 +389,7 @@ struct WatchConnectivityManagerTests {
         try context.save()
 
         let (statusManager, manager) = try createStatusManagerWithMockSession(
-            mockSession: mockSession,
-            container: container
+            mockSession: mockSession
         )
         _ = statusManager
 
@@ -425,8 +413,7 @@ struct WatchConnectivityManagerTests {
 
         // Сохраняем statusManager, чтобы он не был освобожден
         let (statusManager, manager) = try createStatusManagerWithMockSession(
-            mockSession: mockSession,
-            container: container
+            mockSession: mockSession
         )
         _ = statusManager // Убеждаемся, что statusManager не освобожден
 
@@ -480,8 +467,7 @@ struct WatchConnectivityManagerTests {
 
         // Сохраняем statusManager, чтобы он не был освобожден
         let (statusManager, manager) = try createStatusManagerWithMockSession(
-            mockSession: mockSession,
-            container: container
+            mockSession: mockSession
         )
         _ = statusManager // Убеждаемся, что statusManager не освобожден
 
@@ -508,8 +494,7 @@ struct WatchConnectivityManagerTests {
 
         // Сохраняем statusManager, чтобы он не был освобожден
         let (statusManager, manager) = try createStatusManagerWithMockSession(
-            mockSession: mockSession,
-            container: container
+            mockSession: mockSession
         )
         _ = statusManager // Убеждаемся, что statusManager не освобожден
 
@@ -569,8 +554,7 @@ struct WatchConnectivityManagerTests {
 
         // Сохраняем statusManager, чтобы он не был освобожден
         let (statusManager, manager) = try createStatusManagerWithMockSession(
-            mockSession: mockSession,
-            container: container
+            mockSession: mockSession
         )
         _ = statusManager // Убеждаемся, что statusManager не освобожден
 
@@ -626,8 +610,7 @@ struct WatchConnectivityManagerTests {
 
         // Сохраняем statusManager, чтобы он не был освобожден
         let (statusManager, manager) = try createStatusManagerWithMockSession(
-            mockSession: mockSession,
-            container: container
+            mockSession: mockSession
         )
         _ = statusManager // Убеждаемся, что statusManager не освобожден
 
@@ -658,8 +641,7 @@ struct WatchConnectivityManagerTests {
 
         // Сохраняем statusManager, чтобы он не был освобожден
         let (statusManager, manager) = try createStatusManagerWithMockSession(
-            mockSession: mockSession,
-            container: container
+            mockSession: mockSession
         )
         _ = statusManager // Убеждаемся, что statusManager не освобожден
 
@@ -687,8 +669,7 @@ struct WatchConnectivityManagerTests {
 
         // Сохраняем statusManager, чтобы он не был освобожден
         let (statusManager, manager) = try createStatusManagerWithMockSession(
-            mockSession: mockSession,
-            container: container
+            mockSession: mockSession
         )
         _ = statusManager // Убеждаемся, что statusManager не освобожден
 
@@ -715,12 +696,10 @@ struct WatchConnectivityManagerTests {
     @Test("Отправляет команду PHONE_COMMAND_AUTH_STATUS при успешной авторизации")
     func sendsAuthStatusCommandOnSuccessfulAuthorization() throws {
         let mockSession = MockWCSession(isReachable: true)
-        let container = try createTestModelContainer()
 
         // Сохраняем statusManager, чтобы он не был освобожден
         let (statusManager, manager) = try createStatusManagerWithMockSession(
-            mockSession: mockSession,
-            container: container
+            mockSession: mockSession
         )
         _ = statusManager // Убеждаемся, что statusManager не освобожден
 
@@ -737,12 +716,10 @@ struct WatchConnectivityManagerTests {
     @Test("Отправляет команду PHONE_COMMAND_AUTH_STATUS при логауте")
     func sendsAuthStatusCommandOnLogout() throws {
         let mockSession = MockWCSession(isReachable: true)
-        let container = try createTestModelContainer()
 
         // Сохраняем statusManager, чтобы он не был освобожден
         let (statusManager, manager) = try createStatusManagerWithMockSession(
-            mockSession: mockSession,
-            container: container
+            mockSession: mockSession
         )
         _ = statusManager // Убеждаемся, что statusManager не освобожден
 
@@ -780,8 +757,7 @@ struct WatchConnectivityManagerTests {
         try context.save()
 
         let (statusManager, manager) = try createStatusManagerWithMockSession(
-            mockSession: mockSession,
-            container: container
+            mockSession: mockSession
         )
         _ = statusManager
 
@@ -803,8 +779,7 @@ struct WatchConnectivityManagerTests {
         let context = container.mainContext
 
         let (statusManager, manager) = try createStatusManagerWithMockSession(
-            mockSession: mockSession,
-            container: container
+            mockSession: mockSession
         )
         _ = statusManager
 
@@ -831,8 +806,7 @@ struct WatchConnectivityManagerTests {
         _ = try createTestUser(in: context)
 
         let (statusManager, manager) = try createStatusManagerWithMockSession(
-            mockSession: mockSession,
-            container: container
+            mockSession: mockSession
         )
         _ = statusManager
 
@@ -892,8 +866,7 @@ struct WatchConnectivityManagerTests {
         try context.save()
 
         let (statusManager, manager) = try createStatusManagerWithMockSession(
-            mockSession: mockSession,
-            container: container
+            mockSession: mockSession
         )
         _ = statusManager
 

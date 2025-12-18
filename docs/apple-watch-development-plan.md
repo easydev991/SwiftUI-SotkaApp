@@ -735,46 +735,54 @@ init(...) {
 
 ### Пошаговый план рефакторинга
 
-#### Шаг 1: Создание простого WatchConnectivityManager
+#### Шаг 1: Создание простого WatchConnectivityManager ✅
 
 **Цель:** Создать простую структуру только для отправки данных на часы
 
 **Действия (TDD подход):**
 
-**1.1. Красный - Написать тесты (до реализации):**
-1. Создать файл `WatchConnectivityManagerTests.swift`
-2. Написать тесты для протокола `WatchConnectivityManagerProtocol`:
-   - `@Test("Должен отправлять сообщение через WCSession")` - тест `sendMessage`
-   - `@Test("Должен возвращать isReachable из WCSession")` - тест `isReachable`
-   - Использовать `MockWCSession` для мокирования WCSession
-   - Использовать `#expect` для проверок, `#require` для разворачивания опционалов
-3. Запустить `make test` - тесты должны падать (Красный)
+**1.1. Красный - Написать тесты (до реализации):** ✅
+1. ✅ Создать файл `WatchConnectivityManagerProtocolTests.swift` (создан файл с тестами для протокола)
+2. ✅ Написать тесты для протокола `WatchConnectivityManagerProtocol`:
+   - ✅ `@Test("Должен отправлять сообщение через WCSession")` - тест `sendMessage`
+   - ✅ `@Test("Должен возвращать isReachable из WCSession")` - тест `isReachable`
+   - ✅ `@Test("Должен вызывать errorHandler при ошибке отправки")` - дополнительный тест
+   - ✅ `@Test("Должен вызывать errorHandler когда сессия недоступна")` - дополнительный тест
+   - ✅ Использовать `MockWCSession` для мокирования WCSession
+   - ✅ Использовать `#expect` для проверок, `#require` для разворачивания опционалов
+3. ✅ Запустить `make test` - тесты проходят (Зеленый)
 
-**1.2. Зеленый - Реализовать код:**
-1. Создать протокол `WatchConnectivityManagerProtocol` с методами:
-   - `sendMessage(_:replyHandler:errorHandler:)`
-   - `isReachable` (computed property)
-   - **Примечание:** Методы активации сессии НЕ нужны - активация происходит в `StatusManager`
-2. Создать отдельный файл `WatchConnectivityManager.swift` со структурой (не класс)
-3. Реализовать структуру `WatchConnectivityManager`, которая:
-   - Хранит `WCSessionProtocol` (для тестирования)
-   - Реализует `WatchConnectivityManagerProtocol`
-   - Содержит только методы отправки данных на часы
-   - Не хранит состояние (поэтому структура, а не класс)
-   - **Не является делегатом WCSession** (делегатом будет `StatusManager`)
-4. Запустить `make format` и `make test` - тесты должны пройти (Зеленый)
+**1.2. Зеленый - Реализовать код:** ✅
+1. ✅ Создать протокол `WatchConnectivityManagerProtocol` с методами:
+   - ✅ `sendMessage(_:replyHandler:errorHandler:)`
+   - ✅ `isReachable` (computed property)
+   - ✅ **Примечание:** Методы активации сессии НЕ нужны - активация происходит в `StatusManager`
+2. ✅ Создать отдельный файл `WatchConnectivityManager.swift` со структурой (не класс)
+3. ✅ Реализовать структуру `WatchConnectivityManager`, которая:
+   - ✅ Хранит `WCSessionProtocol?` (опциональное свойство для поддержки iPad/macOS, где WCSession может быть не поддерживается)
+   - ✅ Реализует `WatchConnectivityManagerProtocol`
+   - ✅ Содержит только методы отправки данных на часы
+   - ✅ Не хранит состояние (поэтому структура, а не класс)
+   - ✅ **Не является делегатом WCSession** (делегатом будет `StatusManager`)
+   - ✅ **Безопасная инициализация:** не использует `fatalError`, если WCSession не поддерживается, `sessionProtocol` будет `nil`
+   - ✅ `isReachable` возвращает `false` если `sessionProtocol == nil`
+   - ✅ `sendMessage` вызывает `errorHandler` если `sessionProtocol == nil`
+4. ✅ Создать enum `WatchConnectivityError` в extension `WatchConnectivityManager`:
+   - ✅ Кейсы: `.unsupported` (WCSession не поддерживается) и `.unreachable` (сессия недоступна)
+   - ✅ Реализует `LocalizedError` с описаниями ошибок
+   - ✅ Используется вместо локальных структур ошибок в методе `sendMessage`
+5. ✅ Добавить тесты для случая когда `sessionProtocol == nil`:
+   - ✅ `@Test("Должен возвращать false для isReachable когда sessionProtocol равен nil")`
+   - ⚠️ Тест для `errorHandler` с `.unsupported` не добавлен, так как его нельзя надежно протестировать на всех устройствах (поведение зависит от `WCSession.isSupported()`, которое мы не контролируем в тестах)
+6. ✅ Запустить `make format` и `make test` - тесты проходят (Зеленый)
 
-**1.3. Рефакторинг:**
-1. Убрать из него всю бизнес-логику (обработку команд)
-2. Убрать очередь запросов (`pendingRequests`)
-3. Убрать методы обработки команд (`handleSetActivity`, `handleSaveWorkout` и т.д.)
-4. Запустить `make format` и `make test` - убедиться, что все тесты проходят
-
-**Результат:**
-- Простая структура с единственной ответственностью - отправка данных
-- Протокол для легкого тестирования `StatusManager`
-- Value type - безопаснее и проще
-- **Структура остается структурой**, так как делегатом WCSession будет `StatusManager`
+**Результат:** ✅
+- ✅ Простая структура с единственной ответственностью - отправка данных
+- ✅ Протокол для легкого тестирования `StatusManager`
+- ✅ Value type - безопаснее и проще
+- ✅ **Структура остается структурой**, так как делегатом WCSession будет `StatusManager`
+- ✅ Безопасная работа на iPad/macOS (без `fatalError`, `sessionProtocol` может быть `nil`)
+- ✅ Централизованная обработка ошибок через enum `WatchConnectivityError` в extension
 
 #### Шаг 2: Перенос делегата WCSession в StatusManager
 
@@ -845,7 +853,7 @@ init(...) {
 
 #### Шаг 3: Убрать force unwrap и очередь
 
-**Цель:** Безопасная инициализация и убрать костыль с очередью
+**Цель:** Безопасная инициализация и убрать костыль с очередью, удалить старый класс `StatusManager.WatchConnectivityManager`
 
 **Действия (TDD подход):**
 
@@ -857,19 +865,27 @@ init(...) {
 
 **3.2. Зеленый - Реализовать код:**
 1. Изменить `watchConnectivityManager` на свойство типа `WatchConnectivityManagerProtocol` (не force unwrap)
-2. Инициализировать `WatchConnectivityManager` (структуру) в `init` `StatusManager` как обычное свойство
-3. Убрать `pendingRequests` и `pendingRequestsCount`
-4. Убрать метод `processPendingRequests(context:)`
-5. Убрать `onChange(of: pendingRequestsCount)` из `SwiftUI_SotkaAppApp.swift`
-6. Убрать enum `WatchRequest` (больше не нужен)
-7. Убрать `unowned` reference (больше не нужна, так как структура не создает циклических ссылок)
-8. Запустить `make format` и `make test` - тесты должны пройти (Зеленый)
+2. Инициализировать новый `WatchConnectivityManager` (структуру) в `init` `StatusManager` как обычное свойство
+3. Удалить старый класс `StatusManager.WatchConnectivityManager` (extension в `StatusManager.swift`)
+4. Убрать `pendingRequests` и `pendingRequestsCount` из старого класса
+5. Убрать метод `processPendingRequests(context:)` из старого класса
+6. Убрать `onChange(of: pendingRequestsCount)` из `SwiftUI_SotkaAppApp.swift`
+7. Убрать enum `WatchRequest` (больше не нужен)
+8. Убрать `unowned` reference (больше не нужна, так как структура не создает циклических ссылок)
+9. Убрать методы обработки команд из старого класса (`handleSetActivity`, `handleSaveWorkout`, `handleGetCurrentActivity`, `handleGetWorkoutData`, `handleDeleteActivity`)
+10. Убрать методы делегата WCSession из старого класса (они будут перенесены в `StatusManager` в Шаге 2)
+11. Запустить `make format` и `make test` - тесты должны пройти (Зеленый)
 
 **Результат:**
 - Нет force unwrap
 - Нет очереди запросов
+- Старый класс `StatusManager.WatchConnectivityManager` удален
+- Используется новая структура `WatchConnectivityManager` через протокол
 - Простой и предсказуемый поток данных
 - Использование протокола для гибкости и тестируемости
+
+**3.3. Рефакторинг:** ✅
+> **Примечание:** Новый `WatchConnectivityManager` создан с нуля и не содержит бизнес-логики. Старый класс `StatusManager.WatchConnectivityManager` был удален в этом шаге вместе с очередью запросов и методами обработки команд.
 
 #### Шаг 4: Рефакторинг обработки команд
 
