@@ -47,7 +47,8 @@ SotkaWatch Watch App/
 │   └── WCSessionProtocol.swift         # Протокол для WCSession (для тестирования) ✅
 ├── ViewModels/
 │   ├── HomeViewModel.swift              # ViewModel для главного экрана ✅
-│   └── WorkoutViewModel.swift          # ViewModel для экрана тренировки ✅
+│   ├── WorkoutViewModel.swift          # ViewModel для экрана тренировки ✅
+│   └── WorkoutPreviewViewModel.swift   # ViewModel для экрана превью тренировки ✅
 ├── Views/
 │   ├── AuthRequiredView.swift          # Экран для неавторизованных пользователей ✅
 │   ├── HomeView.swift                  # Главный экран часов ✅
@@ -56,29 +57,22 @@ SotkaWatch Watch App/
 │   ├── SelectedActivityView.swift      # Отображение выбранной активности ✅
 │   ├── WatchDayActivityTrainingView.swift # Компонент отображения данных тренировки ✅
 │   ├── WatchDayActivityCommentView.swift  # Компонент отображения комментария ✅
-│   ├── WorkoutView.swift               # Экран выполнения тренировки (еще не создан)
-│   └── WorkoutRestTimerView.swift      # Таймер отдыха между кругами/подходами (еще не создан)
+│   ├── WorkoutPreviewView.swift        # Экран превью тренировки ✅
+│   ├── WorkoutEditView.swift           # Экран редактирования упражнений в тренировке ✅
+│   ├── WorkoutStepperView.swift        # Компонент для изменения значений (stepper) ✅
+│   ├── WorkoutView.swift               # Экран выполнения тренировки ✅
+│   └── WorkoutRestTimerView.swift      # Таймер отдыха между кругами/подходами ✅
 └── Utilities/
     ├── WatchAppGroupHelper.swift       # Утилита для работы с App Group UserDefaults ✅
     └── WatchAppGroupHelperProtocol.swift # Протокол утилиты (для тестирования) ✅
 
 Примечание: 
-- Модели данных используются из основного приложения:
-  - Models/SWSharedModels/WorkoutData.swift (общая модель для передачи данных тренировки)
-  - Models/SWSharedModels/WorkoutDataResponse.swift (структура для передачи полных данных тренировки с iPhone на Apple Watch, включает WorkoutData, executionCount, comment)
-  - Models/Workout/WorkoutResult.swift (добавлен Codable для передачи через WatchConnectivity)
-  - Models/Workout/WorkoutPreviewTraining.swift (добавлен Codable для передачи через WatchConnectivity)
-  - Models/Workout/DayActivityType.swift (используется rawValue для передачи)
-  - Models/Workout/ExerciseExecutionType.swift (используется rawValue для передачи)
-  - Models/Workout/ExerciseType.swift (добавлен в Watch App target для использования локализованных названий и иконок упражнений)
-  - Models/Workout/DayCalculator.swift (переиспользуется из основного приложения для вычисления текущего дня программы)
-  - **Models/Workout/WorkoutStep.swift** (добавлен в Watch App target для представления этапов тренировки: разминка, упражнение, заминка) ⚠️ **Критически важно для сохранения тех же стадий тренировки**
-  - **Models/Workout/WorkoutState.swift** (добавлен в Watch App target для представления состояния этапа: active, completed, inactive) ⚠️ **Критически важно для управления этапами тренировки**
-  - **Models/Workout/WorkoutStepState.swift** (добавлен в Watch App target для объединения этапа и его состояния) ⚠️ **Критически важно для отслеживания прогресса тренировки**
+- Модели данных переиспользуются из основного приложения (WorkoutData, WorkoutDataResponse, WorkoutResult, WorkoutPreviewTraining и др.)
+- Модели для этапов тренировки (WorkoutStep, WorkoutState, WorkoutStepState) добавлены в Watch App target
 - Локальные модели для Watch App размещаются в `Models/` (например, `AuthState`)
-- Простые структуры (не SwiftData) получают Codable для прямой передачи через WatchConnectivity
+- Простые структуры получают Codable для передачи через WatchConnectivity
 - Модели с `@Model` (SwiftData) не используются напрямую на часах
-- Ассеты упражнений находятся в отдельном `ExercisesAssets.xcassets`, доступном обоим таргетам (основное приложение и Watch App)
+- Ассеты упражнений в отдельном `ExercisesAssets.xcassets`, доступном обоим таргетам
 ```
 
 ### Технологии
@@ -90,15 +84,10 @@ SotkaWatch Watch App/
 - **OSLog** - для логирования
 
 **Важно:** 
-- Часы не используют SwiftData или другое постоянное хранилище. Все данные запрашиваются с iPhone в реальном времени.
-- **Модели переиспользуются из основного приложения** - не создаем дубликаты моделей для часов.
-- **Простые структуры (не SwiftData)** получают Codable для прямой передачи через WatchConnectivity:
-  - `WorkoutResult` - добавлен Codable
-  - `WorkoutPreviewTraining` - добавлен Codable
-  - `DayActivityType` и `ExerciseExecutionType` - используют rawValue для передачи
-- **`ExerciseType`** добавлен в Watch App target для использования локализованных названий упражнений и иконок на экране тренировки
-- **Ассеты упражнений** находятся в отдельном `ExercisesAssets.xcassets`, доступном обоим таргетам (основное приложение и Watch App), что позволяет использовать иконки упражнений без дублирования
-- Модели с `@Model` (SwiftData) не используются напрямую на часах, только для преобразования в простые структуры.
+- Часы не используют SwiftData, все данные запрашиваются с iPhone в реальном времени
+- Модели переиспользуются из основного приложения
+- Простые структуры получают Codable для передачи через WatchConnectivity
+- Модели с `@Model` (SwiftData) не используются напрямую на часах
 
 ### Обмен данными между часами и iPhone
 
@@ -196,70 +185,70 @@ SotkaWatch Watch App/
 ### Этап 1: Настройка проекта и инфраструктуры ✅ Выполнено
 
 #### 1.1 Настройка Watch App Target ✅ Выполнено
-- [x] ✅ Минимальная версия watchOS: 10.0, App Group настроен, WatchConnectivity доступен, OSLog для логирования
-- [x] ✅ Добавлены модели в Watch App target: WorkoutResult, WorkoutPreviewTraining, DayActivityType, ExerciseExecutionType, ExerciseType, DayCalculator, Constants, WorkoutData, WorkoutDataResponse, WorkoutStep, WorkoutState, WorkoutStepState
-- [x] ✅ `AuthHelper` переведен на App Group с автоматической миграцией
+- [x] ✅ watchOS 10.0, App Group, WatchConnectivity, OSLog настроены
+- [x] ✅ Модели добавлены в Watch App target
+- [x] ✅ `AuthHelper` переведен на App Group
 
 #### 1.2 Константы и утилиты ✅ Выполнено
-- [x] ✅ Enum `Constants.WatchCommand`, `WatchAppGroupHelper`, локализация displayName для часов
+- [x] ✅ `Constants.WatchCommand`, `WatchAppGroupHelper`, локализация displayName
 
 #### 1.3 App Group для обмена данными ✅ Выполнено
-- [x] ✅ App Group настроен, `WatchAppGroupHelper` с вычисляемыми свойствами (`isAuthorized`, `startDate`, `currentDay`), данные читаются напрямую из UserDefaults без кэширования
+- [x] ✅ App Group настроен, `WatchAppGroupHelper` с вычисляемыми свойствами
 
 #### 1.4 Ассеты упражнений ✅ Выполнено
 - [x] ✅ `ExercisesAssets.xcassets` создан и добавлен в оба таргета
 
 ### Этап 2: Добавление Codable к моделям ✅ Выполнено
-- [x] ✅ Codable добавлен к `WorkoutResult`, `WorkoutPreviewTraining`, создана структура `WorkoutData`, добавлено вычисляемое свойство `workoutData` в `DayActivity`
+- [x] ✅ Codable добавлен к моделям, создана структура `WorkoutData`
 
 ### Этап 3: Сервисы ✅ Выполнено
 - [x] ✅ `WatchAuthService`, `WatchConnectivityService`, `WatchWorkoutService` реализованы
 
 ### Этап 4: ViewModels ✅ Выполнено
-- [x] ✅ `HomeViewModel`, `WorkoutViewModel`, `WorkoutPreviewViewModel` реализованы с полной бизнес-логикой
+- [x] ✅ `HomeViewModel`, `WorkoutViewModel`, `WorkoutPreviewViewModel` реализованы
 
 ### Этап 5: Интеграция с iPhone ✅ Выполнено
-- [x] ✅ `WatchConnectivityManager` реализован, обработка всех команд WatchConnectivity, очередь запросов для actor isolation, проверка конфликтов при изменении активности
+- [x] ✅ `WatchConnectivityManager` реализован, обработка команд, очередь запросов, проверка конфликтов
 
 **Важные примечания:**
 - ⚠️ **WCSessionDelegate для watchOS:** НЕ добавлять методы `sessionDidBecomeInactive` и `sessionDidDeactivate` (unavailable на watchOS, баг Cursor IDE)
 - **Actor isolation:** Методы делегата `nonisolated` добавляют запросы в очередь через `Task { @MainActor in }`, обработка через `processPendingRequests(context:)` во вьюхе
 - **Авторизация:** При авторизации часы читают статус из App Group UserDefaults, при логауте отправляется `PHONE_COMMAND_AUTH_STATUS_CHANGED`
 
-### Этап 6: UI экранов
+### Этап 6: UI экранов ✅ Выполнено
 
 #### 6.1 Экран авторизации ✅ Выполнено
 - [x] ✅ `AuthRequiredView` создан и интегрирован
 
 #### 6.2 Главный экран ✅ Выполнено
-- [x] ✅ `HomeView` создан: отображение активности дня, выбор активности, открытие экрана превью тренировки через `.fullScreenCover`, передача зависимостей через Environment
+- [x] ✅ `HomeView` создан с отображением активности, выбором активности, открытием превью тренировки
 
 #### 6.3 Экран выбора активности ✅ Выполнено
-- [x] ✅ Созданы экраны: `DayActivitySelectionView`, `DayActivityView`, `SelectedActivityView` с полным функционалом
-- [x] ✅ Реализовано отображение данных тренировки, редактирование и удаление активности, загрузка данных через `WorkoutDataResponse`
-- [x] ✅ Логика выбора/изменения активности с обработкой ошибок и индикаторами загрузки
+- [x] ✅ Созданы экраны: `DayActivitySelectionView`, `DayActivityView`, `SelectedActivityView`
+- [x] ✅ Реализовано отображение данных тренировки, редактирование и удаление активности
+- [x] ✅ Логика выбора/изменения активности с обработкой ошибок
 - [ ] **TODO:** Добавить локализованные строки для индикаторов и ошибок (`Watch.Activity.Saving`, `Watch.Activity.Error`) в `Localizable.xcstrings`
 
 #### 6.3.1 Экран превью тренировки ✅ Выполнено
-- [x] ✅ `WorkoutPreviewView` создан с полной интеграцией с `WorkoutPreviewViewModel`
+- [x] ✅ `WorkoutPreviewView` создан с интеграцией `WorkoutPreviewViewModel`
 - [x] ✅ Реализованы секции: `executionTypePicker`, список упражнений, `plannedCount`, `restTime`, кнопки управления
-- [x] ✅ `WorkoutEditView` создан с редактированием упражнений (добавление/удаление стандартных упражнений, изменение порядка, изменение количества повторений)
-- [x] ✅ Логика редактирования перенесена в `WorkoutPreviewViewModel` (методы: `addStandardExercise`, `removeExercise`, `moveExercise`, `updateTrainingCount`, `initializeEditableExercises`)
-- [x] ✅ Редактор комментария через `TextFieldLink` реализован (`canEditComment`, `updateComment` в ViewModel, секция комментария в View)
-- [x] ✅ Интеграция с сохранением: комментарий передается через `WatchConnectivityService.sendWorkoutResult` и сохраняется в `handleSaveWorkout` на iPhone
+- [x] ✅ `WorkoutEditView` создан с редактированием упражнений
+- [x] ✅ Логика редактирования в `WorkoutPreviewViewModel`
+- [x] ✅ Редактор комментария через `TextFieldLink` реализован
+- [x] ✅ Интеграция с сохранением комментария через WatchConnectivity
 
 #### 6.4 Экран выполнения тренировки ✅ Выполнено
-- [x] ✅ `WorkoutView` создан с полной интеграцией с `WorkoutViewModel`
-- [x] ✅ Реализовано отображение текущего этапа тренировки (разминка, упражнение, заминка), кнопки управления, таймер отдыха
-- [x] ✅ Модели `WorkoutStep`, `WorkoutState`, `WorkoutStepState` добавлены в Watch App target
-- [x] ✅ `WorkoutViewModel` реализован: инициализация этапов, управление состоянием, завершение тренировки, уведомления об отдыхе
-- [x] ✅ `WorkoutRestTimerView` создан с интеграцией `CircularTimerView`, обработкой фонового режима
-- [x] ✅ Обработка ошибок через `viewModel.error` с отображением через `.alert`
-- **Отличия от основного приложения:** На часах отображается только текущий этап тренировки, а не вся тренировка сразу
+- [x] ✅ `WorkoutView` создан с интеграцией `WorkoutViewModel`
+- [x] ✅ Реализовано отображение текущего этапа тренировки, кнопки управления, таймер отдыха
+- [x] ✅ Модели `WorkoutStep`, `WorkoutState`, `WorkoutStepState` добавлены
+- [x] ✅ `WorkoutViewModel` реализован
+- [x] ✅ `WorkoutRestTimerView` создан с интеграцией `CircularTimerView`
+- [x] ✅ Обработка ошибок через `viewModel.error`
+- **Отличия от основного приложения:** На часах отображается только текущий этап тренировки
 - [ ] **TODO:** Проверить и добавить недостающие локализованные строки (`Watch.Workout.*`), добавить переводы на русский и английский
 
 #### 6.5 Навигация и главный файл приложения ✅ Выполнено
-- [x] ✅ `SotkaWatchApp.swift` настроен: навигация между экранами, проверка авторизации при запуске и активации, передача `currentDay` через Environment
+- [x] ✅ `SotkaWatchApp.swift` настроен с навигацией и проверкой авторизации
 
 ### Этап 7: UI/UX оптимизация для часов
 
@@ -371,13 +360,12 @@ struct WorkoutDataResponse: Codable, Equatable {
 ```
 
 **Примечание:**
-- Простые структуры (`WorkoutResult`, `WorkoutPreviewTraining`) получают Codable для прямой передачи через WatchConnectivity
-- Enum'ы (`DayActivityType`, `ExerciseExecutionType`) передаются через rawValue (Int)
-- `WorkoutData` - структура для передачи данных тренировки, размещается в общих моделях (`Models/SWSharedModels/`)
-- `WorkoutDataResponse` - структура для передачи полных данных тренировки с iPhone на Apple Watch, включает `WorkoutData`, `executionCount`, `comment`
-- `ExerciseType` добавлен в Watch App target для использования локализованных названий упражнений и иконок на экране тренировки
-- Ассеты упражнений находятся в отдельном `ExercisesAssets.xcassets`, доступном обоим таргетам, что позволяет использовать иконки упражнений без дублирования
-- Модели с `@Model` (SwiftData) не используются напрямую на часах, только для преобразования в простые структуры
+- Простые структуры получают Codable для передачи через WatchConnectivity
+- Enum'ы передаются через rawValue (Int)
+- `WorkoutData` и `WorkoutDataResponse` размещены в общих моделях (`Models/SWSharedModels/`)
+- `ExerciseType` добавлен в Watch App target для локализованных названий и иконок
+- Ассеты упражнений в отдельном `ExercisesAssets.xcassets`, доступном обоим таргетам
+- Модели с `@Model` (SwiftData) не используются напрямую на часах
 
 ### Команды WatchConnectivity
 
@@ -462,9 +450,9 @@ extension Constants {
 
 ## Риски и митигация
 
-### Риск 1: Ограничения WatchConnectivity
+### Риск 1: Ограничения WatchConnectivity ✅ Реализовано
 - **Проблема:** WatchConnectivity может быть недоступен или нестабилен
-- **Митигация:** Реализовать очередь несинхронизированных действий, повторные попытки синхронизации
+- **Митигация:** ✅ Обработка ошибок через `WatchConnectivityError`, показ ошибок через `viewModel.error`, блокировка действий при недоступности сессии
 
 ### Риск 2: Различия в данных между часами и iPhone
 - **Проблема:** Данные на часах могут отличаться от данных на iPhone
@@ -478,29 +466,29 @@ extension Constants {
 - **Проблема:** Синхронизация между часами и iPhone может быть сложной
 - **Митигация:** Простая архитектура синхронизации, четкие команды, обработка ошибок
 
-### Риск 5: Работа часов без авторизации
+### Риск 5: Работа часов без авторизации ✅ Реализовано
 - **Проблема:** Часы могут попытаться работать без авторизации на iPhone
-- **Митигация:** Обязательная проверка авторизации при запуске, блокировка функционала без авторизации, экран с сообщением о необходимости авторизации
+- **Митигация:** ✅ Проверка авторизации через `WatchAuthService`, блокировка функционала, экран `AuthRequiredView`
 
-### Риск 6: Отсутствие связи с iPhone
+### Риск 6: Отсутствие связи с iPhone ✅ Реализовано
 - **Проблема:** Часы могут быть недоступны для связи с iPhone
-- **Митигация:** Показ сообщения об ошибке, блокировка действий, требующих сохранения данных. Минимальное кэширование только для отображения текущего дня (опционально)
+- **Митигация:** ✅ Обработка ошибок через `WatchConnectivityError`, показ ошибок через `viewModel.error`, блокировка действий при недоступности сессии
 
 ## Приоритеты разработки
 
-### Высокий приоритет (MVP)
-1. **Добавление Codable к простым моделям** для передачи данных
-2. **Проверка авторизации и блокировка функционала без авторизации**
-3. **Запрос данных с iPhone** (текущий день, активность, данные тренировки)
-4. **Отправка действий в iPhone** для сохранения в SwiftData (с использованием Codable моделей)
-5. Главный экран с отображением текущего дня (только для авторизованных)
-6. Выбор типа активности (сохранение через iPhone)
-7. Обработка отсутствия связи с iPhone
+### Высокий приоритет (MVP) ✅ Выполнено
+1. ✅ Добавление Codable к моделям
+2. ✅ Проверка авторизации и блокировка функционала
+3. ✅ Запрос данных с iPhone
+4. ✅ Отправка действий в iPhone для сохранения
+5. ✅ Главный экран с отображением текущего дня
+6. ✅ Выбор типа активности
+7. ✅ Обработка отсутствия связи с iPhone
 
-### Средний приоритет
-1. Выполнение тренировки
-2. Сохранение результата тренировки
-3. Полная синхронизация данных
+### Средний приоритет ✅ Выполнено
+1. ✅ Выполнение тренировки
+2. ✅ Сохранение результата тренировки
+3. ✅ Полная синхронизация данных
 
 ### Низкий приоритет (будущие улучшения)
 1. Расширенная статистика тренировок
