@@ -14,7 +14,6 @@ final class WorkoutViewModel {
     private let restTimerNotificationIdentifier = "restTimerNotification"
 
     @ObservationIgnored private let connectivityService: any WatchConnectivityServiceProtocol
-    @ObservationIgnored private let appGroupHelper: any WatchAppGroupHelperProtocol
 
     private(set) var dayNumber = 1
     private(set) var executionType: ExerciseExecutionType = .cycles
@@ -52,15 +51,11 @@ final class WorkoutViewModel {
     }
 
     /// Инициализатор
-    /// - Parameters:
-    ///   - connectivityService: Сервис связи с iPhone для сохранения результата тренировки
-    ///   - appGroupHelper: Хелпер для чтения данных из App Group UserDefaults (по умолчанию создается новый экземпляр)
+    /// - Parameter connectivityService: Сервис связи с iPhone для сохранения результата тренировки
     init(
-        connectivityService: any WatchConnectivityServiceProtocol,
-        appGroupHelper: (any WatchAppGroupHelperProtocol)? = nil
+        connectivityService: any WatchConnectivityServiceProtocol
     ) {
         self.connectivityService = connectivityService
-        self.appGroupHelper = appGroupHelper ?? WatchAppGroupHelper()
     }
 
     /// Определяет фактический тип выполнения для турбо-дней

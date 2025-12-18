@@ -7,10 +7,8 @@ struct WorkoutViewModelSetsTests {
     @Test("Должен создавать правильную последовательность этапов для типа .sets с несколькими упражнениями")
     func initializeStepStatesForSetsWithMultipleExercises() throws {
         let connectivityService = MockWatchConnectivityService()
-        let appGroupHelper = MockWatchAppGroupHelper(restTime: 60)
         let viewModel = WorkoutViewModel(
-            connectivityService: connectivityService,
-            appGroupHelper: appGroupHelper
+            connectivityService: connectivityService
         )
 
         let trainings = [
@@ -70,10 +68,8 @@ struct WorkoutViewModelSetsTests {
     @Test("Должен последовательно переходить через все подходы для типа .sets")
     func completeStepsForSetsSequentially() throws {
         let connectivityService = MockWatchConnectivityService()
-        let appGroupHelper = MockWatchAppGroupHelper(restTime: 60)
         let viewModel = WorkoutViewModel(
-            connectivityService: connectivityService,
-            appGroupHelper: appGroupHelper
+            connectivityService: connectivityService
         )
 
         let trainings = [
@@ -146,10 +142,8 @@ struct WorkoutViewModelSetsTests {
     @Test("Должен создавать правильную последовательность для одного упражнения с несколькими подходами")
     func initializeStepStatesForSingleExerciseWithMultipleSets() throws {
         let connectivityService = MockWatchConnectivityService()
-        let appGroupHelper = MockWatchAppGroupHelper(restTime: 60)
         let viewModel = WorkoutViewModel(
-            connectivityService: connectivityService,
-            appGroupHelper: appGroupHelper
+            connectivityService: connectivityService
         )
 
         let trainings = [

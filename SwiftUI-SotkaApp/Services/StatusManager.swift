@@ -95,14 +95,9 @@ final class StatusManager {
         self.statusClient = statusClient
         if let userDefaults {
             self.defaults = userDefaults
-        } else if let appGroupDefaults = UserDefaults(suiteName: Constants.appGroupIdentifier) {
-            self.defaults = appGroupDefaults
         } else {
-            logger.error("App Group '\(Constants.appGroupIdentifier)' недоступен, используется стандартный UserDefaults")
             self.defaults = UserDefaults.standard
         }
-        // Временная переменная для миграции
-        let defaultsForMigration = defaults
         // Инициализируем watchConnectivityManager после всех свойств
         // Используем unowned reference для избежания циклической ссылки
         unowned let tempStatusManager = self
@@ -110,8 +105,6 @@ final class StatusManager {
             statusManager: tempStatusManager,
             sessionProtocol: watchConnectivitySessionProtocol
         )
-        // Миграция после инициализации всех свойств
-        migrateStartDateFromStandardUserDefaults(to: defaultsForMigration)
     }
 
     /// Получает статус прохождения пользователя
@@ -147,6 +140,10 @@ final class StatusManager {
                 }
             }
             currentDayCalculator = .init(startDate, now)
+
+            // Отправка данных на часы при обновлении статуса
+            sendDayDataToWatch(currentDay: currentDayCalculator?.currentDay, context: context)
+
             didLoadInitialData = true
             state = .idle
         } catch {
@@ -214,6 +211,41 @@ final class StatusManager {
         infopostsService.didLogout()
         // Отправка команды логаута на часы
         watchConnectivityManager.sendAuthStatusChanged(false)
+    }
+
+    /// Обрабатывает изменение статуса авторизации
+    /// - Parameters:
+    ///   - isAuthorized: Статус авторизации
+    ///   - context: Контекст SwiftData для получения активности дня
+    func processAuthStatus(isAuthorized: Bool, context: ModelContext) {
+        if isAuthorized {
+            let currentDay = currentDayCalculator?.currentDay
+            watchConnectivityManager.sendAuthStatusChanged(
+                true,
+                currentDay: currentDay,
+                context: context
+            )
+        } else {
+            didLogout()
+            do {
+                try context.delete(model: User.self)
+            } catch {
+                logger.error("Не удалось удалить данные пользователя: \(error.localizedDescription)")
+                fatalError("Не удалось удалить данные пользователя: \(error.localizedDescription)")
+            }
+        }
+    }
+
+    /// Отправляет данные текущего дня на часы
+    /// - Parameters:
+    ///   - currentDay: Номер текущего дня (опционально)
+    ///   - context: Контекст SwiftData для получения активности дня
+    func sendDayDataToWatch(currentDay: Int?, context _: ModelContext) {
+        guard let currentDay else {
+            return
+        }
+
+        watchConnectivityManager.sendCurrentDayChanged(currentDay)
     }
 
     /// Сбрасывает программу: удаляет все данные прохождения программы и начинает заново
@@ -298,25 +330,6 @@ private extension StatusManager {
         case maxReadInfoPostDay = "WorkoutMaxReadInfoPostDay"
         /// Признак успешной первичной загрузки данных
         case didLoadInitialData = "DidLoadInitialData"
-        /// Флаг завершения миграции startDate в App Group
-        case migrationStartDateCompleted = "migrationStartDateToAppGroupCompleted"
-    }
-
-    /// Миграция данных startDate из UserDefaults.standard в App Group UserDefaults
-    func migrateStartDateFromStandardUserDefaults(to appGroupDefaults: UserDefaults) {
-        if appGroupDefaults.bool(forKey: Key.migrationStartDateCompleted.rawValue) {
-            return
-        }
-        let standardDefaults = UserDefaults.standard
-        let key = Constants.startDateKey
-        let hasDataInStandard = standardDefaults.object(forKey: key) != nil
-        let hasDataInAppGroup = appGroupDefaults.object(forKey: key) != nil
-        if hasDataInStandard, !hasDataInAppGroup {
-            let startDateValue = standardDefaults.double(forKey: key)
-            appGroupDefaults.set(startDateValue, forKey: key)
-            logger.info("Выполнена миграция startDate из UserDefaults.standard в App Group: \(startDateValue)")
-        }
-        appGroupDefaults.set(true, forKey: Key.migrationStartDateCompleted.rawValue)
     }
 }
 
@@ -517,21 +530,47 @@ extension StatusManager {
         }
 
         /// Отправка команды изменения статуса авторизации на часы
-        /// - Parameter isAuthorized: Статус авторизации
+        /// - Parameters:
+        ///   - isAuthorized: Статус авторизации
+        ///   - currentDay: Номер текущего дня (опционально)
+        ///   - context: Контекст SwiftData для получения активности дня (опционально)
         @MainActor
-        func sendAuthStatusChanged(_ isAuthorized: Bool) {
+        func sendAuthStatusChanged(_ isAuthorized: Bool, currentDay: Int? = nil, context _: ModelContext? = nil) {
             guard sessionProtocol.isReachable else {
                 watchConnectivityLogger.debug("Часы недоступны для отправки команды изменения статуса авторизации")
                 return
             }
 
-            let message: [String: Any] = [
-                "command": Constants.WatchCommand.authStatusChanged.rawValue,
+            var message: [String: Any] = [
+                "command": Constants.WatchCommand.authStatus.rawValue,
                 "isAuthorized": isAuthorized
             ]
 
+            if let currentDay {
+                message["currentDay"] = currentDay
+            }
+
             sessionProtocol.sendMessage(message, replyHandler: nil) { error in
                 watchConnectivityLogger.error("Ошибка отправки команды изменения статуса авторизации: \(error.localizedDescription)")
+            }
+        }
+
+        /// Отправляет команду об изменении текущего дня на часы
+        /// - Parameter currentDay: Номер текущего дня
+        @MainActor
+        func sendCurrentDayChanged(_ currentDay: Int) {
+            guard sessionProtocol.isReachable else {
+                watchConnectivityLogger.debug("Часы недоступны для отправки команды изменения текущего дня")
+                return
+            }
+
+            let message: [String: Any] = [
+                "command": Constants.WatchCommand.currentDay.rawValue,
+                "currentDay": currentDay
+            ]
+
+            sessionProtocol.sendMessage(message, replyHandler: nil) { error in
+                watchConnectivityLogger.error("Ошибка отправки команды изменения текущего дня: \(error.localizedDescription)")
             }
         }
 
@@ -961,7 +1000,7 @@ private extension StatusManager.WatchConnectivityManager {
             }
             pendingRequests.append(.deleteActivity(day: day))
 
-        case .currentActivity, .sendWorkoutData, .authStatusChanged:
+        case .currentActivity, .sendWorkoutData, .authStatus, .currentDay:
             watchConnectivityLogger.warning("Команда \(commandString) не должна приходить от часов")
             replyHandler?(["error": "Неверная команда"])
         }

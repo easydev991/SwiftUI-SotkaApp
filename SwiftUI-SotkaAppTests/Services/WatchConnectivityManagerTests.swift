@@ -712,8 +712,8 @@ struct WatchConnectivityManagerTests {
         #expect(error.contains("Пользователь") || error.contains("пользователь"))
     }
 
-    @Test("Отправляет команду PHONE_COMMAND_AUTH_STATUS_CHANGED при успешной авторизации")
-    func sendsAuthStatusChangedCommandOnSuccessfulAuthorization() throws {
+    @Test("Отправляет команду PHONE_COMMAND_AUTH_STATUS при успешной авторизации")
+    func sendsAuthStatusCommandOnSuccessfulAuthorization() throws {
         let mockSession = MockWCSession(isReachable: true)
         let container = try createTestModelContainer()
 
@@ -729,13 +729,13 @@ struct WatchConnectivityManagerTests {
         #expect(mockSession.sentMessages.count == 1)
         let sentMessage = try #require(mockSession.sentMessages.first)
         let command = try #require(sentMessage["command"] as? String)
-        #expect(command == Constants.WatchCommand.authStatusChanged.rawValue)
+        #expect(command == Constants.WatchCommand.authStatus.rawValue)
         let isAuthorized = try #require(sentMessage["isAuthorized"] as? Bool)
         #expect(isAuthorized)
     }
 
-    @Test("Отправляет команду PHONE_COMMAND_AUTH_STATUS_CHANGED при логауте")
-    func sendsAuthStatusChangedCommandOnLogout() throws {
+    @Test("Отправляет команду PHONE_COMMAND_AUTH_STATUS при логауте")
+    func sendsAuthStatusCommandOnLogout() throws {
         let mockSession = MockWCSession(isReachable: true)
         let container = try createTestModelContainer()
 
@@ -751,7 +751,7 @@ struct WatchConnectivityManagerTests {
         #expect(mockSession.sentMessages.count == 1)
         let sentMessage = try #require(mockSession.sentMessages.first)
         let command = try #require(sentMessage["command"] as? String)
-        #expect(command == Constants.WatchCommand.authStatusChanged.rawValue)
+        #expect(command == Constants.WatchCommand.authStatus.rawValue)
         let isAuthorized = try #require(sentMessage["isAuthorized"] as? Bool)
         #expect(!isAuthorized)
     }

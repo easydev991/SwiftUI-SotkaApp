@@ -9,10 +9,8 @@ extension WorkoutPreviewViewModelTests {
         @MainActor
         func returnsTrueForIsPlannedCountDisabledWhenTurbo() {
             let connectivityService = MockWatchConnectivityService()
-            let appGroupHelper = MockWatchAppGroupHelper(restTime: 60)
             let viewModel = WorkoutPreviewViewModel(
-                connectivityService: connectivityService,
-                appGroupHelper: appGroupHelper
+                connectivityService: connectivityService
             )
 
             viewModel.selectedExecutionType = .turbo
@@ -24,10 +22,8 @@ extension WorkoutPreviewViewModelTests {
         @MainActor
         func returnsFalseForIsPlannedCountDisabledWhenCycles() {
             let connectivityService = MockWatchConnectivityService()
-            let appGroupHelper = MockWatchAppGroupHelper(restTime: 60)
             let viewModel = WorkoutPreviewViewModel(
-                connectivityService: connectivityService,
-                appGroupHelper: appGroupHelper
+                connectivityService: connectivityService
             )
 
             viewModel.selectedExecutionType = .cycles
@@ -39,10 +35,8 @@ extension WorkoutPreviewViewModelTests {
         @MainActor
         func returnsCountWhenCountIsSet() throws {
             let connectivityService = MockWatchConnectivityService()
-            let appGroupHelper = MockWatchAppGroupHelper(restTime: 60)
             let viewModel = WorkoutPreviewViewModel(
-                connectivityService: connectivityService,
-                appGroupHelper: appGroupHelper
+                connectivityService: connectivityService
             )
 
             viewModel.count = 5
@@ -56,10 +50,8 @@ extension WorkoutPreviewViewModelTests {
         @MainActor
         func returnsPlannedCountWhenCountIsNil() throws {
             let connectivityService = MockWatchConnectivityService()
-            let appGroupHelper = MockWatchAppGroupHelper(restTime: 60)
             let viewModel = WorkoutPreviewViewModel(
-                connectivityService: connectivityService,
-                appGroupHelper: appGroupHelper
+                connectivityService: connectivityService
             )
 
             viewModel.count = nil
@@ -73,10 +65,8 @@ extension WorkoutPreviewViewModelTests {
         @MainActor
         func returnsTrueForShouldShowEditButtonWhenCycles() {
             let connectivityService = MockWatchConnectivityService()
-            let appGroupHelper = MockWatchAppGroupHelper(restTime: 60)
             let viewModel = WorkoutPreviewViewModel(
-                connectivityService: connectivityService,
-                appGroupHelper: appGroupHelper
+                connectivityService: connectivityService
             )
 
             viewModel.selectedExecutionType = .cycles
@@ -88,10 +78,8 @@ extension WorkoutPreviewViewModelTests {
         @MainActor
         func returnsTrueForShouldShowEditButtonWhenSets() {
             let connectivityService = MockWatchConnectivityService()
-            let appGroupHelper = MockWatchAppGroupHelper(restTime: 60)
             let viewModel = WorkoutPreviewViewModel(
-                connectivityService: connectivityService,
-                appGroupHelper: appGroupHelper
+                connectivityService: connectivityService
             )
 
             viewModel.selectedExecutionType = .sets
@@ -103,10 +91,8 @@ extension WorkoutPreviewViewModelTests {
         @MainActor
         func returnsFalseForShouldShowEditButtonWhenTurbo() {
             let connectivityService = MockWatchConnectivityService()
-            let appGroupHelper = MockWatchAppGroupHelper(restTime: 60)
             let viewModel = WorkoutPreviewViewModel(
-                connectivityService: connectivityService,
-                appGroupHelper: appGroupHelper
+                connectivityService: connectivityService
             )
 
             viewModel.selectedExecutionType = .turbo
@@ -118,10 +104,8 @@ extension WorkoutPreviewViewModelTests {
         @MainActor
         func returnsFalseForHasChangesOnInitialLoad() async throws {
             let connectivityService = MockWatchConnectivityService()
-            let appGroupHelper = MockWatchAppGroupHelper(restTime: 60)
             let viewModel = WorkoutPreviewViewModel(
-                connectivityService: connectivityService,
-                appGroupHelper: appGroupHelper
+                connectivityService: connectivityService
             )
 
             let workoutData = WorkoutData(
@@ -142,10 +126,8 @@ extension WorkoutPreviewViewModelTests {
         @MainActor
         func returnsTrueForHasChangesAfterChangingPlannedCount() async throws {
             let connectivityService = MockWatchConnectivityService()
-            let appGroupHelper = MockWatchAppGroupHelper(restTime: 60)
             let viewModel = WorkoutPreviewViewModel(
-                connectivityService: connectivityService,
-                appGroupHelper: appGroupHelper
+                connectivityService: connectivityService
             )
 
             let workoutData = WorkoutData(
@@ -168,10 +150,8 @@ extension WorkoutPreviewViewModelTests {
         @MainActor
         func returnsOnlyTrainingsWithCountGreaterThanZero() {
             let connectivityService = MockWatchConnectivityService()
-            let appGroupHelper = MockWatchAppGroupHelper(restTime: 60)
             let viewModel = WorkoutPreviewViewModel(
-                connectivityService: connectivityService,
-                appGroupHelper: appGroupHelper
+                connectivityService: connectivityService
             )
 
             viewModel.trainings = [
@@ -192,10 +172,8 @@ extension WorkoutPreviewViewModelTests {
         @MainActor
         func returnsEmptyListWhenAllTrainingsHaveZeroOrNilCount() {
             let connectivityService = MockWatchConnectivityService()
-            let appGroupHelper = MockWatchAppGroupHelper(restTime: 60)
             let viewModel = WorkoutPreviewViewModel(
-                connectivityService: connectivityService,
-                appGroupHelper: appGroupHelper
+                connectivityService: connectivityService
             )
 
             viewModel.trainings = [
@@ -212,10 +190,8 @@ extension WorkoutPreviewViewModelTests {
         @MainActor
         func returnsAllTrainingsWhenAllHaveCountGreaterThanZero() {
             let connectivityService = MockWatchConnectivityService()
-            let appGroupHelper = MockWatchAppGroupHelper(restTime: 60)
             let viewModel = WorkoutPreviewViewModel(
-                connectivityService: connectivityService,
-                appGroupHelper: appGroupHelper
+                connectivityService: connectivityService
             )
 
             viewModel.trainings = [
@@ -233,10 +209,8 @@ extension WorkoutPreviewViewModelTests {
         @MainActor
         func returnsEmptyListWhenTrainingsIsEmpty() {
             let connectivityService = MockWatchConnectivityService()
-            let appGroupHelper = MockWatchAppGroupHelper(restTime: 60)
             let viewModel = WorkoutPreviewViewModel(
-                connectivityService: connectivityService,
-                appGroupHelper: appGroupHelper
+                connectivityService: connectivityService
             )
 
             viewModel.trainings = []

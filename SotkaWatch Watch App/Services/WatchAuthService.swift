@@ -11,39 +11,28 @@ final class WatchAuthService {
         category: String(describing: WatchAuthService.self)
     )
 
-    @ObservationIgnored private let defaults: UserDefaults?
-
     private(set) var isAuthorized = false
 
-    /// Инициализатор с возможностью передачи UserDefaults для тестирования
-    /// - Parameter userDefaults: UserDefaults для использования. Если `nil`, используется App Group UserDefaults
-    init(userDefaults: UserDefaults? = nil) {
-        if let userDefaults {
-            self.defaults = userDefaults
-        } else {
-            self.defaults = UserDefaults(suiteName: Constants.appGroupIdentifier)
-        }
-        self.isAuthorized = checkAuthStatus()
+    /// Инициализатор
+    init() {
+        // При инициализации статус авторизации неизвестен, устанавливаем false
+        // Статус будет обновлен при получении команды от iPhone через WatchConnectivity
+        self.isAuthorized = false
     }
 
-    /// Чтение статуса авторизации напрямую из App Group UserDefaults
+    /// Проверка статуса авторизации
+    ///
+    /// Возвращает текущий статус авторизации (обновляется через WatchConnectivity)
     /// - Returns: `true` если пользователь авторизован, `false` в противном случае
     func checkAuthStatus() -> Bool {
-        guard let defaults else {
-            logger.warning("App Group '\(Constants.appGroupIdentifier)' недоступен, возвращаем false для статуса авторизации")
-            isAuthorized = false
-            return false
-        }
-
-        let isAuthorized = defaults.bool(forKey: Constants.isAuthorizedKey)
-        logger.debug("Прочитан статус авторизации из App Group: \(isAuthorized)")
-        self.isAuthorized = isAuthorized
-        return isAuthorized
+        let result = isAuthorized
+        logger.debug("Проверка статуса авторизации: \(result)")
+        return result
     }
 
     /// Обновление статуса авторизации
     ///
-    /// Вызывается при получении команды `PHONE_COMMAND_AUTH_STATUS_CHANGED` или при проверке при активации приложения
+    /// Вызывается при получении команды `PHONE_COMMAND_AUTH_STATUS` от iPhone через WatchConnectivity
     /// - Parameter isAuthorized: Новый статус авторизации
     func updateAuthStatus(_ isAuthorized: Bool) {
         logger.info("Обновление статуса авторизации: \(isAuthorized)")

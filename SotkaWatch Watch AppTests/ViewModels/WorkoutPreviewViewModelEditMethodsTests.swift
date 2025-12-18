@@ -10,8 +10,7 @@ extension WorkoutPreviewViewModelTests {
         func canRemoveExerciseReturnsTrueWhenMoreThanOneExercise() {
             let connectivityService = MockWatchConnectivityService()
             let viewModel = WorkoutPreviewViewModel(
-                connectivityService: connectivityService,
-                appGroupHelper: MockWatchAppGroupHelper()
+                connectivityService: connectivityService
             )
 
             viewModel.trainings = [
@@ -26,8 +25,7 @@ extension WorkoutPreviewViewModelTests {
         func canRemoveExerciseReturnsFalseWhenOnlyOneExercise() {
             let connectivityService = MockWatchConnectivityService()
             let viewModel = WorkoutPreviewViewModel(
-                connectivityService: connectivityService,
-                appGroupHelper: MockWatchAppGroupHelper()
+                connectivityService: connectivityService
             )
 
             viewModel.trainings = [
@@ -41,8 +39,7 @@ extension WorkoutPreviewViewModelTests {
         func editableTrainingsFiltersTurboExercises() {
             let connectivityService = MockWatchConnectivityService()
             let viewModel = WorkoutPreviewViewModel(
-                connectivityService: connectivityService,
-                appGroupHelper: MockWatchAppGroupHelper()
+                connectivityService: connectivityService
             )
 
             viewModel.trainings = [
@@ -60,8 +57,7 @@ extension WorkoutPreviewViewModelTests {
         func addStandardExerciseAddsStandardExercise() throws {
             let connectivityService = MockWatchConnectivityService()
             let viewModel = WorkoutPreviewViewModel(
-                connectivityService: connectivityService,
-                appGroupHelper: MockWatchAppGroupHelper()
+                connectivityService: connectivityService
             )
 
             viewModel.trainings = [
@@ -82,8 +78,7 @@ extension WorkoutPreviewViewModelTests {
         func updateTrainingCountIncrementsCount() throws {
             let connectivityService = MockWatchConnectivityService()
             let viewModel = WorkoutPreviewViewModel(
-                connectivityService: connectivityService,
-                appGroupHelper: MockWatchAppGroupHelper()
+                connectivityService: connectivityService
             )
 
             let exercise = WorkoutPreviewTraining(count: 5, typeId: ExerciseType.pullups.rawValue, sortOrder: 0)
@@ -99,8 +94,7 @@ extension WorkoutPreviewViewModelTests {
         func updateTrainingCountDecrementsCount() throws {
             let connectivityService = MockWatchConnectivityService()
             let viewModel = WorkoutPreviewViewModel(
-                connectivityService: connectivityService,
-                appGroupHelper: MockWatchAppGroupHelper()
+                connectivityService: connectivityService
             )
 
             let exercise = WorkoutPreviewTraining(count: 5, typeId: ExerciseType.pullups.rawValue, sortOrder: 0)
@@ -116,8 +110,7 @@ extension WorkoutPreviewViewModelTests {
         func updateTrainingCountRemovesExerciseWhenCountBecomesZero() throws {
             let connectivityService = MockWatchConnectivityService()
             let viewModel = WorkoutPreviewViewModel(
-                connectivityService: connectivityService,
-                appGroupHelper: MockWatchAppGroupHelper()
+                connectivityService: connectivityService
             )
 
             let exercise1 = WorkoutPreviewTraining(count: 1, typeId: ExerciseType.pullups.rawValue, sortOrder: 0)
@@ -135,8 +128,7 @@ extension WorkoutPreviewViewModelTests {
         func initializeEditableExercisesInitializesListWithoutTurboExercises() {
             let connectivityService = MockWatchConnectivityService()
             let viewModel = WorkoutPreviewViewModel(
-                connectivityService: connectivityService,
-                appGroupHelper: MockWatchAppGroupHelper()
+                connectivityService: connectivityService
             )
 
             viewModel.trainings = [

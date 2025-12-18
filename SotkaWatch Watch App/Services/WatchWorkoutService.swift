@@ -13,15 +13,11 @@ final class WatchWorkoutService {
     private(set) var completedRounds = 0
     private(set) var workoutStartTime: Date?
     private(set) var isCancelled = false
-    private let appGroupHelper: any WatchAppGroupHelperProtocol
 
     /// Инициализация из WorkoutData
-    /// - Parameters:
-    ///   - workoutData: Данные тренировки
-    ///   - appGroupHelper: Хелпер для чтения данных из App Group UserDefaults (по умолчанию создается новый экземпляр)
-    init(workoutData: WorkoutData, appGroupHelper: (any WatchAppGroupHelperProtocol)? = nil) {
+    /// - Parameter workoutData: Данные тренировки
+    init(workoutData: WorkoutData) {
         self.workoutData = workoutData
-        self.appGroupHelper = appGroupHelper ?? WatchAppGroupHelper()
         self.workoutStartTime = Date()
         logger.info("Инициализирована тренировка дня \(workoutData.day)")
     }
@@ -42,9 +38,9 @@ final class WatchWorkoutService {
     }
 
     /// Получение времени отдыха между кругами/подходами
-    /// - Returns: Время отдыха в секундах или значение по умолчанию если время отдыха не установлено
+    /// - Returns: Время отдыха в секундах (значение по умолчанию)
     func getRestTime() -> Int {
-        appGroupHelper.restTime
+        Constants.defaultRestTime
     }
 
     /// Завершение тренировки и формирование результата

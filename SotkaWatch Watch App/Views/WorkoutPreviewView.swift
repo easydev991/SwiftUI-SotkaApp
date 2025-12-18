@@ -9,17 +9,13 @@ struct WorkoutPreviewView: View {
     @State private var showWorkoutView = false
 
     /// Инициализатор
-    /// - Parameters:
-    ///   - connectivityService: Сервис связи с iPhone
-    ///   - appGroupHelper: Хелпер для чтения данных из App Group UserDefaults (опционально)
+    /// - Parameter connectivityService: Сервис связи с iPhone
     init(
-        connectivityService: any WatchConnectivityServiceProtocol,
-        appGroupHelper: (any WatchAppGroupHelperProtocol)? = nil
+        connectivityService: any WatchConnectivityServiceProtocol
     ) {
         _viewModel = State(
             initialValue: .init(
-                connectivityService: connectivityService,
-                appGroupHelper: appGroupHelper ?? WatchAppGroupHelper()
+                connectivityService: connectivityService
             )
         )
     }
@@ -49,7 +45,6 @@ struct WorkoutPreviewView: View {
                         plannedCount: viewModel.plannedCount,
                         restTime: viewModel.restTime,
                         connectivityService: viewModel.connectivityService,
-                        appGroupHelper: viewModel.appGroupHelper,
                         onWorkoutCompleted: { result in
                             viewModel.handleWorkoutResult(result)
                             showWorkoutView = false

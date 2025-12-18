@@ -105,8 +105,7 @@ struct WorkoutEditView: View {
 #if DEBUG
 #Preview {
     @Previewable @State var viewModel = WorkoutPreviewViewModel(
-        connectivityService: PreviewWatchConnectivityService(),
-        appGroupHelper: PreviewWatchAppGroupHelper()
+        connectivityService: PreviewWatchConnectivityService()
     )
     NavigationStack {
         WorkoutEditView(viewModel: viewModel)

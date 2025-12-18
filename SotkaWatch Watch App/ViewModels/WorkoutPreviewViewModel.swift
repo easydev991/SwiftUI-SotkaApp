@@ -12,7 +12,6 @@ final class WorkoutPreviewViewModel {
     )
 
     @ObservationIgnored let connectivityService: any WatchConnectivityServiceProtocol
-    @ObservationIgnored let appGroupHelper: any WatchAppGroupHelperProtocol
 
     // MARK: - State
 
@@ -99,15 +98,11 @@ final class WorkoutPreviewViewModel {
     // MARK: - Initialization
 
     /// Инициализатор
-    /// - Parameters:
-    ///   - connectivityService: Сервис связи с iPhone для получения данных тренировки
-    ///   - appGroupHelper: Хелпер для чтения данных из App Group UserDefaults (по умолчанию создается новый экземпляр)
+    /// - Parameter connectivityService: Сервис связи с iPhone для получения данных тренировки
     init(
-        connectivityService: any WatchConnectivityServiceProtocol,
-        appGroupHelper: (any WatchAppGroupHelperProtocol)? = nil
+        connectivityService: any WatchConnectivityServiceProtocol
     ) {
         self.connectivityService = connectivityService
-        self.appGroupHelper = appGroupHelper ?? WatchAppGroupHelper()
     }
 
     // MARK: - Methods
@@ -124,8 +119,7 @@ final class WorkoutPreviewViewModel {
 
         do {
             let response = try await connectivityService.requestWorkoutData(day: day)
-            let restTime = appGroupHelper.restTime
-            updateData(workoutDataResponse: response, restTime: restTime)
+            updateData(workoutDataResponse: response, restTime: Constants.defaultRestTime)
             logger.info("Данные тренировки для дня \(day) загружены успешно")
         } catch {
             logger.error("Ошибка загрузки данных тренировки для дня \(day): \(error.localizedDescription)")

@@ -29,12 +29,7 @@ final class AuthHelperImp: AuthHelper {
     init(userDefaults: UserDefaults? = nil) {
         if let userDefaults {
             self.defaults = userDefaults
-            migrateFromStandardUserDefaults(to: userDefaults)
-        } else if let appGroupDefaults = UserDefaults(suiteName: Constants.appGroupIdentifier) {
-            self.defaults = appGroupDefaults
-            migrateFromStandardUserDefaults(to: appGroupDefaults)
         } else {
-            logger.error("App Group '\(Constants.appGroupIdentifier)' недоступен, используется стандартный UserDefaults")
             self.defaults = UserDefaults.standard
         }
     }
@@ -82,24 +77,5 @@ final class AuthHelperImp: AuthHelper {
 private extension AuthHelperImp {
     enum Key: String {
         case authData
-        case migrationCompleted = "migrationToAppGroupCompleted"
-    }
-
-    /// Миграция данных из UserDefaults.standard в App Group UserDefaults
-    func migrateFromStandardUserDefaults(to appGroupDefaults: UserDefaults) {
-        // Проверяем, была ли уже выполнена миграция
-        if appGroupDefaults.bool(forKey: Key.migrationCompleted.rawValue) {
-            return
-        }
-        let standardDefaults = UserDefaults.standard
-        let key = Constants.isAuthorizedKey
-        let hasDataInStandard = standardDefaults.object(forKey: key) != nil
-        let hasDataInAppGroup = appGroupDefaults.object(forKey: key) != nil
-        if hasDataInStandard, !hasDataInAppGroup {
-            let isAuthorizedValue = standardDefaults.bool(forKey: key)
-            appGroupDefaults.set(isAuthorizedValue, forKey: key)
-            logger.info("Выполнена миграция статуса авторизации из UserDefaults.standard в App Group: \(isAuthorizedValue)")
-        }
-        appGroupDefaults.set(true, forKey: Key.migrationCompleted.rawValue)
     }
 }

@@ -21,7 +21,6 @@ struct WorkoutView: View {
     ///   - plannedCount: Плановое количество кругов/подходов
     ///   - restTime: Время отдыха между подходами/кругами (в секундах)
     ///   - connectivityService: Сервис связи с iPhone
-    ///   - appGroupHelper: Хелпер для чтения данных из App Group UserDefaults (опционально)
     ///   - onWorkoutCompleted: Callback при завершении тренировки
     init(
         executionType: ExerciseExecutionType,
@@ -29,7 +28,6 @@ struct WorkoutView: View {
         plannedCount: Int?,
         restTime: Int,
         connectivityService: any WatchConnectivityServiceProtocol,
-        appGroupHelper: (any WatchAppGroupHelperProtocol)? = nil,
         onWorkoutCompleted: @escaping (WorkoutResult) -> Void
     ) {
         self.executionType = executionType
@@ -39,8 +37,7 @@ struct WorkoutView: View {
         self.onWorkoutCompleted = onWorkoutCompleted
         _viewModel = State(
             initialValue: .init(
-                connectivityService: connectivityService,
-                appGroupHelper: appGroupHelper
+                connectivityService: connectivityService
             )
         )
     }

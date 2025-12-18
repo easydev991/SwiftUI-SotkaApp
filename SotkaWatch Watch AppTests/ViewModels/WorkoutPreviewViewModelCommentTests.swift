@@ -10,8 +10,7 @@ extension WorkoutPreviewViewModelTests {
         func canEditCommentReturnsTrueWhenWorkoutCompleted() {
             let connectivityService = MockWatchConnectivityService()
             let viewModel = WorkoutPreviewViewModel(
-                connectivityService: connectivityService,
-                appGroupHelper: MockWatchAppGroupHelper()
+                connectivityService: connectivityService
             )
 
             viewModel.handleWorkoutResult(WorkoutResult(count: 5, duration: 100))
@@ -23,8 +22,7 @@ extension WorkoutPreviewViewModelTests {
         func canEditCommentReturnsTrueWhenOriginallyPassed() async throws {
             let connectivityService = MockWatchConnectivityService()
             let viewModel = WorkoutPreviewViewModel(
-                connectivityService: connectivityService,
-                appGroupHelper: MockWatchAppGroupHelper()
+                connectivityService: connectivityService
             )
 
             let workoutData = WorkoutData(
@@ -46,8 +44,7 @@ extension WorkoutPreviewViewModelTests {
         func canEditCommentReturnsFalseWhenBothFlagsFalse() async throws {
             let connectivityService = MockWatchConnectivityService()
             let viewModel = WorkoutPreviewViewModel(
-                connectivityService: connectivityService,
-                appGroupHelper: MockWatchAppGroupHelper()
+                connectivityService: connectivityService
             )
 
             let workoutData = WorkoutData(
@@ -69,8 +66,7 @@ extension WorkoutPreviewViewModelTests {
         func updateCommentUpdatesCommentToNewValue() throws {
             let connectivityService = MockWatchConnectivityService()
             let viewModel = WorkoutPreviewViewModel(
-                connectivityService: connectivityService,
-                appGroupHelper: MockWatchAppGroupHelper()
+                connectivityService: connectivityService
             )
 
             viewModel.updateComment("Новый комментарий")
@@ -83,8 +79,7 @@ extension WorkoutPreviewViewModelTests {
         func updateCommentRemovesCommentWhenNil() {
             let connectivityService = MockWatchConnectivityService()
             let viewModel = WorkoutPreviewViewModel(
-                connectivityService: connectivityService,
-                appGroupHelper: MockWatchAppGroupHelper()
+                connectivityService: connectivityService
             )
 
             viewModel.comment = "Старый комментарий"
@@ -97,8 +92,7 @@ extension WorkoutPreviewViewModelTests {
         func updateCommentReplacesExistingComment() throws {
             let connectivityService = MockWatchConnectivityService()
             let viewModel = WorkoutPreviewViewModel(
-                connectivityService: connectivityService,
-                appGroupHelper: MockWatchAppGroupHelper()
+                connectivityService: connectivityService
             )
 
             viewModel.comment = "Первый комментарий"

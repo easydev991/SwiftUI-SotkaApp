@@ -9,10 +9,8 @@ extension WorkoutPreviewViewModelTests {
         @MainActor
         func sendsWorkoutResultThroughConnectivityService() async throws {
             let connectivityService = MockWatchConnectivityService()
-            let appGroupHelper = MockWatchAppGroupHelper(restTime: 60)
             let viewModel = WorkoutPreviewViewModel(
-                connectivityService: connectivityService,
-                appGroupHelper: appGroupHelper
+                connectivityService: connectivityService
             )
 
             let workoutData = WorkoutData(
@@ -41,10 +39,8 @@ extension WorkoutPreviewViewModelTests {
         @MainActor
         func setsCountToPlannedCountWhenCountIsNil() async throws {
             let connectivityService = MockWatchConnectivityService()
-            let appGroupHelper = MockWatchAppGroupHelper(restTime: 60)
             let viewModel = WorkoutPreviewViewModel(
-                connectivityService: connectivityService,
-                appGroupHelper: appGroupHelper
+                connectivityService: connectivityService
             )
 
             let workoutData = WorkoutData(
@@ -69,10 +65,8 @@ extension WorkoutPreviewViewModelTests {
         @MainActor
         func setsErrorWhenSelectedExecutionTypeIsNil() async throws {
             let connectivityService = MockWatchConnectivityService()
-            let appGroupHelper = MockWatchAppGroupHelper(restTime: 60)
             let viewModel = WorkoutPreviewViewModel(
-                connectivityService: connectivityService,
-                appGroupHelper: appGroupHelper
+                connectivityService: connectivityService
             )
 
             viewModel.selectedExecutionType = nil
@@ -90,10 +84,8 @@ extension WorkoutPreviewViewModelTests {
         @MainActor
         func setsErrorWhenTrainingsIsEmpty() async throws {
             let connectivityService = MockWatchConnectivityService()
-            let appGroupHelper = MockWatchAppGroupHelper(restTime: 60)
             let viewModel = WorkoutPreviewViewModel(
-                connectivityService: connectivityService,
-                appGroupHelper: appGroupHelper
+                connectivityService: connectivityService
             )
 
             viewModel.selectedExecutionType = .cycles
@@ -109,10 +101,8 @@ extension WorkoutPreviewViewModelTests {
         @MainActor
         func doesNotSetErrorOnNetworkSendFailure() async throws {
             let connectivityService = MockWatchConnectivityService()
-            let appGroupHelper = MockWatchAppGroupHelper(restTime: 60)
             let viewModel = WorkoutPreviewViewModel(
-                connectivityService: connectivityService,
-                appGroupHelper: appGroupHelper
+                connectivityService: connectivityService
             )
 
             let workoutData = WorkoutData(
@@ -139,10 +129,8 @@ extension WorkoutPreviewViewModelTests {
         @MainActor
         func includesWorkoutDurationInResultWhenSet() async throws {
             let connectivityService = MockWatchConnectivityService()
-            let appGroupHelper = MockWatchAppGroupHelper(restTime: 60)
             let viewModel = WorkoutPreviewViewModel(
-                connectivityService: connectivityService,
-                appGroupHelper: appGroupHelper
+                connectivityService: connectivityService
             )
 
             let workoutData = WorkoutData(
@@ -169,10 +157,8 @@ extension WorkoutPreviewViewModelTests {
         @MainActor
         func passesCommentWhenSavingWorkout() async throws {
             let connectivityService = MockWatchConnectivityService()
-            let appGroupHelper = MockWatchAppGroupHelper(restTime: 60)
             let viewModel = WorkoutPreviewViewModel(
-                connectivityService: connectivityService,
-                appGroupHelper: appGroupHelper
+                connectivityService: connectivityService
             )
 
             let workoutData = WorkoutData(
@@ -199,10 +185,8 @@ extension WorkoutPreviewViewModelTests {
         @MainActor
         func passesNilForCommentWhenCommentNotSet() async throws {
             let connectivityService = MockWatchConnectivityService()
-            let appGroupHelper = MockWatchAppGroupHelper(restTime: 60)
             let viewModel = WorkoutPreviewViewModel(
-                connectivityService: connectivityService,
-                appGroupHelper: appGroupHelper
+                connectivityService: connectivityService
             )
 
             let workoutData = WorkoutData(

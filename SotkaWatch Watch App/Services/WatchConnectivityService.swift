@@ -13,6 +13,9 @@ final class WatchConnectivityService: NSObject {
     private let authService: WatchAuthService
     private let sessionProtocol: WCSessionProtocol?
 
+    /// Текущий день программы (обновляется при получении команды PHONE_COMMAND_CURRENT_DAY)
+    private(set) var currentDay: Int?
+
     /// Реальная сессия для делегата (только для WCSession, не для моков)
     var session: WCSession? {
         sessionProtocol as? WCSession
@@ -239,6 +242,20 @@ extension WatchConnectivityService: WCSessionDelegate {
         handleReceivedMessage(message)
         replyHandler([:])
     }
+
+    func session(_: WCSession, didReceiveApplicationContext applicationContext: [String: Any]) {
+        logger.info("Получен Application Context от iPhone: \(applicationContext)")
+        handleApplicationContext(applicationContext)
+    }
+}
+
+extension WatchConnectivityService {
+    #if DEBUG
+    /// Тестовый метод для обработки сообщения (доступен только в тестах)
+    func testHandleReceivedMessage(_ message: [String: Any]) {
+        handleReceivedMessage(message)
+    }
+    #endif
 }
 
 private extension WatchConnectivityService {
@@ -250,12 +267,20 @@ private extension WatchConnectivityService {
         }
 
         switch command {
-        case .authStatusChanged:
+        case .authStatus:
             if let isAuthorized = message["isAuthorized"] as? Bool {
                 logger.info("Получена команда изменения статуса авторизации: \(isAuthorized)")
                 authService.updateAuthStatus(isAuthorized)
+                // currentDay передается отдельной командой PHONE_COMMAND_CURRENT_DAY
             } else {
-                logger.warning("Отсутствует значение isAuthorized в команде PHONE_COMMAND_AUTH_STATUS_CHANGED")
+                logger.warning("Отсутствует значение isAuthorized в команде PHONE_COMMAND_AUTH_STATUS")
+            }
+        case .currentDay:
+            if let currentDay = message["currentDay"] as? Int {
+                logger.info("Получена команда изменения текущего дня: \(currentDay)")
+                self.currentDay = currentDay
+            } else {
+                logger.warning("Отсутствует значение currentDay в команде PHONE_COMMAND_CURRENT_DAY")
             }
         case .currentActivity, .sendWorkoutData:
             // Эти команды обрабатываются через replyHandler в методах запроса
@@ -264,6 +289,15 @@ private extension WatchConnectivityService {
             // Эти команды отправляются с часов, не обрабатываются здесь
             break
         }
+    }
+
+    func handleApplicationContext(_ context: [String: Any]) {
+        // Обработка статуса авторизации
+        if let isAuthorized = context["isAuthorized"] as? Bool {
+            logger.info("Обновление статуса авторизации из Application Context: \(isAuthorized)")
+            authService.updateAuthStatus(isAuthorized)
+        }
+        // currentDay и currentActivity обрабатываются через команды sendMessage в HomeViewModel
     }
 }
 

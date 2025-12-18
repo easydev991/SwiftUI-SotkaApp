@@ -90,13 +90,4 @@ struct AppSettingsTests {
         #expect(storedValueAfter == "Ringtone 4.mp3")
         #expect(settings2.timerSound == .ringtone4)
     }
-
-    @Test("Должен устанавливать флаг миграции при использовании App Group")
-    func appSettingsSetsMigrationFlagWhenUsingAppGroup() throws {
-        let appGroupDefaults = try MockUserDefaults.create()
-
-        _ = AppSettings(userDefaults: appGroupDefaults)
-
-        #expect(appGroupDefaults.bool(forKey: "migrationRestTimeToAppGroupCompleted"))
-    }
 }

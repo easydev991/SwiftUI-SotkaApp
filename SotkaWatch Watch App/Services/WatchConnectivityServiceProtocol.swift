@@ -3,6 +3,7 @@ import Foundation
 /// Протокол для WatchConnectivityService для тестирования
 @MainActor
 protocol WatchConnectivityServiceProtocol {
+    var currentDay: Int? { get }
     func sendActivityType(day: Int, activityType: DayActivityType) async throws
     func requestCurrentActivity(day: Int) async throws -> DayActivityType?
     func requestWorkoutData(day: Int) async throws -> WorkoutDataResponse

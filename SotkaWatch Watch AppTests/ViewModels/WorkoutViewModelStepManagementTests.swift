@@ -7,10 +7,8 @@ struct WorkoutViewModelStepManagementTests {
     @Test("Должен завершать текущий этап и переходить к следующему")
     func completeCurrentStep() throws {
         let connectivityService = MockWatchConnectivityService()
-        let appGroupHelper = MockWatchAppGroupHelper(restTime: 60)
         let viewModel = WorkoutViewModel(
-            connectivityService: connectivityService,
-            appGroupHelper: appGroupHelper
+            connectivityService: connectivityService
         )
 
         let trainings = [
@@ -44,10 +42,8 @@ struct WorkoutViewModelStepManagementTests {
     @Test("Должен показывать таймер отдыха после завершения круга")
     func showsRestTimerAfterCompletingCycle() throws {
         let connectivityService = MockWatchConnectivityService()
-        let appGroupHelper = MockWatchAppGroupHelper(restTime: 60)
         let viewModel = WorkoutViewModel(
-            connectivityService: connectivityService,
-            appGroupHelper: appGroupHelper
+            connectivityService: connectivityService
         )
 
         let trainings = [
@@ -74,10 +70,8 @@ struct WorkoutViewModelStepManagementTests {
     @Test("Не должен показывать таймер отдыха после завершения разминки")
     func doesNotShowRestTimerAfterWarmUp() throws {
         let connectivityService = MockWatchConnectivityService()
-        let appGroupHelper = MockWatchAppGroupHelper(restTime: 60)
         let viewModel = WorkoutViewModel(
-            connectivityService: connectivityService,
-            appGroupHelper: appGroupHelper
+            connectivityService: connectivityService
         )
 
         let trainings = [
@@ -102,10 +96,8 @@ struct WorkoutViewModelStepManagementTests {
     @Test("Должен обрабатывать завершение таймера отдыха")
     func handleRestTimerFinish() throws {
         let connectivityService = MockWatchConnectivityService()
-        let appGroupHelper = MockWatchAppGroupHelper(restTime: 60)
         let viewModel = WorkoutViewModel(
-            connectivityService: connectivityService,
-            appGroupHelper: appGroupHelper
+            connectivityService: connectivityService
         )
 
         let trainings = [
@@ -142,10 +134,8 @@ struct WorkoutViewModelStepManagementTests {
     @Test("Должен получать состояние этапа")
     func getStepState() throws {
         let connectivityService = MockWatchConnectivityService()
-        let appGroupHelper = MockWatchAppGroupHelper(restTime: 60)
         let viewModel = WorkoutViewModel(
-            connectivityService: connectivityService,
-            appGroupHelper: appGroupHelper
+            connectivityService: connectivityService
         )
 
         let trainings = [
@@ -170,10 +160,8 @@ struct WorkoutViewModelStepManagementTests {
     @Test("Должен возвращать список кругов для типа .cycles")
     func getCycleSteps() throws {
         let connectivityService = MockWatchConnectivityService()
-        let appGroupHelper = MockWatchAppGroupHelper(restTime: 60)
         let viewModel = WorkoutViewModel(
-            connectivityService: connectivityService,
-            appGroupHelper: appGroupHelper
+            connectivityService: connectivityService
         )
 
         let trainings = [
@@ -205,10 +193,8 @@ struct WorkoutViewModelStepManagementTests {
     @Test("Должен возвращать список подходов для упражнения для типа .sets")
     func getExerciseSteps() throws {
         let connectivityService = MockWatchConnectivityService()
-        let appGroupHelper = MockWatchAppGroupHelper(restTime: 60)
         let viewModel = WorkoutViewModel(
-            connectivityService: connectivityService,
-            appGroupHelper: appGroupHelper
+            connectivityService: connectivityService
         )
 
         let trainings = [

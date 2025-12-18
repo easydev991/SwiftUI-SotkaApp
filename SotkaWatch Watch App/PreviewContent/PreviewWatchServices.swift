@@ -21,6 +21,12 @@ final class PreviewWatchAuthService: WatchAuthServiceProtocol {
 
 @MainActor
 final class PreviewWatchConnectivityService: WatchConnectivityServiceProtocol {
+    var currentDay: Int?
+
+    init(currentDay: Int? = 5) {
+        self.currentDay = currentDay
+    }
+
     func sendActivityType(day _: Int, activityType _: DayActivityType) async throws {
         print("Заглушка sendActivityType")
     }
@@ -48,30 +54,5 @@ final class PreviewWatchConnectivityService: WatchConnectivityServiceProtocol {
 
     func deleteActivity(day _: Int) async throws {
         print("Заглушка deleteActivity")
-    }
-}
-
-/// Мок для WatchAppGroupHelper для превью
-struct PreviewWatchAppGroupHelper: WatchAppGroupHelperProtocol {
-    var isAuthorized: Bool
-    var startDate: Date?
-    var restTime: Int
-
-    var currentDay: Int? {
-        guard let startDate else {
-            return nil
-        }
-        let calculator = DayCalculator(startDate, Date.now)
-        return calculator.currentDay
-    }
-
-    init(
-        isAuthorized: Bool = false,
-        startDate: Date? = nil,
-        restTime: Int = 60
-    ) {
-        self.isAuthorized = isAuthorized
-        self.startDate = startDate
-        self.restTime = restTime
     }
 }

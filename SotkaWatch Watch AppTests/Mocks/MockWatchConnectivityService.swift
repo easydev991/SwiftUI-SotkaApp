@@ -4,6 +4,7 @@ import Foundation
 /// Мок для WatchConnectivityService для тестирования
 @MainActor
 final class MockWatchConnectivityService: WatchConnectivityServiceProtocol {
+    var currentDay: Int?
     var shouldSucceed = true
     var mockError: Error?
     var mockCurrentActivity: DayActivityType?

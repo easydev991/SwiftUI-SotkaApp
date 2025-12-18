@@ -5,8 +5,8 @@ import Testing
 
 @MainActor
 struct AuthHelperTests {
-    @Test("Должен использовать App Group UserDefaults для сохранения статуса авторизации")
-    func authHelperUsesAppGroupUserDefaults() throws {
+    @Test("Должен использовать UserDefaults для сохранения статуса авторизации")
+    func authHelperUsesUserDefaults() throws {
         let userDefaults = try MockUserDefaults.create()
         let authHelper = AuthHelperImp(userDefaults: userDefaults)
 
@@ -16,17 +16,6 @@ struct AuthHelperTests {
         let isAuthorized = userDefaults.bool(forKey: "isAuthorized")
         #expect(isAuthorized)
         #expect(authHelper.isAuthorized)
-    }
-
-    @Test("Должен использовать fallback на стандартный UserDefaults при недоступности App Group")
-    func authHelperFallsBackToStandardUserDefaultsWhenAppGroupUnavailable() throws {
-        let userDefaults = try MockUserDefaults.create()
-        let authHelper = AuthHelperImp(userDefaults: userDefaults)
-
-        authHelper.didAuthorize()
-
-        let isAuthorized = authHelper.isAuthorized
-        #expect(isAuthorized)
     }
 
     @Test("Должен сохранять и получать статус авторизации")
@@ -104,25 +93,5 @@ struct AuthHelperTests {
         let valueFromUserDefaults = userDefaults.bool(forKey: "isAuthorized")
         #expect(valueFromUserDefaults)
         #expect(authHelper.isAuthorized)
-    }
-
-    @Test("Должен выполнять миграцию только один раз при наличии флага миграции")
-    func authHelperPerformsMigrationOnlyOnce() throws {
-        let appGroupDefaults = try MockUserDefaults.create()
-        appGroupDefaults.set(true, forKey: "migrationToAppGroupCompleted")
-
-        let authHelper = AuthHelperImp(userDefaults: appGroupDefaults)
-
-        #expect(appGroupDefaults.bool(forKey: "migrationToAppGroupCompleted"))
-        #expect(!authHelper.isAuthorized)
-    }
-
-    @Test("Должен устанавливать флаг миграции при использовании App Group")
-    func authHelperSetsMigrationFlagWhenUsingAppGroup() throws {
-        let appGroupDefaults = try MockUserDefaults.create()
-
-        _ = AuthHelperImp(userDefaults: appGroupDefaults)
-
-        #expect(appGroupDefaults.bool(forKey: "migrationToAppGroupCompleted"))
     }
 }

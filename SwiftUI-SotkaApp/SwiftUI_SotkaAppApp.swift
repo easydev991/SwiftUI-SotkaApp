@@ -120,9 +120,13 @@ struct SwiftUI_SotkaAppApp: App {
             .networkStatus(networkStatus.isOnline)
             .environment(youtubeVideoService)
             .preferredColorScheme(appSettings.appTheme.colorScheme)
-            .onChange(of: statusManager.currentDayCalculator) { _, _ in
+            .onChange(of: statusManager.currentDayCalculator) { _, newCalculator in
                 guard authHelper.isAuthorized else { return }
                 statusManager.loadInfopostsWithUserGender(context: modelContainer.mainContext)
+                statusManager.sendDayDataToWatch(
+                    currentDay: newCalculator?.currentDay,
+                    context: modelContainer.mainContext
+                )
             }
             .onChange(of: scenePhase) { _, newPhase in
                 guard newPhase == .active else { return }
@@ -143,14 +147,9 @@ struct SwiftUI_SotkaAppApp: App {
         }
         .modelContainer(modelContainer)
         .onChange(of: authHelper.isAuthorized) { _, isAuthorized in
+            statusManager.processAuthStatus(isAuthorized: isAuthorized, context: modelContainer.mainContext)
             if !isAuthorized {
                 appSettings.didLogout()
-                statusManager.didLogout()
-                do {
-                    try modelContainer.mainContext.delete(model: User.self)
-                } catch {
-                    fatalError("Не удалось удалить данные пользователя: \(error.localizedDescription)")
-                }
             }
         }
     }

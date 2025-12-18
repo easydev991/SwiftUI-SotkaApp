@@ -7,10 +7,8 @@ struct WorkoutViewModelSetupTests {
     @Test("Должен инициализировать данные тренировки для типа .cycles")
     func setupWorkoutDataForCycles() throws {
         let connectivityService = MockWatchConnectivityService()
-        let appGroupHelper = MockWatchAppGroupHelper(restTime: 60)
         let viewModel = WorkoutViewModel(
-            connectivityService: connectivityService,
-            appGroupHelper: appGroupHelper
+            connectivityService: connectivityService
         )
 
         let trainings = [
@@ -41,10 +39,8 @@ struct WorkoutViewModelSetupTests {
     @Test("Должен инициализировать данные тренировки для типа .sets")
     func setupWorkoutDataForSets() throws {
         let connectivityService = MockWatchConnectivityService()
-        let appGroupHelper = MockWatchAppGroupHelper(restTime: 60)
         let viewModel = WorkoutViewModel(
-            connectivityService: connectivityService,
-            appGroupHelper: appGroupHelper
+            connectivityService: connectivityService
         )
 
         let trainings = [
@@ -74,10 +70,8 @@ struct WorkoutViewModelSetupTests {
     @Test("Должен возвращать текущий этап тренировки")
     func currentStep() throws {
         let connectivityService = MockWatchConnectivityService()
-        let appGroupHelper = MockWatchAppGroupHelper(restTime: 60)
         let viewModel = WorkoutViewModel(
-            connectivityService: connectivityService,
-            appGroupHelper: appGroupHelper
+            connectivityService: connectivityService
         )
 
         let trainings = [
@@ -99,10 +93,8 @@ struct WorkoutViewModelSetupTests {
     @Test("Должен возвращать nil для currentStep если этапы не инициализированы")
     func currentStepNilWhenNotInitialized() {
         let connectivityService = MockWatchConnectivityService()
-        let appGroupHelper = MockWatchAppGroupHelper(restTime: 60)
         let viewModel = WorkoutViewModel(
-            connectivityService: connectivityService,
-            appGroupHelper: appGroupHelper
+            connectivityService: connectivityService
         )
 
         #expect(viewModel.currentStep == nil)
@@ -111,10 +103,8 @@ struct WorkoutViewModelSetupTests {
     @Test("Должен определять завершенность тренировки")
     func isWorkoutCompleted() throws {
         let connectivityService = MockWatchConnectivityService()
-        let appGroupHelper = MockWatchAppGroupHelper(restTime: 60)
         let viewModel = WorkoutViewModel(
-            connectivityService: connectivityService,
-            appGroupHelper: appGroupHelper
+            connectivityService: connectivityService
         )
 
         let trainings = [
@@ -141,10 +131,8 @@ struct WorkoutViewModelSetupTests {
     @Test("Должен определять нужно ли показывать напоминание об упражнениях для .cycles")
     func shouldShowExercisesReminderForCycles() throws {
         let connectivityService = MockWatchConnectivityService()
-        let appGroupHelper = MockWatchAppGroupHelper(restTime: 60)
         let viewModel = WorkoutViewModel(
-            connectivityService: connectivityService,
-            appGroupHelper: appGroupHelper
+            connectivityService: connectivityService
         )
 
         let trainings = [
@@ -165,10 +153,8 @@ struct WorkoutViewModelSetupTests {
     @Test("Должен определять нужно ли показывать напоминание об упражнениях для .sets")
     func shouldShowExercisesReminderForSets() throws {
         let connectivityService = MockWatchConnectivityService()
-        let appGroupHelper = MockWatchAppGroupHelper(restTime: 60)
         let viewModel = WorkoutViewModel(
-            connectivityService: connectivityService,
-            appGroupHelper: appGroupHelper
+            connectivityService: connectivityService
         )
 
         let trainings = [

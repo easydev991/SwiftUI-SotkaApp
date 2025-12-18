@@ -8,12 +8,10 @@ struct HomeViewModelTests {
     func initializesViewModelWithDefaultValues() {
         let authService = MockWatchAuthService()
         let connectivityService = MockWatchConnectivityService()
-        let appGroupHelper = MockWatchAppGroupHelper()
 
         let viewModel = HomeViewModel(
             authService: authService,
-            connectivityService: connectivityService,
-            appGroupHelper: appGroupHelper
+            connectivityService: connectivityService
         )
 
         #expect(!viewModel.isLoading)
@@ -27,12 +25,10 @@ struct HomeViewModelTests {
     func checksAuthorizationWhenLoadingData() async throws {
         let authService = MockWatchAuthService(isAuthorized: false)
         let connectivityService = MockWatchConnectivityService()
-        let appGroupHelper = MockWatchAppGroupHelper(isAuthorized: false)
 
         let viewModel = HomeViewModel(
             authService: authService,
-            connectivityService: connectivityService,
-            appGroupHelper: appGroupHelper
+            connectivityService: connectivityService
         )
 
         await viewModel.loadData()
@@ -46,12 +42,10 @@ struct HomeViewModelTests {
     func checksAuthorizationWhenScenePhaseBecomesActive() async throws {
         let authService = MockWatchAuthService(isAuthorized: true)
         let connectivityService = MockWatchConnectivityService()
-        let appGroupHelper = MockWatchAppGroupHelper(isAuthorized: true)
 
         let viewModel = HomeViewModel(
             authService: authService,
-            connectivityService: connectivityService,
-            appGroupHelper: appGroupHelper
+            connectivityService: connectivityService
         )
 
         await viewModel.checkAuthStatusOnActivation()
@@ -59,43 +53,33 @@ struct HomeViewModelTests {
         #expect(viewModel.isAuthorized)
     }
 
-    @Test("Вычисляет текущий день из startDate")
-    func calculatesCurrentDayFromStartDate() async throws {
-        let startDate = Calendar.current.date(byAdding: .day, value: -5, to: Date.now) ?? Date.now
+    @Test("Читает текущий день из WatchConnectivityService")
+    func readsCurrentDayFromConnectivityService() async throws {
         let authService = MockWatchAuthService(isAuthorized: true)
         let connectivityService = MockWatchConnectivityService()
-        let appGroupHelper = MockWatchAppGroupHelper(
-            isAuthorized: true,
-            startDate: startDate
-        )
+        connectivityService.currentDay = 5
 
         let viewModel = HomeViewModel(
             authService: authService,
-            connectivityService: connectivityService,
-            appGroupHelper: appGroupHelper
+            connectivityService: connectivityService
         )
 
         await viewModel.loadData()
 
         let currentDay = try #require(viewModel.currentDay)
-        #expect(currentDay > 0)
+        #expect(currentDay == 5)
     }
 
     @Test("Загружает текущую активность дня")
     func loadsCurrentActivityForDay() async throws {
-        let startDate = Calendar.current.date(byAdding: .day, value: -5, to: Date.now) ?? Date.now
         let authService = MockWatchAuthService(isAuthorized: true)
         let connectivityService = MockWatchConnectivityService()
+        connectivityService.currentDay = 5
         connectivityService.mockCurrentActivity = .workout
-        let appGroupHelper = MockWatchAppGroupHelper(
-            isAuthorized: true,
-            startDate: startDate
-        )
 
         let viewModel = HomeViewModel(
             authService: authService,
-            connectivityService: connectivityService,
-            appGroupHelper: appGroupHelper
+            connectivityService: connectivityService
         )
 
         await viewModel.loadData()
@@ -116,18 +100,14 @@ struct HomeViewModelTests {
             trainings: [],
             plannedCount: 4
         )
+        connectivityService.currentDay = 5
         connectivityService.mockWorkoutData = workoutData
         connectivityService.mockWorkoutExecutionCount = 3
         connectivityService.mockWorkoutComment = "Отличная тренировка!"
-        let appGroupHelper = MockWatchAppGroupHelper(
-            isAuthorized: true,
-            startDate: startDate
-        )
 
         let viewModel = HomeViewModel(
             authService: authService,
-            connectivityService: connectivityService,
-            appGroupHelper: appGroupHelper
+            connectivityService: connectivityService
         )
 
         await viewModel.loadData()
@@ -145,16 +125,12 @@ struct HomeViewModelTests {
         let startDate = Calendar.current.date(byAdding: .day, value: -5, to: Date.now) ?? Date.now
         let authService = MockWatchAuthService(isAuthorized: true)
         let connectivityService = MockWatchConnectivityService()
+        connectivityService.currentDay = 5
         connectivityService.mockCurrentActivity = .rest
-        let appGroupHelper = MockWatchAppGroupHelper(
-            isAuthorized: true,
-            startDate: startDate
-        )
 
         let viewModel = HomeViewModel(
             authService: authService,
-            connectivityService: connectivityService,
-            appGroupHelper: appGroupHelper
+            connectivityService: connectivityService
         )
 
         await viewModel.loadData()
@@ -169,18 +145,14 @@ struct HomeViewModelTests {
         let startDate = Calendar.current.date(byAdding: .day, value: -5, to: Date.now) ?? Date.now
         let authService = MockWatchAuthService(isAuthorized: true)
         let connectivityService = MockWatchConnectivityService()
+        connectivityService.currentDay = 5
         connectivityService.mockCurrentActivity = .workout
         connectivityService.shouldSucceed = false
         connectivityService.mockError = WatchConnectivityError.sessionUnavailable
-        let appGroupHelper = MockWatchAppGroupHelper(
-            isAuthorized: true,
-            startDate: startDate
-        )
 
         let viewModel = HomeViewModel(
             authService: authService,
-            connectivityService: connectivityService,
-            appGroupHelper: appGroupHelper
+            connectivityService: connectivityService
         )
 
         await viewModel.loadData()
@@ -195,15 +167,11 @@ struct HomeViewModelTests {
         let startDate = Calendar.current.date(byAdding: .day, value: -5, to: Date.now) ?? Date.now
         let authService = MockWatchAuthService(isAuthorized: true)
         let connectivityService = MockWatchConnectivityService()
-        let appGroupHelper = MockWatchAppGroupHelper(
-            isAuthorized: true,
-            startDate: startDate
-        )
+        connectivityService.currentDay = 5
 
         let viewModel = HomeViewModel(
             authService: authService,
-            connectivityService: connectivityService,
-            appGroupHelper: appGroupHelper
+            connectivityService: connectivityService
         )
 
         await viewModel.loadData()
@@ -227,16 +195,12 @@ struct HomeViewModelTests {
             trainings: [],
             plannedCount: 4
         )
+        connectivityService.currentDay = 5
         connectivityService.mockWorkoutData = workoutData
-        let appGroupHelper = MockWatchAppGroupHelper(
-            isAuthorized: true,
-            startDate: startDate
-        )
 
         let viewModel = HomeViewModel(
             authService: authService,
-            connectivityService: connectivityService,
-            appGroupHelper: appGroupHelper
+            connectivityService: connectivityService
         )
 
         await viewModel.loadData()
@@ -255,17 +219,13 @@ struct HomeViewModelTests {
         let startDate = Calendar.current.date(byAdding: .day, value: -5, to: Date.now) ?? Date.now
         let authService = MockWatchAuthService(isAuthorized: true)
         let connectivityService = MockWatchConnectivityService()
+        connectivityService.currentDay = 5
         connectivityService.shouldSucceed = false
         connectivityService.mockError = WatchConnectivityError.sessionUnavailable
-        let appGroupHelper = MockWatchAppGroupHelper(
-            isAuthorized: true,
-            startDate: startDate
-        )
 
         let viewModel = HomeViewModel(
             authService: authService,
-            connectivityService: connectivityService,
-            appGroupHelper: appGroupHelper
+            connectivityService: connectivityService
         )
 
         await viewModel.loadData()
@@ -276,19 +236,15 @@ struct HomeViewModelTests {
         #expect(error is WatchConnectivityError)
     }
 
-    @Test("Обрабатывает случай когда startDate отсутствует в App Group")
-    func handlesMissingStartDateInAppGroup() async throws {
+    @Test("Обрабатывает случай когда currentDay отсутствует в WatchConnectivityService")
+    func handlesMissingCurrentDayInConnectivityService() async throws {
         let authService = MockWatchAuthService(isAuthorized: true)
         let connectivityService = MockWatchConnectivityService()
-        let appGroupHelper = MockWatchAppGroupHelper(
-            isAuthorized: true,
-            startDate: nil
-        )
+        connectivityService.currentDay = nil
 
         let viewModel = HomeViewModel(
             authService: authService,
-            connectivityService: connectivityService,
-            appGroupHelper: appGroupHelper
+            connectivityService: connectivityService
         )
 
         await viewModel.loadData()
@@ -297,53 +253,14 @@ struct HomeViewModelTests {
         #expect(viewModel.currentActivity == nil)
     }
 
-    @Test("Читает актуальное значение startDate из App Group при каждом вычислении текущего дня")
-    func readsActualStartDateFromAppGroupOnEachCalculation() async throws {
-        let startDate1 = Calendar.current.date(byAdding: .day, value: -5, to: Date.now) ?? Date.now
-        let authService = MockWatchAuthService(isAuthorized: true)
-        let connectivityService = MockWatchConnectivityService()
-        var appGroupHelper = MockWatchAppGroupHelper(
-            isAuthorized: true,
-            startDate: startDate1
-        )
-
-        let viewModel = HomeViewModel(
-            authService: authService,
-            connectivityService: connectivityService,
-            appGroupHelper: appGroupHelper
-        )
-
-        await viewModel.loadData()
-        let currentDay1 = try #require(viewModel.currentDay)
-
-        let startDate2 = Calendar.current.date(byAdding: .day, value: -10, to: Date.now) ?? Date.now
-        appGroupHelper = MockWatchAppGroupHelper(
-            isAuthorized: true,
-            startDate: startDate2
-        )
-
-        let viewModel2 = HomeViewModel(
-            authService: authService,
-            connectivityService: connectivityService,
-            appGroupHelper: appGroupHelper
-        )
-
-        await viewModel2.loadData()
-        let currentDay2 = try #require(viewModel2.currentDay)
-
-        #expect(currentDay2 > currentDay1)
-    }
-
     @Test("Реагирует на изменения статуса авторизации через WatchAuthService")
     func reactsToAuthStatusChangesThroughWatchAuthService() async throws {
         let authService = MockWatchAuthService(isAuthorized: false)
         let connectivityService = MockWatchConnectivityService()
-        let appGroupHelper = MockWatchAppGroupHelper(isAuthorized: false)
 
         let viewModel = HomeViewModel(
             authService: authService,
-            connectivityService: connectivityService,
-            appGroupHelper: appGroupHelper
+            connectivityService: connectivityService
         )
 
         #expect(!viewModel.isAuthorized)
@@ -358,16 +275,12 @@ struct HomeViewModelTests {
         let startDate = Calendar.current.date(byAdding: .day, value: -5, to: Date.now) ?? Date.now
         let authService = MockWatchAuthService(isAuthorized: true)
         let connectivityService = MockWatchConnectivityService()
+        connectivityService.currentDay = 5
         connectivityService.mockCurrentActivity = .workout
-        let appGroupHelper = MockWatchAppGroupHelper(
-            isAuthorized: true,
-            startDate: startDate
-        )
 
         let viewModel = HomeViewModel(
             authService: authService,
-            connectivityService: connectivityService,
-            appGroupHelper: appGroupHelper
+            connectivityService: connectivityService
         )
 
         await viewModel.loadData()
@@ -386,16 +299,12 @@ struct HomeViewModelTests {
         let startDate = Calendar.current.date(byAdding: .day, value: -5, to: Date.now) ?? Date.now
         let authService = MockWatchAuthService(isAuthorized: true)
         let connectivityService = MockWatchConnectivityService()
+        connectivityService.currentDay = 5
         connectivityService.mockCurrentActivity = .rest
-        let appGroupHelper = MockWatchAppGroupHelper(
-            isAuthorized: true,
-            startDate: startDate
-        )
 
         let viewModel = HomeViewModel(
             authService: authService,
-            connectivityService: connectivityService,
-            appGroupHelper: appGroupHelper
+            connectivityService: connectivityService
         )
 
         await viewModel.loadData()
@@ -412,16 +321,12 @@ struct HomeViewModelTests {
         let startDate = Calendar.current.date(byAdding: .day, value: -5, to: Date.now) ?? Date.now
         let authService = MockWatchAuthService(isAuthorized: true)
         let connectivityService = MockWatchConnectivityService()
+        connectivityService.currentDay = 5
         connectivityService.mockCurrentActivity = .workout
-        let appGroupHelper = MockWatchAppGroupHelper(
-            isAuthorized: true,
-            startDate: startDate
-        )
 
         let viewModel = HomeViewModel(
             authService: authService,
-            connectivityService: connectivityService,
-            appGroupHelper: appGroupHelper
+            connectivityService: connectivityService
         )
 
         await viewModel.loadData()
@@ -441,17 +346,13 @@ struct HomeViewModelTests {
         let startDate = Calendar.current.date(byAdding: .day, value: -5, to: Date.now) ?? Date.now
         let authService = MockWatchAuthService(isAuthorized: true)
         let connectivityService = MockWatchConnectivityService()
+        connectivityService.currentDay = 5
         connectivityService.shouldSucceed = false
         connectivityService.mockError = WatchConnectivityError.sessionUnavailable
-        let appGroupHelper = MockWatchAppGroupHelper(
-            isAuthorized: true,
-            startDate: startDate
-        )
 
         let viewModel = HomeViewModel(
             authService: authService,
-            connectivityService: connectivityService,
-            appGroupHelper: appGroupHelper
+            connectivityService: connectivityService
         )
 
         await viewModel.loadData()

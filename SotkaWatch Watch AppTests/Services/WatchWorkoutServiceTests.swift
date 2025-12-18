@@ -191,11 +191,8 @@ struct WatchWorkoutServiceTests {
         #expect(service.workoutData.plannedCount == nil)
     }
 
-    @Test("Читает время отдыха из App Group UserDefaults")
-    func readsRestTimeFromAppGroup() throws {
-        let userDefaults = try MockUserDefaults.create()
-        userDefaults.set(45, forKey: Constants.restTimeKey)
-        let helper = WatchAppGroupHelper(userDefaults: userDefaults)
+    @Test("Возвращает значение по умолчанию для времени отдыха")
+    func returnsDefaultRestTime() throws {
         let workoutData = WorkoutData(
             day: 5,
             executionType: 0,
@@ -203,40 +200,8 @@ struct WatchWorkoutServiceTests {
             plannedCount: nil
         )
 
-        let service = WatchWorkoutService(workoutData: workoutData, appGroupHelper: helper)
-
-        #expect(service.getRestTime() == 45)
-    }
-
-    @Test("Возвращает значение по умолчанию если время отдыха не установлено")
-    func returnsDefaultValueWhenRestTimeNotSet() throws {
-        let userDefaults = try MockUserDefaults.create()
-        let helper = WatchAppGroupHelper(userDefaults: userDefaults)
-        let workoutData = WorkoutData(
-            day: 5,
-            executionType: 0,
-            trainings: [],
-            plannedCount: nil
-        )
-
-        let service = WatchWorkoutService(workoutData: workoutData, appGroupHelper: helper)
+        let service = WatchWorkoutService(workoutData: workoutData)
 
         #expect(service.getRestTime() == Constants.defaultRestTime)
-    }
-
-    @Test("Возвращает значение по умолчанию если App Group недоступен")
-    func returnsDefaultValueWhenAppGroupUnavailable() {
-        let helper = WatchAppGroupHelper(userDefaults: nil)
-        let workoutData = WorkoutData(
-            day: 5,
-            executionType: 0,
-            trainings: [],
-            plannedCount: nil
-        )
-
-        let service = WatchWorkoutService(workoutData: workoutData, appGroupHelper: helper)
-
-        let restTime = service.getRestTime()
-        #expect(restTime == Constants.defaultRestTime)
     }
 }

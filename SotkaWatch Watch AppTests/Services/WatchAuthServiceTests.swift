@@ -4,63 +4,57 @@ import Testing
 
 @MainActor
 struct WatchAuthServiceTests {
-    @Test("Читает статус авторизации из UserDefaults")
-    func readsAuthStatusFromUserDefaults() throws {
-        let userDefaults = try MockUserDefaults.create()
-        userDefaults.set(true, forKey: Constants.isAuthorizedKey)
-        let service = WatchAuthService(userDefaults: userDefaults)
+    @Test("Инициализируется с isAuthorized = false")
+    func initializesWithFalseAuthStatus() {
+        let service = WatchAuthService()
 
-        let isAuthorized = service.checkAuthStatus()
-        #expect(isAuthorized)
-        #expect(service.isAuthorized)
-    }
-
-    @Test("Возвращает false если статус авторизации не установлен")
-    func returnsFalseWhenAuthStatusNotSet() throws {
-        let userDefaults = try MockUserDefaults.create()
-        let service = WatchAuthService(userDefaults: userDefaults)
-
-        let isAuthorized = service.checkAuthStatus()
-        #expect(!isAuthorized)
         #expect(!service.isAuthorized)
+        #expect(!service.checkAuthStatus())
     }
 
-    @Test("Возвращает false если App Group UserDefaults недоступен")
-    func returnsFalseWhenAppGroupUnavailable() {
-        let service = WatchAuthService(userDefaults: nil)
+    @Test("Возвращает текущий статус авторизации")
+    func returnsCurrentAuthStatus() {
+        let service = WatchAuthService()
 
-        let isAuthorized = service.checkAuthStatus()
-        #expect(!isAuthorized)
+        // По умолчанию false
+        #expect(!service.checkAuthStatus())
         #expect(!service.isAuthorized)
-    }
 
-    @Test("Использует правильный ключ для чтения статуса")
-    func usesCorrectKeyForReadingStatus() throws {
-        let userDefaults = try MockUserDefaults.create()
-        userDefaults.set(true, forKey: Constants.isAuthorizedKey)
-        let service = WatchAuthService(userDefaults: userDefaults)
-
-        // checkAuthStatus() уже вызывается в init, проверяем результат
-        let valueFromUserDefaults = userDefaults.bool(forKey: Constants.isAuthorizedKey)
-        #expect(valueFromUserDefaults)
+        // Обновляем статус
+        service.updateAuthStatus(true)
+        #expect(service.checkAuthStatus())
         #expect(service.isAuthorized)
-
-        // Дополнительно проверяем, что метод возвращает правильное значение
-        let statusFromMethod = service.checkAuthStatus()
-        #expect(statusFromMethod)
     }
 
     @Test("Обновляет статус авторизации при получении команды от iPhone")
-    func updatesAuthStatusWhenReceivingCommandFromPhone() throws {
-        let userDefaults = try MockUserDefaults.create()
-        let service = WatchAuthService(userDefaults: userDefaults)
+    func updatesAuthStatusWhenReceivingCommandFromPhone() {
+        let service = WatchAuthService()
 
+        // Начальное состояние
         #expect(!service.isAuthorized)
 
+        // Обновляем на true
         service.updateAuthStatus(true)
         #expect(service.isAuthorized)
+        #expect(service.checkAuthStatus())
 
+        // Обновляем на false
         service.updateAuthStatus(false)
         #expect(!service.isAuthorized)
+        #expect(!service.checkAuthStatus())
+    }
+
+    @Test("Проверяет статус авторизации после обновления")
+    func checksAuthStatusAfterUpdate() {
+        let service = WatchAuthService()
+
+        // Начальное состояние
+        let initialStatus = service.checkAuthStatus()
+        #expect(!initialStatus)
+
+        // Обновляем статус
+        service.updateAuthStatus(true)
+        let updatedStatus = service.checkAuthStatus()
+        #expect(updatedStatus)
     }
 }

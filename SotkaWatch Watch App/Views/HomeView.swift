@@ -46,8 +46,7 @@ struct HomeView: View {
         .animation(.default, value: viewModel.isAuthorized)
         .fullScreenCover(isPresented: $showEditWorkout) {
             WorkoutPreviewView(
-                connectivityService: viewModel.connectivityService,
-                appGroupHelper: viewModel.appGroupHelper
+                connectivityService: viewModel.connectivityService
             )
         }
     }
@@ -80,17 +79,11 @@ private extension HomeView {
 }
 
 #Preview("Авторизован") {
-    let startDate = Calendar.current.date(byAdding: .day, value: -5, to: Date.now) ?? Date.now
     let authService = PreviewWatchAuthService(isAuthorized: true)
     let connectivityService = PreviewWatchConnectivityService()
-    let appGroupHelper = PreviewWatchAppGroupHelper(
-        isAuthorized: true,
-        startDate: startDate
-    )
     let viewModel = HomeViewModel(
         authService: authService,
-        connectivityService: connectivityService,
-        appGroupHelper: appGroupHelper
+        connectivityService: connectivityService
     )
     HomeView()
         .environment(viewModel)

@@ -13,7 +13,6 @@ final class HomeViewModel {
 
     @ObservationIgnored private let authService: any WatchAuthServiceProtocol
     @ObservationIgnored let connectivityService: any WatchConnectivityServiceProtocol
-    @ObservationIgnored let appGroupHelper: any WatchAppGroupHelperProtocol
 
     private(set) var isLoading = false
     private(set) var error: Error?
@@ -30,18 +29,15 @@ final class HomeViewModel {
     /// - Parameters:
     ///   - authService: Сервис авторизации
     ///   - connectivityService: Сервис связи с iPhone
-    ///   - appGroupHelper: Хелпер для чтения данных из App Group UserDefaults (по умолчанию создается новый экземпляр)
     init(
         authService: any WatchAuthServiceProtocol,
-        connectivityService: any WatchConnectivityServiceProtocol,
-        appGroupHelper: (any WatchAppGroupHelperProtocol)? = nil
+        connectivityService: any WatchConnectivityServiceProtocol
     ) {
         self.authService = authService
         self.connectivityService = connectivityService
-        self.appGroupHelper = appGroupHelper ?? WatchAppGroupHelper()
     }
 
-    /// Загрузка данных (проверка авторизации, вычисление текущего дня, запрос активности)
+    /// Загрузка данных (проверка авторизации, получение текущего дня, запрос активности)
     func loadData() async {
         isLoading = true
         error = nil
@@ -55,11 +51,13 @@ final class HomeViewModel {
             return
         }
 
-        let currentDayValue = appGroupHelper.currentDay
+        // Получаем currentDay из WatchConnectivityService (обновляется при получении команды от iPhone)
+        let currentDayValue = connectivityService.currentDay
         currentDay = currentDayValue
 
         guard let currentDayValue else {
-            logger.warning("Не удалось вычислить текущий день: startDate отсутствует в App Group")
+            logger.warning("Текущий день еще не получен от iPhone, ожидаем команду PHONE_COMMAND_CURRENT_DAY")
+            error = WatchConnectivityError.sessionUnavailable
             return
         }
 
@@ -99,6 +97,25 @@ final class HomeViewModel {
 
         if wasAuthorized != newAuthStatus {
             logger.info("Статус авторизации изменился при активации: \(newAuthStatus)")
+        }
+
+        // Обновляем currentDay из WatchConnectivityService при активации
+        updateCurrentDayFromConnectivity()
+    }
+
+    /// Обновление currentDay из WatchConnectivityService
+    /// Вызывается при получении команды PHONE_COMMAND_CURRENT_DAY от iPhone
+    func updateCurrentDayFromConnectivity() {
+        let newCurrentDay = connectivityService.currentDay
+        if newCurrentDay != currentDay {
+            logger.info("Обновление currentDay из WatchConnectivityService: \(newCurrentDay ?? 0)")
+            currentDay = newCurrentDay
+            // Если currentDay изменился, перезагружаем данные
+            if newCurrentDay != nil {
+                Task {
+                    await loadData()
+                }
+            }
         }
     }
 

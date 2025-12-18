@@ -22,8 +22,6 @@ extension Constants {
 }
 
 extension Constants {
-    /// Идентификатор App Group для обмена данными между основным приложением и Watch App
-    static let appGroupIdentifier = "group.com.sotka.app"
     /// Ключ для статуса авторизации в UserDefaults
     static let isAuthorizedKey = "isAuthorized"
     /// Ключ для даты начала программы в UserDefaults
@@ -47,6 +45,7 @@ extension Constants {
         // От iPhone к часам
         case currentActivity = "PHONE_COMMAND_CURRENT_ACTIVITY"
         case sendWorkoutData = "PHONE_COMMAND_SEND_WORKOUT_DATA"
-        case authStatusChanged = "PHONE_COMMAND_AUTH_STATUS_CHANGED"
+        case authStatus = "PHONE_COMMAND_AUTH_STATUS"
+        case currentDay = "PHONE_COMMAND_CURRENT_DAY"
     }
 }

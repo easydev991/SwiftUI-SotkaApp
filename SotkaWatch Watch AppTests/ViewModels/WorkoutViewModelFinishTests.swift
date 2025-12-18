@@ -7,10 +7,8 @@ struct WorkoutViewModelFinishTests {
     @Test("Должен завершать тренировку и возвращать результат")
     func finishWorkout() throws {
         let connectivityService = MockWatchConnectivityService()
-        let appGroupHelper = MockWatchAppGroupHelper(restTime: 60)
         let viewModel = WorkoutViewModel(
-            connectivityService: connectivityService,
-            appGroupHelper: appGroupHelper
+            connectivityService: connectivityService
         )
 
         let trainings = [
@@ -45,10 +43,8 @@ struct WorkoutViewModelFinishTests {
     @Test("Должен прерывать тренировку и создавать результат с interrupt")
     func cancelWorkout() throws {
         let connectivityService = MockWatchConnectivityService()
-        let appGroupHelper = MockWatchAppGroupHelper(restTime: 60)
         let viewModel = WorkoutViewModel(
-            connectivityService: connectivityService,
-            appGroupHelper: appGroupHelper
+            connectivityService: connectivityService
         )
 
         let trainings = [
@@ -81,10 +77,8 @@ struct WorkoutViewModelFinishTests {
     @Test("Должен получать результат тренировки")
     func getWorkoutResult() throws {
         let connectivityService = MockWatchConnectivityService()
-        let appGroupHelper = MockWatchAppGroupHelper(restTime: 60)
         let viewModel = WorkoutViewModel(
-            connectivityService: connectivityService,
-            appGroupHelper: appGroupHelper
+            connectivityService: connectivityService
         )
 
         let trainings = [
@@ -118,10 +112,8 @@ struct WorkoutViewModelFinishTests {
     @Test("Должен возвращать nil и устанавливать error если тренировка не завершена")
     func returnsNilWhenWorkoutNotCompleted() throws {
         let connectivityService = MockWatchConnectivityService()
-        let appGroupHelper = MockWatchAppGroupHelper(restTime: 60)
         let viewModel = WorkoutViewModel(
-            connectivityService: connectivityService,
-            appGroupHelper: appGroupHelper
+            connectivityService: connectivityService
         )
 
         let trainings = [
@@ -149,10 +141,8 @@ struct WorkoutViewModelFinishTests {
     @Test("Должен проверять и обрабатывать истекший таймер отдыха")
     func checkAndHandleExpiredRestTimer() async throws {
         let connectivityService = MockWatchConnectivityService()
-        let appGroupHelper = MockWatchAppGroupHelper(restTime: 1)
         let viewModel = WorkoutViewModel(
-            connectivityService: connectivityService,
-            appGroupHelper: appGroupHelper
+            connectivityService: connectivityService
         )
 
         let trainings = [

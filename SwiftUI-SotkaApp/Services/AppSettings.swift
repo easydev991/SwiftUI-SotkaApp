@@ -19,16 +19,7 @@ final class AppSettings {
     var notificationError: NotificationError?
 
     init(userDefaults: UserDefaults? = nil) {
-        if let userDefaults {
-            self.defaults = userDefaults
-            migrateRestTimeFromStandardUserDefaults(to: userDefaults)
-        } else if let appGroupDefaults = UserDefaults(suiteName: Constants.appGroupIdentifier) {
-            self.defaults = appGroupDefaults
-            migrateRestTimeFromStandardUserDefaults(to: appGroupDefaults)
-        } else {
-            logger.warning("App Group '\(Constants.appGroupIdentifier)' недоступен, используется стандартный UserDefaults")
-            self.defaults = UserDefaults.standard
-        }
+        self.defaults = userDefaults ?? UserDefaults.standard
     }
 
     var appTheme: AppTheme {
@@ -334,28 +325,5 @@ private extension AppSettings {
         components.hour = 19
         components.minute = 0
         return Calendar.current.date(from: components) ?? .now
-    }
-
-    enum MigrationKey: String {
-        case migrationRestTimeCompleted = "migrationRestTimeToAppGroupCompleted"
-    }
-
-    /// Миграция данных restTime из UserDefaults.standard в App Group UserDefaults
-    func migrateRestTimeFromStandardUserDefaults(to appGroupDefaults: UserDefaults) {
-        if appGroupDefaults.bool(forKey: MigrationKey.migrationRestTimeCompleted.rawValue) {
-            return
-        }
-        let standardDefaults = UserDefaults.standard
-        let key = Constants.restTimeKey
-        let hasDataInStandard = standardDefaults.object(forKey: key) != nil
-        let hasDataInAppGroup = appGroupDefaults.object(forKey: key) != nil
-        if hasDataInStandard, !hasDataInAppGroup {
-            let restTimeValue = standardDefaults.integer(forKey: key)
-            if restTimeValue != 0 {
-                appGroupDefaults.set(restTimeValue, forKey: key)
-                logger.info("Выполнена миграция restTime из UserDefaults.standard в App Group: \(restTimeValue)")
-            }
-        }
-        appGroupDefaults.set(true, forKey: MigrationKey.migrationRestTimeCompleted.rawValue)
     }
 }

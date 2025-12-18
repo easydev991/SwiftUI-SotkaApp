@@ -9,10 +9,8 @@ extension WorkoutPreviewViewModelTests {
         @MainActor
         func loadsWorkoutDataFromConnectivityService() async throws {
             let connectivityService = MockWatchConnectivityService()
-            let appGroupHelper = MockWatchAppGroupHelper(restTime: 60)
             let viewModel = WorkoutPreviewViewModel(
-                connectivityService: connectivityService,
-                appGroupHelper: appGroupHelper
+                connectivityService: connectivityService
             )
 
             let workoutData = WorkoutData(
@@ -43,10 +41,8 @@ extension WorkoutPreviewViewModelTests {
         @MainActor
         func setsWasOriginallyPassedToTrueWhenExecutionCountIsSet() async throws {
             let connectivityService = MockWatchConnectivityService()
-            let appGroupHelper = MockWatchAppGroupHelper(restTime: 60)
             let viewModel = WorkoutPreviewViewModel(
-                connectivityService: connectivityService,
-                appGroupHelper: appGroupHelper
+                connectivityService: connectivityService
             )
 
             let workoutData = WorkoutData(
@@ -72,10 +68,8 @@ extension WorkoutPreviewViewModelTests {
         @MainActor
         func setsWasOriginallyPassedToFalseWhenExecutionCountIsNil() async throws {
             let connectivityService = MockWatchConnectivityService()
-            let appGroupHelper = MockWatchAppGroupHelper(restTime: 60)
             let viewModel = WorkoutPreviewViewModel(
-                connectivityService: connectivityService,
-                appGroupHelper: appGroupHelper
+                connectivityService: connectivityService
             )
 
             let workoutData = WorkoutData(
@@ -100,10 +94,8 @@ extension WorkoutPreviewViewModelTests {
         @MainActor
         func setsCommentFromResponse() async throws {
             let connectivityService = MockWatchConnectivityService()
-            let appGroupHelper = MockWatchAppGroupHelper(restTime: 60)
             let viewModel = WorkoutPreviewViewModel(
-                connectivityService: connectivityService,
-                appGroupHelper: appGroupHelper
+                connectivityService: connectivityService
             )
 
             let workoutData = WorkoutData(
@@ -128,10 +120,8 @@ extension WorkoutPreviewViewModelTests {
         @MainActor
         func setsIsLoadingToTrueDuringLoad() async throws {
             let connectivityService = MockWatchConnectivityService()
-            let appGroupHelper = MockWatchAppGroupHelper(restTime: 60)
             let viewModel = WorkoutPreviewViewModel(
-                connectivityService: connectivityService,
-                appGroupHelper: appGroupHelper
+                connectivityService: connectivityService
             )
 
             let workoutData = WorkoutData(
@@ -163,10 +153,8 @@ extension WorkoutPreviewViewModelTests {
         @MainActor
         func doesNotSetErrorOnNetworkLoadFailure() async throws {
             let connectivityService = MockWatchConnectivityService()
-            let appGroupHelper = MockWatchAppGroupHelper(restTime: 60)
             let viewModel = WorkoutPreviewViewModel(
-                connectivityService: connectivityService,
-                appGroupHelper: appGroupHelper
+                connectivityService: connectivityService
             )
 
             connectivityService.shouldSucceed = false
@@ -183,10 +171,8 @@ extension WorkoutPreviewViewModelTests {
         @MainActor
         func determinesAvailableExecutionTypesBasedOnDayNumber() async throws {
             let connectivityService = MockWatchConnectivityService()
-            let appGroupHelper = MockWatchAppGroupHelper(restTime: 60)
             let viewModel = WorkoutPreviewViewModel(
-                connectivityService: connectivityService,
-                appGroupHelper: appGroupHelper
+                connectivityService: connectivityService
             )
 
             let workoutData = WorkoutData(
@@ -210,10 +196,8 @@ extension WorkoutPreviewViewModelTests {
         @MainActor
         func determinesAvailableExecutionTypesForDays92To98() async throws {
             let connectivityService = MockWatchConnectivityService()
-            let appGroupHelper = MockWatchAppGroupHelper(restTime: 60)
             let viewModel = WorkoutPreviewViewModel(
-                connectivityService: connectivityService,
-                appGroupHelper: appGroupHelper
+                connectivityService: connectivityService
             )
 
             let workoutData = WorkoutData(
