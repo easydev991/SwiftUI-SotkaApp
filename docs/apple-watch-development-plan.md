@@ -316,8 +316,7 @@ extension Constants {
         // От iPhone к часам
         case currentActivity = "PHONE_COMMAND_CURRENT_ACTIVITY"
         case sendWorkoutData = "PHONE_COMMAND_SEND_WORKOUT_DATA"
-        case authStatus = "PHONE_COMMAND_AUTH_STATUS"
-        case currentDay = "PHONE_COMMAND_CURRENT_DAY"
+        case currentStatus = "PHONE_COMMAND_CURRENT_STATUS"
     }
 }
 ```
@@ -361,7 +360,7 @@ extension Constants {
 ```
 
 **Примечание:** 
-- Команды проверки авторизации и получения/обновления текущего дня не нужны - данные передаются через `PHONE_COMMAND_AUTH_STATUS`, `PHONE_COMMAND_CURRENT_DAY`
+- Команды проверки авторизации и получения/обновления текущего дня объединены в `PHONE_COMMAND_CURRENT_STATUS` - данные передаются вместе (статус авторизации, текущий день и текущая активность)
 - Команды для получения данных пользователя не нужны - часы не отображают данные пользователя
 
 **Ответ с текущей активностью дня:**
@@ -375,26 +374,21 @@ extension Constants {
 }
 ```
 
-**Уведомление об изменении статуса авторизации (через `sendMessage`):**
+**Уведомление об изменении статуса (через `sendMessage`):**
 ```json
 {
-    "command": "PHONE_COMMAND_AUTH_STATUS",
+    "command": "PHONE_COMMAND_CURRENT_STATUS",
     "isAuthorized": true,
-    "currentDay": 42
+    "currentDay": 42,
+    "currentActivity": 0
 }
 ```
 *Примечания:*
 - Команда отправляется через `sendMessage` при авторизации/логауте или изменении `currentDayCalculator`
-- `currentDay` - опциональное поле для `PHONE_COMMAND_AUTH_STATUS`
+- `isAuthorized: Bool` - обязательное поле (статус авторизации)
+- `currentDay: Int?` - обязательное поле, если `isAuthorized == true`, иначе `null`
+- `currentActivity: Int?` - опциональное поле (тип активности текущего дня, если активность выбрана)
 - Часы получают данные только через WatchConnectivity, локальное хранение не используется
-
-**Уведомление об изменении текущего дня (через `sendMessage`):**
-```json
-{
-    "command": "PHONE_COMMAND_CURRENT_DAY",
-    "currentDay": 42
-}
-```
 
 **Важно:** 
 - ✅ Синхронизация данных только через `sendMessage` (отключен `updateApplicationContext`). Данные на часах получаются только из `WatchConnectivityService`, при отсутствии связи показывается `AuthRequiredView`
@@ -571,6 +565,467 @@ extension Constants {
 3. **Ограничения:**
    - Меньше автономности часов
    - Зависимость от доступности iPhone
+
+## Рефакторинг архитектуры WatchConnectivity
+
+**Важно:** Рефакторинг выполняется с соблюдением правил TDD (Test-Driven Development) и unit-тестирования:
+- **TDD цикл**: Красный (тест падает) → Зеленый (код проходит тест) → Рефакторинг
+- **Итеративный процесс**: Тест → Код → `make format` → `make test` → Следующий тест
+- **Технологии**: Swift Testing (`import Testing`), `@Test`, `#expect`, `#require`
+- **Моки**: Использование моков для всех зависимостей (WCSession, сервисы)
+- **Описания тестов**: Все тесты с описанием на русском языке в аннотации `@Test`
+
+### Анализ текущих проблем
+
+#### Проблема 1: Смешение ответственности в WatchConnectivityManager
+
+**Текущее состояние:**
+- `WatchConnectivityManager` - вложенный класс в `StatusManager`, выполняет слишком много функций:
+  - Управляет WCSession (является делегатом)
+  - Хранит очередь запросов (`pendingRequests`)
+  - Обрабатывает команды от часов (бизнес-логика)
+  - Отправляет данные на часы
+  - Работает с `ModelContext` (что странно для менеджера связи)
+- Нарушение принципа единственной ответственности (Single Responsibility Principle)
+
+**Проблемы:**
+- Менеджер связи не должен знать о бизнес-логике приложения
+- Сложно тестировать из-за множества зависимостей
+- Сложно поддерживать из-за смешения уровней абстракции
+
+#### Проблема 2: Костыль с очередью запросов
+
+**Текущее состояние:**
+- Делегат WCSession (`nonisolated`) добавляет запросы в очередь через `Task { @MainActor in }`
+- Очередь обрабатывается во вьюхе через `onChange(of: pendingRequestsCount)`
+- Сложный и непредсказуемый поток данных: делегат → очередь → вьюха → обработка
+
+**Проблемы:**
+- Непредсказуемый порядок обработки запросов
+- Зависимость от SwiftUI lifecycle для обработки запросов
+- Сложность отладки из-за асинхронности и очереди
+- Потенциальные проблемы с производительностью при большом количестве запросов
+
+**Код-костыль:**
+```swift
+// В SwiftUI_SotkaAppApp.swift
+.onChange(of: statusManager.watchConnectivityManager.pendingRequestsCount) { _, _ in
+    guard authHelper.isAuthorized else { return }
+    statusManager.watchConnectivityManager.processPendingRequests(context: modelContainer.mainContext)
+}
+```
+
+#### Проблема 3: Force unwrap watchConnectivityManager
+
+**Текущее состояние:**
+- `@ObservationIgnored var watchConnectivityManager: WatchConnectivityManager!` в `StatusManager`
+- Инициализация происходит в `init` после создания всех свойств
+- Использование `unowned` reference для избежания циклической ссылки
+
+**Проблемы:**
+- Force unwrap может привести к крашу, если инициализация не удалась
+- Неявная зависимость от порядка инициализации
+- Нарушение принципа безопасного программирования
+
+**Код-проблема:**
+```swift
+@ObservationIgnored var watchConnectivityManager: WatchConnectivityManager!
+
+init(...) {
+    // ...
+    unowned let tempStatusManager = self
+    self.watchConnectivityManager = WatchConnectivityManager(
+        statusManager: tempStatusManager,
+        sessionProtocol: watchConnectivitySessionProtocol
+    )
+}
+```
+
+#### Проблема 4: Неоптимальный поток данных
+
+**Текущий поток:**
+1. Часы отправляют команду → WCSessionDelegate (nonisolated)
+2. Делегат добавляет запрос в очередь через `Task { @MainActor in }`
+3. Вьюха отслеживает изменения очереди через `onChange`
+4. Вьюха вызывает `processPendingRequests(context:)`
+5. Менеджер обрабатывает запросы и работает с `ModelContext`
+
+**Проблемы:**
+- Слишком много промежуточных шагов
+- Зависимость от SwiftUI lifecycle
+- Непредсказуемое время обработки
+- Сложность отладки
+
+### Предлагаемое решение
+
+#### Принципы рефакторинга
+
+1. **Разделение ответственности (Separation of Concerns)**
+   - `StatusManager` - делегат WCSession, обрабатывает команды от часов
+   - `WatchConnectivityManager` - простой сервис только для отправки данных на часы
+   - Убрать бизнес-логику из менеджера связи
+
+2. **Прямая обработка команд (Command Pattern)**
+   - Убрать очередь запросов
+   - Обрабатывать команды сразу в делегате WCSession
+   - Использовать Command Pattern для обработки команд
+
+3. **Безопасная инициализация и value types**
+   - Убрать force unwrap
+   - `WatchConnectivityManager` - структура (value type), так как не хранит состояние
+   - Протокол `WatchConnectivityManagerProtocol` для тестирования `StatusManager`
+   - Явные зависимости через конструктор
+
+4. **Упрощение потока данных**
+   - Делегат WCSession → прямая обработка команды → ответ на часы
+   - Убрать промежуточные шаги
+   - Предсказуемый и синхронный поток
+
+#### Архитектура после рефакторинга
+
+```
+┌─────────────────────────────────────────────────────────┐
+│                    StatusManager                        │
+│  (WCSessionDelegate, содержит все сервисы)             │
+│                                                         │
+│  - session(_:didReceiveMessage:)                       │
+│    → handleWatchCommand(_:context:replyHandler:)      │
+│      → dailyActivitiesService / progressSyncService    │
+│                                                         │
+│  - sendCurrentStatus(isAuthorized:currentDay:currentActivity:) │
+│  - sendCurrentActivity(day:context:)                   │
+└─────────────────────────────────────────────────────────┘
+                          │
+                          │ использует
+                          ▼
+┌─────────────────────────────────────────────────────────┐
+│      WatchConnectivityManager (struct)                   │
+│  (Простой сервис только для отправки данных)            │
+│                                                         │
+│  - sendMessage(_:replyHandler:errorHandler:)            │
+│  - Управление WCSession (активация, проверка доступности)│
+│                                                         │
+│  Реализует протокол WatchConnectivityManagerProtocol   │
+│  для тестирования StatusManager                         │
+└─────────────────────────────────────────────────────────┘
+```
+
+#### Преимущества нового подхода
+
+1. **Простота и понятность**
+   - Прямой поток данных без промежуточных шагов
+   - Легко понять, где и как обрабатываются команды
+   - Меньше кода, меньше сложности
+
+2. **Тестируемость**
+   - Протокол `WatchConnectivityManagerProtocol` для мокирования в тестах `StatusManager`
+   - `WatchConnectivityManager` как структура - безопаснее и проще
+   - Легко тестировать обработку команд в `StatusManager`
+   - Четкое разделение ответственности
+
+3. **Безопасность**
+   - Нет force unwrap
+   - Явные зависимости
+   - Предсказуемое поведение
+
+4. **Производительность**
+   - Нет очереди запросов
+   - Немедленная обработка команд
+   - Меньше накладных расходов
+
+### Пошаговый план рефакторинга
+
+#### Шаг 1: Создание простого WatchConnectivityManager
+
+**Цель:** Создать простую структуру только для отправки данных на часы
+
+**Действия (TDD подход):**
+
+**1.1. Красный - Написать тесты (до реализации):**
+1. Создать файл `WatchConnectivityManagerTests.swift`
+2. Написать тесты для протокола `WatchConnectivityManagerProtocol`:
+   - `@Test("Должен отправлять сообщение через WCSession")` - тест `sendMessage`
+   - `@Test("Должен возвращать isReachable из WCSession")` - тест `isReachable`
+   - Использовать `MockWCSession` для мокирования WCSession
+   - Использовать `#expect` для проверок, `#require` для разворачивания опционалов
+3. Запустить `make test` - тесты должны падать (Красный)
+
+**1.2. Зеленый - Реализовать код:**
+1. Создать протокол `WatchConnectivityManagerProtocol` с методами:
+   - `sendMessage(_:replyHandler:errorHandler:)`
+   - `isReachable` (computed property)
+   - **Примечание:** Методы активации сессии НЕ нужны - активация происходит в `StatusManager`
+2. Создать отдельный файл `WatchConnectivityManager.swift` со структурой (не класс)
+3. Реализовать структуру `WatchConnectivityManager`, которая:
+   - Хранит `WCSessionProtocol` (для тестирования)
+   - Реализует `WatchConnectivityManagerProtocol`
+   - Содержит только методы отправки данных на часы
+   - Не хранит состояние (поэтому структура, а не класс)
+   - **Не является делегатом WCSession** (делегатом будет `StatusManager`)
+4. Запустить `make format` и `make test` - тесты должны пройти (Зеленый)
+
+**1.3. Рефакторинг:**
+1. Убрать из него всю бизнес-логику (обработку команд)
+2. Убрать очередь запросов (`pendingRequests`)
+3. Убрать методы обработки команд (`handleSetActivity`, `handleSaveWorkout` и т.д.)
+4. Запустить `make format` и `make test` - убедиться, что все тесты проходят
+
+**Результат:**
+- Простая структура с единственной ответственностью - отправка данных
+- Протокол для легкого тестирования `StatusManager`
+- Value type - безопаснее и проще
+- **Структура остается структурой**, так как делегатом WCSession будет `StatusManager`
+
+#### Шаг 2: Перенос делегата WCSession в StatusManager
+
+**Цель:** Сделать `StatusManager` делегатом WCSession для прямой обработки команд
+
+**Действия (TDD подход):**
+
+**2.1. Красный - Написать тесты (до реализации):**
+1. Создать файл `StatusManagerWatchConnectivityTests.swift`
+2. Написать тесты для методов делегата:
+   - `@Test("Должен обрабатывать активацию WCSession")` - тест `session(_:activationDidCompleteWith:error:)`
+   - `@Test("Должен обрабатывать сообщение от часов")` - тест `session(_:didReceiveMessage:)`
+   - `@Test("Должен обрабатывать сообщение с replyHandler")` - тест `session(_:didReceiveMessage:replyHandler:)`
+3. Написать тесты для методов отправки данных:
+   - `@Test("Должен отправлять текущий статус в начале getStatus")` - тест `sendCurrentStatus` сразу после первой установки `currentDayCalculator` (до синхронизации, активность может быть `nil`)
+   - `@Test("Должен отправлять текущий статус после синхронизации в getStatus")` - тест `sendCurrentStatus` перед `didLoadInitialData = true` (после синхронизации, активность может появиться)
+   - `@Test("Должен отправлять текущий статус при изменении currentDayCalculator")` - тест `sendCurrentStatus` из `.onChange(of: currentDayCalculator)`
+   - `@Test("Должен отправлять текущий статус при логауте")` - тест `sendCurrentStatus` из `processAuthStatus` с `isAuthorized == false`
+   - `@Test("Должен отправлять текущую активность")` - тест `sendCurrentActivity`
+4. Использовать `MockWCSession` и `MockWatchConnectivityManager` для тестирования
+5. Запустить `make test` - тесты должны падать (Красный)
+
+**2.2. Зеленый - Реализовать код:**
+1. Добавить `WCSessionDelegate` к `StatusManager`
+2. В `init` `StatusManager`:
+   - Получить `WCSession.default` (или использовать `WCSessionProtocol` для тестирования)
+   - Установить `StatusManager` как делегат: `session.delegate = self`
+   - Активировать сессию: `session.activate()`
+3. Перенести методы делегата из `WatchConnectivityManager` в `StatusManager`:
+   - `session(_:activationDidCompleteWith:error:)` - обработка активации
+   - `session(_:didReceiveMessage:)` → `handleWatchCommand(_:context:)`
+   - `session(_:didReceiveMessage:replyHandler:)` → `handleWatchCommand(_:context:replyHandler:)`
+4. Создать метод `handleWatchCommand(_:context:replyHandler:)` для обработки всех команд (пока заглушка)
+5. Создать методы отправки данных на часы в `StatusManager`:
+6. Обновить метод `getStatus` для вызова `sendCurrentStatus`:
+   - Добавить вызов `sendCurrentStatus` сразу после первой установки `currentDayCalculator = .init(startDate, now)` (до синхронизации)
+   - Добавить вызов `sendCurrentStatus` перед `didLoadInitialData = true` (после синхронизации, после второй установки `currentDayCalculator`)
+   - В обоих случаях пытаться получить `currentActivity` из SwiftData для текущего дня (может быть `nil`)
+7. Обновить метод `processAuthStatus`:
+   - При `isAuthorized == false` вызывать `sendCurrentStatus(isAuthorized: false, currentDay: nil, currentActivity: nil)`
+   - Убрать старый вызов `sendAuthStatusChanged` (если был)
+8. Обновить метод `sendDayDataToWatch`:
+   - Заменить вызов `sendCurrentDayChanged` на `sendCurrentStatus` с получением `currentActivity` из SwiftData
+   - `sendCurrentStatus(isAuthorized:currentDay:currentActivity:)` - отправка статуса авторизации, текущего дня и текущей активности (опционально):
+     - **Вызывается из `getStatus`** в двух местах:
+       - **Сразу после первой установки `currentDayCalculator = .init(startDate, now)`** (в начале метода `getStatus`, до синхронизации):
+         - Получить `currentDay` из `currentDayCalculator?.currentDay`
+         - Попытаться получить `currentActivity` из SwiftData для текущего дня (может быть `nil`, если активность еще не выбрана)
+         - Отправить `isAuthorized: true`, `currentDay`, `currentActivity` (опционально)
+       - **Перед `didLoadInitialData = true`** (после синхронизации, после второй установки `currentDayCalculator = .init(startDate, now)`):
+         - Получить `currentDay` из `currentDayCalculator?.currentDay`
+         - Попытаться получить `currentActivity` из SwiftData для текущего дня (после синхронизации активность может появиться)
+         - Отправить `isAuthorized: true`, `currentDay`, `currentActivity` (опционально)
+     - **Вызывается из `.onChange(of: currentDayCalculator)`** в `SwiftUI_SotkaAppApp.swift` (через `sendDayDataToWatch`):
+       - Получить `currentDay` из параметра
+       - Получить `currentActivity` из SwiftData для текущего дня (если активность выбрана)
+       - Отправить `isAuthorized: true` (так как метод вызывается только для авторизованных пользователей)
+     - **Вызывается из `processAuthStatus`** при `isAuthorized == false`:
+       - Отправить `isAuthorized: false`, `currentDay: nil`, `currentActivity: nil`
+     - Параметры: `isAuthorized: Bool` (обязательный), `currentDay: Int?` (обязательный, если авторизован), `currentActivity: DayActivityType?` (опциональный, получается из SwiftData для текущего дня)
+   - `sendCurrentActivity(day:context:)` - отправка активности конкретного дня (вызывается после обработки команд `setActivity`, `saveWorkout`, `deleteActivity` для отправки обновления на часы)
+
+**Результат:**
+- Прямая обработка команд без очереди
+- `StatusManager` имеет доступ ко всем сервисам для обработки команд
+- `StatusManager` управляет жизненным циклом WCSession (активация, делегат)
+- Методы отправки данных на часы реализованы в `StatusManager` и используют `watchConnectivityManager`
+
+#### Шаг 3: Убрать force unwrap и очередь
+
+**Цель:** Безопасная инициализация и убрать костыль с очередью
+
+**Действия (TDD подход):**
+
+**3.1. Красный - Написать тесты (до реализации):**
+1. Добавить тесты в `StatusManagerWatchConnectivityTests.swift`:
+   - `@Test("Должен инициализировать watchConnectivityManager без force unwrap")` - проверка безопасной инициализации
+   - `@Test("Должен работать без очереди запросов")` - проверка отсутствия очереди
+2. Запустить `make test` - тесты должны падать (Красный)
+
+**3.2. Зеленый - Реализовать код:**
+1. Изменить `watchConnectivityManager` на свойство типа `WatchConnectivityManagerProtocol` (не force unwrap)
+2. Инициализировать `WatchConnectivityManager` (структуру) в `init` `StatusManager` как обычное свойство
+3. Убрать `pendingRequests` и `pendingRequestsCount`
+4. Убрать метод `processPendingRequests(context:)`
+5. Убрать `onChange(of: pendingRequestsCount)` из `SwiftUI_SotkaAppApp.swift`
+6. Убрать enum `WatchRequest` (больше не нужен)
+7. Убрать `unowned` reference (больше не нужна, так как структура не создает циклических ссылок)
+8. Запустить `make format` и `make test` - тесты должны пройти (Зеленый)
+
+**Результат:**
+- Нет force unwrap
+- Нет очереди запросов
+- Простой и предсказуемый поток данных
+- Использование протокола для гибкости и тестируемости
+
+#### Шаг 4: Рефакторинг обработки команд
+
+**Цель:** Упростить обработку команд с использованием Command Pattern
+
+**Действия (TDD подход, итеративно для каждой команды):**
+
+**4.1. Красный - Написать тесты для парсинга:**
+1. Добавить тесты в `StatusManagerWatchConnectivityTests.swift`:
+   - `@Test("Должен парсить команду setActivity из Dictionary")` - тест `parseWatchCommand` для `.setActivity`
+   - `@Test("Должен парсить команду saveWorkout из Dictionary")` - тест `parseWatchCommand` для `.saveWorkout`
+   - `@Test("Должен возвращать nil для неизвестной команды")` - тест обработки ошибок
+2. Запустить `make test` - тесты должны падать (Красный)
+
+**4.2. Зеленый - Реализовать парсинг:**
+1. **Использовать существующий `Constants.WatchCommand`** (enum с rawValue String) для парсинга команды из Dictionary
+2. Создать метод `parseWatchCommand(_:) -> (command: Constants.WatchCommand, data: [String: Any])?` для парсинга сообщений:
+   - Извлечь команду через `Constants.WatchCommand(rawValue: commandString)`
+   - Вернуть команду и данные для дальнейшей обработки
+3. Запустить `make format` и `make test` - тесты должны пройти (Зеленый)
+
+**4.3. Красный - Написать тесты для обработки команд (итеративно):**
+Для каждой команды (setActivity, saveWorkout, getCurrentActivity, getWorkoutData, deleteActivity):
+1. Добавить тесты в `StatusManagerWatchConnectivityTests.swift`:
+   - `@Test("Должен обрабатывать команду setActivity")` - тест обработки команды
+   - `@Test("Должен отправлять текущую активность после setActivity")` - тест отправки обновления
+   - Использовать `MockWatchConnectivityManager` для проверки вызовов
+2. Запустить `make test` - тесты должны падать (Красный)
+
+**4.4. Зеленый - Реализовать обработку команд (итеративно):**
+1. Создать метод `handleWatchCommand(_:context:replyHandler:)` с switch по типам команд из `Constants.WatchCommand`
+2. Для каждой команды:
+   - Парсить данные из Dictionary
+   - Обрабатывать команду напрямую без очереди
+   - Перенести логику из `WatchConnectivityManager` в `StatusManager`
+3. После обработки команд, которые изменяют активность (`setActivity`, `saveWorkout`, `deleteActivity`):
+   - Вызывать `sendCurrentActivity(day:context:)` для отправки обновленной активности на часы
+   - **Если измененная активность относится к текущему дню** (день совпадает с `currentDayCalculator?.currentDay`):
+     - Также вызвать `sendCurrentStatus()` для обновления статуса на часах с новой активностью текущего дня
+4. Использовать `watchConnectivityManager` только для отправки ответов на часы через методы `sendCurrentStatus()` и `sendCurrentActivity()`
+5. Запустить `make format` и `make test` - тесты должны пройти (Зеленый)
+
+**4.5. Рефакторинг:**
+1. Улучшить код после успешных тестов
+2. Убрать дублирование
+3. Запустить `make format` и `make test` - убедиться, что все тесты проходят
+
+**Результат:**
+- Четкая структура обработки команд
+- Легко добавлять новые команды
+- Легко тестировать обработку команд
+- Автоматическая отправка обновлений на часы после изменения активности
+
+#### Шаг 5: Обновление тестов
+
+**Цель:** Обновить тесты под новую архитектуру и обеспечить полное покрытие
+
+**Действия:**
+1. Обновить тесты `WatchConnectivityManagerTests`:
+   - Убрать тесты обработки команд (перенесены в `StatusManager`)
+   - Оставить только тесты отправки данных (структура)
+   - Запустить `make test` - убедиться, что тесты проходят
+2. Создать мок `MockWatchConnectivityManager`, реализующий `WatchConnectivityManagerProtocol`:
+   - В папке `SwiftUI-SotkaAppTests/Mocks/`
+   - Использовать для тестирования `StatusManager`
+3. Убедиться, что все тесты в `StatusManagerWatchConnectivityTests` написаны согласно правилам:
+   - Все тесты с описанием на русском языке в `@Test("...")`
+   - Использование `#expect` для проверок
+   - Использование `#require` для разворачивания опционалов
+   - Использование `MockWatchConnectivityManager` и `MockWCSession` для мокирования
+   - Тесты обработки команд от часов (уже написаны в Шаге 4)
+   - Тесты отправки данных на часы:
+     - `@Test("Должен отправлять текущий статус в начале getStatus")` - тест `sendCurrentStatus()` сразу после первой установки `currentDayCalculator` (до синхронизации, активность может быть `nil`)
+     - `@Test("Должен отправлять текущий статус после синхронизации в getStatus")` - тест `sendCurrentStatus()` перед `didLoadInitialData = true` (после синхронизации, активность может появиться)
+     - `@Test("Должен отправлять текущий статус при изменении currentDayCalculator")` - тест `sendCurrentStatus()` из `.onChange(of: currentDayCalculator)`
+     - `@Test("Должен отправлять текущий статус при логауте")` - тест `sendCurrentStatus()` из `processAuthStatus` с `isAuthorized == false`
+     - `@Test("Должен отправлять текущую активность после изменения")` - тест `sendCurrentActivity()`
+   - Тесты обработки ошибок:
+     - `@Test("Должен обрабатывать неизвестную команду")` - тест обработки ошибок парсинга
+     - `@Test("Должен обрабатывать неверный формат команды")` - тест обработки ошибок валидации
+4. Обновить моки:
+   - Упростить `MockWCSession` (убрать логику очереди)
+   - Использовать `MockWatchConnectivityManager` в тестах `StatusManager`
+5. Запустить `make format` и `make test` - все тесты должны проходить
+
+**Результат:**
+- Все тесты проходят
+- Покрытие тестами новой архитектуры
+- Легко добавлять новые тесты
+
+#### Шаг 6: Обновление документации
+
+**Цель:** Обновить документацию под новую архитектуру
+
+**Действия:**
+1. Обновить раздел "Архитектура" в `apple-watch-development-plan.md`
+2. Обновить описание `WatchConnectivityManager` (теперь простой сервис)
+3. Обновить описание обработки команд (теперь в `StatusManager`)
+4. Обновить примеры кода в документации
+
+**Результат:**
+- Актуальная документация
+- Понятное описание новой архитектуры
+
+### Риски и митигация
+
+#### Риск 1: Проблемы с actor isolation
+
+**Проблема:** Делегат WCSession `nonisolated`, а обработка команд требует `@MainActor`
+
+**Митигация:**
+- Использовать `Task { @MainActor in }` для перехода в MainActor
+- Использовать `nonisolated(unsafe)` для безопасного доступа к данным
+- Тестировать на разных сценариях
+
+#### Риск 2: Потеря команд при быстрых запросах
+
+**Проблема:** При быстрых запросах команды могут обрабатываться не в том порядке
+
+**Митигация:**
+- WatchConnectivity гарантирует порядок доставки сообщений
+- Если нужна гарантия порядка - добавить последовательную обработку через Actor
+- Тестировать сценарии с множественными запросами
+
+#### Риск 3: Регрессии в существующем функционале
+
+**Проблема:** При рефакторинге может сломаться существующий функционал
+
+**Митигация:**
+- Пошаговый рефакторинг с тестами на каждом шаге
+- Сохранение существующих тестов до завершения рефакторинга
+- Тщательное тестирование на реальных устройствах
+
+### Ожидаемые результаты
+
+После рефакторинга:
+
+1. **Упрощение кода:**
+   - Убрано ~200 строк кода (очередь, обработка во вьюхе)
+   - Проще понять поток данных
+   - Меньше промежуточных шагов
+
+2. **Улучшение архитектуры:**
+   - Четкое разделение ответственности
+   - Легко тестировать и поддерживать
+   - Соответствие принципам SOLID
+
+3. **Безопасность:**
+   - Нет force unwrap
+   - Явные зависимости
+   - Предсказуемое поведение
+
+4. **Производительность:**
+   - Нет очереди запросов
+   - Немедленная обработка команд
+   - Меньше накладных расходов
 
 ## Заключение
 
