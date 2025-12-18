@@ -1,4 +1,7 @@
 import SwiftUI
+#if !os(watchOS)
+import SWDesignSystem
+#endif
 
 struct CircularTimerView: View {
     let remainingSeconds: Int
@@ -41,7 +44,7 @@ private extension CircularTimerView {
         Circle()
             .trim(from: 0, to: 1.0 - progress)
             .stroke(
-                Color.blue,
+                strokeColor,
                 style: StrokeStyle(lineWidth: 8, lineCap: .round)
             )
             .rotationEffect(.degrees(-90))
@@ -52,6 +55,14 @@ private extension CircularTimerView {
         Text(timeString)
             .font(.largeTitle).bold()
             .monospacedDigit() // Для предотвращения "прыжков" цифр
+    }
+
+    var strokeColor: Color {
+        #if os(watchOS)
+        return .blue
+        #else
+        return Color.swAccent
+        #endif
     }
 }
 

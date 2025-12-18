@@ -1,4 +1,7 @@
 import SwiftUI
+#if !os(watchOS)
+import SWDesignSystem
+#endif
 
 struct ActivityRowView: View {
     @ScaledMetric(relativeTo: .body) private var imageSize: CGFloat = 20
@@ -18,7 +21,11 @@ struct ActivityRowView: View {
                 .resizable()
                 .scaledToFit()
                 .frame(width: imageSize, height: imageSize)
+            #if os(watchOS)
                 .foregroundStyle(.blue)
+            #else
+                .foregroundStyle(Color.swAccent)
+            #endif
             Text(title)
                 .frame(maxWidth: .infinity, alignment: .leading)
                 .multilineTextAlignment(.leading)

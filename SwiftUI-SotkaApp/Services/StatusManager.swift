@@ -209,8 +209,6 @@ final class StatusManager {
         currentDayCalculator = nil
         maxReadInfoPostDay = 0
         infopostsService.didLogout()
-        // Отправка команды логаута на часы
-        watchConnectivityManager.sendAuthStatusChanged(false)
     }
 
     /// Обрабатывает изменение статуса авторизации
@@ -222,10 +220,10 @@ final class StatusManager {
             let currentDay = currentDayCalculator?.currentDay
             watchConnectivityManager.sendAuthStatusChanged(
                 true,
-                currentDay: currentDay,
-                context: context
+                currentDay: currentDay
             )
         } else {
+            watchConnectivityManager.sendAuthStatusChanged(false)
             didLogout()
             do {
                 try context.delete(model: User.self)
@@ -535,7 +533,7 @@ extension StatusManager {
         ///   - currentDay: Номер текущего дня (опционально)
         ///   - context: Контекст SwiftData для получения активности дня (опционально)
         @MainActor
-        func sendAuthStatusChanged(_ isAuthorized: Bool, currentDay: Int? = nil, context _: ModelContext? = nil) {
+        func sendAuthStatusChanged(_ isAuthorized: Bool, currentDay: Int? = nil) {
             guard sessionProtocol.isReachable else {
                 watchConnectivityLogger.debug("Часы недоступны для отправки команды изменения статуса авторизации")
                 return
