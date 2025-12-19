@@ -219,6 +219,99 @@ SotkaWatch Watch App/
 - [ ] Тестирование обработки ошибок при отсутствии связи с iPhone
 - [ ] Тестирование производительности
 
+#### 8.4.1 Исправление багов, найденных при ручном тестировании
+
+**Найденные проблемы:**
+
+1. **Кнопка "Проверить авторизацию" бесполезна, если приложение на iPhone закрыто**
+   - **Проблема:** `loadData()` использует `sendMessage`, который требует активного соединения. Если приложение на iPhone закрыто, часы не могут получить статус авторизации и данные.
+   - **Решение:** Использовать `updateApplicationContext` для отправки статуса авторизации, текущего дня и текущей активности с iPhone. `applicationContext` работает даже когда приложение закрыто.
+
+2. **Ошибка "Попытка выбрать активность без текущего дня"**
+   - **Проблема:** При попытке выбрать активность дня в часах `currentDay` может быть `nil`, если статус не был получен от iPhone.
+   - **Решение:** Обрабатывать `applicationContext` на часах для получения `currentDay` и `currentActivity`. Если `currentDay` все еще `nil`, запрашивать статус перед выбором активности.
+
+3. **При выборе активности в основном приложении ничего не происходит в часах**
+   - **Проблема:** При выборе активности через `DailyActivitiesService.set()` в основном приложении не вызывается отправка статуса в часы.
+   - **Решение:** Добавить вызов `sendCurrentStatus` или `sendCurrentActivity` после установки активности в `DailyActivitiesService.set()` или в месте вызова этого метода.
+
+**План исправления (TDD):**
+
+##### Баг 1: Отправка applicationContext с iPhone
+
+**Шаг 1.1: Тест для отправки applicationContext при изменении статуса авторизации**
+- [ ] Создать тест в `StatusManagerWatchConnectivityTests.swift`
+- [ ] Проверить, что при вызове `processAuthStatus(isAuthorized: true)` вызывается `updateApplicationContext` с корректными данными
+- [ ] Проверить, что при вызове `processAuthStatus(isAuthorized: false)` вызывается `updateApplicationContext` с `isAuthorized: false`
+- [ ] Тест должен падать (красный)
+
+**Шаг 1.2: Тест для отправки applicationContext при изменении текущего дня**
+- [ ] Создать тест в `StatusManagerWatchConnectivityTests.swift`
+- [ ] Проверить, что при изменении `currentDayCalculator` вызывается `updateApplicationContext` с актуальным `currentDay` и `currentActivity`
+- [ ] Тест должен падать (красный)
+
+**Шаг 1.3: Реализация отправки applicationContext**
+- [ ] Добавить метод `updateApplicationContextOnWatch()` в `StatusManager`
+- [ ] Вызывать `updateApplicationContextOnWatch()` в `processAuthStatus()`
+- [ ] Вызывать `updateApplicationContextOnWatch()` в `getStatus()` после установки `currentDayCalculator`
+- [ ] Вызывать `updateApplicationContextOnWatch()` в `sendCurrentStatus()` для синхронизации
+- [ ] Тесты должны проходить (зеленый)
+
+**Шаг 1.4: Рефакторинг**
+- [ ] Проверить форматирование кода (`make format`)
+- [ ] Запустить тесты (`make test`)
+- [ ] Убедиться, что все тесты проходят
+
+##### Баг 2: Обработка applicationContext на часах для получения currentDay
+
+**Шаг 2.1: Тест для обработки applicationContext с currentDay и currentActivity**
+- [ ] Создать тест в `WatchConnectivityServiceTests.swift` (или создать новый файл)
+- [ ] Проверить, что при получении `applicationContext` с `currentDay` и `currentActivity` обновляется `currentDay` в `WatchConnectivityService`
+- [ ] Проверить, что вызывается обновление `currentDay` в `HomeViewModel`
+- [ ] Тест должен падать (красный)
+
+**Шаг 2.2: Тест для запроса статуса перед выбором активности, если currentDay == nil**
+- [ ] Создать тест в `HomeViewModelTests.swift`
+- [ ] Проверить, что при вызове `selectActivity()` с `currentDay == nil` сначала запрашивается статус
+- [ ] Проверить, что после получения статуса выполняется выбор активности
+- [ ] Тест должен падать (красный)
+
+**Шаг 2.3: Реализация обработки applicationContext на часах**
+- [ ] Обновить `handleApplicationContext()` в `WatchConnectivityService` для обработки `currentDay` и `currentActivity`
+- [ ] Обновить `HomeViewModel.updateCurrentDayFromConnectivity()` для обработки изменений из `applicationContext`
+- [ ] Добавить запрос статуса в `selectActivity()` если `currentDay == nil`
+- [ ] Тесты должны проходить (зеленый)
+
+**Шаг 2.4: Рефакторинг**
+- [ ] Проверить форматирование кода (`make format`)
+- [ ] Запустить тесты (`make test_watch`)
+- [ ] Убедиться, что все тесты проходят
+
+##### Баг 3: Отправка статуса в часы при выборе активности в основном приложении
+
+**Шаг 3.1: Тест для отправки статуса при установке активности через DailyActivitiesService**
+- [ ] Создать тест в `DailyActivitiesServiceTests.swift` или `StatusManagerWatchConnectivityTests.swift`
+- [ ] Проверить, что при вызове `DailyActivitiesService.set()` для текущего дня вызывается `sendCurrentStatus` в `StatusManager`
+- [ ] Проверить, что отправляется корректный `currentDay` и `currentActivity`
+- [ ] Тест должен падать (красный)
+
+**Шаг 3.2: Реализация отправки статуса при установке активности**
+- [ ] Добавить вызов `sendCurrentStatus` в `StatusManager` после установки активности через `DailyActivitiesService.set()`
+- [ ] Или добавить вызов в месте использования `DailyActivitiesService.set()` (например, в `HomeActivitySectionView.actionFor()`)
+- [ ] Проверить, что отправка происходит только для текущего дня
+- [ ] Тесты должны проходить (зеленый)
+
+**Шаг 3.3: Рефакторинг**
+- [ ] Проверить форматирование кода (`make format`)
+- [ ] Запустить тесты (`make test`)
+- [ ] Убедиться, что все тесты проходят
+
+**Примечания:**
+- Все тесты должны следовать правилам из `unit-testing-ios-app.mdc`
+- Использовать моки для `WCSession` и других зависимостей
+- Тесты должны быть на русском языке в аннотации `@Test`
+- Использовать `#expect` и `#require` вместо force unwrap
+
 #### 8.5 Документация
 - [ ] Обновление `feature-map.md` с информацией о часах
 - [ ] Создание документации по архитектуре часов (если нужно)
