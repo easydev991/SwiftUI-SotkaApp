@@ -24,7 +24,7 @@ final class MockWCSession: WCSessionProtocol {
         activateCallCount += 1
     }
 
-    func sendMessage(
+    func sendMessageToWatch(
         _ message: [String: Any],
         replyHandler: (([String: Any]) -> Void)?,
         errorHandler: ((Error) -> Void)?

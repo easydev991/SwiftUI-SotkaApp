@@ -12,13 +12,9 @@ extension StatusManagerTests {
             let mockSession = MockWCSession(isReachable: true)
             let statusManager = try MockStatusManager.create(
                 daysClient: MockDaysClient(),
-                userDefaults: MockUserDefaults.create()
+                userDefaults: MockUserDefaults.create(),
+                watchConnectivitySessionProtocol: mockSession
             )
-            let manager = StatusManager.WatchConnectivityManager(
-                statusManager: statusManager,
-                sessionProtocol: mockSession
-            )
-            statusManager.watchConnectivityManager = manager
 
             let modelConfiguration = ModelConfiguration(isStoredInMemoryOnly: true)
             let modelContainer = try ModelContainer(
@@ -37,7 +33,7 @@ extension StatusManagerTests {
             #expect(mockSession.sentMessages.count == 1)
             let sentMessage = try #require(mockSession.sentMessages.first)
             let command = try #require(sentMessage["command"] as? String)
-            #expect(command == Constants.WatchCommand.currentDay.rawValue)
+            #expect(command == Constants.WatchCommand.authStatus.rawValue)
             let currentDay = try #require(sentMessage["currentDay"] as? Int)
             #expect(currentDay == 42)
         }
@@ -47,13 +43,9 @@ extension StatusManagerTests {
             let mockSession = MockWCSession(isReachable: true)
             let statusManager = try MockStatusManager.create(
                 daysClient: MockDaysClient(),
-                userDefaults: MockUserDefaults.create()
+                userDefaults: MockUserDefaults.create(),
+                watchConnectivitySessionProtocol: mockSession
             )
-            let manager = StatusManager.WatchConnectivityManager(
-                statusManager: statusManager,
-                sessionProtocol: mockSession
-            )
-            statusManager.watchConnectivityManager = manager
 
             let modelConfiguration = ModelConfiguration(isStoredInMemoryOnly: true)
             let modelContainer = try ModelContainer(
@@ -73,13 +65,9 @@ extension StatusManagerTests {
             let mockSession = MockWCSession(isReachable: false)
             let statusManager = try MockStatusManager.create(
                 daysClient: MockDaysClient(),
-                userDefaults: MockUserDefaults.create()
+                userDefaults: MockUserDefaults.create(),
+                watchConnectivitySessionProtocol: mockSession
             )
-            let manager = StatusManager.WatchConnectivityManager(
-                statusManager: statusManager,
-                sessionProtocol: mockSession
-            )
-            statusManager.watchConnectivityManager = manager
 
             let modelConfiguration = ModelConfiguration(isStoredInMemoryOnly: true)
             let modelContainer = try ModelContainer(

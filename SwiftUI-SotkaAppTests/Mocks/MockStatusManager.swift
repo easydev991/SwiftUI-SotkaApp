@@ -1,5 +1,6 @@
 import Foundation
 @testable import SwiftUI_SotkaApp
+import WatchConnectivity
 
 /// Мок для StatusManager для тестирования
 enum MockStatusManager {
@@ -22,7 +23,8 @@ enum MockStatusManager {
         progressClient: ProgressClient = MockProgressClient(),
         daysClient: DaysClient = MockDaysClient(),
         language: String = "ru",
-        userDefaults: UserDefaults? = nil
+        userDefaults: UserDefaults? = nil,
+        watchConnectivitySessionProtocol: WCSessionProtocol? = nil
     ) throws -> StatusManager {
         let defaults = try userDefaults ?? MockUserDefaults.create()
         return StatusManager(
@@ -34,7 +36,8 @@ enum MockStatusManager {
             progressSyncService: ProgressSyncService(client: progressClient),
             dailyActivitiesService: DailyActivitiesService(client: daysClient),
             statusClient: statusClient,
-            userDefaults: defaults
+            userDefaults: defaults,
+            watchConnectivitySessionProtocol: watchConnectivitySessionProtocol
         )
     }
 }

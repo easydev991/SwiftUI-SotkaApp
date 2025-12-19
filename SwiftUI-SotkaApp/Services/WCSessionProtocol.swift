@@ -8,7 +8,7 @@ protocol WCSessionProtocol: AnyObject {
     var delegate: WCSessionDelegate? { get set }
 
     func activate()
-    func sendMessage(
+    func sendMessageToWatch(
         _ message: [String: Any],
         replyHandler: (([String: Any]) -> Void)?,
         errorHandler: ((Error) -> Void)?
@@ -16,4 +16,12 @@ protocol WCSessionProtocol: AnyObject {
 }
 
 /// WCSession соответствует протоколу
-extension WCSession: WCSessionProtocol {}
+extension WCSession: WCSessionProtocol {
+    func sendMessageToWatch(
+        _ message: [String: Any],
+        replyHandler: (([String: Any]) -> Void)?,
+        errorHandler: ((Error) -> Void)?
+    ) {
+        sendMessage(message, replyHandler: replyHandler, errorHandler: errorHandler)
+    }
+}

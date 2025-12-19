@@ -12,13 +12,9 @@ extension StatusManagerTests {
             let mockSession = MockWCSession(isReachable: true)
             let statusManager = try MockStatusManager.create(
                 daysClient: MockDaysClient(),
-                userDefaults: MockUserDefaults.create()
+                userDefaults: MockUserDefaults.create(),
+                watchConnectivitySessionProtocol: mockSession
             )
-            let manager = StatusManager.WatchConnectivityManager(
-                statusManager: statusManager,
-                sessionProtocol: mockSession
-            )
-            statusManager.watchConnectivityManager = manager
 
             let now = Date.now
             let startDate = try #require(Calendar.current.date(byAdding: .day, value: -30, to: now))
@@ -57,14 +53,9 @@ extension StatusManagerTests {
             let statusManager = try MockStatusManager.create(
                 statusClient: mockStatusClient,
                 daysClient: MockDaysClient(),
-                userDefaults: MockUserDefaults.create()
+                userDefaults: MockUserDefaults.create(),
+                watchConnectivitySessionProtocol: mockSession
             )
-            let manager = StatusManager.WatchConnectivityManager(
-                statusManager: statusManager,
-                sessionProtocol: mockSession
-            )
-            statusManager.watchConnectivityManager = manager
-
             await statusManager.startNewRun(appDate: startDate)
 
             let modelConfiguration = ModelConfiguration(isStoredInMemoryOnly: true)
@@ -93,14 +84,9 @@ extension StatusManagerTests {
             let mockSession = MockWCSession(isReachable: true)
             let statusManager = try MockStatusManager.create(
                 daysClient: MockDaysClient(),
-                userDefaults: MockUserDefaults.create()
+                userDefaults: MockUserDefaults.create(),
+                watchConnectivitySessionProtocol: mockSession
             )
-            let manager = StatusManager.WatchConnectivityManager(
-                statusManager: statusManager,
-                sessionProtocol: mockSession
-            )
-            statusManager.watchConnectivityManager = manager
-
             let now = Date.now
             let startDate = try #require(Calendar.current.date(byAdding: .day, value: -30, to: now))
             await statusManager.startNewRun(appDate: startDate)
@@ -131,13 +117,9 @@ extension StatusManagerTests {
             let mockSession = MockWCSession(isReachable: true)
             let statusManager = try MockStatusManager.create(
                 daysClient: MockDaysClient(),
-                userDefaults: MockUserDefaults.create()
+                userDefaults: MockUserDefaults.create(),
+                watchConnectivitySessionProtocol: mockSession
             )
-            let manager = StatusManager.WatchConnectivityManager(
-                statusManager: statusManager,
-                sessionProtocol: mockSession
-            )
-            statusManager.watchConnectivityManager = manager
 
             let modelConfiguration = ModelConfiguration(isStoredInMemoryOnly: true)
             let modelContainer = try ModelContainer(
@@ -160,13 +142,9 @@ extension StatusManagerTests {
             let mockSession = MockWCSession(isReachable: true)
             let statusManager = try MockStatusManager.create(
                 daysClient: MockDaysClient(),
-                userDefaults: MockUserDefaults.create()
+                userDefaults: MockUserDefaults.create(),
+                watchConnectivitySessionProtocol: mockSession
             )
-            let manager = StatusManager.WatchConnectivityManager(
-                statusManager: statusManager,
-                sessionProtocol: mockSession
-            )
-            statusManager.watchConnectivityManager = manager
 
             let modelConfiguration = ModelConfiguration(isStoredInMemoryOnly: true)
             let modelContainer = try ModelContainer(
