@@ -31,7 +31,7 @@ extension StatusManagerTests {
             context.insert(user)
             try context.save()
 
-            await statusManager.start(appDate: appDate, context: context)
+            await statusManager.start(appDate: appDate)
 
             let calculator = try #require(statusManager.currentDayCalculator)
             #expect(calculator.startDate.isTheSameDayIgnoringTime(appDate))
@@ -75,7 +75,7 @@ extension StatusManagerTests {
             let initialExerciseCalls = mockExerciseClient.getCustomExercisesCallCount
             let initialDaysCalls = mockDaysClient.getDaysCallCount
 
-            await statusManager.start(appDate: appDate, context: context)
+            await statusManager.start(appDate: appDate)
 
             #expect(mockProgressClient.getProgressCallCount > initialProgressCalls)
             #expect(mockExerciseClient.getCustomExercisesCallCount > initialExerciseCalls)
@@ -105,7 +105,7 @@ extension StatusManagerTests {
             context.insert(user)
             try context.save()
 
-            await statusManager.start(appDate: nil, context: context)
+            await statusManager.start(appDate: nil)
 
             let calculator = try #require(statusManager.currentDayCalculator)
             #expect(calculator.startDate.isTheSameDayIgnoringTime(now))

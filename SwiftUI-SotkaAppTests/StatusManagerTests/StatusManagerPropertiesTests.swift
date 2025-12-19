@@ -47,7 +47,7 @@ extension StatusManagerTests {
             try context.save()
 
             await statusManager.startNewRun(appDate: startDate)
-            await statusManager.getStatus(context: context)
+            await statusManager.getStatus()
 
             let key = "WorkoutMaxReadInfoPostDay"
             #expect(userDefaults.integer(forKey: key) == 75)
@@ -131,7 +131,7 @@ extension StatusManagerTests {
             try context.save()
 
             await statusManager.startNewRun(appDate: appDate)
-            await statusManager.getStatus(context: context)
+            await statusManager.getStatus()
 
             let conflictingModel = try #require(statusManager.conflictingSyncModel)
             #expect(conflictingModel.appDayCalculator.startDate.isTheSameDayIgnoringTime(appDate))
@@ -164,11 +164,11 @@ extension StatusManagerTests {
             try context.save()
 
             await statusManager.startNewRun(appDate: appDate)
-            await statusManager.getStatus(context: context)
+            await statusManager.getStatus()
 
             #expect(statusManager.conflictingSyncModel != nil)
 
-            await statusManager.syncWithSiteDate(siteDate: siteDate, context: context)
+            await statusManager.syncWithSiteDate(siteDate: siteDate)
 
             #expect(statusManager.conflictingSyncModel == nil)
         }

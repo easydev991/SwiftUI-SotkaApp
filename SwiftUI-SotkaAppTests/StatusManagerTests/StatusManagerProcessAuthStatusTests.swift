@@ -32,7 +32,7 @@ extension StatusManagerTests {
             context.insert(user)
             try context.save()
 
-            statusManager.processAuthStatus(isAuthorized: true, context: context)
+            statusManager.processAuthStatus(isAuthorized: true)
 
             #expect(mockSession.sentMessages.count == 1)
             let sentMessage = try #require(mockSession.sentMessages.first)
@@ -70,7 +70,7 @@ extension StatusManagerTests {
             context.insert(user)
             try context.save()
 
-            statusManager.processAuthStatus(isAuthorized: true, context: context)
+            statusManager.processAuthStatus(isAuthorized: true)
 
             let sentMessage = try #require(mockSession.sentMessages.first)
             let currentDay = try #require(sentMessage["currentDay"] as? Int)
@@ -91,17 +91,9 @@ extension StatusManagerTests {
             let startDate = try #require(Calendar.current.date(byAdding: .day, value: -30, to: now))
             await statusManager.startNewRun(appDate: startDate)
 
-            let modelConfiguration = ModelConfiguration(isStoredInMemoryOnly: true)
-            let modelContainer = try ModelContainer(
-                for: User.self,
-                DayActivity.self,
-                configurations: modelConfiguration
-            )
-            let context = modelContainer.mainContext
-
             #expect(statusManager.currentDayCalculator != nil)
 
-            statusManager.processAuthStatus(isAuthorized: false, context: context)
+            statusManager.processAuthStatus(isAuthorized: false)
 
             #expect(statusManager.currentDayCalculator == nil)
             #expect(mockSession.sentMessages.count == 1)
@@ -121,17 +113,9 @@ extension StatusManagerTests {
                 watchConnectivitySessionProtocol: mockSession
             )
 
-            let modelConfiguration = ModelConfiguration(isStoredInMemoryOnly: true)
-            let modelContainer = try ModelContainer(
-                for: User.self,
-                DayActivity.self,
-                configurations: modelConfiguration
-            )
-            let context = modelContainer.mainContext
-
             #expect(statusManager.currentDayCalculator == nil)
 
-            statusManager.processAuthStatus(isAuthorized: true, context: context)
+            statusManager.processAuthStatus(isAuthorized: true)
 
             let sentMessage = try #require(mockSession.sentMessages.first)
             #expect(sentMessage["currentDay"] == nil)
@@ -161,7 +145,7 @@ extension StatusManagerTests {
             let usersBefore = try context.fetch(FetchDescriptor<User>())
             #expect(usersBefore.count == 1)
 
-            statusManager.processAuthStatus(isAuthorized: false, context: context)
+            statusManager.processAuthStatus(isAuthorized: false)
 
             let usersAfter = try context.fetch(FetchDescriptor<User>())
             #expect(usersAfter.isEmpty)

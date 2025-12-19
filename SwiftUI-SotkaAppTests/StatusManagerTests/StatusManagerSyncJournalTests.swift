@@ -41,13 +41,13 @@ extension StatusManagerTests {
             try context.save()
 
             await statusManager.startNewRun(appDate: startDate)
-            await statusManager.getStatus(context: context)
+            await statusManager.getStatus()
 
             let initialProgressCalls = mockProgressClient.getProgressCallCount
             let initialExerciseCalls = mockExerciseClient.getCustomExercisesCallCount
             let initialDaysCalls = mockDaysClient.getDaysCallCount
 
-            await statusManager.getStatus(context: context)
+            await statusManager.getStatus()
 
             #expect(mockProgressClient.getProgressCallCount >= initialProgressCalls)
             #expect(mockExerciseClient.getCustomExercisesCallCount >= initialExerciseCalls)
@@ -91,7 +91,7 @@ extension StatusManagerTests {
 
             let initialCalls = mockProgressClient.getProgressCallCount
 
-            await statusManager.start(appDate: startDate, context: context)
+            await statusManager.start(appDate: startDate)
 
             #expect(mockProgressClient.getProgressCallCount > initialCalls)
         }
@@ -133,7 +133,7 @@ extension StatusManagerTests {
 
             let initialCalls = mockExerciseClient.getCustomExercisesCallCount
 
-            await statusManager.start(appDate: startDate, context: context)
+            await statusManager.start(appDate: startDate)
 
             #expect(mockExerciseClient.getCustomExercisesCallCount > initialCalls)
         }
@@ -175,7 +175,7 @@ extension StatusManagerTests {
 
             let initialCalls = mockDaysClient.getDaysCallCount
 
-            await statusManager.start(appDate: startDate, context: context)
+            await statusManager.start(appDate: startDate)
 
             #expect(mockDaysClient.getDaysCallCount > initialCalls)
         }
@@ -205,7 +205,7 @@ extension StatusManagerTests {
             try context.save()
 
             await statusManager.startNewRun(appDate: startDate)
-            await statusManager.start(appDate: startDate, context: context)
+            await statusManager.start(appDate: startDate)
 
             #expect(!statusManager.state.isLoading)
         }
@@ -236,11 +236,11 @@ extension StatusManagerTests {
             try context.save()
 
             await statusManager.startNewRun(appDate: appDate)
-            await statusManager.getStatus(context: context)
+            await statusManager.getStatus()
 
             #expect(statusManager.conflictingSyncModel != nil)
 
-            await statusManager.syncWithSiteDate(siteDate: siteDate, context: context)
+            await statusManager.syncWithSiteDate(siteDate: siteDate)
 
             #expect(statusManager.conflictingSyncModel == nil)
         }
@@ -271,7 +271,7 @@ extension StatusManagerTests {
             try context.save()
 
             await statusManager.startNewRun(appDate: startDate)
-            await statusManager.start(appDate: startDate, context: context)
+            await statusManager.start(appDate: startDate)
 
             let entries = try context.fetch(FetchDescriptor<SyncJournalEntry>())
             #expect(entries.count == 1)
@@ -307,7 +307,7 @@ extension StatusManagerTests {
             try context.save()
 
             await statusManager.startNewRun(appDate: startDate)
-            await statusManager.start(appDate: startDate, context: context)
+            await statusManager.start(appDate: startDate)
 
             let entries = try context.fetch(FetchDescriptor<SyncJournalEntry>())
             let entry = try #require(entries.first)
@@ -342,7 +342,7 @@ extension StatusManagerTests {
             try context.save()
 
             await statusManager.startNewRun(appDate: startDate)
-            await statusManager.start(appDate: startDate, context: context)
+            await statusManager.start(appDate: startDate)
 
             let entries = try context.fetch(FetchDescriptor<SyncJournalEntry>())
             let entry = try #require(entries.first)
@@ -385,7 +385,7 @@ extension StatusManagerTests {
             try context.save()
 
             await statusManager.startNewRun(appDate: startDate)
-            await statusManager.start(appDate: startDate, context: context)
+            await statusManager.start(appDate: startDate)
 
             let entries = try context.fetch(FetchDescriptor<SyncJournalEntry>())
             let entry = try #require(entries.first)
@@ -428,7 +428,7 @@ extension StatusManagerTests {
             try context.save()
 
             await statusManager.startNewRun(appDate: startDate)
-            await statusManager.start(appDate: startDate, context: context)
+            await statusManager.start(appDate: startDate)
 
             let entries = try context.fetch(FetchDescriptor<SyncJournalEntry>())
             let entry = try #require(entries.first)
@@ -470,7 +470,7 @@ extension StatusManagerTests {
             try context.save()
 
             await statusManager.startNewRun(appDate: startDate)
-            await statusManager.start(appDate: startDate, context: context)
+            await statusManager.start(appDate: startDate)
 
             let entries = try context.fetch(FetchDescriptor<SyncJournalEntry>())
             let entry = try #require(entries.first)
@@ -514,7 +514,7 @@ extension StatusManagerTests {
             try context.save()
 
             await statusManager.startNewRun(appDate: startDate)
-            await statusManager.start(appDate: startDate, context: context)
+            await statusManager.start(appDate: startDate)
 
             let entries = try context.fetch(FetchDescriptor<SyncJournalEntry>())
             let entry = try #require(entries.first)
@@ -556,7 +556,7 @@ extension StatusManagerTests {
             try context.save()
 
             await statusManager.startNewRun(appDate: startDate)
-            await statusManager.start(appDate: startDate, context: context)
+            await statusManager.start(appDate: startDate)
 
             let entries = try context.fetch(FetchDescriptor<SyncJournalEntry>())
             let entry = try #require(entries.first)
@@ -600,7 +600,7 @@ extension StatusManagerTests {
             try context.save()
 
             await statusManager.startNewRun(appDate: startDate)
-            await statusManager.start(appDate: startDate, context: context)
+            await statusManager.start(appDate: startDate)
 
             let entries = try context.fetch(FetchDescriptor<SyncJournalEntry>())
             let entry = try #require(entries.first)

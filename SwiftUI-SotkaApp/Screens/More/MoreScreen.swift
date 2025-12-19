@@ -192,7 +192,7 @@ struct MoreScreen: View {
         ) {
             Button(.moreScreenResetProgramDialogConfirm, role: .destructive) {
                 Task {
-                    await statusManager.resetProgram(context: modelContext)
+                    await statusManager.resetProgram()
                 }
             }
         } message: {

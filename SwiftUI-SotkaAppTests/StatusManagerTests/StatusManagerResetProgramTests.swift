@@ -57,7 +57,7 @@ extension StatusManagerTests {
 
             try context.save()
 
-            await statusManager.resetProgram(context: context)
+            await statusManager.resetProgram()
 
             let users = try context.fetch(FetchDescriptor<User>())
             let savedUser = try #require(users.first)
@@ -117,7 +117,7 @@ extension StatusManagerTests {
             context.insert(progress)
             try context.save()
 
-            await statusManager.resetProgram(context: context)
+            await statusManager.resetProgram()
 
             let users = try context.fetch(FetchDescriptor<User>())
             let savedUser = try #require(users.first)
@@ -173,7 +173,7 @@ extension StatusManagerTests {
             context.insert(training)
             try context.save()
 
-            await statusManager.resetProgram(context: context)
+            await statusManager.resetProgram()
 
             let users = try context.fetch(FetchDescriptor<User>())
             let savedUser = try #require(users.first)
@@ -220,7 +220,7 @@ extension StatusManagerTests {
             context.insert(progress)
             try context.save()
 
-            await statusManager.resetProgram(context: context)
+            await statusManager.resetProgram()
 
             let users = try context.fetch(FetchDescriptor<User>())
             let savedUser = try #require(users.first)
@@ -261,7 +261,7 @@ extension StatusManagerTests {
             context.insert(customExercise)
             try context.save()
 
-            await statusManager.resetProgram(context: context)
+            await statusManager.resetProgram()
 
             let customExercises = try context.fetch(FetchDescriptor<CustomExercise>())
             #expect(customExercises.count == 1)
@@ -295,7 +295,7 @@ extension StatusManagerTests {
             user.setUnsyncedReadInfopostDays([6, 7, 8])
             try context.save()
 
-            await statusManager.resetProgram(context: context)
+            await statusManager.resetProgram()
 
             let users = try context.fetch(FetchDescriptor<User>())
             let savedUser = try #require(users.first)
@@ -325,7 +325,7 @@ extension StatusManagerTests {
             try context.save()
             let originalUserId = user.id
 
-            await statusManager.resetProgram(context: context)
+            await statusManager.resetProgram()
 
             let users = try context.fetch(FetchDescriptor<User>())
             #expect(users.count == 1)
@@ -356,7 +356,7 @@ extension StatusManagerTests {
             context.insert(user)
             try context.save()
 
-            await statusManager.resetProgram(context: context)
+            await statusManager.resetProgram()
 
             #expect(mockStatusClient.startCallCount == 1)
             let calculator = try #require(statusManager.currentDayCalculator)
@@ -388,7 +388,7 @@ extension StatusManagerTests {
 
             let beforeReset = Date.now
 
-            await statusManager.resetProgram(context: context)
+            await statusManager.resetProgram()
 
             let afterReset = Date.now
 
@@ -436,7 +436,7 @@ extension StatusManagerTests {
             context.insert(progress)
             try context.save()
 
-            await statusManager.resetProgram(context: context)
+            await statusManager.resetProgram()
 
             let users = try context.fetch(FetchDescriptor<User>())
             let savedUser = try #require(users.first)
@@ -490,7 +490,7 @@ extension StatusManagerTests {
             context.insert(progress)
             try context.save()
 
-            await statusManager.resetProgram(context: context)
+            await statusManager.resetProgram()
 
             let users = try context.fetch(FetchDescriptor<User>())
             let savedUser = try #require(users.first)
@@ -512,14 +512,7 @@ extension StatusManagerTests {
             let mockStatusClient = MockStatusClient()
             let statusManager = try MockStatusManager.create(statusClient: mockStatusClient)
 
-            let modelConfiguration = ModelConfiguration(isStoredInMemoryOnly: true)
-            let modelContainer = try ModelContainer(
-                for: User.self,
-                configurations: modelConfiguration
-            )
-            let context = modelContainer.mainContext
-
-            await statusManager.resetProgram(context: context)
+            await statusManager.resetProgram()
 
             #expect(!statusManager.state.isLoading)
             #expect(mockStatusClient.startCallCount == 0)

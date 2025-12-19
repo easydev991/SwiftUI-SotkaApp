@@ -33,7 +33,7 @@ extension StatusManagerTests {
             try context.save()
 
             await statusManager.startNewRun(appDate: startDate)
-            await statusManager.getStatus(context: context)
+            await statusManager.getStatus()
 
             #expect(!statusManager.state.isLoading)
             #expect(statusManager.maxReadInfoPostDay == 50)
@@ -65,7 +65,7 @@ extension StatusManagerTests {
             context.insert(user)
             try context.save()
 
-            await statusManager.getStatus(context: context)
+            await statusManager.getStatus()
 
             #expect(!statusManager.state.isLoading)
             #expect(statusManager.currentDayCalculator != nil)
@@ -112,7 +112,7 @@ extension StatusManagerTests {
             let initialExerciseCalls = mockExerciseClient.getCustomExercisesCallCount
             let initialDaysCalls = mockDaysClient.getDaysCallCount
 
-            await statusManager.getStatus(context: context)
+            await statusManager.getStatus()
 
             #expect(mockProgressClient.getProgressCallCount > initialProgressCalls)
             #expect(mockExerciseClient.getCustomExercisesCallCount > initialExerciseCalls)
@@ -148,13 +148,13 @@ extension StatusManagerTests {
             try context.save()
 
             await statusManager.startNewRun(appDate: appDate)
-            await statusManager.getStatus(context: context)
+            await statusManager.getStatus()
 
             let conflictingModel = try #require(statusManager.conflictingSyncModel)
             #expect(conflictingModel.appDayCalculator.startDate.isTheSameDayIgnoringTime(appDate))
             #expect(conflictingModel.siteDayCalculator.startDate.isTheSameDayIgnoringTime(siteDate))
 
-            await statusManager.syncWithSiteDate(siteDate: siteDate, context: context)
+            await statusManager.syncWithSiteDate(siteDate: siteDate)
 
             #expect(statusManager.conflictingSyncModel == nil)
             #expect(!statusManager.state.isLoading)

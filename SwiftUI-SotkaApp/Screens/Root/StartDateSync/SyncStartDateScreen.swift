@@ -3,7 +3,6 @@ import SwiftUI
 
 struct SyncStartDateView: View {
     @Environment(StatusManager.self) private var statusManager
-    @Environment(\.modelContext) private var modelContext
     @State private var selectedOption = Selection.none
     @State private var syncTask: Task<Void, Never>?
     let model: ConflictingStartDate
@@ -86,17 +85,11 @@ struct SyncStartDateView: View {
             assertionFailure("Дата должна быть выбрана до попытки сохранения")
         case let .app(model):
             syncTask = Task {
-                await statusManager.start(
-                    appDate: model.startDate,
-                    context: modelContext
-                )
+                await statusManager.start(appDate: model.startDate)
             }
         case let .site(model):
             syncTask = Task {
-                await statusManager.syncWithSiteDate(
-                    siteDate: model.startDate,
-                    context: modelContext
-                )
+                await statusManager.syncWithSiteDate(siteDate: model.startDate)
             }
         }
     }

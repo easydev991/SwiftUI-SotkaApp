@@ -20,6 +20,7 @@ final class StatusManager: NSObject {
     @ObservationIgnored private var isJournalSyncInProgress = false
     @ObservationIgnored private(set) var syncReadPostsTask: Task<Void, Error>?
     @ObservationIgnored private let sessionProtocol: WCSessionProtocol?
+    @ObservationIgnored let modelContainer: ModelContainer
     private let statusClient: StatusClient
 
     /// Проверяет, доступны ли часы для отправки сообщений
@@ -90,6 +91,7 @@ final class StatusManager: NSObject {
         progressSyncService: ProgressSyncService,
         dailyActivitiesService: DailyActivitiesService,
         statusClient: StatusClient,
+        modelContainer: ModelContainer,
         userDefaults: UserDefaults? = nil,
         watchConnectivitySessionProtocol: WCSessionProtocol? = nil
     ) {
@@ -98,6 +100,7 @@ final class StatusManager: NSObject {
         self.progressSyncService = progressSyncService
         self.dailyActivitiesService = dailyActivitiesService
         self.statusClient = statusClient
+        self.modelContainer = modelContainer
         if let userDefaults {
             self.defaults = userDefaults
         } else {
@@ -126,9 +129,8 @@ final class StatusManager: NSObject {
     }
 
     /// Получает статус прохождения пользователя
-    /// - Parameters:
-    ///   - client: Сервис для загрузки статуса
-    func getStatus(context: ModelContext) async {
+    func getStatus() async {
+        let context = modelContainer.mainContext
         let now = Date.now
         currentDayCalculator = .init(startDate, now)
 
@@ -146,19 +148,19 @@ final class StatusManager: NSObject {
             switch (startDate, siteStartDate) {
             case (.none, .none):
                 logger.info("Сотку еще не стартовали")
-                await start(appDate: nil, context: context)
+                await start(appDate: nil)
             case let (.some(date), .none):
                 // Приложение - источник истины
                 logger.info("Дата старта есть только в приложении: \(date.description)")
-                await start(appDate: date, context: context)
+                await start(appDate: date)
             case let (.none, .some(date)):
                 // Сайт - источник истины
                 logger.info("Дата старта есть только на сайте: \(date.description)")
-                await syncWithSiteDate(siteDate: date, context: context)
+                await syncWithSiteDate(siteDate: date)
             case let (.some(appDate), .some(siteDate)):
                 logger.info("Дата старта в приложении: \(appDate.description), и на сайте: \(siteDate.description)")
                 if appDate.isTheSameDayIgnoringTime(siteDate) {
-                    await syncJournalAndProgress(context: context)
+                    await syncJournalAndProgress()
                 } else {
                     conflictingSyncModel = .init(appDate, siteDate)
                 }
@@ -194,19 +196,20 @@ final class StatusManager: NSObject {
         currentDayCalculator = .init(startDate, now)
     }
 
-    func start(appDate: Date?, context: ModelContext) async {
+    func start(appDate: Date?) async {
         await startNewRun(appDate: appDate)
-        await syncJournalAndProgress(context: context)
+        await syncJournalAndProgress()
     }
 
-    func syncWithSiteDate(siteDate: Date, context: ModelContext) async {
+    func syncWithSiteDate(siteDate: Date) async {
         startDate = siteDate
         let now = Date.now
         currentDayCalculator = .init(startDate, now)
-        await syncJournalAndProgress(context: context)
+        await syncJournalAndProgress()
     }
 
-    func loadInfopostsWithUserGender(context: ModelContext) {
+    func loadInfopostsWithUserGender() {
+        let context = modelContainer.mainContext
         do {
             let user = try context.fetch(FetchDescriptor<User>()).first
             try infopostsService.loadAvailableInfoposts(
@@ -240,8 +243,8 @@ final class StatusManager: NSObject {
     /// Обрабатывает изменение статуса авторизации
     /// - Parameters:
     ///   - isAuthorized: Статус авторизации
-    ///   - context: Контекст SwiftData для получения активности дня
-    func processAuthStatus(isAuthorized: Bool, context: ModelContext) {
+    func processAuthStatus(isAuthorized: Bool) {
+        let context = modelContainer.mainContext
         if isAuthorized {
             let currentDay = currentDayCalculator?.currentDay
             let currentActivity = currentDay.map { dailyActivitiesService.getActivityType(day: $0, context: context) } ?? nil
@@ -261,13 +264,13 @@ final class StatusManager: NSObject {
     /// Отправляет данные текущего дня на часы
     /// - Parameters:
     ///   - currentDay: Номер текущего дня (опционально)
-    ///   - context: Контекст SwiftData для получения активности дня
-    func sendDayDataToWatch(currentDay: Int?, context: ModelContext) {
+    func sendDayDataToWatch(currentDay: Int?) {
         guard let currentDay else {
             return
         }
 
         // Получаем текущую активность из SwiftData
+        let context = modelContainer.mainContext
         let currentActivity = dailyActivitiesService.getActivityType(day: currentDay, context: context)
         sendCurrentStatus(isAuthorized: true, currentDay: currentDay, currentActivity: currentActivity)
     }
@@ -303,13 +306,13 @@ final class StatusManager: NSObject {
     /// Отправляет текущую активность конкретного дня на часы
     /// - Parameters:
     ///   - day: Номер дня
-    ///   - context: Контекст SwiftData для получения активности
-    func sendCurrentActivity(day: Int, context: ModelContext) {
+    func sendCurrentActivity(day: Int) {
         guard let sessionProtocol, sessionProtocol.isReachable else {
             logger.debug("Часы недоступны для отправки текущей активности дня \(day)")
             return
         }
 
+        let context = modelContainer.mainContext
         let activityType = dailyActivitiesService.getActivityType(day: day, context: context)
 
         let statusMessage = WatchStatusMessage(
@@ -332,18 +335,12 @@ final class StatusManager: NSObject {
     /// Обрабатывает команду от часов
     /// - Parameters:
     ///   - message: Сообщение от часов
-    ///   - context: Контекст SwiftData (опционально, будет передан из делегата)
     ///   - replyHandler: Обработчик ответа (опционально)
     func handleWatchCommand(
         _ message: [String: Any],
-        context: ModelContext?,
         replyHandler: (([String: Any]) -> Void)? = nil
     ) {
-        guard let context else {
-            logger.error("Контекст SwiftData не предоставлен для обработки команды")
-            replyHandler?(["error": "Контекст не предоставлен"])
-            return
-        }
+        let context = modelContainer.mainContext
 
         guard let parsed = WatchStatusMessage.parseWatchCommand(message) else {
             logger.warning("Не удалось распарсить команду из сообщения: \(message)")
@@ -407,7 +404,7 @@ final class StatusManager: NSObject {
         dailyActivitiesService.set(activityType, for: day, context: context)
 
         // Отправляем обновленную активность на часы
-        sendCurrentActivity(day: day, context: context)
+        sendCurrentActivity(day: day)
 
         // Если измененная активность относится к текущему дню, также отправляем статус
         if let currentDay = currentDayCalculator?.currentDay, currentDay == day {
@@ -471,7 +468,7 @@ final class StatusManager: NSObject {
         dailyActivitiesService.createDailyActivity(dayActivity, context: context)
 
         // Отправляем обновленную активность на часы
-        sendCurrentActivity(day: day, context: context)
+        sendCurrentActivity(day: day)
 
         // Если сохраненная тренировка относится к текущему дню, также отправляем статус
         if let currentDay = currentDayCalculator?.currentDay, currentDay == day {
@@ -581,7 +578,7 @@ final class StatusManager: NSObject {
         dailyActivitiesService.deleteDailyActivity(activity, context: context)
 
         // Отправляем обновленную активность на часы (nil после удаления)
-        sendCurrentActivity(day: day, context: context)
+        sendCurrentActivity(day: day)
 
         // Если удаленная активность относится к текущему дню, также отправляем статус
         if let currentDay = currentDayCalculator?.currentDay, currentDay == day {
@@ -596,8 +593,8 @@ final class StatusManager: NSObject {
     }
 
     /// Сбрасывает программу: удаляет все данные прохождения программы и начинает заново
-    /// - Parameter context: Контекст модели SwiftData
-    func resetProgram(context: ModelContext) async {
+    func resetProgram() async {
+        let context = modelContainer.mainContext
         state = .isLoadingInitialData
         guard let user = try? context.fetch(FetchDescriptor<User>()).first else {
             logger.error("Пользователь не найден для сброса программы")
@@ -681,7 +678,8 @@ private extension StatusManager {
 }
 
 private extension StatusManager {
-    func syncJournalAndProgress(context: ModelContext) async {
+    func syncJournalAndProgress() async {
+        let context = modelContainer.mainContext
         guard !isJournalSyncInProgress else { return }
         isJournalSyncInProgress = true
         defer { isJournalSyncInProgress = false }
@@ -801,9 +799,7 @@ nonisolated extension StatusManager: WCSessionDelegate {
         nonisolated(unsafe) let messageCopy = message
         let managerRef = self
         Task { @MainActor in
-            // Примечание: context должен быть передан из SwiftUI_SotkaAppApp через свойство в StatusManager
-            // Пока передаем nil, обработка команд требует context
-            managerRef.handleWatchCommand(messageCopy, context: nil)
+            managerRef.handleWatchCommand(messageCopy)
         }
     }
 
@@ -814,9 +810,7 @@ nonisolated extension StatusManager: WCSessionDelegate {
         let managerRef = self
         nonisolated(unsafe) let replyHandlerCopy = replyHandler
         Task { @MainActor in
-            // Примечание: context должен быть передан из SwiftUI_SotkaAppApp через свойство в StatusManager
-            // Пока передаем nil, обработка команд требует context
-            managerRef.handleWatchCommand(messageCopy, context: nil, replyHandler: replyHandlerCopy)
+            managerRef.handleWatchCommand(messageCopy, replyHandler: replyHandlerCopy)
         }
     }
 }

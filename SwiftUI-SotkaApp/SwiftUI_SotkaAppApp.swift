@@ -16,10 +16,29 @@ struct SwiftUI_SotkaAppApp: App {
     private let client: SWClient
 
     init() {
+        // Создаем ModelContainer в init()
+        let schema = Schema(
+            [
+                User.self,
+                Country.self,
+                CustomExercise.self,
+                UserProgress.self,
+                DayActivity.self,
+                DayActivityTraining.self
+            ]
+        )
+        let modelConfiguration = ModelConfiguration(schema: schema, isStoredInMemoryOnly: false)
+        let modelContainer: ModelContainer
+        do {
+            modelContainer = try ModelContainer(for: schema, configurations: [modelConfiguration])
+        } catch {
+            fatalError("Не смогли создать ModelContainer: \(error)")
+        }
+
         #if DEBUG
         if ProcessInfo.processInfo.arguments.contains("UITest") {
             UserDefaults.standard.removePersistentDomain(forName: Bundle.main.bundleIdentifier!)
-            let mockServices = Self.createMockServices()
+            let mockServices = Self.createMockServices(modelContainer: modelContainer)
             self.statusManager = mockServices.statusManager
             self.countriesService = mockServices.countriesService
             self.authHelper = mockServices.authHelper
@@ -36,7 +55,8 @@ struct SwiftUI_SotkaAppApp: App {
                 ),
                 progressSyncService: .init(client: client),
                 dailyActivitiesService: .init(client: client),
-                statusClient: client
+                statusClient: client,
+                modelContainer: modelContainer
             )
             self.countriesService = .init(client: client)
             self.authHelper = authHelper
@@ -59,7 +79,8 @@ struct SwiftUI_SotkaAppApp: App {
             ),
             progressSyncService: .init(client: client),
             dailyActivitiesService: .init(client: client),
-            statusClient: client
+            statusClient: client,
+            modelContainer: modelContainer
         )
         self.countriesService = .init(client: client)
         self.authHelper = authHelper
@@ -72,25 +93,6 @@ struct SwiftUI_SotkaAppApp: App {
         #endif
     }
 
-    private var modelContainer: ModelContainer = {
-        let schema = Schema(
-            [
-                User.self,
-                Country.self,
-                CustomExercise.self,
-                UserProgress.self,
-                DayActivity.self,
-                DayActivityTraining.self
-            ]
-        )
-        let modelConfiguration = ModelConfiguration(schema: schema, isStoredInMemoryOnly: false)
-        do {
-            return try ModelContainer(for: schema, configurations: [modelConfiguration])
-        } catch {
-            fatalError("Не смогли создать ModelContainer: \(error)")
-        }
-    }()
-
     var body: some Scene {
         WindowGroup {
             ZStack {
@@ -99,7 +101,7 @@ struct SwiftUI_SotkaAppApp: App {
                         .task(id: scenePhase) {
                             guard scenePhase == .active else { return }
                             guard authHelper.isAuthorized else { return }
-                            await statusManager.getStatus(context: modelContainer.mainContext)
+                            await statusManager.getStatus()
                             await appSettings.syncNotificationSettings()
                         }
                 } else {
@@ -122,28 +124,25 @@ struct SwiftUI_SotkaAppApp: App {
             .preferredColorScheme(appSettings.appTheme.colorScheme)
             .onChange(of: statusManager.currentDayCalculator) { _, newCalculator in
                 guard authHelper.isAuthorized else { return }
-                statusManager.loadInfopostsWithUserGender(context: modelContainer.mainContext)
-                statusManager.sendDayDataToWatch(
-                    currentDay: newCalculator?.currentDay,
-                    context: modelContainer.mainContext
-                )
+                statusManager.loadInfopostsWithUserGender()
+                statusManager.sendDayDataToWatch(currentDay: newCalculator?.currentDay)
             }
             .onChange(of: scenePhase) { _, newPhase in
                 guard newPhase == .active else { return }
-                countriesService.update(modelContainer.mainContext)
+                countriesService.update(statusManager.modelContainer.mainContext)
             }
             .task {
                 #if DEBUG
                 if ProcessInfo.processInfo.arguments.contains("UITest") {
-                    ScreenshotDemoData.setup(context: modelContainer.mainContext)
-                    statusManager.loadInfopostsWithUserGender(context: modelContainer.mainContext)
+                    ScreenshotDemoData.setup(context: statusManager.modelContainer.mainContext)
+                    statusManager.loadInfopostsWithUserGender()
                 }
                 #endif
             }
         }
-        .modelContainer(modelContainer)
+        .modelContainer(statusManager.modelContainer)
         .onChange(of: authHelper.isAuthorized) { _, isAuthorized in
-            statusManager.processAuthStatus(isAuthorized: isAuthorized, context: modelContainer.mainContext)
+            statusManager.processAuthStatus(isAuthorized: isAuthorized)
             if !isAuthorized {
                 appSettings.didLogout()
             }
@@ -168,7 +167,7 @@ private extension SwiftUI_SotkaAppApp {
 
 #if DEBUG
 private extension SwiftUI_SotkaAppApp {
-    static func createMockServices() -> (
+    static func createMockServices(modelContainer: ModelContainer) -> (
         statusManager: StatusManager,
         countriesService: CountriesUpdateService,
         authHelper: AuthHelperImp,
@@ -186,7 +185,8 @@ private extension SwiftUI_SotkaAppApp {
             ),
             progressSyncService: .init(client: mockClient),
             dailyActivitiesService: .init(client: mockClient),
-            statusClient: mockClient
+            statusClient: mockClient,
+            modelContainer: modelContainer
         )
 
         let countriesService = CountriesUpdateService(client: mockClient)

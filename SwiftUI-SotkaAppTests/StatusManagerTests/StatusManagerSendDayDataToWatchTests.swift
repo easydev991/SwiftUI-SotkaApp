@@ -28,7 +28,7 @@ extension StatusManagerTests {
             context.insert(user)
             try context.save()
 
-            statusManager.sendDayDataToWatch(currentDay: 42, context: context)
+            statusManager.sendDayDataToWatch(currentDay: 42)
 
             #expect(mockSession.sentMessages.count == 1)
             let sentMessage = try #require(mockSession.sentMessages.first)
@@ -47,15 +47,7 @@ extension StatusManagerTests {
                 watchConnectivitySessionProtocol: mockSession
             )
 
-            let modelConfiguration = ModelConfiguration(isStoredInMemoryOnly: true)
-            let modelContainer = try ModelContainer(
-                for: User.self,
-                DayActivity.self,
-                configurations: modelConfiguration
-            )
-            let context = modelContainer.mainContext
-
-            statusManager.sendDayDataToWatch(currentDay: nil, context: context)
+            statusManager.sendDayDataToWatch(currentDay: nil)
 
             #expect(mockSession.sentMessages.isEmpty)
         }
@@ -69,15 +61,7 @@ extension StatusManagerTests {
                 watchConnectivitySessionProtocol: mockSession
             )
 
-            let modelConfiguration = ModelConfiguration(isStoredInMemoryOnly: true)
-            let modelContainer = try ModelContainer(
-                for: User.self,
-                DayActivity.self,
-                configurations: modelConfiguration
-            )
-            let context = modelContainer.mainContext
-
-            statusManager.sendDayDataToWatch(currentDay: 42, context: context)
+            statusManager.sendDayDataToWatch(currentDay: 42)
 
             #expect(mockSession.sentMessages.isEmpty)
         }

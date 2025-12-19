@@ -77,17 +77,9 @@ struct StatusManagerWatchConnectivityTests {
             watchConnectivitySessionProtocol: mockSession
         )
 
-        let modelConfiguration = ModelConfiguration(isStoredInMemoryOnly: true)
-        let modelContainer = try ModelContainer(
-            for: User.self,
-            DayActivity.self,
-            configurations: modelConfiguration
-        )
-        let context = modelContainer.mainContext
-
         statusManager.setCurrentDayForDebug(10)
 
-        await statusManager.getStatus(context: context)
+        await statusManager.getStatus()
 
         #expect(mockSession.sentMessages.count >= 1)
         let sentMessage = try #require(mockSession.sentMessages.first)
@@ -104,17 +96,9 @@ struct StatusManagerWatchConnectivityTests {
             watchConnectivitySessionProtocol: mockSession
         )
 
-        let modelConfiguration = ModelConfiguration(isStoredInMemoryOnly: true)
-        let modelContainer = try ModelContainer(
-            for: User.self,
-            DayActivity.self,
-            configurations: modelConfiguration
-        )
-        let context = modelContainer.mainContext
-
         statusManager.setCurrentDayForDebug(10)
 
-        await statusManager.getStatus(context: context)
+        await statusManager.getStatus()
 
         #expect(mockSession.sentMessages.count >= 1)
     }
@@ -128,16 +112,8 @@ struct StatusManagerWatchConnectivityTests {
             watchConnectivitySessionProtocol: mockSession
         )
 
-        let modelConfiguration = ModelConfiguration(isStoredInMemoryOnly: true)
-        let modelContainer = try ModelContainer(
-            for: User.self,
-            DayActivity.self,
-            configurations: modelConfiguration
-        )
-        let context = modelContainer.mainContext
-
         statusManager.setCurrentDayForDebug(10)
-        statusManager.sendDayDataToWatch(currentDay: 10, context: context)
+        statusManager.sendDayDataToWatch(currentDay: 10)
 
         #expect(mockSession.sentMessages.count >= 1)
         let sentMessage = try #require(mockSession.sentMessages.first)
@@ -154,15 +130,7 @@ struct StatusManagerWatchConnectivityTests {
             watchConnectivitySessionProtocol: mockSession
         )
 
-        let modelConfiguration = ModelConfiguration(isStoredInMemoryOnly: true)
-        let modelContainer = try ModelContainer(
-            for: User.self,
-            DayActivity.self,
-            configurations: modelConfiguration
-        )
-        let context = modelContainer.mainContext
-
-        statusManager.processAuthStatus(isAuthorized: false, context: context)
+        statusManager.processAuthStatus(isAuthorized: false)
 
         #expect(mockSession.sentMessages.count >= 1)
         let sentMessage = try #require(mockSession.sentMessages.first)
@@ -181,13 +149,7 @@ struct StatusManagerWatchConnectivityTests {
             watchConnectivitySessionProtocol: mockSession
         )
 
-        let modelConfiguration = ModelConfiguration(isStoredInMemoryOnly: true)
-        let modelContainer = try ModelContainer(
-            for: User.self,
-            DayActivity.self,
-            configurations: modelConfiguration
-        )
-        let context = modelContainer.mainContext
+        let context = statusManager.modelContainer.mainContext
 
         let user = User(id: 1, userName: "testuser", fullName: "Test User", email: "test@example.com")
         context.insert(user)
@@ -207,7 +169,7 @@ struct StatusManagerWatchConnectivityTests {
         context.insert(dayActivity)
         try context.save()
 
-        statusManager.sendCurrentActivity(day: 42, context: context)
+        statusManager.sendCurrentActivity(day: 42)
 
         #expect(mockSession.sentMessages.count >= 1)
         let sentMessage = try #require(mockSession.sentMessages.first)
@@ -319,13 +281,7 @@ struct StatusManagerWatchConnectivityTests {
             watchConnectivitySessionProtocol: mockSession
         )
 
-        let modelConfiguration = ModelConfiguration(isStoredInMemoryOnly: true)
-        let modelContainer = try ModelContainer(
-            for: User.self,
-            DayActivity.self,
-            configurations: modelConfiguration
-        )
-        let context = modelContainer.mainContext
+        let context = statusManager.modelContainer.mainContext
 
         let user = User(id: 1, userName: "testuser", fullName: "Test User", email: "test@example.com")
         context.insert(user)
@@ -337,7 +293,7 @@ struct StatusManagerWatchConnectivityTests {
             "activityType": DayActivityType.stretch.rawValue
         ]
 
-        statusManager.handleWatchCommand(message, context: context)
+        statusManager.handleWatchCommand(message)
 
         let activity = statusManager.dailyActivitiesService.getActivity(dayNumber: 42, context: context)
         let activityType = try #require(activity?.activityType)
@@ -353,13 +309,7 @@ struct StatusManagerWatchConnectivityTests {
             watchConnectivitySessionProtocol: mockSession
         )
 
-        let modelConfiguration = ModelConfiguration(isStoredInMemoryOnly: true)
-        let modelContainer = try ModelContainer(
-            for: User.self,
-            DayActivity.self,
-            configurations: modelConfiguration
-        )
-        let context = modelContainer.mainContext
+        let context = statusManager.modelContainer.mainContext
 
         let user = User(id: 1, userName: "testuser", fullName: "Test User", email: "test@example.com")
         context.insert(user)
@@ -371,7 +321,7 @@ struct StatusManagerWatchConnectivityTests {
             "activityType": DayActivityType.rest.rawValue
         ]
 
-        statusManager.handleWatchCommand(message, context: context)
+        statusManager.handleWatchCommand(message)
 
         #expect(mockSession.sentMessages.count >= 1)
         let sentMessage = try #require(mockSession.sentMessages.first { msg in
@@ -380,5 +330,80 @@ struct StatusManagerWatchConnectivityTests {
         })
         let currentActivity = try #require(sentMessage["currentActivity"] as? Int)
         #expect(currentActivity == DayActivityType.rest.rawValue)
+    }
+
+    // MARK: - Тесты работы с modelContainer
+
+    @Test("Должен обрабатывать команду setActivity с ModelContext из modelContainer")
+    func shouldHandleSetActivityCommandWithModelContextFromModelContainer() throws {
+        let mockSession = MockWCSession(isReachable: true)
+        let modelConfiguration = ModelConfiguration(isStoredInMemoryOnly: true)
+        let modelContainer = try ModelContainer(
+            for: User.self,
+            DayActivity.self,
+            configurations: modelConfiguration
+        )
+        let statusManager = try MockStatusManager.create(
+            daysClient: MockDaysClient(),
+            userDefaults: MockUserDefaults.create(),
+            modelContainer: modelContainer,
+            watchConnectivitySessionProtocol: mockSession
+        )
+
+        let context = statusManager.modelContainer.mainContext
+
+        let user = User(id: 1, userName: "testuser", fullName: "Test User", email: "test@example.com")
+        context.insert(user)
+        try context.save()
+
+        let message: [String: Any] = [
+            "command": Constants.WatchCommand.setActivity.rawValue,
+            "day": 42,
+            "activityType": DayActivityType.workout.rawValue
+        ]
+
+        // Симулируем вызов через делегат WCSession
+        statusManager.handleWatchCommand(message)
+
+        let activity = statusManager.dailyActivitiesService.getActivity(dayNumber: 42, context: context)
+        let activityType = try #require(activity?.activityType)
+        #expect(activityType == .workout)
+    }
+
+    @Test("Должен использовать mainContext из modelContainer для обработки команд")
+    func shouldUseMainContextFromModelContainerForCommandHandling() throws {
+        let mockSession = MockWCSession(isReachable: true)
+        let modelConfiguration = ModelConfiguration(isStoredInMemoryOnly: true)
+        let modelContainer = try ModelContainer(
+            for: User.self,
+            DayActivity.self,
+            configurations: modelConfiguration
+        )
+        let statusManager = try MockStatusManager.create(
+            daysClient: MockDaysClient(),
+            userDefaults: MockUserDefaults.create(),
+            modelContainer: modelContainer,
+            watchConnectivitySessionProtocol: mockSession
+        )
+
+        let context = statusManager.modelContainer.mainContext
+
+        let user = User(id: 1, userName: "testuser", fullName: "Test User", email: "test@example.com")
+        context.insert(user)
+        try context.save()
+
+        let message: [String: Any] = [
+            "command": Constants.WatchCommand.setActivity.rawValue,
+            "day": 42,
+            "activityType": DayActivityType.stretch.rawValue
+        ]
+
+        statusManager.handleWatchCommand(message)
+
+        // Проверяем, что активность была сохранена в том же контексте
+        let activity = statusManager.dailyActivitiesService.getActivity(dayNumber: 42, context: context)
+        let activityType = try #require(activity?.activityType)
+        #expect(activityType == .stretch)
+        #expect(activity?.user?.id == user.id)
     }
 }
