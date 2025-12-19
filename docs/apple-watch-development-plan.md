@@ -895,6 +895,96 @@ init(...) {
 **Результат:** ✅
 - ✅ Актуальная документация, отражены все изменения архитектуры
 
+#### Шаг 7: Устранение зависимости от ModelContext в методах делегата WCSession
+
+**Цель:** Устранить техдолг с передачей `nil` для `ModelContext` в методах делегата WCSession
+
+**Проблема:**
+- Методы делегата WCSession (`session(_:didReceiveMessage:)` и `session(_:didReceiveMessage:replyHandler:)`) вызывают `handleWatchCommand` с `context: nil`
+- Это техдолг, так как обработка команд требует `ModelContext` для работы с SwiftData
+- `ModelContext` недоступен в методах делегата, так как они `nonisolated` и не имеют доступа к SwiftUI окружению
+
+**Решение:**
+- Инициализировать `ModelContainer` в `init()` `SwiftUI_SotkaAppApp` (переместить логику создания из lazy property)
+- Передать `modelContainer` в `StatusManager` при создании (через параметр `init` или метод `setModelContainer`)
+- Добавить публичное свойство `let modelContainer: ModelContainer` в `StatusManager` (не опциональное, так как требуется для SwiftUI модификатора, устанавливается один раз при создании)
+- В методах делегата использовать `modelContainer.mainContext` вместо `nil`
+- В `SwiftUI_SotkaAppApp` использовать `statusManager.modelContainer` в `.modelContainer()` модификаторе вместо локального свойства
+- Заменить все использования `modelContainer.mainContext` в `SwiftUI_SotkaAppApp` на `statusManager.modelContainer.mainContext`
+- Удалить локальное свойство `modelContainer` из `SwiftUI_SotkaAppApp`
+- Это централизует управление `ModelContainer` в `StatusManager` и упрощает код
+
+**Безопасность решения:**
+- `ModelContainer` - это struct (value type), передача безопасна и не создает retain cycles
+- `StatusManager` помечен как `@MainActor`, что соответствует требованиям `mainContext` (должен использоваться только на главном потоке)
+- Оба объекта (`StatusManager` и `modelContainer`) живут в `SwiftUI_SotkaAppApp` и имеют одинаковый жизненный цикл
+- Это стандартный подход в SwiftUI/SwiftData для централизации управления данными в сервисе
+- `StatusManager` становится единственным источником истины для `ModelContainer` в приложении
+
+**Действия (TDD подход):**
+
+**7.1. Красный - Написать тесты (до реализации):**
+1. Обновить все тесты для работы с `modelContainer` в `StatusManager`:
+   - Обновить `MockStatusManager.create` для приема `modelContainer: ModelContainer` и передачи его в `StatusManager`
+   - Обновить все тесты, которые создают `StatusManager`, чтобы передавать `modelContainer`
+   - Обновить все вызовы методов `StatusManager` в тестах - убрать параметр `context:`
+   - Добавить тесты в `StatusManagerWatchConnectivityTests.swift`:
+     - `@Test("Должен обрабатывать команду setActivity с ModelContext из modelContainer")` - тест обработки команды через метод делегата с установленным `modelContainer`
+     - `@Test("Должен использовать mainContext из modelContainer для обработки команд")` - тест проверки использования правильного контекста
+2. Запустить `make test` - тесты должны падать (Красный) из-за отсутствия параметра `modelContainer` в `init` и измененных сигнатур методов
+
+**7.2. Зеленый - Реализовать код:**
+1. В `StatusManager`:
+   - Добавить свойство `@ObservationIgnored let modelContainer: ModelContainer` (публичное, не опциональное, устанавливается один раз при создании)
+   - Добавить параметр `modelContainer: ModelContainer` в `init` для передачи контейнера при создании
+   - Убрать параметр `context: ModelContext` из всех методов и использовать `modelContainer.mainContext` напрямую:
+     - `getStatus(context:)` -> `getStatus()` - использовать `modelContainer.mainContext` внутри
+     - `start(appDate:context:)` -> `start(appDate:)` - использовать `modelContainer.mainContext` внутри
+     - `syncWithSiteDate(siteDate:context:)` -> `syncWithSiteDate(siteDate:)` - использовать `modelContainer.mainContext` внутри
+     - `loadInfopostsWithUserGender(context:)` -> `loadInfopostsWithUserGender()` - использовать `modelContainer.mainContext` внутри
+     - `processAuthStatus(isAuthorized:context:)` -> `processAuthStatus(isAuthorized:)` - использовать `modelContainer.mainContext` внутри
+     - `sendDayDataToWatch(currentDay:context:)` -> `sendDayDataToWatch(currentDay:)` - использовать `modelContainer.mainContext` внутри
+     - `sendCurrentActivity(day:context:)` -> `sendCurrentActivity(day:)` - использовать `modelContainer.mainContext` внутри
+     - `resetProgram(context:)` -> `resetProgram()` - использовать `modelContainer.mainContext` внутри
+     - `syncJournalAndProgress(context:)` -> `syncJournalAndProgress()` - использовать `modelContainer.mainContext` внутри
+     - `handleWatchCommand(_:context:replyHandler:)` -> `handleWatchCommand(_:replyHandler:)` - использовать `modelContainer.mainContext` внутри, убрать проверку на `nil`
+   - Обновить методы делегата WCSession:
+     - В `session(_:didReceiveMessage:)` вызывать `handleWatchCommand` без параметра `context`
+     - В `session(_:didReceiveMessage:replyHandler:)` вызывать `handleWatchCommand` без параметра `context`
+2. В `SwiftUI_SotkaAppApp`:
+   - Переместить логику создания `ModelContainer` из lazy property в `init()` (создать `modelContainer` как локальную переменную в `init`)
+   - Передать `modelContainer` в `StatusManager` при создании через параметр `init`
+   - Заменить `.modelContainer(modelContainer)` на `.modelContainer(statusManager.modelContainer)`
+   - Убрать параметр `context:` из всех вызовов методов `StatusManager`:
+     - `statusManager.getStatus(context:)` -> `statusManager.getStatus()`
+     - `statusManager.loadInfopostsWithUserGender(context:)` -> `statusManager.loadInfopostsWithUserGender()`
+     - `statusManager.processAuthStatus(isAuthorized:context:)` -> `statusManager.processAuthStatus(isAuthorized:)`
+   - Удалить локальное свойство `private var modelContainer: ModelContainer`
+3. В `MoreScreen.swift`:
+   - Убрать параметр `context:` из вызова `statusManager.resetProgram(context:)` -> `statusManager.resetProgram()`
+4. Обновить все тесты:
+   - Передавать `modelContainer` при создании `StatusManager` через `MockStatusManager.create` или аналогичный метод
+   - Убрать параметр `context:` из всех вызовов методов `StatusManager` в тестах
+   - Обновить тесты, которые проверяют работу с `context`, чтобы они проверяли использование `modelContainer.mainContext`
+5. Запустить `make format` и `make test` - тесты должны пройти (Зеленый)
+
+**7.3. Рефакторинг:**
+1. Убедиться, что все методы используют `modelContainer.mainContext` напрямую, без передачи через параметры
+2. Проверить, что нет дублирования логики получения контекста - все методы используют `modelContainer.mainContext` напрямую
+3. Убедиться, что код стал проще и понятнее - меньше параметров, меньше передач `context` между методами
+4. Проверить, что все вызовы методов `StatusManager` в коде и тестах обновлены (убраны параметры `context:`)
+5. Убедиться, что `StatusManager` стал более самодостаточным - не требует передачи `context` извне
+
+**Результат:**
+- ✅ Устранена зависимость от передачи `ModelContext` извне во все методы `StatusManager`
+- ✅ Все методы `StatusManager` используют `modelContainer.mainContext` напрямую
+- ✅ Команды от часов обрабатываются с использованием `mainContext` из `modelContainer`
+- ✅ `ModelContainer` централизован в `StatusManager`, упрощен код в `SwiftUI_SotkaAppApp` и других местах
+- ✅ `StatusManager` становится единственным источником истины для `ModelContainer`
+- ✅ Упрощены сигнатуры методов - убраны параметры `context: ModelContext`
+- ✅ Упрощены вызовы методов - не нужно передавать `context` извне
+- ✅ Тесты покрывают все сценарии работы с `modelContainer`
+
 ### Риски и митигация
 
 #### Риск 1: Проблемы с actor isolation
