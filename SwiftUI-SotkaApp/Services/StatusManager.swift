@@ -5,13 +5,14 @@ import SwiftData
 import SWUtils
 import WatchConnectivity
 
+private let logger = Logger(
+    subsystem: Bundle.main.bundleIdentifier ?? "SotkaApp",
+    category: String(describing: StatusManager.self)
+)
+
 @MainActor
 @Observable
 final class StatusManager: NSObject {
-    @ObservationIgnored private let logger = Logger(
-        subsystem: Bundle.main.bundleIdentifier!,
-        category: String(describing: StatusManager.self)
-    )
     @ObservationIgnored private let defaults: UserDefaults
     @ObservationIgnored let customExercisesService: CustomExercisesService
     @ObservationIgnored let infopostsService: InfopostsService
@@ -299,7 +300,7 @@ final class StatusManager: NSObject {
             message,
             replyHandler: nil
         ) { error in
-            self.logger.error("Ошибка отправки текущего статуса на часы: \(error.localizedDescription)")
+            logger.error("Ошибка отправки текущего статуса на часы: \(error.localizedDescription)")
         }
     }
 
@@ -326,7 +327,7 @@ final class StatusManager: NSObject {
             message,
             replyHandler: nil
         ) { error in
-            self.logger.error("Ошибка отправки текущей активности на часы: \(error.localizedDescription)")
+            logger.error("Ошибка отправки текущей активности на часы: \(error.localizedDescription)")
         }
     }
 
@@ -785,32 +786,26 @@ nonisolated extension StatusManager: WCSessionDelegate {
 
     nonisolated func session(_: WCSession, activationDidCompleteWith activationState: WCSessionActivationState, error: Error?) {
         if let error {
-            Logger(subsystem: Bundle.main.bundleIdentifier ?? "SotkaApp", category: "StatusManager")
-                .error("Ошибка активации WCSession: \(error.localizedDescription)")
+            logger.error("Ошибка активации WCSession: \(error.localizedDescription)")
         } else {
-            Logger(subsystem: Bundle.main.bundleIdentifier ?? "SotkaApp", category: "StatusManager")
-                .info("WCSession активирована с состоянием: \(activationState.rawValue)")
+            logger.info("WCSession активирована с состоянием: \(activationState.rawValue)")
         }
     }
 
     nonisolated func session(_: WCSession, didReceiveMessage message: [String: Any]) {
-        Logger(subsystem: Bundle.main.bundleIdentifier ?? "SotkaApp", category: "StatusManager")
-            .info("Получено сообщение от часов: \(message)")
+        logger.info("Получено сообщение от часов: \(message)")
         nonisolated(unsafe) let messageCopy = message
-        let managerRef = self
         Task { @MainActor in
-            managerRef.handleWatchCommand(messageCopy)
+            handleWatchCommand(messageCopy)
         }
     }
 
     nonisolated func session(_: WCSession, didReceiveMessage message: [String: Any], replyHandler: @escaping ([String: Any]) -> Void) {
-        Logger(subsystem: Bundle.main.bundleIdentifier ?? "SotkaApp", category: "StatusManager")
-            .info("Получено сообщение с ответом от часов: \(message)")
+        logger.info("Получено сообщение с ответом от часов: \(message)")
         nonisolated(unsafe) let messageCopy = message
-        let managerRef = self
         nonisolated(unsafe) let replyHandlerCopy = replyHandler
         Task { @MainActor in
-            managerRef.handleWatchCommand(messageCopy, replyHandler: replyHandlerCopy)
+            handleWatchCommand(messageCopy, replyHandler: replyHandlerCopy)
         }
     }
 }
