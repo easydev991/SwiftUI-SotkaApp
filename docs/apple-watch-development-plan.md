@@ -169,65 +169,26 @@ SotkaWatch Watch App/
    - Переводы добавляются на русский и английский языки
 
 ### Этап 1: Настройка проекта и инфраструктуры ✅ Выполнено
-
-#### 1.1 Настройка Watch App Target ✅ Выполнено
-- [x] ✅ watchOS 10.0, WatchConnectivity, OSLog настроены
-- [x] ✅ Модели добавлены в Watch App target
-- [x] ✅ `AuthHelper` использует обычный UserDefaults
-
-#### 1.2 Константы и утилиты ✅ Выполнено
-- [x] ✅ `Constants.WatchCommand`, локализация displayName
-
-#### 1.3 Настройка хранения данных ✅ Выполнено
-- [x] ✅ `AuthHelper`, `StatusManager`, `AppSettings` используют обычный UserDefaults
-- [x] ✅ Все данные на часах получаются только через WatchConnectivity, при отсутствии связи показывается `AuthRequiredView`
-
-#### 1.4 Ассеты упражнений ✅ Выполнено
-- [x] ✅ `ExercisesAssets.xcassets` создан и добавлен в оба таргета
+- ✅ watchOS 10.0, WatchConnectivity, OSLog, модели, константы, ассеты настроены
+- ✅ Все данные на часах получаются только через WatchConnectivity, при отсутствии связи показывается `AuthRequiredView`
 
 ### Этап 2: Добавление Codable к моделям ✅ Выполнено
-- [x] ✅ Codable добавлен к моделям, создана структура `WorkoutData`
+- ✅ Codable добавлен к моделям, создана структура `WorkoutData`
 
 ### Этап 3: Сервисы ✅ Выполнено
-- [x] ✅ `WatchAuthService`, `WatchConnectivityService`, `WatchWorkoutService` реализованы
+- ✅ `WatchAuthService`, `WatchConnectivityService`, `WatchWorkoutService` реализованы
 
 ### Этап 4: ViewModels ✅ Выполнено
-- [x] ✅ `HomeViewModel`, `WorkoutViewModel`, `WorkoutPreviewViewModel` реализованы
+- ✅ `HomeViewModel`, `WorkoutViewModel`, `WorkoutPreviewViewModel` реализованы
 
 ### Этап 5: Интеграция с iPhone ✅ Выполнено
-- [x] ✅ `WatchConnectivityManager` реализован с обработкой команд, очередью запросов и проверкой конфликтов
-- [x] ✅ Методы для работы с активностями и отправки данных на часы добавлены в `DailyActivitiesService` и `StatusManager`
-- [x] ✅ Синхронизация через `sendMessage` (отключен `updateApplicationContext` из-за проблем с рекурсией в тестах)
-
-**Важные примечания:**
+- ✅ Обработка команд, проверка конфликтов, синхронизация через `sendMessage`
 - ⚠️ WCSessionDelegate для watchOS: НЕ добавлять методы `sessionDidBecomeInactive` и `sessionDidDeactivate` (unavailable на watchOS)
-- Actor isolation: Методы делегата `nonisolated` добавляют запросы в очередь через `Task { @MainActor in }`, обработка через `processPendingRequests(context:)` во вьюхе
-- Авторизация и текущий день: ✅ Реализовано через WatchConnectivity (`sendMessage`). Команды отправляются при изменении статуса и `currentDayCalculator`. На часах данные получаются только из WatchConnectivity, при отсутствии связи показывается `AuthRequiredView`
 
 ### Этап 6: UI экранов ✅ Выполнено
-
-#### 6.1 Экран авторизации ✅ Выполнено
-- [x] ✅ `AuthRequiredView` создан и интегрирован
-
-#### 6.2 Главный экран ✅ Выполнено
-- [x] ✅ `HomeView` создан с отображением активности, выбором активности, открытием превью тренировки
-- [x] ✅ Авторизация и синхронизация данных через WatchConnectivity (`sendMessage`). Данные получаются только из `WatchConnectivityService`, при ошибке или отсутствии связи показывается `AuthRequiredView`
-
-#### 6.3 Экран выбора активности ✅ Выполнено
-- [x] ✅ Созданы экраны: `DayActivitySelectionView`, `DayActivityView`, `SelectedActivityView` с полным функционалом
-- [ ] **TODO:** Добавить локализованные строки для индикаторов и ошибок (`Watch.Activity.Saving`, `Watch.Activity.Error`) в `Localizable.xcstrings`
-
-#### 6.3.1 Экран превью тренировки ✅ Выполнено
-- [x] ✅ `WorkoutPreviewView` и `WorkoutEditView` созданы с полным функционалом редактирования упражнений и комментариев
-
-#### 6.4 Экран выполнения тренировки ✅ Выполнено
-- [x] ✅ `WorkoutView` и `WorkoutRestTimerView` созданы с полным функционалом выполнения тренировки
-- [x] ✅ Модели `WorkoutStep`, `WorkoutState`, `WorkoutStepState` добавлены
-- **Отличия от основного приложения:** На часах отображается только текущий этап тренировки
-- [ ] **TODO:** Проверить и добавить недостающие локализованные строки (`Watch.Workout.*`), добавить переводы на русский и английский
-
-#### 6.5 Навигация и главный файл приложения ✅ Выполнено
-- [x] ✅ `SotkaWatchApp.swift` настроен с навигацией и проверкой авторизации
+- ✅ Все экраны созданы: `AuthRequiredView`, `HomeView`, `DayActivityView`, `WorkoutPreviewView`, `WorkoutView` и др.
+- ✅ Модели `WorkoutStep`, `WorkoutState`, `WorkoutStepState` добавлены
+- [ ] **TODO:** Добавить недостающие локализованные строки (`Watch.Activity.*`, `Watch.Workout.*`)
 
 ### Этап 7: UI/UX оптимизация для часов
 
@@ -689,23 +650,13 @@ init(...) {
 │                    StatusManager                        │
 │  (WCSessionDelegate, содержит все сервисы)             │
 │                                                         │
+│  - sessionProtocol: WCSessionProtocol?                  │
 │  - session(_:didReceiveMessage:)                       │
-│    → handleWatchCommand(_:context:replyHandler:)      │
+│    → handleWatchCommand(_:replyHandler:)               │
 │      → dailyActivitiesService / progressSyncService    │
 │                                                         │
 │  - sendCurrentStatus(isAuthorized:currentDay:currentActivity:) │
-│  - sendCurrentActivity(day:context:)                   │
-└─────────────────────────────────────────────────────────┘
-                          │
-                          │ использует
-                          ▼
-┌─────────────────────────────────────────────────────────┐
-│                    StatusManager                        │
-│  (WCSessionDelegate, содержит все сервисы)             │
-│                                                         │
-│  - sessionProtocol: WCSessionProtocol?                  │
-│  - sendCurrentStatus(isAuthorized:currentDay:currentActivity:) │
-│  - sendCurrentActivity(day:context:)                   │
+│  - sendCurrentActivity(day:)                           │
 │                                                         │
 │  Использует WCSessionProtocol для поддержки моков      │
 │  Метод sendMessageToWatch в протоколе для избежания    │
@@ -739,252 +690,48 @@ init(...) {
 ### Пошаговый план рефакторинга
 
 #### Шаг 1: Создание простого WatchConnectivityManager ✅
+- ✅ Протокол и структура для отправки данных, безопасная работа на iPad/macOS
 
-**Цель:** Создать простую структуру только для отправки данных на часы
+#### Шаг 2: Перенос делегата WCSession в StatusManager ✅
+- ✅ `StatusManager` стал делегатом WCSession, прямая обработка команд без очереди
 
-**Действия (TDD подход):**
-
-**1.1. Красный - Написать тесты (до реализации):** ✅
-1. ✅ Создать файл `WatchConnectivityManagerProtocolTests.swift` с тестами для протокола
-2. ✅ Написать тесты: `sendMessage`, `isReachable`, обработка ошибок
-3. ✅ Запустить `make test` - тесты проходят (Зеленый)
-
-**1.2. Зеленый - Реализовать код:** ✅
-1. ✅ Создать протокол `WatchConnectivityManagerProtocol` с методами `sendMessage` и `isReachable`
-2. ✅ Создать структуру `WatchConnectivityManager` (не класс, не делегат WCSession)
-3. ✅ Реализовать структуру с `WCSessionProtocol?` для поддержки iPad/macOS, безопасная инициализация
-4. ✅ Создать enum `WatchConnectivityError` с кейсами `.unsupported` и `.unreachable`
-5. ✅ Добавить тесты для случая `sessionProtocol == nil`
-6. ✅ Запустить `make format` и `make test` - тесты проходят (Зеленый)
-
-**Результат:** ✅
-- ✅ Простая структура для отправки данных, протокол для тестирования, безопасная работа на iPad/macOS
-
-#### Шаг 2: Перенос делегата WCSession в StatusManager
-
-**Цель:** Сделать `StatusManager` делегатом WCSession для прямой обработки команд
-
-**Действия (TDD подход):**
-
-**2.1. Красный - Написать тесты (до реализации):** ✅
-1. ✅ Создать файл `StatusManagerWatchConnectivityTests.swift`
-2. ✅ Написать тесты для методов отправки данных (`sendCurrentStatus`, `sendCurrentActivity`)
-3. ✅ Обновить `MockStatusManager.create` для поддержки `watchConnectivitySessionProtocol`
-
-**2.2. Зеленый - Реализовать код:** ✅
-1. ✅ Добавить `WCSessionDelegate` к `StatusManager` (наследование от `NSObject`)
-2. ✅ В `init` инициализировать `watchConnectivityManager`, установить делегат и активировать сессию
-3. ✅ Перенести методы делегата из `WatchConnectivityManager` в `StatusManager`
-4. ✅ Создать метод `handleWatchCommand(_:context:replyHandler:)` (заглушка, полная реализация в шаге 4)
-5. ✅ Создать методы отправки данных: `sendCurrentStatus`, `sendCurrentActivity`, `getCurrentActivity`
-6. ✅ Обновить `getStatus`, `processAuthStatus`, `sendDayDataToWatch` для вызова `sendCurrentStatus`
-
-**Результат:** ✅
-- ✅ Прямая обработка команд без очереди, `StatusManager` управляет WCSession и имеет доступ ко всем сервисам
-
-#### Шаг 2.5: Упрощение работы с WatchConnectivity - убрать промежуточный слой ✅
-
-**Цель:** Избавиться от `WatchConnectivityManager` в основном приложении для iPhone, упростить работу с WCSession напрямую в `StatusManager`
-
-**Мотивация:**
-- `WatchConnectivityManager` является избыточным промежуточным слоем для iPhone приложения
-- `StatusManager` уже управляет жизненным циклом WCSession (делегат, активация)
-- Логика преобразования данных в сообщения должна быть отделена от логики отправки
-- Прямая работа с `WCSession` упростит код и уменьшит количество абстракций
-
-**Действия (TDD подход):**
-
-**2.5.1. Красный - Написать тесты (до реализации):** ✅
-1. ✅ Обновить тесты для работы напрямую с `WCSession`, добавить тесты для `WatchStatusMessage` и `isReachable`
-2. ✅ Запустить `make test` - тесты должны падать (Красный)
-
-**2.5.2. Зеленый - Реализовать код:** ✅
-1. ✅ Создать структуру `WatchStatusMessage` с методом `toMessage()` в файле `WatchStatusMessage.swift`
-2. ✅ В `StatusManager`: заменить `watchConnectivityManager` на `sessionProtocol: WCSessionProtocol?`, обновить методы отправки данных
-3. ✅ Удалить `WatchConnectivityManager.swift`, `WatchConnectivityManagerProtocol`, `MockWatchConnectivityManager`
-4. ✅ Запустить `make format` и `make test` - тесты должны пройти (Зеленый)
-
-**2.5.3. Рефакторинг:** ✅
-1. ✅ Проверить вынос логики преобразования данных в `WatchStatusMessage` и централизацию работы с `WCSession` в `StatusManager`
-
-**Результат:** ✅
-- ✅ Убран промежуточный слой, `StatusManager` работает напрямую с `WCSessionProtocol`, логика преобразования данных в `WatchStatusMessage`
-
-**Примечания:**
-- `WatchConnectivityManager` может остаться для Watch App, если там нужна абстракция
-- Для iPhone приложения достаточно прямой работы с `WCSession`
-- Структура `WatchStatusMessage` может быть расширена для других типов сообщений в будущем
-- Метод `parseWatchCommand` перенесен в extension `WatchStatusMessage` как статический метод для лучшей организации кода (логика парсинга находится рядом с логикой создания сообщений)
+#### Шаг 2.5: Упрощение работы с WatchConnectivity ✅
+- ✅ Убран промежуточный слой `WatchConnectivityManager`, `StatusManager` работает напрямую с `WCSessionProtocol`
+- ✅ Создана структура `WatchStatusMessage` для преобразования данных
+- ✅ Метод `parseWatchCommand` перенесен в extension `WatchStatusMessage` как статический метод
 
 #### Шаг 3: Убрать force unwrap и очередь ✅
-
-**Цель:** Безопасная инициализация и убрать костыль с очередью, удалить старый класс `StatusManager.WatchConnectivityManager`
-
-**Действия (TDD подход):**
-
-**3.1. Красный - Написать тесты (до реализации):** ✅
-1. ✅ Обновить тесты в `StatusManagerWatchConnectivityTests.swift`: убрать тесты делегата, исправить ошибки компиляции, обновить для работы с `WCSessionProtocol`
-2. ✅ Запустить `make test` - тесты проходят
-
-**3.2. Зеленый - Реализовать код:** ✅
-1. ✅ Удалить старый класс `StatusManager.WatchConnectivityManager`, убрать очередь запросов, убрать `onChange(of: pendingRequestsCount)` из `SwiftUI_SotkaAppApp.swift`
-2. ✅ Запустить `make format` и `make test` - тесты должны пройти (Зеленый)
-
-**Результат:** ✅
-- ✅ Нет force unwrap и очереди запросов, старый класс удален, простой поток данных
-
-**3.3. Рефакторинг:** ✅
-> ✅ Выполнено: Старый класс `StatusManager.WatchConnectivityManager` удален вместе с очередью запросов и методами обработки команд. Команды от часов теперь обрабатываются напрямую через методы делегата WCSession в `StatusManager`.
+- ✅ Удален старый класс `StatusManager.WatchConnectivityManager`, убрана очередь запросов
 
 #### Шаг 4: Рефакторинг обработки команд ✅
-
-**Цель:** Упростить обработку команд с использованием Command Pattern
-
-**Действия (TDD подход, итеративно для каждой команды):**
-
-**4.1. Красный - Написать тесты для парсинга:** ✅
-1. ✅ Добавить тесты парсинга команд в `StatusManagerWatchConnectivityTests.swift`
-2. ✅ Запустить `make test` - тесты проходят (Зеленый)
-
-**4.2. Зеленый - Реализовать парсинг:** ✅
-1. ✅ Создать статический метод `parseWatchCommand` в extension `WatchStatusMessage`
-2. ✅ Обновить `StatusManager.handleWatchCommand` для использования статического метода
-3. ✅ Запустить `make format` и `make test` - тесты проходят (Зеленый)
-
-**4.3. Красный - Написать тесты для обработки команд (итеративно):** ✅
-1. ✅ Добавить тесты обработки команд в `StatusManagerWatchConnectivityTests.swift` (вызывают `handleWatchCommand` напрямую)
-2. ✅ Запустить `make test` - тесты проходят (Зеленый)
-
-**4.4. Зеленый - Реализовать обработку команд (итеративно):** ✅
-1. ✅ Создать метод `handleWatchCommand(_:context:replyHandler:)` с switch по типам команд
-2. ✅ Реализовать обработку всех команд: `setActivity`, `saveWorkout`, `getCurrentActivity`, `getWorkoutData`, `deleteActivity`
-3. ✅ После изменения активности вызывать `sendCurrentActivity`, при необходимости `sendCurrentStatus`
-4. ✅ Запустить `make format` и `make test` - тесты проходят (Зеленый)
-
-**4.5. Рефакторинг:** ✅
-1. ✅ Улучшить код, убрать дублирование, упростить тесты
-2. ✅ Перенести `parseWatchCommand` в extension `WatchStatusMessage` как статический метод
-3. ✅ Упростить логику активации сессии с логированием
-4. ✅ Запустить `make format` и `make test` - все тесты проходят
-
-**Результат:** ✅
-- ✅ Четкая структура обработки команд, легко добавлять новые команды и тестировать
+- ✅ Реализована обработка всех команд через Command Pattern
 - ✅ `parseWatchCommand` в extension `WatchStatusMessage`, упрощена активация сессии с логированием
 
-#### Шаг 5: Обновление тестов ✅ Частично выполнено
-
-**Цель:** Обновить тесты под новую архитектуру и обеспечить полное покрытие
-
-**Действия:**
-1. ✅ Удалить устаревшие тесты: `WatchConnectivityManagerTests.swift`, `WatchConnectivityManagerProtocolTests.swift`, `MockWatchConnectivityManager.swift`
-2. ✅ Обновить тесты в `StatusManagerWatchConnectivityTests`: отправка данных, `WatchStatusMessage`, `isReachable`, парсинг команд (статический метод), обработка команд
-3. ✅ Обновить тесты в `StatusManagerProcessAuthStatusTests.swift` и `StatusManagerSendDayDataToWatchTests.swift` для работы с `WCSessionProtocol`
-4. ✅ Запустить `make format` и `make test` - все тесты проходят
-
-**Результат:** ✅
-- ✅ Все тесты проходят, полное покрытие новой архитектуры, устаревшие тесты удалены
+#### Шаг 5: Обновление тестов ✅ Выполнено
+- ✅ Удалены устаревшие тесты, обновлены все тесты под новую архитектуру
+- ✅ Исправлены предупреждения о неиспользуемых переменных `context` в тестах
 
 #### Шаг 6: Обновление документации ✅ Частично выполнено
+- ✅ Обновлен раздел "Архитектура" в `apple-watch-development-plan.md`
+- ⏸️ Обновить внешнюю документацию (если есть) - опционально
 
-**Цель:** Обновить документацию под новую архитектуру
+#### Шаг 7: Устранение зависимости от ModelContext в методах делегата WCSession ✅ Выполнено
 
-**Действия:**
-1. ✅ Обновлен раздел "Архитектура" и описание обработки команд в `apple-watch-development-plan.md`
-2. ⏸️ Обновить внешнюю документацию (если есть) - опционально
+**Проблема:** ✅ Решена
+- Методы делегата WCSession вызывали `handleWatchCommand` с `context: nil` (техдолг)
+
+**Решение:** ✅ Реализовано
+- ✅ `ModelContainer` инициализирован в `init()` `SwiftUI_SotkaAppApp` и передан в `StatusManager`
+- ✅ Добавлено свойство `let modelContainer: ModelContainer` в `StatusManager`
+- ✅ Убран параметр `context: ModelContext` из всех методов `StatusManager`, используется `modelContainer.mainContext` напрямую
+- ✅ В `SwiftUI_SotkaAppApp` используется `statusManager.modelContainer` в `.modelContainer()` модификаторе
+- ✅ Управление `ModelContainer` централизовано в `StatusManager`
+
+**Безопасность:** `ModelContainer` - struct (value type), передача безопасна. `StatusManager` - `@MainActor`, соответствует требованиям `mainContext`.
 
 **Результат:** ✅
-- ✅ Актуальная документация, отражены все изменения архитектуры
-
-#### Шаг 7: Устранение зависимости от ModelContext в методах делегата WCSession ✅ **Выполнено**
-
-**Цель:** Устранить техдолг с передачей `nil` для `ModelContext` в методах делегата WCSession
-
-**Проблема:** ✅ **Решена**
-- Методы делегата WCSession (`session(_:didReceiveMessage:)` и `session(_:didReceiveMessage:replyHandler:)`) вызывали `handleWatchCommand` с `context: nil`
-- Это был техдолг, так как обработка команд требует `ModelContext` для работы с SwiftData
-- `ModelContext` был недоступен в методах делегата, так как они `nonisolated` и не имели доступа к SwiftUI окружению
-
-**Решение:** ✅ **Реализовано**
-- ✅ Инициализирован `ModelContainer` в `init()` `SwiftUI_SotkaAppApp` (логика создания перемещена из lazy property)
-- ✅ Передается `modelContainer` в `StatusManager` при создании через параметр `init`
-- ✅ Добавлено публичное свойство `let modelContainer: ModelContainer` в `StatusManager` (не опциональное, так как требуется для SwiftUI модификатора, устанавливается один раз при создании)
-- ✅ В методах делегата используется `modelContainer.mainContext` вместо `nil`
-- ✅ В `SwiftUI_SotkaAppApp` используется `statusManager.modelContainer` в `.modelContainer()` модификаторе вместо локального свойства
-- ✅ Заменены все использования `modelContainer.mainContext` в `SwiftUI_SotkaAppApp` на `statusManager.modelContainer.mainContext`
-- ✅ Удалено локальное свойство `modelContainer` из `SwiftUI_SotkaAppApp`
-- ✅ Управление `ModelContainer` централизовано в `StatusManager`, код упрощен
-
-**Безопасность решения:**
-- `ModelContainer` - это struct (value type), передача безопасна и не создает retain cycles
-- `StatusManager` помечен как `@MainActor`, что соответствует требованиям `mainContext` (должен использоваться только на главном потоке)
-- Оба объекта (`StatusManager` и `modelContainer`) живут в `SwiftUI_SotkaAppApp` и имеют одинаковый жизненный цикл
-- Это стандартный подход в SwiftUI/SwiftData для централизации управления данными в сервисе
-- `StatusManager` становится единственным источником истины для `ModelContainer` в приложении
-
-**Действия (TDD подход):**
-
-**7.1. Красный - Написать тесты (до реализации):** ✅ **Выполнено**
-1. ✅ Обновлены все тесты для работы с `modelContainer` в `StatusManager`:
-   - ✅ Обновлен `MockStatusManager.create` для приема `modelContainer: ModelContainer` и передачи его в `StatusManager`
-   - ✅ Обновлены все тесты, которые создают `StatusManager`, чтобы передавать `modelContainer`
-   - ✅ Обновлены все вызовы методов `StatusManager` в тестах - убран параметр `context:`
-   - ✅ Добавлены тесты в `StatusManagerWatchConnectivityTests.swift`:
-     - ✅ `@Test("Должен обрабатывать команду setActivity с ModelContext из modelContainer")` - тест обработки команды через метод делегата с установленным `modelContainer`
-     - ✅ `@Test("Должен использовать mainContext из modelContainer для обработки команд")` - тест проверки использования правильного контекста
-2. ✅ Тесты обновлены и готовы к запуску (Красный) - ожидали отсутствие параметра `modelContainer` в `init` и измененные сигнатуры методов
-
-**7.2. Зеленый - Реализовать код:** ✅ **Выполнено**
-1. ✅ В `StatusManager`:
-   - ✅ Добавлено свойство `@ObservationIgnored let modelContainer: ModelContainer` (публичное, не опциональное, устанавливается один раз при создании)
-   - ✅ Добавлен параметр `modelContainer: ModelContainer` в `init` для передачи контейнера при создании
-   - ✅ Убран параметр `context: ModelContext` из всех методов и используется `modelContainer.mainContext` напрямую:
-     - ✅ `getStatus(context:)` -> `getStatus()` - использует `modelContainer.mainContext` внутри
-     - ✅ `start(appDate:context:)` -> `start(appDate:)` - использует `modelContainer.mainContext` внутри
-     - ✅ `syncWithSiteDate(siteDate:context:)` -> `syncWithSiteDate(siteDate:)` - использует `modelContainer.mainContext` внутри
-     - ✅ `loadInfopostsWithUserGender(context:)` -> `loadInfopostsWithUserGender()` - использует `modelContainer.mainContext` внутри
-     - ✅ `processAuthStatus(isAuthorized:context:)` -> `processAuthStatus(isAuthorized:)` - использует `modelContainer.mainContext` внутри
-     - ✅ `sendDayDataToWatch(currentDay:context:)` -> `sendDayDataToWatch(currentDay:)` - использует `modelContainer.mainContext` внутри
-     - ✅ `sendCurrentActivity(day:context:)` -> `sendCurrentActivity(day:)` - использует `modelContainer.mainContext` внутри
-     - ✅ `resetProgram(context:)` -> `resetProgram()` - использует `modelContainer.mainContext` внутри
-     - ✅ `syncJournalAndProgress(context:)` -> `syncJournalAndProgress()` - использует `modelContainer.mainContext` внутри
-     - ✅ `handleWatchCommand(_:context:replyHandler:)` -> `handleWatchCommand(_:replyHandler:)` - использует `modelContainer.mainContext` внутри, убрана проверка на `nil`
-   - ✅ Обновлены методы делегата WCSession:
-     - ✅ В `session(_:didReceiveMessage:)` вызывается `handleWatchCommand` без параметра `context`
-     - ✅ В `session(_:didReceiveMessage:replyHandler:)` вызывается `handleWatchCommand` без параметра `context`
-2. ✅ В `SwiftUI_SotkaAppApp`:
-   - ✅ Перемещена логика создания `ModelContainer` из lazy property в `init()` (создается `modelContainer` как локальная переменная в `init`)
-   - ✅ Передается `modelContainer` в `StatusManager` при создании через параметр `init`
-   - ✅ Заменено `.modelContainer(modelContainer)` на `.modelContainer(statusManager.modelContainer)`
-   - ✅ Убран параметр `context:` из всех вызовов методов `StatusManager`:
-     - ✅ `statusManager.getStatus(context:)` -> `statusManager.getStatus()`
-     - ✅ `statusManager.loadInfopostsWithUserGender(context:)` -> `statusManager.loadInfopostsWithUserGender()`
-     - ✅ `statusManager.processAuthStatus(isAuthorized:context:)` -> `statusManager.processAuthStatus(isAuthorized:)`
-   - ✅ Удалено локальное свойство `private var modelContainer: ModelContainer`
-3. ✅ В `MoreScreen.swift`:
-   - ✅ Убран параметр `context:` из вызова `statusManager.resetProgram(context:)` -> `statusManager.resetProgram()`
-4. ✅ Обновлены все тесты:
-   - ✅ Передается `modelContainer` при создании `StatusManager` через `MockStatusManager.create`
-   - ✅ Убран параметр `context:` из всех вызовов методов `StatusManager` в тестах
-   - ✅ Обновлены тесты, которые проверяют работу с `context`, чтобы они проверяли использование `modelContainer.mainContext`
-5. ✅ Запущены `make format` и проверка компиляции - код готов к тестированию (Зеленый)
-
-**7.3. Рефакторинг:** ✅ **Выполнено**
-1. ✅ Все методы используют `modelContainer.mainContext` напрямую, без передачи через параметры - каждый метод получает контекст локально через `let context = modelContainer.mainContext`
-2. ✅ Нет дублирования логики получения контекста - все методы используют `modelContainer.mainContext` напрямую, каждый метод получает контекст локально
-3. ✅ Код стал проще и понятнее - убраны параметры `context: ModelContext` из всех методов, упрощены сигнатуры методов, меньше передач `context` между методами
-4. ✅ Все вызовы методов `StatusManager` в коде и тестах обновлены - убраны параметры `context:` из всех вызовов
-5. ✅ `StatusManager` стал более самодостаточным - не требует передачи `context` извне, все методы получают контекст из `modelContainer.mainContext`
-
-**Результат:** ✅ **Достигнут**
-- ✅ Устранена зависимость от передачи `ModelContext` извне во все методы `StatusManager`
-- ✅ Все методы `StatusManager` используют `modelContainer.mainContext` напрямую
-- ✅ Команды от часов обрабатываются с использованием `mainContext` из `modelContainer`
-- ✅ `ModelContainer` централизован в `StatusManager`, упрощен код в `SwiftUI_SotkaAppApp` и других местах
-- ✅ `StatusManager` стал единственным источником истины для `ModelContainer`
-- ✅ Упрощены сигнатуры методов - убраны параметры `context: ModelContext`
-- ✅ Упрощены вызовы методов - не нужно передавать `context` извне
-- ✅ Тесты покрывают все сценарии работы с `modelContainer`
-- ✅ Все шаги (7.1, 7.2, 7.3) выполнены и проверены
+- ✅ Устранена зависимость от передачи `ModelContext` извне, все методы используют `modelContainer.mainContext` напрямую
+- ✅ Упрощены сигнатуры методов и вызовы, исправлены предупреждения в тестах
 
 ### Риски и митигация
 

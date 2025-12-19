@@ -9,8 +9,7 @@ struct WatchConnectivityServiceTests {
     func initializesWCSessionOnCreation() throws {
         let authService = WatchAuthService()
         let mockSession = MockWCSession(isReachable: true)
-        let service = WatchConnectivityService(authService: authService, sessionProtocol: mockSession)
-
+        _ = WatchConnectivityService(authService: authService, sessionProtocol: mockSession)
         // При использовании мок сессии, session будет nil, но sessionProtocol установлен
         // Проверяем, что мок сессия активирована
         #expect(mockSession.activateCallCount == 1)

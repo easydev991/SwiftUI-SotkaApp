@@ -4,7 +4,7 @@ import WatchConnectivity
 
 /// Мок для WCSession для тестирования
 @MainActor
-final class MockWCSession: WCSessionProtocol {
+final class MockWCSession: WatchSessionProtocol {
     var isReachable: Bool
     weak var delegate: WCSessionDelegate?
 

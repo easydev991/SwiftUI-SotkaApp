@@ -11,7 +11,7 @@ final class WatchConnectivityService: NSObject {
     )
 
     private let authService: WatchAuthService
-    private let sessionProtocol: WCSessionProtocol?
+    private let sessionProtocol: WatchSessionProtocol?
 
     /// Текущий день программы (обновляется при получении команды PHONE_COMMAND_CURRENT_DAY)
     private(set) var currentDay: Int?
@@ -27,7 +27,7 @@ final class WatchConnectivityService: NSObject {
     ///   - sessionProtocol: Протокол сессии для тестирования. Если `nil`, используется `WCSession.default`
     init(
         authService: WatchAuthService,
-        sessionProtocol: WCSessionProtocol? = nil
+        sessionProtocol: WatchSessionProtocol? = nil
     ) {
         self.authService = authService
         if let sessionProtocol {

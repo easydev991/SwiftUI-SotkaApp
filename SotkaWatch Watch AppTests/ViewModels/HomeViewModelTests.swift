@@ -90,7 +90,6 @@ struct HomeViewModelTests {
 
     @Test("Загружает данные тренировки при активности типа workout")
     func loadsWorkoutDataWhenActivityIsWorkout() async throws {
-        let startDate = Calendar.current.date(byAdding: .day, value: -5, to: Date.now) ?? Date.now
         let authService = MockWatchAuthService(isAuthorized: true)
         let connectivityService = MockWatchConnectivityService()
         connectivityService.mockCurrentActivity = .workout
@@ -122,7 +121,6 @@ struct HomeViewModelTests {
 
     @Test("Не загружает данные тренировки при активности не типа workout")
     func doesNotLoadWorkoutDataWhenActivityIsNotWorkout() async throws {
-        let startDate = Calendar.current.date(byAdding: .day, value: -5, to: Date.now) ?? Date.now
         let authService = MockWatchAuthService(isAuthorized: true)
         let connectivityService = MockWatchConnectivityService()
         connectivityService.currentDay = 5
@@ -142,7 +140,6 @@ struct HomeViewModelTests {
 
     @Test("Обрабатывает ошибки при загрузке данных тренировки")
     func handlesErrorsWhenLoadingWorkoutData() async throws {
-        let startDate = Calendar.current.date(byAdding: .day, value: -5, to: Date.now) ?? Date.now
         let authService = MockWatchAuthService(isAuthorized: true)
         let connectivityService = MockWatchConnectivityService()
         connectivityService.currentDay = 5
@@ -164,7 +161,6 @@ struct HomeViewModelTests {
 
     @Test("Отправляет тип активности на iPhone")
     func sendsActivityTypeToiPhone() async throws {
-        let startDate = Calendar.current.date(byAdding: .day, value: -5, to: Date.now) ?? Date.now
         let authService = MockWatchAuthService(isAuthorized: true)
         let connectivityService = MockWatchConnectivityService()
         connectivityService.currentDay = 5
@@ -186,7 +182,6 @@ struct HomeViewModelTests {
 
     @Test("Запрашивает данные тренировки при начале тренировки")
     func requestsWorkoutDataWhenStartingWorkout() async throws {
-        let startDate = Calendar.current.date(byAdding: .day, value: -5, to: Date.now) ?? Date.now
         let authService = MockWatchAuthService(isAuthorized: true)
         let connectivityService = MockWatchConnectivityService()
         let workoutData = WorkoutData(
@@ -216,7 +211,6 @@ struct HomeViewModelTests {
 
     @Test("Обрабатывает ошибки связи с iPhone")
     func handlesConnectivityErrors() async throws {
-        let startDate = Calendar.current.date(byAdding: .day, value: -5, to: Date.now) ?? Date.now
         let authService = MockWatchAuthService(isAuthorized: true)
         let connectivityService = MockWatchConnectivityService()
         connectivityService.currentDay = 5
@@ -272,7 +266,6 @@ struct HomeViewModelTests {
 
     @Test("Удаляет активность дня")
     func deletesActivityForDay() async throws {
-        let startDate = Calendar.current.date(byAdding: .day, value: -5, to: Date.now) ?? Date.now
         let authService = MockWatchAuthService(isAuthorized: true)
         let connectivityService = MockWatchConnectivityService()
         connectivityService.currentDay = 5
@@ -296,7 +289,6 @@ struct HomeViewModelTests {
 
     @Test("Обновляет currentActivity на nil после успешного удаления текущего дня")
     func updatesCurrentActivityToNilAfterSuccessfulDeletionOfCurrentDay() async throws {
-        let startDate = Calendar.current.date(byAdding: .day, value: -5, to: Date.now) ?? Date.now
         let authService = MockWatchAuthService(isAuthorized: true)
         let connectivityService = MockWatchConnectivityService()
         connectivityService.currentDay = 5
@@ -318,7 +310,6 @@ struct HomeViewModelTests {
 
     @Test("Не обновляет currentActivity при удалении другого дня")
     func doesNotUpdateCurrentActivityWhenDeletingOtherDay() async throws {
-        let startDate = Calendar.current.date(byAdding: .day, value: -5, to: Date.now) ?? Date.now
         let authService = MockWatchAuthService(isAuthorized: true)
         let connectivityService = MockWatchConnectivityService()
         connectivityService.currentDay = 5
@@ -343,7 +334,6 @@ struct HomeViewModelTests {
 
     @Test("Обрабатывает ошибки при удалении активности")
     func handlesErrorsWhenDeletingActivity() async throws {
-        let startDate = Calendar.current.date(byAdding: .day, value: -5, to: Date.now) ?? Date.now
         let authService = MockWatchAuthService(isAuthorized: true)
         let connectivityService = MockWatchConnectivityService()
         connectivityService.currentDay = 5

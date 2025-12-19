@@ -1,9 +1,9 @@
 import Foundation
 import WatchConnectivity
 
-/// Протокол для абстракции WCSession для тестирования
+/// Протокол для абстракции WCSession для тестирования на Apple Watch
 @MainActor
-protocol WCSessionProtocol: AnyObject {
+protocol WatchSessionProtocol: AnyObject {
     var isReachable: Bool { get }
     var delegate: WCSessionDelegate? { get set }
 
@@ -16,4 +16,4 @@ protocol WCSessionProtocol: AnyObject {
 }
 
 /// WCSession соответствует протоколу, так как имеет все необходимые методы и свойства
-extension WCSession: WCSessionProtocol {}
+extension WCSession: WatchSessionProtocol {}
