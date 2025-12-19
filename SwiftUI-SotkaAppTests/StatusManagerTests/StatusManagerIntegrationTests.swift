@@ -84,13 +84,6 @@ extension StatusManagerTests {
             let mockExerciseClient = MockExerciseClient()
             let mockDaysClient = MockDaysClient()
 
-            let statusManager = try MockStatusManager.create(
-                statusClient: mockStatusClient,
-                exerciseClient: mockExerciseClient,
-                progressClient: mockProgressClient,
-                daysClient: mockDaysClient
-            )
-
             let modelConfiguration = ModelConfiguration(isStoredInMemoryOnly: true)
             let modelContainer = try ModelContainer(
                 for: User.self,
@@ -105,6 +98,14 @@ extension StatusManagerTests {
             let user = User(id: 1, userName: "testuser", fullName: "Test User", email: "test@example.com")
             context.insert(user)
             try context.save()
+
+            let statusManager = try MockStatusManager.create(
+                statusClient: mockStatusClient,
+                exerciseClient: mockExerciseClient,
+                progressClient: mockProgressClient,
+                daysClient: mockDaysClient,
+                modelContainer: modelContainer
+            )
 
             await statusManager.startNewRun(appDate: startDate)
 

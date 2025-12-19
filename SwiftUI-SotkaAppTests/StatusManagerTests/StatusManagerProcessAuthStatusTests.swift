@@ -124,11 +124,6 @@ extension StatusManagerTests {
         @Test("Удаляет данные пользователя из контекста при логауте")
         func deletesUserDataFromContextOnLogout() async throws {
             let mockSession = MockWCSession(isReachable: true)
-            let statusManager = try MockStatusManager.create(
-                daysClient: MockDaysClient(),
-                userDefaults: MockUserDefaults.create(),
-                watchConnectivitySessionProtocol: mockSession
-            )
 
             let modelConfiguration = ModelConfiguration(isStoredInMemoryOnly: true)
             let modelContainer = try ModelContainer(
@@ -141,6 +136,13 @@ extension StatusManagerTests {
             let user = User(id: 1, userName: "testuser", fullName: "Test User", email: "test@example.com")
             context.insert(user)
             try context.save()
+
+            let statusManager = try MockStatusManager.create(
+                daysClient: MockDaysClient(),
+                userDefaults: MockUserDefaults.create(),
+                modelContainer: modelContainer,
+                watchConnectivitySessionProtocol: mockSession
+            )
 
             let usersBefore = try context.fetch(FetchDescriptor<User>())
             #expect(usersBefore.count == 1)

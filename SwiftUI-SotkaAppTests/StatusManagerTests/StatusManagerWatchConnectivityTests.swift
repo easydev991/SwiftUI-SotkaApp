@@ -359,7 +359,7 @@ struct StatusManagerWatchConnectivityTests {
         let message: [String: Any] = [
             "command": Constants.WatchCommand.setActivity.rawValue,
             "day": 42,
-            "activityType": DayActivityType.workout.rawValue
+            "activityType": DayActivityType.rest.rawValue
         ]
 
         // Симулируем вызов через делегат WCSession
@@ -367,7 +367,7 @@ struct StatusManagerWatchConnectivityTests {
 
         let activity = statusManager.dailyActivitiesService.getActivity(dayNumber: 42, context: context)
         let activityType = try #require(activity?.activityType)
-        #expect(activityType == .workout)
+        #expect(activityType == .rest)
     }
 
     @Test("Должен использовать mainContext из modelContainer для обработки команд")
