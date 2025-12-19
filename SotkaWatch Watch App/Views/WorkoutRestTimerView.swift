@@ -20,9 +20,11 @@ struct WorkoutRestTimerView: View {
     }
 
     var body: some View {
-        VStack(spacing: 12) {
-            timerView
-        }
+        CircularTimerView(
+            remainingSeconds: remainingSeconds,
+            totalSeconds: duration,
+            shouldAnimate: shouldAnimate
+        )
         .navigationTitle(.timerScreenTitle)
         .toolbar {
             ToolbarItem(placement: .topBarLeading) {
@@ -109,14 +111,6 @@ struct WorkoutRestTimerView: View {
 }
 
 private extension WorkoutRestTimerView {
-    var timerView: some View {
-        CircularTimerView(
-            remainingSeconds: remainingSeconds,
-            totalSeconds: duration,
-            shouldAnimate: shouldAnimate
-        )
-    }
-
     var finishButton: some View {
         Button {
             finishTimer(force: true)

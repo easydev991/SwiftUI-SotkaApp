@@ -3,6 +3,7 @@ import SwiftUI
 /// Экран со списком айтемов, где айтем - строка, которую можно выбрать
 ///
 /// Используется для списка стран/городов
+@available(watchOS, unavailable)
 public struct ItemListScreen: View {
     @Environment(\.dismiss) private var dismiss
     @State private var searchQuery = ""
@@ -69,6 +70,7 @@ public struct ItemListScreen: View {
     }
 }
 
+@available(watchOS, unavailable)
 public extension ItemListScreen {
     enum Mode {
         case country, city
@@ -88,6 +90,7 @@ public extension ItemListScreen {
     }
 }
 
+@available(watchOS, unavailable)
 private extension ItemListScreen {
     var filteredItems: [String] {
         searchQuery.isEmpty
@@ -110,7 +113,7 @@ private extension ItemListScreen {
     }
 }
 
-#if DEBUG
+#if DEBUG && !os(watchOS)
 #Preview("Поиск страны") {
     @Previewable @State var selectedItem = "Россия"
     NavigationStack {

@@ -275,7 +275,14 @@ build:
 
 ## test: Запускает unit-тесты в терминале
 test:
-	xcodebuild -project SwiftUI-SotkaApp.xcodeproj -scheme SwiftUI-SotkaApp -sdk iphonesimulator -destination 'platform=iOS Simulator,name=iPhone 13 Pro,OS=18.6' test -testPlan SwiftUI-SotkaApp
+	xcodebuild -project SwiftUI-SotkaApp.xcodeproj \
+		-scheme SwiftUI-SotkaApp \
+		-resolvePackageDependencies && \
+	xcodebuild -project SwiftUI-SotkaApp.xcodeproj \
+		-scheme SwiftUI-SotkaApp \
+		-sdk iphonesimulator \
+		-destination 'platform=iOS Simulator,name=iPhone 13 Pro,OS=18.6' \
+		test -testPlan SwiftUI-SotkaApp
 
 ## test_watch: Запускает unit-тесты для Apple Watch в терминале
 test_watch:

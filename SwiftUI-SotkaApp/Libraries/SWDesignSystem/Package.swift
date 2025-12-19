@@ -6,7 +6,7 @@ import PackageDescription
 let package = Package(
     name: "SWDesignSystem",
     defaultLocalization: "en",
-    platforms: [.iOS(.v17)],
+    platforms: [.iOS(.v17), .watchOS(.v10)],
     products: [
         .library(name: "SWDesignSystem", targets: ["SWDesignSystem"])
     ],

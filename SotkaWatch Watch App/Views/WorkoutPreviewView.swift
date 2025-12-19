@@ -176,6 +176,7 @@ private extension WorkoutPreviewView {
     }
 
     var commentEditor: some View {
+        #if os(watchOS)
         TextFieldLink(prompt: Text(.dayActivityCommentPlaceholder)) {
             HStack {
                 Image(systemName: "text.bubble")
@@ -192,6 +193,9 @@ private extension WorkoutPreviewView {
         } onSubmit: { text in
             viewModel.updateComment(text.isEmpty ? nil : text)
         }
+        #else
+        EmptyView()
+        #endif
     }
 
     var bottomButtonsView: some View {

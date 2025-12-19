@@ -247,6 +247,19 @@ extension WatchConnectivityService: WCSessionDelegate {
         logger.info("Получен Application Context от iPhone: \(applicationContext)")
         handleApplicationContext(applicationContext)
     }
+
+    #if os(iOS)
+    // Примечание: sessionDidBecomeInactive и sessionDidDeactivate вызываются только на iOS,
+    // когда пользователь переключается между несколькими сопряженными Apple Watch.
+    // На watchOS эти методы не вызываются, поэтому оставляем их пустыми.
+    func sessionDidBecomeInactive(_: WCSession) {
+        // Не вызывается на watchOS
+    }
+
+    func sessionDidDeactivate(_: WCSession) {
+        // Не вызывается на watchOS
+    }
+    #endif
 }
 
 extension WatchConnectivityService {

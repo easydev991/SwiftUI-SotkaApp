@@ -12,6 +12,7 @@
 		675FDD152DD5E67A0040CA20 /* SWUtils in Frameworks */ = {isa = PBXBuildFile; productRef = 675FDD142DD5E67A0040CA20 /* SWUtils */; };
 		675FDD182DD5E6DE0040CA20 /* SWNetwork in Frameworks */ = {isa = PBXBuildFile; productRef = 675FDD172DD5E6DE0040CA20 /* SWNetwork */; };
 		679DD77F2DDC7D4900A939D9 /* SWDesignSystem in Frameworks */ = {isa = PBXBuildFile; productRef = 679DD77E2DDC7D4900A939D9 /* SWDesignSystem */; };
+		67BFDD972EF59AFF008E63D2 /* SWDesignSystem in Frameworks */ = {isa = PBXBuildFile; productRef = 67BFDD962EF59AFF008E63D2 /* SWDesignSystem */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -192,6 +193,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				67BFDD972EF59AFF008E63D2 /* SWDesignSystem in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -246,6 +248,7 @@
 				67156B402EDD853500334DEF /* SotkaWatch Watch App */,
 				67156B4E2EDD853600334DEF /* SotkaWatch Watch AppTests */,
 				67156B582EDD853700334DEF /* SotkaWatch Watch AppUITests */,
+				67BFDD952EF59AFF008E63D2 /* Frameworks */,
 				674A8A622DC758BB003F6E50 /* Products */,
 			);
 			sourceTree = "<group>";
@@ -261,6 +264,13 @@
 				67156B552EDD853700334DEF /* SotkaWatch Watch AppUITests.xctest */,
 			);
 			name = Products;
+			sourceTree = "<group>";
+		};
+		67BFDD952EF59AFF008E63D2 /* Frameworks */ = {
+			isa = PBXGroup;
+			children = (
+			);
+			name = Frameworks;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -283,6 +293,7 @@
 			);
 			name = "SotkaWatch Watch App";
 			packageProductDependencies = (
+				67BFDD962EF59AFF008E63D2 /* SWDesignSystem */,
 			);
 			productName = "SotkaWatch Watch App";
 			productReference = 67156B3F2EDD853500334DEF /* SotkaWatch Watch App.app */;
@@ -1125,6 +1136,10 @@
 			productName = SWNetwork;
 		};
 		679DD77E2DDC7D4900A939D9 /* SWDesignSystem */ = {
+			isa = XCSwiftPackageProductDependency;
+			productName = SWDesignSystem;
+		};
+		67BFDD962EF59AFF008E63D2 /* SWDesignSystem */ = {
 			isa = XCSwiftPackageProductDependency;
 			productName = SWDesignSystem;
 		};

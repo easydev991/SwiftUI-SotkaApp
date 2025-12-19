@@ -129,7 +129,7 @@ extension SWButtonStyle.Size {
     }
 }
 
-#if DEBUG
+#if DEBUG && !os(watchOS)
 #Preview {
     List {
         Section("Large") {
