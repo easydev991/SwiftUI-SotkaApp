@@ -31,9 +31,9 @@ extension WorkoutPreviewViewModelTests {
             #expect(!viewModel.isPlannedCountDisabled)
         }
 
-        @Test("Должен возвращать count когда count установлен")
+        @Test("Должен возвращать plannedCount когда оба установлены (приоритет у plannedCount)")
         @MainActor
-        func returnsCountWhenCountIsSet() throws {
+        func returnsPlannedCountWhenBothAreSet() throws {
             let connectivityService = MockWatchConnectivityService()
             let viewModel = WorkoutPreviewViewModel(
                 connectivityService: connectivityService
@@ -43,7 +43,7 @@ extension WorkoutPreviewViewModelTests {
             viewModel.plannedCount = 3
 
             let displayedCount = try #require(viewModel.displayedCount)
-            #expect(displayedCount == 5)
+            #expect(displayedCount == 3)
         }
 
         @Test("Должен возвращать plannedCount когда count == nil")
@@ -59,6 +59,35 @@ extension WorkoutPreviewViewModelTests {
 
             let displayedCount = try #require(viewModel.displayedCount)
             #expect(displayedCount == 4)
+        }
+
+        @Test("Должен возвращать count когда plannedCount == nil")
+        @MainActor
+        func returnsCountWhenPlannedCountIsNil() throws {
+            let connectivityService = MockWatchConnectivityService()
+            let viewModel = WorkoutPreviewViewModel(
+                connectivityService: connectivityService
+            )
+
+            viewModel.count = 10
+            viewModel.plannedCount = nil
+
+            let displayedCount = try #require(viewModel.displayedCount)
+            #expect(displayedCount == 10)
+        }
+
+        @Test("Должен возвращать nil когда оба count и plannedCount равны nil")
+        @MainActor
+        func returnsNilWhenBothAreNil() {
+            let connectivityService = MockWatchConnectivityService()
+            let viewModel = WorkoutPreviewViewModel(
+                connectivityService: connectivityService
+            )
+
+            viewModel.count = nil
+            viewModel.plannedCount = nil
+
+            #expect(viewModel.displayedCount == nil)
         }
 
         @Test("Должен возвращать true для shouldShowEditButton когда selectedExecutionType = cycles")

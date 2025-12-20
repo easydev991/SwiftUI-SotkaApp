@@ -40,7 +40,7 @@ final class WorkoutPreviewViewModel {
 
     /// Отображаемое количество кругов/подходов
     var displayedCount: Int? {
-        count ?? plannedCount
+        plannedCount ?? count
     }
 
     /// Выбранный тип выполнения для Picker (неопциональное значение)
@@ -321,7 +321,9 @@ final class WorkoutPreviewViewModel {
     /// Создание результата тренировки из текущих значений
     /// - Returns: WorkoutResult для отправки на iPhone
     func buildWorkoutResult() -> WorkoutResult {
-        let resultCount = count ?? plannedCount ?? 0
+        // Приоритет у plannedCount - если пользователь изменил запланированное значение,
+        // оно должно быть сохранено, даже если есть старое фактическое значение count
+        let resultCount = plannedCount ?? count ?? 0
         return WorkoutResult(count: resultCount, duration: workoutDuration)
     }
 
@@ -453,7 +455,9 @@ final class WorkoutPreviewViewModel {
             onSaveCompleted?()
         } catch {
             logger.error("Ошибка отправки результата тренировки на iPhone: \(error.localizedDescription)")
-            self.error = TrainingError.saveFailed(error.localizedDescription)
+            // Для сетевых ошибок не устанавливаем error, так как TrainingError только для валидации
+            // Можно добавить отдельный тип ошибки для сетевых ошибок если нужно
+            self.error = nil
         }
     }
 }

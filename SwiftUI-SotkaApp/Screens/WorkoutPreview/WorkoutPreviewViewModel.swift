@@ -33,7 +33,7 @@ final class WorkoutPreviewViewModel {
 
     /// Отображаемое количество кругов/подходов
     var displayedCount: Int? {
-        count ?? plannedCount
+        plannedCount ?? count
     }
 
     /// Определяет, нужно ли показывать кнопку редактирования упражнений
