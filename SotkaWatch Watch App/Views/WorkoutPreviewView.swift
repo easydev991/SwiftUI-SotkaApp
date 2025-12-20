@@ -1,3 +1,4 @@
+import SWDesignSystem
 import SwiftUI
 
 /// Упрощенная версия экрана превью тренировки для Apple Watch
@@ -64,13 +65,7 @@ struct WorkoutPreviewView: View {
                 }
             }
         }
-        .opacity(viewModel.isLoading ? 0.5 : 1)
-        .disabled(viewModel.isLoading)
-        .overlay {
-            if viewModel.isLoading {
-                ProgressView()
-            }
-        }
+        .loadingOverlay(if: viewModel.isLoading)
         .task {
             await viewModel.loadData(day: currentDay)
         }

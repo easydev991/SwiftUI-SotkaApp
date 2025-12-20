@@ -1,3 +1,4 @@
+import SWDesignSystem
 import SwiftUI
 
 struct HomeView: View {
@@ -36,13 +37,7 @@ struct HomeView: View {
                 )
             }
         }
-        .opacity(viewModel.isLoading ? 0.5 : 1)
-        .disabled(viewModel.isLoading)
-        .overlay {
-            if viewModel.isLoading {
-                ProgressView()
-            }
-        }
+        .loadingOverlay(if: viewModel.isLoading)
         .animation(.default, value: viewModel.isAuthorized)
         .fullScreenCover(isPresented: $showEditWorkout) {
             WorkoutPreviewView(
