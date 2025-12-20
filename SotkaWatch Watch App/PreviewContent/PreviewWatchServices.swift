@@ -22,9 +22,11 @@ final class PreviewWatchAuthService: WatchAuthServiceProtocol {
 @MainActor
 final class PreviewWatchConnectivityService: WatchConnectivityServiceProtocol {
     var currentDay: Int?
+    var currentActivity: DayActivityType?
 
-    init(currentDay: Int? = 5) {
+    init(currentDay: Int? = 5, currentActivity: DayActivityType? = .workout) {
         self.currentDay = currentDay
+        self.currentActivity = currentActivity
     }
 
     func sendActivityType(day _: Int, activityType _: DayActivityType) async throws {

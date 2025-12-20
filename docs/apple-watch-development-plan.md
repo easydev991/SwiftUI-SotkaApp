@@ -268,7 +268,7 @@ SotkaWatch Watch App/
      - ⚠️ **Требуется:** Добавить callback для уведомления `HomeViewModel` об изменении `currentActivity` (см. Баг 5)
      - ⚠️ **Требуется:** Обновить `HomeViewModel` для использования `currentActivity` из `applicationContext` (см. Баг 5)
 
-6. **currentActivity из applicationContext не обрабатывается на часах** ⚠️ Требует исправления
+6. **currentActivity из applicationContext не обрабатывается на часах** ✅ Выполнено
    - **Проблема:**
      - При изменении/удалении активности на iPhone `applicationContext` отправляется с правильным `currentActivity` (или без него при удалении)
      - На часах `currentActivity` из `applicationContext` не обрабатывается в `handleApplicationContext()` - обрабатывается только `isAuthorized` и `currentDay`
@@ -276,11 +276,11 @@ SotkaWatch Watch App/
      - `HomeViewModel` продолжает использовать старое значение `currentActivity` или делает лишний запрос к iPhone через `loadData()`
      - Из логов видно, что `applicationContext` приходит с `currentActivity`, но он игнорируется
    - **Решение:**
-     - Обрабатывать `currentActivity` из `applicationContext` в `WatchConnectivityService.handleApplicationContext()`
-     - Добавить свойство `currentActivity` в `WatchConnectivityService` с callback для уведомления
-     - Обновить `HomeViewModel` для использования `currentActivity` из `applicationContext` без запроса к iPhone
-     - При изменении `currentActivity` на `.workout` загружать данные тренировки
-     - При изменении `currentActivity` на другой тип или `nil` очищать данные тренировки
+     - ✅ Обрабатывать `currentActivity` из `applicationContext` в `WatchConnectivityService.handleApplicationContext()`
+     - ✅ Добавить свойство `currentActivity` в `WatchConnectivityService` с callback для уведомления
+     - ✅ Обновить `HomeViewModel` для использования `currentActivity` из `applicationContext` без запроса к iPhone
+     - ✅ При изменении `currentActivity` на `.workout` загружать данные тренировки
+     - ✅ При изменении `currentActivity` на другой тип или `nil` очищать данные тренировки
 
 **План исправления (TDD):**
 
@@ -298,24 +298,37 @@ SotkaWatch Watch App/
 - ✅ Добавлен callback `onCurrentDayChanged` для уведомления `HomeViewModel`
 - ✅ Все тесты написаны и проходят
 
+##### Баг 6: Обработка currentActivity из applicationContext на часах ✅ Выполнено
+
+- ✅ Добавлено свойство `currentActivity` в `WatchConnectivityService` с callback `onCurrentActivityChanged`
+- ✅ Обновлен `handleApplicationContext()` для обработки `currentActivity` из `applicationContext`
+- ✅ Добавлен метод `updateCurrentActivityFromConnectivity()` в `HomeViewModel` для обработки изменений `currentActivity`
+- ✅ Обновлен `loadData()` для использования `currentActivity` из `applicationContext` без запроса к iPhone
+- ✅ При изменении `currentActivity` на `.workout` загружаются данные тренировки
+- ✅ При изменении `currentActivity` на другой тип или `nil` очищаются данные тренировки
+- ✅ Добавлены тесты для обработки `currentActivity` из `applicationContext`
+- ✅ Обновлен `PreviewWatchConnectivityService` для соответствия протоколу
+
 ##### Баг 3: Отправка статуса в часы при выборе активности в основном приложении ⚠️ Частично выполнено
 
 - ✅ Добавлен вызов `sendCurrentStatus` в `HomeActivitySectionView.actionFor()` для установки активности текущего дня
 - ⚠️ **Не выполнено:** Удаление и изменение активности обрабатываются в баге 4
 
-##### Баг 4: Отправка статуса в часы при удалении или изменении активности в основном приложении ⚠️ Частично выполнено
+##### Баг 4: Отправка статуса в часы при удалении или изменении активности в основном приложении ✅ Выполнено
 
 **Проблема:**
 - ✅ Отправка `applicationContext` с `currentActivity` реализована на iPhone
-- ⚠️ **НО:** На часах `currentActivity` из `applicationContext` не обрабатывается и не обновляется в `HomeViewModel`
-- ⚠️ **НО:** При изменении/удалении активности на iPhone активность на часах не обновляется, хотя `applicationContext` приходит с правильными данными
-- ⚠️ **НО:** `HomeViewModel` получает `currentActivity` только через `loadData()`, который делает запрос к iPhone, игнорируя данные из `applicationContext`
+- ✅ На часах `currentActivity` из `applicationContext` обрабатывается и обновляется в `HomeViewModel`
+- ✅ При изменении/удалении активности на iPhone активность на часах обновляется через `applicationContext`
+- ✅ `HomeViewModel` использует `currentActivity` из `applicationContext` без запроса к iPhone
 
 **Решение:**
 - ✅ Добавлен вызов `sendCurrentStatus` при удалении активности в UI компонентах
-- ⚠️ **Требуется:** Обрабатывать `currentActivity` из `applicationContext` в `WatchConnectivityService`
-- ⚠️ **Требуется:** Добавить callback для уведомления `HomeViewModel` об изменении `currentActivity`
-- ⚠️ **Требуется:** Обновить `HomeViewModel` для использования `currentActivity` из `applicationContext` без запроса к iPhone
+- ✅ Обрабатывается `currentActivity` из `applicationContext` в `WatchConnectivityService.handleApplicationContext()`
+- ✅ Добавлен callback `onCurrentActivityChanged` для уведомления `HomeViewModel` об изменении `currentActivity`
+- ✅ Обновлен `HomeViewModel` для использования `currentActivity` из `applicationContext` без запроса к iPhone
+- ✅ При изменении `currentActivity` на `.workout` загружаются данные тренировки
+- ✅ При изменении `currentActivity` на другой тип или `nil` очищаются данные тренировки
 
 **Проблема:**
 - При удалении активности через `DailyActivitiesService.deleteDailyActivity()` в основном приложении не вызывается отправка статуса в часы

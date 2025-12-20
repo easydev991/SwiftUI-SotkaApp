@@ -25,6 +25,19 @@ final class WatchConnectivityService: NSObject {
     /// Callback для уведомления об изменении currentDay
     var onCurrentDayChanged: (() -> Void)?
 
+    /// Текущая активность дня (обновляется при получении applicationContext)
+    private(set) var currentActivity: DayActivityType? {
+        didSet {
+            if currentActivity != oldValue {
+                onCurrentActivityChanged?(currentActivity)
+            }
+        }
+    }
+
+    /// Callback для уведомления об изменении currentActivity
+    /// - Parameter activity: Новая активность или `nil` если активность удалена
+    var onCurrentActivityChanged: ((DayActivityType?) -> Void)?
+
     /// Реальная сессия для делегата (только для WCSession, не для моков)
     var session: WCSession? {
         sessionProtocol as? WCSession
@@ -345,8 +358,16 @@ private extension WatchConnectivityService {
             self.currentDay = currentDay
         }
 
-        // currentActivity не сохраняется в WatchConnectivityService, так как он используется только для запросов
-        // HomeViewModel получит currentActivity через updateCurrentDayFromConnectivity() -> loadData()
+        // Обработка currentActivity
+        if let currentActivityRaw = context["currentActivity"] as? Int,
+           let currentActivity = DayActivityType(rawValue: currentActivityRaw) {
+            logger.info("Обновление currentActivity из Application Context: \(currentActivity.rawValue)")
+            self.currentActivity = currentActivity
+        } else if context["currentActivity"] == nil, context["currentDay"] != nil {
+            // Если currentActivity отсутствует в контексте, но есть currentDay, значит активность была удалена
+            logger.info("Удаление currentActivity из Application Context (активность удалена)")
+            currentActivity = nil
+        }
     }
 }
 

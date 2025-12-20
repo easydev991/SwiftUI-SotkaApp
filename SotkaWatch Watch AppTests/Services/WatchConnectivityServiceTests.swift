@@ -351,6 +351,7 @@ struct WatchConnectivityServiceTests {
         let service = WatchConnectivityService(authService: authService)
 
         #expect(service.currentDay == nil)
+        #expect(service.currentActivity == nil)
         #expect(!authService.isAuthorized)
 
         let applicationContext: [String: Any] = [
@@ -364,6 +365,8 @@ struct WatchConnectivityServiceTests {
         #expect(authService.isAuthorized)
         let currentDay = try #require(service.currentDay)
         #expect(currentDay == 42)
+        let currentActivity = try #require(service.currentActivity)
+        #expect(currentActivity == .workout)
     }
 
     @Test("Должен обрабатывать applicationContext только с isAuthorized")
@@ -424,5 +427,109 @@ struct WatchConnectivityServiceTests {
         #expect(authService.isAuthorized)
         let currentDay = try #require(service.currentDay)
         #expect(currentDay == 42)
+        let currentActivity = try #require(service.currentActivity)
+        #expect(currentActivity == .workout)
+    }
+
+    @Test("Должен обрабатывать applicationContext с currentActivity без currentDay")
+    func shouldHandleApplicationContextWithCurrentActivityWithoutCurrentDay() throws {
+        let authService = WatchAuthService()
+        let service = WatchConnectivityService(authService: authService)
+
+        #expect(service.currentActivity == nil)
+
+        let applicationContext: [String: Any] = [
+            "isAuthorized": true,
+            "currentActivity": DayActivityType.rest.rawValue
+        ]
+
+        service.testHandleApplicationContext(applicationContext)
+
+        let currentActivity = try #require(service.currentActivity)
+        #expect(currentActivity == .rest)
+    }
+
+    @Test("Должен обрабатывать applicationContext с currentActivity=nil (удаление активности)")
+    func shouldHandleApplicationContextWithCurrentActivityNil() throws {
+        let authService = WatchAuthService()
+        let service = WatchConnectivityService(authService: authService)
+
+        // Сначала устанавливаем активность
+        service.testHandleApplicationContext([
+            "isAuthorized": true,
+            "currentDay": 42,
+            "currentActivity": DayActivityType.workout.rawValue
+        ])
+
+        let initialActivity = try #require(service.currentActivity)
+        #expect(initialActivity == .workout)
+
+        // Затем получаем applicationContext без currentActivity (удаление)
+        let applicationContext: [String: Any] = [
+            "isAuthorized": true,
+            "currentDay": 42
+        ]
+
+        service.testHandleApplicationContext(applicationContext)
+
+        #expect(service.currentActivity == nil)
+    }
+
+    @Test("Должен вызывать callback при изменении currentActivity")
+    func shouldCallCallbackWhenCurrentActivityChanges() throws {
+        let authService = WatchAuthService()
+        let service = WatchConnectivityService(authService: authService)
+
+        var callbackCalled = false
+        var callbackActivity: DayActivityType?
+
+        service.onCurrentActivityChanged = { activity in
+            callbackCalled = true
+            callbackActivity = activity
+        }
+
+        let applicationContext: [String: Any] = [
+            "isAuthorized": true,
+            "currentDay": 42,
+            "currentActivity": DayActivityType.stretch.rawValue
+        ]
+
+        service.testHandleApplicationContext(applicationContext)
+
+        #expect(callbackCalled)
+        let activity = try #require(callbackActivity)
+        #expect(activity == .stretch)
+    }
+
+    @Test("Должен вызывать callback с nil при удалении currentActivity")
+    func shouldCallCallbackWithNilWhenCurrentActivityRemoved() throws {
+        let authService = WatchAuthService()
+        let service = WatchConnectivityService(authService: authService)
+
+        // Сначала устанавливаем активность
+        service.testHandleApplicationContext([
+            "isAuthorized": true,
+            "currentDay": 42,
+            "currentActivity": DayActivityType.workout.rawValue
+        ])
+
+        var callbackCalled = false
+        var callbackActivity: DayActivityType?
+
+        service.onCurrentActivityChanged = { activity in
+            callbackCalled = true
+            callbackActivity = activity
+        }
+
+        // Затем удаляем активность
+        let applicationContext: [String: Any] = [
+            "isAuthorized": true,
+            "currentDay": 42
+        ]
+
+        service.testHandleApplicationContext(applicationContext)
+
+        #expect(callbackCalled)
+        #expect(callbackActivity == nil)
     }
 }

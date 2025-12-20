@@ -4,6 +4,7 @@ import Foundation
 @MainActor
 protocol WatchConnectivityServiceProtocol {
     var currentDay: Int? { get }
+    var currentActivity: DayActivityType? { get }
     func sendActivityType(day: Int, activityType: DayActivityType) async throws
     func requestCurrentActivity(day: Int) async throws -> DayActivityType?
     func requestWorkoutData(day: Int) async throws -> WorkoutDataResponse
