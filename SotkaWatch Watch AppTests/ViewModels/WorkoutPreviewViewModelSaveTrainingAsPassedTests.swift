@@ -336,5 +336,98 @@ extension WorkoutPreviewViewModelTests {
             #expect(sentTrainings[1].count == 10)
             #expect(sentTrainings[1].typeId == ExerciseType.pushups.rawValue)
         }
+
+        @Test("Должен обновлять локальные данные после успешного сохранения")
+        @MainActor
+        func updatesLocalDataAfterSuccessfulSave() async throws {
+            let connectivityService = MockWatchConnectivityService()
+            let viewModel = WorkoutPreviewViewModel(
+                connectivityService: connectivityService
+            )
+
+            let workoutData = WorkoutData(
+                day: 50,
+                executionType: ExerciseExecutionType.cycles.rawValue,
+                trainings: [
+                    WorkoutPreviewTraining(count: 5, typeId: ExerciseType.pullups.rawValue, sortOrder: 0)
+                ],
+                plannedCount: 4
+            )
+            connectivityService.mockWorkoutData = workoutData
+            await viewModel.loadData(day: 50)
+
+            viewModel.plannedCount = 6
+            viewModel.comment = "Новый комментарий"
+            await viewModel.saveTrainingAsPassed()
+
+            let count = try #require(viewModel.count)
+            #expect(count == 6)
+            let comment = try #require(viewModel.comment)
+            #expect(comment == "Новый комментарий")
+            #expect(viewModel.wasOriginallyPassed)
+        }
+
+        @Test("Должен обновлять локальные данные trainings после успешного сохранения")
+        @MainActor
+        func updatesLocalTrainingsAfterSuccessfulSave() async throws {
+            let connectivityService = MockWatchConnectivityService()
+            let viewModel = WorkoutPreviewViewModel(
+                connectivityService: connectivityService
+            )
+
+            let initialTrainings = [
+                WorkoutPreviewTraining(count: 5, typeId: ExerciseType.pullups.rawValue, sortOrder: 0),
+                WorkoutPreviewTraining(count: 10, typeId: ExerciseType.pushups.rawValue, sortOrder: 1)
+            ]
+
+            let workoutData = WorkoutData(
+                day: 50,
+                executionType: ExerciseExecutionType.cycles.rawValue,
+                trainings: initialTrainings,
+                plannedCount: 4
+            )
+            connectivityService.mockWorkoutData = workoutData
+            await viewModel.loadData(day: 50)
+
+            viewModel.updateTrainingCount(for: initialTrainings[0].id, newValue: 7)
+            viewModel.plannedCount = 5
+            await viewModel.saveTrainingAsPassed()
+
+            let count = try #require(viewModel.count)
+            #expect(count == 5)
+            #expect(viewModel.trainings.count == 2)
+            let firstTraining = viewModel.trainings.first { $0.id == initialTrainings[0].id }
+            let firstTrainingCount = try #require(firstTraining?.count)
+            #expect(firstTrainingCount == 7)
+        }
+
+        @Test("Должен обновлять локальные данные с workoutDuration после успешного сохранения")
+        @MainActor
+        func updatesLocalDataWithWorkoutDurationAfterSuccessfulSave() async throws {
+            let connectivityService = MockWatchConnectivityService()
+            let viewModel = WorkoutPreviewViewModel(
+                connectivityService: connectivityService
+            )
+
+            let workoutData = WorkoutData(
+                day: 50,
+                executionType: ExerciseExecutionType.cycles.rawValue,
+                trainings: [
+                    WorkoutPreviewTraining(count: 5, typeId: ExerciseType.pullups.rawValue, sortOrder: 0)
+                ],
+                plannedCount: 4
+            )
+            connectivityService.mockWorkoutData = workoutData
+            await viewModel.loadData(day: 50)
+
+            viewModel.workoutDuration = 1800
+            viewModel.plannedCount = 5
+            await viewModel.saveTrainingAsPassed()
+
+            let count = try #require(viewModel.count)
+            #expect(count == 5)
+            let duration = try #require(viewModel.workoutDuration)
+            #expect(duration == 1800)
+        }
     }
 }

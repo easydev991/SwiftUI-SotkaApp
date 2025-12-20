@@ -473,6 +473,12 @@ final class WorkoutPreviewViewModel {
                 comment: comment
             )
 
+            // Обновляем локальные данные после успешного сохранения
+            count = result.count
+            workoutDuration = result.duration
+            wasOriginallyPassed = true
+            // trainings и comment уже обновлены пользователем, поэтому не нужно их обновлять
+
             let dayNumber = dayNumber
             let commentInfo = comment != nil ? ", комментарий: \(comment!)" : ""
             logger.info("Тренировка для дня \(dayNumber) сохранена\(commentInfo)")
@@ -493,7 +499,7 @@ extension WorkoutPreviewViewModel {
         case trainingsListEmpty
         case saveFailed(String)
 
-        var errorDescription: String? {
+        nonisolated var errorDescription: String? {
             switch self {
             case .executionTypeNotSelected:
                 String(localized: .errorTrainingExecutionTypeNotSelected)

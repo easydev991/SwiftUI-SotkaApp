@@ -353,4 +353,102 @@ struct HomeViewModelTests {
         let error = try #require(viewModel.error)
         #expect(error is WatchConnectivityError)
     }
+
+    @Test("Обновляет данные тренировки при получении обновленных данных через onWorkoutDataReceived")
+    func updatesWorkoutDataWhenReceivingUpdatedDataThroughOnWorkoutDataReceived() async throws {
+        let authService = MockWatchAuthService(isAuthorized: true)
+        let connectivityService = MockWatchConnectivityService()
+        connectivityService.currentDay = 5
+
+        let viewModel = HomeViewModel(
+            authService: authService,
+            connectivityService: connectivityService
+        )
+
+        await viewModel.loadData()
+
+        let initialWorkoutData = WorkoutData(
+            day: 5,
+            executionType: 0,
+            trainings: [
+                WorkoutPreviewTraining(count: 5, typeId: ExerciseType.pullups.rawValue, sortOrder: 0)
+            ],
+            plannedCount: 4
+        )
+        let initialResponse = WorkoutDataResponse(
+            workoutData: initialWorkoutData,
+            executionCount: nil,
+            comment: nil
+        )
+
+        viewModel.updateWorkoutDataFromConnectivity(initialResponse)
+
+        let initialData = try #require(viewModel.workoutData)
+        #expect(initialData.day == 5)
+        #expect(initialData.trainings.count == 1)
+
+        let updatedWorkoutData = WorkoutData(
+            day: 5,
+            executionType: 0,
+            trainings: [
+                WorkoutPreviewTraining(count: 7, typeId: ExerciseType.pullups.rawValue, sortOrder: 0),
+                WorkoutPreviewTraining(count: 10, typeId: ExerciseType.pushups.rawValue, sortOrder: 1)
+            ],
+            plannedCount: 5
+        )
+        let updatedResponse = WorkoutDataResponse(
+            workoutData: updatedWorkoutData,
+            executionCount: 5,
+            comment: "Обновленный комментарий"
+        )
+
+        viewModel.updateWorkoutDataFromConnectivity(updatedResponse)
+
+        let updatedData = try #require(viewModel.workoutData)
+        #expect(updatedData.day == 5)
+        #expect(updatedData.trainings.count == 2)
+        #expect(updatedData.plannedCount == 5)
+        let executionCount = try #require(viewModel.workoutExecutionCount)
+        #expect(executionCount == 5)
+        let comment = try #require(viewModel.workoutComment)
+        #expect(comment == "Обновленный комментарий")
+    }
+
+    @Test("Обновляет данные тренировки при изменении currentActivity на workout")
+    func updatesWorkoutDataWhenCurrentActivityChangesToWorkout() async throws {
+        let authService = MockWatchAuthService(isAuthorized: true)
+        let connectivityService = MockWatchConnectivityService()
+        connectivityService.currentDay = 5
+        connectivityService.mockCurrentActivity = .rest
+
+        let viewModel = HomeViewModel(
+            authService: authService,
+            connectivityService: connectivityService
+        )
+
+        await viewModel.loadData()
+        #expect(viewModel.currentActivity == .rest)
+        #expect(viewModel.workoutData == nil)
+
+        let workoutData = WorkoutData(
+            day: 5,
+            executionType: 0,
+            trainings: [
+                WorkoutPreviewTraining(count: 5, typeId: ExerciseType.pullups.rawValue, sortOrder: 0)
+            ],
+            plannedCount: 4
+        )
+        connectivityService.mockWorkoutData = workoutData
+        connectivityService.mockWorkoutExecutionCount = 4
+        connectivityService.mockWorkoutComment = "Новый комментарий"
+
+        viewModel.updateCurrentActivityFromConnectivity(.workout)
+
+        let loadedWorkoutData = try #require(viewModel.workoutData)
+        #expect(loadedWorkoutData.day == 5)
+        let executionCount = try #require(viewModel.workoutExecutionCount)
+        #expect(executionCount == 4)
+        let comment = try #require(viewModel.workoutComment)
+        #expect(comment == "Новый комментарий")
+    }
 }

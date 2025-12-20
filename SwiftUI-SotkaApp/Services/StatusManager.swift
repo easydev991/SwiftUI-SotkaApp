@@ -525,38 +525,17 @@ final class StatusManager: NSObject {
         context: ModelContext,
         replyHandler: (([String: Any]) -> Void)?
     ) {
-        guard let day = data["day"] as? Int,
-              let resultDict = data["result"] as? [String: Any],
-              let executionTypeRaw = data["executionType"] as? Int,
-              let executionType = ExerciseExecutionType(rawValue: executionTypeRaw)
-        else {
+        guard let saveWorkoutData = WatchStatusMessage.decodeSaveWorkoutData(data) else {
             logger.error("Неверный формат данных для команды saveWorkout: \(data)")
             replyHandler?(["error": "Неверный формат данных"])
             return
         }
 
-        // Декодируем WorkoutResult из словаря
-        guard let resultData = try? JSONSerialization.data(withJSONObject: resultDict),
-              let workoutResult = try? JSONDecoder().decode(WorkoutResult.self, from: resultData)
-        else {
-            logger.error("Не удалось декодировать WorkoutResult из данных: \(resultDict)")
-            replyHandler?(["error": "Неверный формат результата тренировки"])
-            return
-        }
-
-        // Декодируем trainings из словаря
-        var trainings: [WorkoutPreviewTraining] = []
-        if let trainingsArray = data["trainings"] as? [[String: Any]] {
-            let decoder = JSONDecoder()
-            for trainingDict in trainingsArray {
-                if let trainingData = try? JSONSerialization.data(withJSONObject: trainingDict),
-                   let training = try? decoder.decode(WorkoutPreviewTraining.self, from: trainingData) {
-                    trainings.append(training)
-                }
-            }
-        }
-
-        let comment = data["comment"] as? String
+        let day = saveWorkoutData.day
+        let workoutResult = saveWorkoutData.result
+        let executionType = saveWorkoutData.executionType
+        let trainings = saveWorkoutData.trainings
+        let comment = saveWorkoutData.comment
 
         // Создаем WorkoutProgramCreator для дня
         let creator = WorkoutProgramCreator(
@@ -581,6 +560,9 @@ final class StatusManager: NSObject {
 
         // Отправляем обновленную активность на часы
         sendCurrentActivity(day: day)
+
+        // Отправляем обновленные данные тренировки на часы
+        sendWorkoutDataToWatch(day: day)
 
         // Если сохраненная тренировка относится к текущему дню, также отправляем статус
         if let currentDay = currentDayCalculator?.currentDay, currentDay == day {
