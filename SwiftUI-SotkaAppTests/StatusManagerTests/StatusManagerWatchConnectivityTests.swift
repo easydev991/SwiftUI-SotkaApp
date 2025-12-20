@@ -458,6 +458,55 @@ struct StatusManagerWatchConnectivityTests {
         #expect(activity?.user?.id == user.id)
     }
 
+    // MARK: - Тесты отправки applicationContext при активации WCSession
+
+    @Test("Должен отправлять applicationContext при активации WCSession, если пользователь авторизован")
+    func shouldSendApplicationContextOnWCSessionActivationWhenUserIsAuthorized() async throws {
+        let mockSession = MockWCSession(isReachable: false)
+        let statusManager = try MockStatusManager.create(
+            daysClient: MockDaysClient(),
+            userDefaults: MockUserDefaults.create(),
+            watchConnectivitySessionProtocol: mockSession
+        )
+
+        let context = statusManager.modelContainer.mainContext
+        let user = User(id: 1, userName: "testuser", fullName: "Test User", email: "test@example.com")
+        context.insert(user)
+        try context.save()
+
+        statusManager.setCurrentDayForDebug(10)
+
+        // Симулируем активацию WCSession
+        await statusManager.simulateWCSessionActivation()
+
+        // Проверяем, что applicationContext был отправлен
+        #expect(mockSession.applicationContexts.count >= 1)
+        let applicationContext = try #require(mockSession.applicationContexts.first)
+        let isAuthorized = try #require(applicationContext["isAuthorized"] as? Bool)
+        #expect(isAuthorized)
+    }
+
+    @Test("Должен отправлять applicationContext с isAuthorized=false при активации WCSession, если пользователь не авторизован")
+    func shouldSendApplicationContextOnWCSessionActivationWhenUserIsNotAuthorized() async throws {
+        let mockSession = MockWCSession(isReachable: false)
+        let statusManager = try MockStatusManager.create(
+            daysClient: MockDaysClient(),
+            userDefaults: MockUserDefaults.create(),
+            watchConnectivitySessionProtocol: mockSession
+        )
+
+        // Пользователь не добавлен в контекст
+
+        // Симулируем активацию WCSession
+        await statusManager.simulateWCSessionActivation()
+
+        // Проверяем, что applicationContext был отправлен с isAuthorized=false
+        #expect(mockSession.applicationContexts.count >= 1)
+        let applicationContext = try #require(mockSession.applicationContexts.first)
+        let isAuthorized = try #require(applicationContext["isAuthorized"] as? Bool)
+        #expect(!isAuthorized)
+    }
+
     // MARK: - Тесты отправки applicationContext
 
     @Test("Должен отправлять applicationContext при изменении статуса авторизации на true")

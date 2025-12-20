@@ -342,4 +342,87 @@ struct WatchConnectivityServiceTests {
             try await service.deleteActivity(day: 5)
         }
     }
+
+    // MARK: - Тесты обработки applicationContext
+
+    @Test("Должен обрабатывать applicationContext с currentDay и currentActivity")
+    func shouldHandleApplicationContextWithCurrentDayAndActivity() throws {
+        let authService = WatchAuthService()
+        let service = WatchConnectivityService(authService: authService)
+
+        #expect(service.currentDay == nil)
+        #expect(!authService.isAuthorized)
+
+        let applicationContext: [String: Any] = [
+            "isAuthorized": true,
+            "currentDay": 42,
+            "currentActivity": DayActivityType.workout.rawValue
+        ]
+
+        service.testHandleApplicationContext(applicationContext)
+
+        #expect(authService.isAuthorized)
+        let currentDay = try #require(service.currentDay)
+        #expect(currentDay == 42)
+    }
+
+    @Test("Должен обрабатывать applicationContext только с isAuthorized")
+    func shouldHandleApplicationContextWithOnlyIsAuthorized() throws {
+        let authService = WatchAuthService()
+        let service = WatchConnectivityService(authService: authService)
+
+        #expect(!authService.isAuthorized)
+
+        let applicationContext: [String: Any] = [
+            "isAuthorized": true
+        ]
+
+        service.testHandleApplicationContext(applicationContext)
+
+        #expect(authService.isAuthorized)
+        #expect(service.currentDay == nil)
+    }
+
+    @Test("Должен обрабатывать applicationContext с isAuthorized=false")
+    func shouldHandleApplicationContextWithIsAuthorizedFalse() throws {
+        let authService = WatchAuthService()
+        let service = WatchConnectivityService(authService: authService)
+
+        // Сначала устанавливаем авторизацию
+        authService.updateAuthStatus(true)
+        service.testHandleApplicationContext(["currentDay": 42])
+
+        #expect(authService.isAuthorized)
+        let currentDay = try #require(service.currentDay)
+        #expect(currentDay == 42)
+
+        // Затем получаем isAuthorized=false
+        let applicationContext: [String: Any] = [
+            "isAuthorized": false
+        ]
+
+        service.testHandleApplicationContext(applicationContext)
+
+        #expect(!authService.isAuthorized)
+        // currentDay должен остаться, так как он не был явно удален
+    }
+
+    @Test("Должен обрабатывать receivedApplicationContext при активации WCSession")
+    func shouldHandleReceivedApplicationContextOnActivation() throws {
+        let authService = WatchAuthService()
+        let mockSession = MockWCSession(isReachable: false)
+        mockSession.receivedApplicationContext = [
+            "isAuthorized": true,
+            "currentDay": 42,
+            "currentActivity": DayActivityType.workout.rawValue
+        ]
+        let service = WatchConnectivityService(authService: authService, sessionProtocol: mockSession)
+
+        // Симулируем активацию
+        service.testHandleWCSessionActivation()
+
+        #expect(authService.isAuthorized)
+        let currentDay = try #require(service.currentDay)
+        #expect(currentDay == 42)
+    }
 }

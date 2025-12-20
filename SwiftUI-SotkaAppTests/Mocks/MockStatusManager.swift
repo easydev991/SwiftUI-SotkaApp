@@ -62,3 +62,12 @@ enum MockStatusManager {
         )
     }
 }
+
+extension StatusManager {
+    #if DEBUG
+    /// Тестовый метод для симуляции активации WCSession
+    func simulateWCSessionActivation() async {
+        sendApplicationContextOnActivation()
+    }
+    #endif
+}

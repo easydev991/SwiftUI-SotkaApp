@@ -35,6 +35,13 @@ final class HomeViewModel {
     ) {
         self.authService = authService
         self.connectivityService = connectivityService
+
+        // Подписываемся на изменения currentDay в WatchConnectivityService
+        if let watchConnectivityService = connectivityService as? WatchConnectivityService {
+            watchConnectivityService.onCurrentDayChanged = { [weak self] in
+                self?.updateCurrentDayFromConnectivity()
+            }
+        }
     }
 
     /// Загрузка данных (проверка авторизации, получение текущего дня, запрос активности)

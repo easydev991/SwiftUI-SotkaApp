@@ -284,6 +284,9 @@ final class StatusManager: NSObject {
     ///   - currentDay: Номер текущего дня (опционально)
     ///   - currentActivity: Текущая активность (опционально)
     func sendCurrentStatus(isAuthorized: Bool, currentDay: Int?, currentActivity: DayActivityType?) {
+        // Отправляем applicationContext всегда, даже если часы недоступны (работает когда приложение закрыто)
+        updateApplicationContextOnWatch(isAuthorized: isAuthorized, currentDay: currentDay, currentActivity: currentActivity)
+
         guard let sessionProtocol, sessionProtocol.isReachable else {
             logger.debug("Часы недоступны для отправки текущего статуса")
             return
@@ -301,9 +304,22 @@ final class StatusManager: NSObject {
         ) { error in
             logger.error("Ошибка отправки текущего статуса на часы: \(error.localizedDescription)")
         }
+    }
 
-        // Отправляем applicationContext для работы часов даже когда приложение закрыто
-        updateApplicationContextOnWatch(isAuthorized: isAuthorized, currentDay: currentDay, currentActivity: currentActivity)
+    /// Отправляет applicationContext при активации WCSession (если пользователь авторизован)
+    func sendApplicationContextOnActivation() {
+        let context = modelContainer.mainContext
+        let isAuthorized = (try? context.fetch(FetchDescriptor<User>()).first) != nil
+
+        if isAuthorized {
+            let currentDay = currentDayCalculator?.currentDay
+            let currentActivity = currentDay.map { dailyActivitiesService.getActivityType(day: $0, context: context) } ?? nil
+            updateApplicationContextOnWatch(isAuthorized: true, currentDay: currentDay, currentActivity: currentActivity)
+            logger.debug("ApplicationContext отправлен при активации WCSession: пользователь авторизован")
+        } else {
+            updateApplicationContextOnWatch(isAuthorized: false, currentDay: nil, currentActivity: nil)
+            logger.debug("ApplicationContext отправлен при активации WCSession: пользователь не авторизован")
+        }
     }
 
     /// Обновляет applicationContext для часов (работает даже когда приложение закрыто)
@@ -813,6 +829,10 @@ nonisolated extension StatusManager: WCSessionDelegate {
             logger.error("Ошибка активации WCSession: \(error.localizedDescription)")
         } else {
             logger.info("WCSession активирована с состоянием: \(activationState.rawValue)")
+            // Отправляем applicationContext при активации, если пользователь авторизован
+            Task { @MainActor in
+                sendApplicationContextOnActivation()
+            }
         }
     }
 

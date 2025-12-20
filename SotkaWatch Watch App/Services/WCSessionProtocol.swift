@@ -6,6 +6,7 @@ import WatchConnectivity
 protocol WatchSessionProtocol: AnyObject {
     var isReachable: Bool { get }
     var delegate: WCSessionDelegate? { get set }
+    var receivedApplicationContext: [String: Any] { get }
 
     func activate()
     func sendMessage(

@@ -13,8 +13,17 @@ final class WatchConnectivityService: NSObject {
     private let authService: WatchAuthService
     private let sessionProtocol: WatchSessionProtocol?
 
-    /// Текущий день программы (обновляется при получении команды PHONE_COMMAND_CURRENT_DAY)
-    private(set) var currentDay: Int?
+    /// Текущий день программы (обновляется при получении команды PHONE_COMMAND_CURRENT_DAY или applicationContext)
+    private(set) var currentDay: Int? {
+        didSet {
+            if currentDay != oldValue {
+                onCurrentDayChanged?()
+            }
+        }
+    }
+
+    /// Callback для уведомления об изменении currentDay
+    var onCurrentDayChanged: (() -> Void)?
 
     /// Реальная сессия для делегата (только для WCSession, не для моков)
     var session: WCSession? {
@@ -229,6 +238,13 @@ extension WatchConnectivityService: WCSessionDelegate {
             logger.error("Ошибка активации WCSession: \(error.localizedDescription)")
         } else {
             logger.info("WCSession активирована с состоянием: \(activationState.rawValue)")
+            // Проверяем receivedApplicationContext при активации
+            if let sessionProtocol, !sessionProtocol.receivedApplicationContext.isEmpty {
+                logger.info("Получен Application Context при активации: \(sessionProtocol.receivedApplicationContext)")
+                handleApplicationContext(sessionProtocol.receivedApplicationContext)
+            } else {
+                logger.info("Application context data is nil")
+            }
         }
     }
 
@@ -267,6 +283,18 @@ extension WatchConnectivityService {
     /// Тестовый метод для обработки сообщения (доступен только в тестах)
     func testHandleReceivedMessage(_ message: [String: Any]) {
         handleReceivedMessage(message)
+    }
+
+    /// Тестовый метод для обработки applicationContext (доступен только в тестах)
+    func testHandleApplicationContext(_ context: [String: Any]) {
+        handleApplicationContext(context)
+    }
+
+    /// Тестовый метод для симуляции активации WCSession (доступен только в тестах)
+    func testHandleWCSessionActivation() {
+        if let sessionProtocol, !sessionProtocol.receivedApplicationContext.isEmpty {
+            handleApplicationContext(sessionProtocol.receivedApplicationContext)
+        }
     }
     #endif
 }
@@ -310,7 +338,15 @@ private extension WatchConnectivityService {
             logger.info("Обновление статуса авторизации из Application Context: \(isAuthorized)")
             authService.updateAuthStatus(isAuthorized)
         }
-        // currentDay и currentActivity обрабатываются через команды sendMessage в HomeViewModel
+
+        // Обработка currentDay
+        if let currentDay = context["currentDay"] as? Int {
+            logger.info("Обновление currentDay из Application Context: \(currentDay)")
+            self.currentDay = currentDay
+        }
+
+        // currentActivity не сохраняется в WatchConnectivityService, так как он используется только для запросов
+        // HomeViewModel получит currentActivity через updateCurrentDayFromConnectivity() -> loadData()
     }
 }
 

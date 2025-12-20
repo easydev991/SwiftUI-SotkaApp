@@ -17,6 +17,7 @@ struct SotkaWatchApp: App {
                 .environment(viewModel)
                 .currentDay(viewModel.currentDay)
                 .task {
+                    await viewModel.checkAuthStatusOnActivation()
                     await viewModel.loadData()
                 }
         }
