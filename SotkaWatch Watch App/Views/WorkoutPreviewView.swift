@@ -6,6 +6,7 @@ struct WorkoutPreviewView: View {
     // MARK: - Properties
 
     @Environment(\.currentDay) private var currentDay
+    @Environment(\.dismiss) private var dismiss
     @State private var viewModel: WorkoutPreviewViewModel
     @State private var showWorkoutView = false
 
@@ -68,6 +69,11 @@ struct WorkoutPreviewView: View {
         .loadingOverlay(if: viewModel.isLoading)
         .task {
             await viewModel.loadData(day: currentDay)
+        }
+        .onAppear {
+            viewModel.onSaveCompleted = {
+                dismiss()
+            }
         }
     }
 }

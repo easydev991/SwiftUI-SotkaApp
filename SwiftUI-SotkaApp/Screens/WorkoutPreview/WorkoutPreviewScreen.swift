@@ -7,6 +7,8 @@ struct WorkoutPreviewScreen: View {
     @Environment(\.restTime) private var restTime
     @Environment(\.modelContext) private var modelContext
     @Environment(\.dismiss) private var dismiss
+    @Environment(StatusManager.self) private var statusManager
+    @Environment(\.currentDay) private var currentDay
     @State private var viewModel = WorkoutPreviewViewModel()
     @State private var showEditorScreen = false
     @State private var showWorkoutScreen = false
@@ -214,6 +216,15 @@ private extension WorkoutPreviewScreen {
                     activitiesService: activitiesService,
                     modelContext: modelContext
                 )
+                // Отправляем данные на часы после сохранения
+                if currentDay == day {
+                    let currentActivity = activitiesService.getActivityType(day: day, context: modelContext)
+                    statusManager.sendCurrentStatus(
+                        isAuthorized: true,
+                        currentDay: currentDay,
+                        currentActivity: currentActivity
+                    )
+                }
                 dismiss()
             },
             onStartTraining: {

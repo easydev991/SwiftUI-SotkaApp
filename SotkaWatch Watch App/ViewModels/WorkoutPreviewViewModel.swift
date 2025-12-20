@@ -13,6 +13,9 @@ final class WorkoutPreviewViewModel {
 
     @ObservationIgnored let connectivityService: any WatchConnectivityServiceProtocol
 
+    /// Callback, вызываемый после успешного сохранения тренировки
+    var onSaveCompleted: (() -> Void)?
+
     // MARK: - State
 
     @ObservationIgnored private var originalSnapshot: DataSnapshot?
@@ -401,6 +404,11 @@ final class WorkoutPreviewViewModel {
     /// Сохранение тренировки через WatchConnectivityService
     func saveTrainingAsPassed() async {
         error = nil
+        isLoading = true
+
+        defer {
+            isLoading = false
+        }
 
         // Проверить валидность данных
         guard selectedExecutionType != nil else {
@@ -435,14 +443,17 @@ final class WorkoutPreviewViewModel {
                 day: dayNumber,
                 result: result,
                 executionType: executionType,
+                trainings: trainings,
                 comment: comment
             )
 
             let dayNumber = dayNumber
             let commentInfo = comment != nil ? ", комментарий: \(comment!)" : ""
             logger.info("Тренировка для дня \(dayNumber) сохранена\(commentInfo)")
+            onSaveCompleted?()
         } catch {
             logger.error("Ошибка отправки результата тренировки на iPhone: \(error.localizedDescription)")
+            self.error = TrainingError.saveFailed(error.localizedDescription)
         }
     }
 }
@@ -452,6 +463,7 @@ extension WorkoutPreviewViewModel {
     enum TrainingError: Error, LocalizedError, Equatable {
         case executionTypeNotSelected
         case trainingsListEmpty
+        case saveFailed(String)
 
         var errorDescription: String? {
             switch self {
@@ -459,6 +471,8 @@ extension WorkoutPreviewViewModel {
                 String(localized: .errorTrainingExecutionTypeNotSelected)
             case .trainingsListEmpty:
                 String(localized: .errorTrainingTrainingsListEmpty)
+            case let .saveFailed(message):
+                message
             }
         }
     }

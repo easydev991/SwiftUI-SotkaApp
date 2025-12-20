@@ -485,6 +485,18 @@ final class StatusManager: NSObject {
             return
         }
 
+        // Декодируем trainings из словаря
+        var trainings: [WorkoutPreviewTraining] = []
+        if let trainingsArray = data["trainings"] as? [[String: Any]] {
+            let decoder = JSONDecoder()
+            for trainingDict in trainingsArray {
+                if let trainingData = try? JSONSerialization.data(withJSONObject: trainingDict),
+                   let training = try? decoder.decode(WorkoutPreviewTraining.self, from: trainingData) {
+                    trainings.append(training)
+                }
+            }
+        }
+
         let comment = data["comment"] as? String
 
         // Создаем WorkoutProgramCreator для дня
@@ -493,7 +505,7 @@ final class StatusManager: NSObject {
             executionType: executionType,
             count: workoutResult.count,
             plannedCount: nil, // plannedCount будет вычислен автоматически
-            trainings: [], // trainings будут созданы автоматически
+            trainings: trainings, // Используем переданные trainings
             comment: comment
         )
 

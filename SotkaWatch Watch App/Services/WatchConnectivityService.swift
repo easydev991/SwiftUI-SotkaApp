@@ -104,8 +104,15 @@ final class WatchConnectivityService: NSObject {
     ///   - day: Номер дня программы
     ///   - result: Результат тренировки
     ///   - executionType: Тип выполнения упражнений
+    ///   - trainings: Список упражнений тренировки
     ///   - comment: Комментарий к тренировке (опционально)
-    func sendWorkoutResult(day: Int, result: WorkoutResult, executionType: ExerciseExecutionType, comment: String?) async throws {
+    func sendWorkoutResult(
+        day: Int,
+        result: WorkoutResult,
+        executionType: ExerciseExecutionType,
+        trainings: [WorkoutPreviewTraining],
+        comment: String?
+    ) async throws {
         guard let sessionProtocol, sessionProtocol.isReachable else {
             throw WatchConnectivityError.sessionUnavailable
         }
@@ -116,11 +123,17 @@ final class WatchConnectivityService: NSObject {
             throw WatchConnectivityError.serializationError
         }
 
+        let trainingsData = try encoder.encode(trainings)
+        guard let trainingsJSON = try JSONSerialization.jsonObject(with: trainingsData) as? [[String: Any]] else {
+            throw WatchConnectivityError.serializationError
+        }
+
         var message: [String: Any] = [
             "command": Constants.WatchCommand.saveWorkout.rawValue,
             "day": day,
             "result": resultJSON,
-            "executionType": executionType.rawValue
+            "executionType": executionType.rawValue,
+            "trainings": trainingsJSON
         ]
 
         if let comment {
@@ -128,7 +141,10 @@ final class WatchConnectivityService: NSObject {
         }
 
         let commentInfo = comment != nil ? ", комментарий: \(comment!)" : ""
-        logger.info("Отправка результата тренировки на iPhone: день \(day), количество \(result.count)\(commentInfo)")
+        logger
+            .info(
+                "Отправка результата тренировки на iPhone: день \(day), количество \(result.count), упражнений \(trainings.count)\(commentInfo)"
+            )
 
         try await withCheckedThrowingContinuation { continuation in
             sessionProtocol.sendMessage(message) { _ in

@@ -5,6 +5,8 @@ import Foundation
 @MainActor
 final class MockWatchConnectivityService: WatchConnectivityServiceProtocol {
     var currentDay: Int?
+    var currentActivity: DayActivityType?
+    var onCurrentActivityChanged: ((DayActivityType?) -> Void)?
     var shouldSucceed = true
     var mockError: Error?
     var mockCurrentActivity: DayActivityType?
@@ -15,7 +17,13 @@ final class MockWatchConnectivityService: WatchConnectivityServiceProtocol {
     private(set) var sentActivityType: (day: Int, activityType: DayActivityType)?
     private(set) var requestedCurrentActivityDay: Int?
     private(set) var requestedWorkoutDataDay: Int?
-    private(set) var sentWorkoutResult: (day: Int, result: WorkoutResult, executionType: ExerciseExecutionType, comment: String?)?
+    private(set) var sentWorkoutResult: (
+        day: Int,
+        result: WorkoutResult,
+        executionType: ExerciseExecutionType,
+        trainings: [WorkoutPreviewTraining],
+        comment: String?
+    )?
     private(set) var deletedActivityDay: Int?
 
     func sendActivityType(day: Int, activityType: DayActivityType) async throws {
@@ -48,8 +56,14 @@ final class MockWatchConnectivityService: WatchConnectivityServiceProtocol {
         )
     }
 
-    func sendWorkoutResult(day: Int, result: WorkoutResult, executionType: ExerciseExecutionType, comment: String?) async throws {
-        sentWorkoutResult = (day, result, executionType, comment)
+    func sendWorkoutResult(
+        day: Int,
+        result: WorkoutResult,
+        executionType: ExerciseExecutionType,
+        trainings: [WorkoutPreviewTraining],
+        comment: String?
+    ) async throws {
+        sentWorkoutResult = (day, result, executionType, trainings, comment)
         if !shouldSucceed {
             throw mockError ?? WatchConnectivityError.sessionUnavailable
         }

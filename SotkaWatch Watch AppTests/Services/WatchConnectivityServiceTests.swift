@@ -89,7 +89,7 @@ struct WatchConnectivityServiceTests {
         let result = WorkoutResult(count: 4, duration: 1800)
 
         await #expect(throws: WatchConnectivityError.self) {
-            try await service.sendWorkoutResult(day: 5, result: result, executionType: .cycles, comment: nil)
+            try await service.sendWorkoutResult(day: 5, result: result, executionType: .cycles, trainings: [], comment: nil)
         }
     }
 
@@ -157,7 +157,7 @@ struct WatchConnectivityServiceTests {
         let service = WatchConnectivityService(authService: authService, sessionProtocol: mockSession)
         let result = WorkoutResult(count: 4, duration: 1800)
 
-        try await service.sendWorkoutResult(day: 5, result: result, executionType: .cycles, comment: nil)
+        try await service.sendWorkoutResult(day: 5, result: result, executionType: .cycles, trainings: [], comment: nil)
 
         #expect(mockSession.sentMessages.count == 1)
         let message = try #require(mockSession.sentMessages.first)
@@ -170,6 +170,8 @@ struct WatchConnectivityServiceTests {
         let resultJSON = try #require(message["result"] as? [String: Any])
         let count = try #require(resultJSON["count"] as? Int)
         #expect(count == 4)
+        let trainings = try #require(message["trainings"] as? [[String: Any]])
+        #expect(trainings.isEmpty)
     }
 
     @Test("Успешно отправляет результат тренировки с комментарием")
@@ -179,7 +181,7 @@ struct WatchConnectivityServiceTests {
         let service = WatchConnectivityService(authService: authService, sessionProtocol: mockSession)
         let result = WorkoutResult(count: 4, duration: 1800)
 
-        try await service.sendWorkoutResult(day: 5, result: result, executionType: .cycles, comment: "Отличная тренировка!")
+        try await service.sendWorkoutResult(day: 5, result: result, executionType: .cycles, trainings: [], comment: "Отличная тренировка!")
 
         #expect(mockSession.sentMessages.count == 1)
         let message = try #require(mockSession.sentMessages.first)
@@ -196,7 +198,7 @@ struct WatchConnectivityServiceTests {
         let service = WatchConnectivityService(authService: authService, sessionProtocol: mockSession)
         let result = WorkoutResult(count: 4, duration: 1800)
 
-        try await service.sendWorkoutResult(day: 5, result: result, executionType: .cycles, comment: nil)
+        try await service.sendWorkoutResult(day: 5, result: result, executionType: .cycles, trainings: [], comment: nil)
 
         let message = try #require(mockSession.sentMessages.first)
         #expect(message["comment"] == nil)
