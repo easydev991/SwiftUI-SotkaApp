@@ -30,6 +30,11 @@ struct HomeActivitySectionView: View {
             Button(.journalDelete, role: .destructive) {
                 if let currentActivity {
                     activitiesService.deleteDailyActivity(currentActivity, context: modelContext)
+
+                    // Отправляем статус на часы, если это текущий день
+                    if currentActivity.day == currentDay {
+                        statusManager.sendCurrentStatus(isAuthorized: true, currentDay: currentDay, currentActivity: nil)
+                    }
                 }
             }
         } message: {

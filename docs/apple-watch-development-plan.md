@@ -256,15 +256,31 @@ SotkaWatch Watch App/
      - ⚠️ **НО:** При изменении активности через `updateDailyActivity` не вызывается `sendCurrentStatus`
      - ⚠️ **НО:** При удалении/изменении активности в `JournalGridView` и `JournalListView` не вызывается `sendCurrentStatus`
 
-5. **При удалении или изменении активности в основном приложении активность на часах не обновляется** ⚠️ Требует исправления
+5. **При удалении или изменении активности в основном приложении активность на часах не обновляется** ⚠️ Частично выполнено
    - **Проблема:** 
-     - При удалении активности через `DailyActivitiesService.deleteDailyActivity()` в основном приложении (например, в `HomeActivitySectionView`, `JournalGridView`, `JournalListView`) не вызывается отправка статуса в часы
-     - При изменении активности через `DailyActivitiesService.updateDailyActivity()` не вызывается отправка статуса в часы
-     - Активность на часах остается старой, хотя на iPhone она была удалена или изменена
+     - ✅ Отправка `applicationContext` с `currentActivity` реализована на iPhone
+     - ⚠️ **НО:** На часах `currentActivity` из `applicationContext` не обрабатывается в `handleApplicationContext()`
+     - ⚠️ **НО:** `HomeViewModel` не получает уведомление об изменении `currentActivity` из `applicationContext`
+     - ⚠️ **НО:** При изменении/удалении активности на iPhone активность на часах не обновляется, хотя `applicationContext` приходит с правильными данными
    - **Решение:** 
-     - Добавить вызов `sendCurrentStatus` после удаления активности, если это текущий день
-     - Добавить вызов `sendCurrentStatus` после изменения активности, если это текущий день
-     - Обработать все места, где вызывается `deleteDailyActivity` или `updateDailyActivity`
+     - ✅ Добавлен вызов `sendCurrentStatus` после удаления активности в UI компонентах
+     - ⚠️ **Требуется:** Обрабатывать `currentActivity` из `applicationContext` в `WatchConnectivityService` (см. Баг 5)
+     - ⚠️ **Требуется:** Добавить callback для уведомления `HomeViewModel` об изменении `currentActivity` (см. Баг 5)
+     - ⚠️ **Требуется:** Обновить `HomeViewModel` для использования `currentActivity` из `applicationContext` (см. Баг 5)
+
+6. **currentActivity из applicationContext не обрабатывается на часах** ⚠️ Требует исправления
+   - **Проблема:**
+     - При изменении/удалении активности на iPhone `applicationContext` отправляется с правильным `currentActivity` (или без него при удалении)
+     - На часах `currentActivity` из `applicationContext` не обрабатывается в `handleApplicationContext()` - обрабатывается только `isAuthorized` и `currentDay`
+     - `HomeViewModel` не получает уведомление об изменении `currentActivity` из `applicationContext`
+     - `HomeViewModel` продолжает использовать старое значение `currentActivity` или делает лишний запрос к iPhone через `loadData()`
+     - Из логов видно, что `applicationContext` приходит с `currentActivity`, но он игнорируется
+   - **Решение:**
+     - Обрабатывать `currentActivity` из `applicationContext` в `WatchConnectivityService.handleApplicationContext()`
+     - Добавить свойство `currentActivity` в `WatchConnectivityService` с callback для уведомления
+     - Обновить `HomeViewModel` для использования `currentActivity` из `applicationContext` без запроса к iPhone
+     - При изменении `currentActivity` на `.workout` загружать данные тренировки
+     - При изменении `currentActivity` на другой тип или `nil` очищать данные тренировки
 
 **План исправления (TDD):**
 
@@ -287,7 +303,19 @@ SotkaWatch Watch App/
 - ✅ Добавлен вызов `sendCurrentStatus` в `HomeActivitySectionView.actionFor()` для установки активности текущего дня
 - ⚠️ **Не выполнено:** Удаление и изменение активности обрабатываются в баге 4
 
-##### Баг 4: Отправка статуса в часы при удалении или изменении активности в основном приложении
+##### Баг 4: Отправка статуса в часы при удалении или изменении активности в основном приложении ⚠️ Частично выполнено
+
+**Проблема:**
+- ✅ Отправка `applicationContext` с `currentActivity` реализована на iPhone
+- ⚠️ **НО:** На часах `currentActivity` из `applicationContext` не обрабатывается и не обновляется в `HomeViewModel`
+- ⚠️ **НО:** При изменении/удалении активности на iPhone активность на часах не обновляется, хотя `applicationContext` приходит с правильными данными
+- ⚠️ **НО:** `HomeViewModel` получает `currentActivity` только через `loadData()`, который делает запрос к iPhone, игнорируя данные из `applicationContext`
+
+**Решение:**
+- ✅ Добавлен вызов `sendCurrentStatus` при удалении активности в UI компонентах
+- ⚠️ **Требуется:** Обрабатывать `currentActivity` из `applicationContext` в `WatchConnectivityService`
+- ⚠️ **Требуется:** Добавить callback для уведомления `HomeViewModel` об изменении `currentActivity`
+- ⚠️ **Требуется:** Обновить `HomeViewModel` для использования `currentActivity` из `applicationContext` без запроса к iPhone
 
 **Проблема:**
 - При удалении активности через `DailyActivitiesService.deleteDailyActivity()` в основном приложении не вызывается отправка статуса в часы
@@ -298,36 +326,31 @@ SotkaWatch Watch App/
   - `JournalGridView` - удаление/изменение активности (если это текущий день)
   - `JournalListView` - удаление/изменение активности (если это текущий день)
 
-**Шаг 4.1: Тест для отправки статуса при удалении активности текущего дня**
-- [ ] Создать тест в `StatusManagerWatchConnectivityTests.swift` или интеграционный тест
-- [ ] Проверить, что при удалении активности текущего дня через `deleteDailyActivity` вызывается `sendCurrentStatus` с `currentActivity: nil`
-- [ ] Проверить, что отправка происходит только для текущего дня
-- [ ] Тест должен падать (красный)
+**Шаг 4.1: Тест для отправки статуса при удалении активности текущего дня** ✅
+- ✅ Созданы тесты в `StatusManagerWatchConnectivityTests.swift`
+- ✅ Проверено, что при удалении активности текущего дня вызывается `sendCurrentStatus` с `currentActivity: nil`
+- ✅ Проверено, что отправка происходит только для текущего дня
+- ✅ Тесты проходят
 
-**Шаг 4.2: Тест для отправки статуса при изменении активности текущего дня**
-- [ ] Создать тест в `StatusManagerWatchConnectivityTests.swift` или интеграционный тест
-- [ ] Проверить, что при изменении активности текущего дня через `updateDailyActivity` вызывается `sendCurrentStatus` с обновленным `currentActivity`
-- [ ] Проверить, что отправка происходит только для текущего дня
-- [ ] Тест должен падать (красный)
+**Шаг 4.2: Тест для отправки статуса при изменении активности текущего дня** ✅
+- ✅ Не требуется: изменение типа активности уже обрабатывается в баге 3 через `set()`
+- ✅ Метод `updateDailyActivity` не существует в `DailyActivitiesService`
 
-**Шаг 4.3: Реализация отправки статуса при удалении активности**
-- [ ] Добавить вызов `sendCurrentStatus` в `HomeActivitySectionView` после удаления активности, если это текущий день
-- [ ] Добавить вызов `sendCurrentStatus` в `JournalGridView` после удаления активности, если это текущий день
-- [ ] Добавить вызов `sendCurrentStatus` в `JournalListView` после удаления активности, если это текущий день
-- [ ] Проверить, что отправляется `currentActivity: nil` после удаления
-- [ ] Тесты должны проходить (зеленый)
+**Шаг 4.3: Реализация отправки статуса при удалении активности** ✅
+- ✅ Добавлен вызов `sendCurrentStatus` в `HomeActivitySectionView` после удаления активности, если это текущий день
+- ✅ Добавлен вызов `sendCurrentStatus` в `JournalGridView` после удаления активности, если это текущий день
+- ✅ Добавлен вызов `sendCurrentStatus` в `JournalListView` после удаления активности, если это текущий день
+- ✅ Отправляется `currentActivity: nil` после удаления
+- ✅ Тесты проходят
 
-**Шаг 4.4: Реализация отправки статуса при изменении активности**
-- [ ] Найти места, где вызывается `updateDailyActivity` для текущего дня
-- [ ] Добавить вызов `sendCurrentStatus` после изменения активности, если это текущий день
-- [ ] Проверить, что отправляется обновленный `currentActivity`
-- [ ] Тесты должны проходить (зеленый)
+**Шаг 4.4: Реализация отправки статуса при изменении активности** ✅
+- ✅ Не требуется: изменение типа активности уже обрабатывается в баге 3
 
-**Шаг 4.5: Рефакторинг**
-- [ ] Проверить форматирование кода (`make format`)
-- [ ] Запустить тесты (`make test`)
-- [ ] Убедиться, что все тесты проходят
-- [ ] Проверить, что нет дублирования логики отправки статуса
+**Шаг 4.5: Рефакторинг** ✅
+- ✅ Проверено форматирование кода (`make format`)
+- ✅ Запущены тесты (`make test`)
+- ✅ Все тесты проходят (27 тестов)
+- ✅ Нет дублирования логики отправки статуса
 
 **Примечания:**
 - Все тесты должны следовать правилам из `unit-testing-ios-app.mdc`

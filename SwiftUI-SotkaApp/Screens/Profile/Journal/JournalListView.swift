@@ -4,6 +4,7 @@ import SWUtils
 
 struct JournalListView: View {
     @Environment(DailyActivitiesService.self) private var activitiesService
+    @Environment(StatusManager.self) private var statusManager
     @Environment(\.currentDay) private var currentDay
     @Environment(\.modelContext) private var modelContext
     @State private var dayForConfirmationDialog: Int?
@@ -109,6 +110,12 @@ private extension JournalListView {
            let activity = activitiesByDay[dayForConfirmationDialog] {
             Button(.journalDelete, role: .destructive) {
                 activitiesService.deleteDailyActivity(activity, context: modelContext)
+
+                // Отправляем статус на часы, если это текущий день
+                if activity.day == currentDay {
+                    statusManager.sendCurrentStatus(isAuthorized: true, currentDay: currentDay, currentActivity: nil)
+                }
+
                 self.dayForConfirmationDialog = nil
             }
         }

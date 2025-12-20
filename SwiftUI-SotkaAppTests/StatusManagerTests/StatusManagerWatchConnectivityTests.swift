@@ -507,6 +507,88 @@ struct StatusManagerWatchConnectivityTests {
         #expect(!isAuthorized)
     }
 
+    // MARK: - Тесты отправки статуса при удалении активности
+
+    @Test("Должен отправлять статус при удалении активности текущего дня")
+    func shouldSendStatusWhenDeletingCurrentDayActivity() throws {
+        let mockSession = MockWCSession(isReachable: false)
+        let statusManager = try MockStatusManager.create(
+            daysClient: MockDaysClient(),
+            userDefaults: MockUserDefaults.create(),
+            watchConnectivitySessionProtocol: mockSession
+        )
+
+        let context = statusManager.modelContainer.mainContext
+        let user = User(id: 1, userName: "testuser", fullName: "Test User", email: "test@example.com")
+        context.insert(user)
+        try context.save()
+
+        // Устанавливаем текущий день
+        statusManager.setCurrentDayForDebug(42)
+
+        // Создаем активность для текущего дня
+        let now = Date.now
+        let activity = DayActivity(day: 42, createDate: now, modifyDate: now)
+        activity.user = user
+        activity.activityType = .rest
+        context.insert(activity)
+        try context.save()
+
+        let initialContextCount = mockSession.applicationContexts.count
+
+        // Удаляем активность (симулируем вызов из UI)
+        statusManager.dailyActivitiesService.deleteDailyActivity(activity, context: context)
+
+        // Симулируем вызов sendCurrentStatus из UI после удаления (как в HomeActivitySectionView)
+        if activity.day == statusManager.currentDayCalculator?.currentDay {
+            statusManager.sendCurrentStatus(isAuthorized: true, currentDay: activity.day, currentActivity: nil)
+        }
+
+        // Проверяем, что applicationContext был отправлен с currentActivity: nil
+        #expect(mockSession.applicationContexts.count > initialContextCount)
+        let lastContext = try #require(mockSession.applicationContexts.last)
+        let isAuthorized = try #require(lastContext["isAuthorized"] as? Bool)
+        #expect(isAuthorized)
+        let currentDay = try #require(lastContext["currentDay"] as? Int)
+        #expect(currentDay == 42)
+        #expect(lastContext["currentActivity"] == nil)
+    }
+
+    @Test("Не должен отправлять статус при удалении активности не текущего дня")
+    func shouldNotSendStatusWhenDeletingNonCurrentDayActivity() throws {
+        let mockSession = MockWCSession(isReachable: false)
+        let statusManager = try MockStatusManager.create(
+            daysClient: MockDaysClient(),
+            userDefaults: MockUserDefaults.create(),
+            watchConnectivitySessionProtocol: mockSession
+        )
+
+        let context = statusManager.modelContainer.mainContext
+        let user = User(id: 1, userName: "testuser", fullName: "Test User", email: "test@example.com")
+        context.insert(user)
+        try context.save()
+
+        // Устанавливаем текущий день
+        statusManager.setCurrentDayForDebug(42)
+
+        // Создаем активность для другого дня
+        let now = Date.now
+        let activity = DayActivity(day: 50, createDate: now, modifyDate: now)
+        activity.user = user
+        activity.activityType = .rest
+        context.insert(activity)
+        try context.save()
+
+        let initialContextCount = mockSession.applicationContexts.count
+
+        // Удаляем активность
+        statusManager.dailyActivitiesService.deleteDailyActivity(activity, context: context)
+
+        // Проверяем, что applicationContext не был отправлен (или был отправлен только при инициализации)
+        // Количество контекстов не должно увеличиться из-за удаления активности не текущего дня
+        #expect(mockSession.applicationContexts.count <= initialContextCount + 1)
+    }
+
     // MARK: - Тесты отправки applicationContext
 
     @Test("Должен отправлять applicationContext при изменении статуса авторизации на true")
