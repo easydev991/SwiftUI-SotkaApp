@@ -289,19 +289,45 @@ final class StatusManager: NSObject {
             return
         }
 
+        let model = WatchStatusMessage(
+            isAuthorized: isAuthorized,
+            currentDay: currentDay,
+            currentActivity: currentActivity
+        )
+
+        sessionProtocol.sendMessageToWatch(
+            model.message,
+            replyHandler: nil
+        ) { error in
+            logger.error("Ошибка отправки текущего статуса на часы: \(error.localizedDescription)")
+        }
+
+        // Отправляем applicationContext для работы часов даже когда приложение закрыто
+        updateApplicationContextOnWatch(isAuthorized: isAuthorized, currentDay: currentDay, currentActivity: currentActivity)
+    }
+
+    /// Обновляет applicationContext для часов (работает даже когда приложение закрыто)
+    /// - Parameters:
+    ///   - isAuthorized: Статус авторизации
+    ///   - currentDay: Номер текущего дня (опционально)
+    ///   - currentActivity: Текущая активность (опционально)
+    private func updateApplicationContextOnWatch(isAuthorized: Bool, currentDay: Int?, currentActivity: DayActivityType?) {
+        guard let sessionProtocol else {
+            return
+        }
+
         let statusMessage = WatchStatusMessage(
             isAuthorized: isAuthorized,
             currentDay: currentDay,
             currentActivity: currentActivity
         )
-        let message = statusMessage.toMessage()
+        let applicationContext = statusMessage.applicationContext
 
-        sessionProtocol.sendMessageToWatch(
-            message,
-            replyHandler: nil
-        ) { error in
-            logger.error("Ошибка отправки текущего статуса на часы: \(error.localizedDescription)")
-        }
+        sessionProtocol.updateApplicationContextOnWatch(applicationContext)
+        logger
+            .debug(
+                "ApplicationContext обновлен для часов: isAuthorized=\(isAuthorized), currentDay=\(currentDay?.description ?? "nil"), currentActivity=\(currentActivity?.rawValue.description ?? "nil")"
+            )
     }
 
     /// Отправляет текущую активность конкретного дня на часы
@@ -316,15 +342,13 @@ final class StatusManager: NSObject {
         let context = modelContainer.mainContext
         let activityType = dailyActivitiesService.getActivityType(day: day, context: context)
 
-        let statusMessage = WatchStatusMessage(
+        let model = WatchStatusMessage(
             isAuthorized: true,
             currentDay: day,
             currentActivity: activityType
         )
-        let message = statusMessage.toMessage()
-
         sessionProtocol.sendMessageToWatch(
-            message,
+            model.message,
             replyHandler: nil
         ) { error in
             logger.error("Ошибка отправки текущей активности на часы: \(error.localizedDescription)")

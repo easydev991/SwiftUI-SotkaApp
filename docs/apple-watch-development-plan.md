@@ -223,66 +223,109 @@ SotkaWatch Watch App/
 
 **Найденные проблемы:**
 
-1. **Кнопка "Проверить авторизацию" бесполезна, если приложение на iPhone закрыто**
-   - **Проблема:** `loadData()` использует `sendMessage`, который требует активного соединения. Если приложение на iPhone закрыто, часы не могут получить статус авторизации и данные.
-   - **Решение:** Использовать `updateApplicationContext` для отправки статуса авторизации, текущего дня и текущей активности с iPhone. `applicationContext` работает даже когда приложение закрыто.
+1. **Кнопка "Проверить авторизацию" бесполезна, если приложение на iPhone закрыто** ⚠️ Частично решено, требует доработки
+   - **Проблема:** 
+     - `loadData()` использует `sendMessage`, который требует активного соединения. Если приложение на iPhone закрыто, часы не могут получить статус авторизации и данные.
+     - ✅ `updateApplicationContext` реализован для отправки статуса авторизации с iPhone
+     - ⚠️ **НО:** При запуске часов `applicationContext` не обрабатывается при активации WCSession - не проверяется `receivedApplicationContext`
+     - ⚠️ **НО:** `updateApplicationContextOnWatch()` вызывается только внутри `sendCurrentStatus()`, который проверяет `isReachable`. `applicationContext` должен отправляться всегда, даже если часы недоступны
+     - ⚠️ **НО:** При запуске приложения на iPhone (если пользователь уже авторизован) `applicationContext` может не отправляться сразу, если `getStatus()` еще не выполнился
+   - **Решение:** 
+     - ✅ Использовать `updateApplicationContext` для отправки статуса авторизации, текущего дня и текущей активности с iPhone
+     - ⚠️ **Требуется:** Проверять `receivedApplicationContext` при активации WCSession на часах
+     - ⚠️ **Требуется:** Вызывать `updateApplicationContextOnWatch()` всегда, независимо от `isReachable`
+     - ⚠️ **Требуется:** Отправлять `applicationContext` при запуске приложения на iPhone, если пользователь уже авторизован (до выполнения `getStatus()`)
 
-2. **Ошибка "Попытка выбрать активность без текущего дня"**
+2. **ApplicationContext не обрабатывается полностью на часах при запуске** ⚠️ Требует исправления
+   - **Проблема:** 
+     - При запуске часов `applicationContext` показывает `nil` ("Application context data is nil")
+     - `handleApplicationContext()` обрабатывает только `isAuthorized`, но не обрабатывает `currentDay` и `currentActivity`
+     - **КРИТИЧНО:** При активации WCSession на часах не проверяется `receivedApplicationContext` для получения данных, отправленных с iPhone до активации
+     - Статус авторизации остается `false`, хотя пользователь авторизован в основном приложении
+     - Кнопка "Проверить авторизацию" возвращает `false`, даже если `applicationContext` был отправлен с iPhone
+   - **Решение:** 
+     - Обновить `handleApplicationContext()` для обработки `currentDay` и `currentActivity`
+     - **КРИТИЧНО:** Проверять `receivedApplicationContext` при активации WCSession на часах в `session(_:activationDidCompleteWith:error:)`
+     - Добавить механизм уведомления `HomeViewModel` об изменении данных из `applicationContext`
+
+3. **Ошибка "Попытка выбрать активность без текущего дня"**
    - **Проблема:** При попытке выбрать активность дня в часах `currentDay` может быть `nil`, если статус не был получен от iPhone.
    - **Решение:** Обрабатывать `applicationContext` на часах для получения `currentDay` и `currentActivity`. Если `currentDay` все еще `nil`, запрашивать статус перед выбором активности.
 
-3. **При выборе активности в основном приложении ничего не происходит в часах**
+4. **При выборе активности в основном приложении ничего не происходит в часах**
    - **Проблема:** При выборе активности через `DailyActivitiesService.set()` в основном приложении не вызывается отправка статуса в часы.
    - **Решение:** Добавить вызов `sendCurrentStatus` или `sendCurrentActivity` после установки активности в `DailyActivitiesService.set()` или в месте вызова этого метода.
 
 **План исправления (TDD):**
 
-##### Баг 1: Отправка applicationContext с iPhone
+##### Баг 1: Отправка applicationContext с iPhone ⚠️ Частично выполнено, требует доработки
 
-**Шаг 1.1: Тест для отправки applicationContext при изменении статуса авторизации**
-- [ ] Создать тест в `StatusManagerWatchConnectivityTests.swift`
-- [ ] Проверить, что при вызове `processAuthStatus(isAuthorized: true)` вызывается `updateApplicationContext` с корректными данными
-- [ ] Проверить, что при вызове `processAuthStatus(isAuthorized: false)` вызывается `updateApplicationContext` с `isAuthorized: false`
+**Шаг 1.1: Тест для отправки applicationContext при изменении статуса авторизации** ✅
+- ✅ Создан тест в `StatusManagerWatchConnectivityTests.swift`
+- ✅ Проверено, что при вызове `processAuthStatus(isAuthorized: true)` вызывается `updateApplicationContext` с корректными данными
+- ✅ Проверено, что при вызове `processAuthStatus(isAuthorized: false)` вызывается `updateApplicationContext` с `isAuthorized: false`
+
+**Шаг 1.2: Тест для отправки applicationContext при изменении текущего дня** ✅
+- ✅ Создан тест в `StatusManagerWatchConnectivityTests.swift`
+- ✅ Проверено, что при изменении `currentDayCalculator` вызывается `updateApplicationContext` с актуальным `currentDay` и `currentActivity`
+
+**Шаг 1.3: Реализация отправки applicationContext** ✅
+- ✅ Добавлен метод `updateApplicationContextOnWatch()` в `StatusManager`
+- ✅ Вызывается `updateApplicationContextOnWatch()` в `sendCurrentStatus()` для синхронизации
+- ✅ Используется `WatchStatusMessage.applicationContext` для формирования данных
+
+**Шаг 1.4: Рефакторинг** ✅
+- ✅ Код отформатирован
+- ✅ Все тесты проходят
+
+**Шаг 1.5: Доработка - отправка applicationContext всегда, независимо от isReachable** ⚠️ Требует исправления
+- [ ] Вынести `updateApplicationContextOnWatch()` из `sendCurrentStatus()` - вызывать его всегда, даже если `isReachable == false`
+- [ ] Убрать проверку `isReachable` из `updateApplicationContextOnWatch()` (она уже есть в методе)
 - [ ] Тест должен падать (красный)
 
-**Шаг 1.2: Тест для отправки applicationContext при изменении текущего дня**
-- [ ] Создать тест в `StatusManagerWatchConnectivityTests.swift`
-- [ ] Проверить, что при изменении `currentDayCalculator` вызывается `updateApplicationContext` с актуальным `currentDay` и `currentActivity`
+**Шаг 1.6: Доработка - отправка applicationContext при запуске приложения на iPhone** ⚠️ Требует исправления
+- [ ] Добавить проверку авторизации при инициализации `StatusManager` или при активации WCSession
+- [ ] Если пользователь авторизован, отправить `applicationContext` сразу, до выполнения `getStatus()`
 - [ ] Тест должен падать (красный)
 
-**Шаг 1.3: Реализация отправки applicationContext**
-- [ ] Добавить метод `updateApplicationContextOnWatch()` в `StatusManager`
-- [ ] Вызывать `updateApplicationContextOnWatch()` в `processAuthStatus()`
-- [ ] Вызывать `updateApplicationContextOnWatch()` в `getStatus()` после установки `currentDayCalculator`
-- [ ] Вызывать `updateApplicationContextOnWatch()` в `sendCurrentStatus()` для синхронизации
-- [ ] Тесты должны проходить (зеленый)
-
-**Шаг 1.4: Рефакторинг**
+**Шаг 1.7: Рефакторинг доработок**
 - [ ] Проверить форматирование кода (`make format`)
 - [ ] Запустить тесты (`make test`)
 - [ ] Убедиться, что все тесты проходят
 
-##### Баг 2: Обработка applicationContext на часах для получения currentDay
+##### Баг 2: Обработка applicationContext на часах для получения currentDay и статуса авторизации
+
+**Проблема:** 
+- При запуске часов `applicationContext` не обрабатывается полностью - обрабатывается только `isAuthorized`, но не `currentDay` и `currentActivity`
+- При активации WCSession на часах не проверяется `receivedApplicationContext` для получения данных, которые были отправлены с iPhone до активации
+- `handleApplicationContext` не обновляет `currentDay` в `WatchConnectivityService` и не уведомляет `HomeViewModel`
 
 **Шаг 2.1: Тест для обработки applicationContext с currentDay и currentActivity**
 - [ ] Создать тест в `WatchConnectivityServiceTests.swift` (или создать новый файл)
 - [ ] Проверить, что при получении `applicationContext` с `currentDay` и `currentActivity` обновляется `currentDay` в `WatchConnectivityService`
-- [ ] Проверить, что вызывается обновление `currentDay` в `HomeViewModel`
+- [ ] Проверить, что при получении `applicationContext` обновляется статус авторизации
 - [ ] Тест должен падать (красный)
 
-**Шаг 2.2: Тест для запроса статуса перед выбором активности, если currentDay == nil**
-- [ ] Создать тест в `HomeViewModelTests.swift`
-- [ ] Проверить, что при вызове `selectActivity()` с `currentDay == nil` сначала запрашивается статус
-- [ ] Проверить, что после получения статуса выполняется выбор активности
+**Шаг 2.2: Тест для получения receivedApplicationContext при активации WCSession**
+- [ ] Создать тест в `WatchConnectivityServiceTests.swift`
+- [ ] Проверить, что при активации WCSession проверяется `receivedApplicationContext` и обрабатывается, если он существует
 - [ ] Тест должен падать (красный)
 
-**Шаг 2.3: Реализация обработки applicationContext на часах**
+**Шаг 2.3: Тест для уведомления HomeViewModel при получении applicationContext**
+- [ ] Создать тест в `HomeViewModelTests.swift` или интеграционный тест
+- [ ] Проверить, что при обновлении `currentDay` в `WatchConnectivityService` вызывается обновление в `HomeViewModel`
+- [ ] Тест должен падать (красный)
+
+**Шаг 2.4: Реализация обработки applicationContext на часах**
 - [ ] Обновить `handleApplicationContext()` в `WatchConnectivityService` для обработки `currentDay` и `currentActivity`
+- [ ] Добавить проверку `receivedApplicationContext` в `session(_:activationDidCompleteWith:error:)` при активации WCSession на часах
+- [ ] Добавить механизм уведомления `HomeViewModel` об изменении `currentDay` (через callback или протокол)
 - [ ] Обновить `HomeViewModel.updateCurrentDayFromConnectivity()` для обработки изменений из `applicationContext`
-- [ ] Добавить запрос статуса в `selectActivity()` если `currentDay == nil`
+- [ ] Исправить `updateApplicationContextOnWatch()` - он должен вызываться всегда, даже если `isReachable == false`, так как `applicationContext` работает независимо от доступности часов
+- [ ] Убедиться, что `updateApplicationContextOnWatch()` вызывается при запуске приложения на iPhone (в `getStatus()` или при инициализации `StatusManager`)
 - [ ] Тесты должны проходить (зеленый)
 
-**Шаг 2.4: Рефакторинг**
+**Шаг 2.5: Рефакторинг**
 - [ ] Проверить форматирование кода (`make format`)
 - [ ] Запустить тесты (`make test_watch`)
 - [ ] Убедиться, что все тесты проходят

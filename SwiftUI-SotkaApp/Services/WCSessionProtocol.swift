@@ -13,6 +13,7 @@ protocol WCSessionProtocol: AnyObject {
         replyHandler: (([String: Any]) -> Void)?,
         errorHandler: ((Error) -> Void)?
     )
+    func updateApplicationContextOnWatch(_ applicationContext: [String: Any])
 }
 
 /// WCSession соответствует протоколу
@@ -23,5 +24,15 @@ extension WCSession: WCSessionProtocol {
         errorHandler: ((Error) -> Void)?
     ) {
         sendMessage(message, replyHandler: replyHandler, errorHandler: errorHandler)
+    }
+
+    func updateApplicationContextOnWatch(_ applicationContext: [String: Any]) {
+        // WCSession уже имеет метод updateApplicationContext с throws
+        // Используем существующий метод напрямую, обернув в do-catch
+        do {
+            try updateApplicationContext(applicationContext)
+        } catch {
+            // Игнорируем ошибки при обновлении applicationContext
+        }
     }
 }

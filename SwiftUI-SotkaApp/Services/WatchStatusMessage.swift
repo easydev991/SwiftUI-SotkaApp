@@ -11,21 +11,39 @@ struct WatchStatusMessage {
 
     /// Преобразует данные в словарь для отправки через WatchConnectivity
     /// - Returns: Словарь с данными для отправки на часы
-    func toMessage() -> [String: Any] {
-        var message: [String: Any] = [
+    var message: [String: Any] {
+        var result: [String: Any] = [
             "command": Constants.WatchCommand.authStatus.rawValue,
             "isAuthorized": isAuthorized
         ]
 
         if let currentDay {
-            message["currentDay"] = currentDay
+            result["currentDay"] = currentDay
         }
 
         if let currentActivity {
-            message["currentActivity"] = currentActivity.rawValue
+            result["currentActivity"] = currentActivity.rawValue
         }
 
-        return message
+        return result
+    }
+
+    /// Создает applicationContext для часов (без поля "command", работает даже когда приложение закрыто)
+    /// - Returns: Словарь с данными для applicationContext
+    var applicationContext: [String: Any] {
+        var context: [String: Any] = [
+            "isAuthorized": isAuthorized
+        ]
+
+        if let currentDay {
+            context["currentDay"] = currentDay
+        }
+
+        if let currentActivity {
+            context["currentActivity"] = currentActivity.rawValue
+        }
+
+        return context
     }
 }
 

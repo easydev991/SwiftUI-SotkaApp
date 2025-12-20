@@ -15,6 +15,7 @@ final class MockWCSession: WCSessionProtocol {
     private(set) var sentMessages: [[String: Any]] = []
     private(set) var receivedMessages: [[String: Any]] = []
     private(set) var activateCallCount = 0
+    private(set) var applicationContexts: [[String: Any]] = []
 
     init(isReachable: Bool = true) {
         self.isReachable = isReachable
@@ -41,6 +42,10 @@ final class MockWCSession: WCSessionProtocol {
             let error = mockError ?? WatchConnectivityError.sessionUnavailable
             errorHandler?(error)
         }
+    }
+
+    func updateApplicationContextOnWatch(_ applicationContext: [String: Any]) {
+        applicationContexts.append(applicationContext)
     }
 
     func simulateReceivedMessage(_ message: [String: Any]) {

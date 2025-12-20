@@ -17,7 +17,7 @@ struct StatusManagerWatchConnectivityTests {
             currentActivity: .workout
         )
 
-        let result = message.toMessage()
+        let result = message.message
 
         let command = try #require(result["command"] as? String)
         #expect(command == Constants.WatchCommand.authStatus.rawValue)
@@ -29,6 +29,57 @@ struct StatusManagerWatchConnectivityTests {
         #expect(currentActivity == DayActivityType.workout.rawValue)
     }
 
+    @Test("Должен создавать applicationContext с полными данными")
+    func shouldCreateApplicationContextWithFullData() throws {
+        let message = WatchStatusMessage(
+            isAuthorized: true,
+            currentDay: 42,
+            currentActivity: .workout
+        )
+        let applicationContext = message.applicationContext
+
+        let isAuthorized = try #require(applicationContext["isAuthorized"] as? Bool)
+        #expect(isAuthorized)
+        let currentDay = try #require(applicationContext["currentDay"] as? Int)
+        #expect(currentDay == 42)
+        let currentActivity = try #require(applicationContext["currentActivity"] as? Int)
+        #expect(currentActivity == DayActivityType.workout.rawValue)
+        #expect(applicationContext["command"] == nil)
+    }
+
+    @Test("Должен создавать applicationContext без активности")
+    func shouldCreateApplicationContextWithoutActivity() throws {
+        let message = WatchStatusMessage(
+            isAuthorized: true,
+            currentDay: 42,
+            currentActivity: nil
+        )
+        let applicationContext = message.applicationContext
+
+        let isAuthorized = try #require(applicationContext["isAuthorized"] as? Bool)
+        #expect(isAuthorized)
+        let currentDay = try #require(applicationContext["currentDay"] as? Int)
+        #expect(currentDay == 42)
+        #expect(applicationContext["currentActivity"] == nil)
+        #expect(applicationContext["command"] == nil)
+    }
+
+    @Test("Должен создавать applicationContext для неавторизованного пользователя")
+    func shouldCreateApplicationContextForUnauthorized() throws {
+        let message = WatchStatusMessage(
+            isAuthorized: false,
+            currentDay: nil,
+            currentActivity: nil
+        )
+        let applicationContext = message.applicationContext
+
+        let isAuthorized = try #require(applicationContext["isAuthorized"] as? Bool)
+        #expect(!isAuthorized)
+        #expect(applicationContext["currentDay"] == nil)
+        #expect(applicationContext["currentActivity"] == nil)
+        #expect(applicationContext["command"] == nil)
+    }
+
     @Test("Должен преобразовывать данные статуса в сообщение без активности")
     func shouldConvertStatusToMessageWithoutActivity() throws {
         let message = WatchStatusMessage(
@@ -37,7 +88,7 @@ struct StatusManagerWatchConnectivityTests {
             currentActivity: nil
         )
 
-        let result = message.toMessage()
+        let result = message.message
 
         let command = try #require(result["command"] as? String)
         #expect(command == Constants.WatchCommand.authStatus.rawValue)
@@ -56,7 +107,7 @@ struct StatusManagerWatchConnectivityTests {
             currentActivity: nil
         )
 
-        let result = message.toMessage()
+        let result = message.message
 
         let command = try #require(result["command"] as? String)
         #expect(command == Constants.WatchCommand.authStatus.rawValue)
@@ -405,5 +456,65 @@ struct StatusManagerWatchConnectivityTests {
         let activityType = try #require(activity?.activityType)
         #expect(activityType == .stretch)
         #expect(activity?.user?.id == user.id)
+    }
+
+    // MARK: - Тесты отправки applicationContext
+
+    @Test("Должен отправлять applicationContext при изменении статуса авторизации на true")
+    func shouldSendApplicationContextWhenAuthStatusChangesToTrue() throws {
+        let mockSession = MockWCSession(isReachable: true)
+        let statusManager = try MockStatusManager.create(
+            daysClient: MockDaysClient(),
+            userDefaults: MockUserDefaults.create(),
+            watchConnectivitySessionProtocol: mockSession
+        )
+
+        statusManager.setCurrentDayForDebug(10)
+        statusManager.processAuthStatus(isAuthorized: true)
+
+        #expect(mockSession.applicationContexts.count >= 1)
+        let context = try #require(mockSession.applicationContexts.first)
+        let isAuthorized = try #require(context["isAuthorized"] as? Bool)
+        #expect(isAuthorized)
+    }
+
+    @Test("Должен отправлять applicationContext при изменении статуса авторизации на false")
+    func shouldSendApplicationContextWhenAuthStatusChangesToFalse() throws {
+        let mockSession = MockWCSession(isReachable: true)
+        let statusManager = try MockStatusManager.create(
+            daysClient: MockDaysClient(),
+            userDefaults: MockUserDefaults.create(),
+            watchConnectivitySessionProtocol: mockSession
+        )
+
+        statusManager.processAuthStatus(isAuthorized: false)
+
+        #expect(mockSession.applicationContexts.count >= 1)
+        let context = try #require(mockSession.applicationContexts.first)
+        let isAuthorized = try #require(context["isAuthorized"] as? Bool)
+        #expect(!isAuthorized)
+    }
+
+    @Test("Должен отправлять applicationContext с currentDay и currentActivity при изменении текущего дня в getStatus")
+    func shouldSendApplicationContextWithCurrentDayAndActivityWhenCurrentDayChangesInGetStatus() async throws {
+        let mockSession = MockWCSession(isReachable: true)
+        let statusManager = try MockStatusManager.create(
+            daysClient: MockDaysClient(),
+            userDefaults: MockUserDefaults.create(),
+            watchConnectivitySessionProtocol: mockSession
+        )
+
+        statusManager.setCurrentDayForDebug(10)
+
+        await statusManager.getStatus()
+
+        #expect(mockSession.applicationContexts.count >= 1)
+        let context = try #require(mockSession.applicationContexts.first { ctx in
+            (ctx["currentDay"] as? Int) == 10
+        })
+        let isAuthorized = try #require(context["isAuthorized"] as? Bool)
+        #expect(isAuthorized)
+        let currentDay = try #require(context["currentDay"] as? Int)
+        #expect(currentDay == 10)
     }
 }
