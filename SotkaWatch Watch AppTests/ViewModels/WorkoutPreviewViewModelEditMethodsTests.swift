@@ -142,5 +142,75 @@ extension WorkoutPreviewViewModelTests {
             #expect(editableExercises.count == 2)
             #expect(editableExercises.allSatisfy { !$0.isTurboExercise })
         }
+
+        @Test("updatePlannedCount(for:) должен обновлять count когда тренировка сохранена")
+        func updatePlannedCountUpdatesCountWhenTrainingIsSaved() throws {
+            let connectivityService = MockWatchConnectivityService()
+            let viewModel = WorkoutPreviewViewModel(
+                connectivityService: connectivityService
+            )
+
+            viewModel.count = 5
+            viewModel.plannedCount = 3
+
+            viewModel.updatePlannedCount(for: 7)
+
+            let updatedCount = try #require(viewModel.count)
+            #expect(updatedCount == 7)
+            let plannedCount = try #require(viewModel.plannedCount)
+            #expect(plannedCount == 3)
+        }
+
+        @Test("updatePlannedCount(for:) должен обновлять plannedCount когда тренировка не сохранена")
+        func updatePlannedCountUpdatesPlannedCountWhenTrainingNotSaved() throws {
+            let connectivityService = MockWatchConnectivityService()
+            let viewModel = WorkoutPreviewViewModel(
+                connectivityService: connectivityService
+            )
+
+            viewModel.count = nil
+            viewModel.plannedCount = 3
+
+            viewModel.updatePlannedCount(for: 7)
+
+            let updatedPlannedCount = try #require(viewModel.plannedCount)
+            #expect(updatedPlannedCount == 7)
+            #expect(viewModel.count == nil)
+        }
+
+        @Test("updatePlannedCount(id:action:) должен обновлять count когда тренировка сохранена")
+        func updatePlannedCountWithIdUpdatesCountWhenTrainingIsSaved() throws {
+            let connectivityService = MockWatchConnectivityService()
+            let viewModel = WorkoutPreviewViewModel(
+                connectivityService: connectivityService
+            )
+
+            viewModel.count = 5
+            viewModel.plannedCount = 3
+
+            viewModel.updatePlannedCount(id: "plannedCount", action: .increment)
+
+            let updatedCount = try #require(viewModel.count)
+            #expect(updatedCount == 6)
+            let plannedCount = try #require(viewModel.plannedCount)
+            #expect(plannedCount == 3)
+        }
+
+        @Test("updatePlannedCount(id:action:) должен обновлять plannedCount когда тренировка не сохранена")
+        func updatePlannedCountWithIdUpdatesPlannedCountWhenTrainingNotSaved() throws {
+            let connectivityService = MockWatchConnectivityService()
+            let viewModel = WorkoutPreviewViewModel(
+                connectivityService: connectivityService
+            )
+
+            viewModel.count = nil
+            viewModel.plannedCount = 5
+
+            viewModel.updatePlannedCount(id: "plannedCount", action: .increment)
+
+            let updatedPlannedCount = try #require(viewModel.plannedCount)
+            #expect(updatedPlannedCount == 6)
+            #expect(viewModel.count == nil)
+        }
     }
 }

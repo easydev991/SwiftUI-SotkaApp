@@ -38,6 +38,10 @@ final class WatchConnectivityService: NSObject {
     /// - Parameter activity: Новая активность или `nil` если активность удалена
     var onCurrentActivityChanged: ((DayActivityType?) -> Void)?
 
+    /// Callback для уведомления о получении данных тренировки
+    /// - Parameter response: Полные данные тренировки с iPhone
+    var onWorkoutDataReceived: ((WorkoutDataResponse) -> Void)?
+
     /// Реальная сессия для делегата (только для WCSession, не для моков)
     var session: WCSession? {
         sessionProtocol as? WCSession
@@ -352,9 +356,11 @@ private extension WatchConnectivityService {
             } else {
                 logger.warning("Отсутствует значение currentDay в команде PHONE_COMMAND_CURRENT_DAY")
             }
-        case .currentActivity, .sendWorkoutData:
-            // Эти команды обрабатываются через replyHandler в методах запроса
+        case .currentActivity:
+            // Эта команда обрабатывается через replyHandler в методах запроса
             break
+        case .sendWorkoutData:
+            handleSendWorkoutDataCommand(message)
         case .setActivity, .saveWorkout, .getCurrentActivity, .getWorkoutData, .deleteActivity:
             // Эти команды отправляются с часов, не обрабатываются здесь
             break
@@ -383,6 +389,18 @@ private extension WatchConnectivityService {
             // Если currentActivity отсутствует в контексте, но есть currentDay, значит активность была удалена
             logger.info("Удаление currentActivity из Application Context (активность удалена)")
             currentActivity = nil
+        }
+    }
+
+    func handleSendWorkoutDataCommand(_ message: [String: Any]) {
+        do {
+            let jsonData = try JSONSerialization.data(withJSONObject: message)
+            let decoder = JSONDecoder()
+            let response = try decoder.decode(WorkoutDataResponse.self, from: jsonData)
+            logger.info("Получены данные тренировки для дня \(response.workoutData.day) через PHONE_COMMAND_SEND_WORKOUT_DATA")
+            onWorkoutDataReceived?(response)
+        } catch {
+            logger.error("Ошибка декодирования данных тренировки из PHONE_COMMAND_SEND_WORKOUT_DATA: \(error.localizedDescription)")
         }
     }
 }

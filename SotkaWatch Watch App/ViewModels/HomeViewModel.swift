@@ -45,6 +45,10 @@ final class HomeViewModel {
             watchConnectivityService.onCurrentActivityChanged = { [weak self] activity in
                 self?.updateCurrentActivityFromConnectivity(activity)
             }
+            // Подписываемся на получение данных тренировки
+            watchConnectivityService.onWorkoutDataReceived = { [weak self] response in
+                self?.updateWorkoutDataFromConnectivity(response)
+            }
         }
     }
 
@@ -251,6 +255,15 @@ final class HomeViewModel {
             self.error = error
             return nil
         }
+    }
+
+    /// Обновление данных тренировки из WatchConnectivityService
+    /// - Parameter response: Полные данные тренировки с iPhone
+    func updateWorkoutDataFromConnectivity(_ response: WorkoutDataResponse) {
+        logger.info("Обновление данных тренировки из WatchConnectivityService для дня \(response.workoutData.day)")
+        workoutData = response.workoutData
+        workoutExecutionCount = response.executionCount
+        workoutComment = response.comment
     }
 
     /// Удаление активности дня (отправка на iPhone)

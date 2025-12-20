@@ -5,18 +5,18 @@ import Testing
 extension WorkoutPreviewViewModelTests {
     @Suite("Тесты для displayedCount")
     struct DisplayedCountTests {
-        @Test("Должен возвращать plannedCount когда оба установлены (приоритет у plannedCount)")
+        @Test("Должен возвращать count когда оба установлены (приоритет у count для сохраненных тренировок)")
         @MainActor
-        func returnsPlannedCountWhenBothAreSet() throws {
+        func returnsCountWhenBothAreSet() throws {
             let viewModel = WorkoutPreviewViewModel()
             viewModel.count = 5
             viewModel.plannedCount = 3
 
             let displayedCount = try #require(viewModel.displayedCount)
-            #expect(displayedCount == 3)
+            #expect(displayedCount == 5)
         }
 
-        @Test("Должен возвращать plannedCount когда count == nil")
+        @Test("Должен возвращать plannedCount когда count == nil (непройденная тренировка)")
         @MainActor
         func returnsPlannedCountWhenCountIsNil() throws {
             let viewModel = WorkoutPreviewViewModel()
@@ -37,7 +37,7 @@ extension WorkoutPreviewViewModelTests {
             #expect(viewModel.displayedCount == nil)
         }
 
-        @Test("Должен возвращать count когда plannedCount == nil")
+        @Test("Должен возвращать count когда plannedCount == nil (сохраненная тренировка)")
         @MainActor
         func returnsCountWhenPlannedCountIsNil() throws {
             let viewModel = WorkoutPreviewViewModel()

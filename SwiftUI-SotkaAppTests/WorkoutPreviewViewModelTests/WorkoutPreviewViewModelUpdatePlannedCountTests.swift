@@ -116,34 +116,82 @@ extension WorkoutPreviewViewModelTests {
             #expect(unchangedCount3 == 15)
         }
 
-        @Test("Должен увеличивать plannedCount при increment для id plannedCount")
+        @Test("Должен увеличивать count при increment для id plannedCount когда тренировка сохранена")
         @MainActor
-        func incrementsPlannedCount() throws {
+        func incrementsCountWhenTrainingIsSaved() throws {
             let viewModel = WorkoutPreviewViewModel()
+            viewModel.count = 5
+            viewModel.plannedCount = 3
+
+            viewModel.updatePlannedCount(id: "plannedCount", action: .increment)
+
+            let updatedCount = try #require(viewModel.count)
+            #expect(updatedCount == 6)
+            let plannedCount = try #require(viewModel.plannedCount)
+            #expect(plannedCount == 3)
+        }
+
+        @Test("Должен уменьшать count при decrement для id plannedCount когда тренировка сохранена")
+        @MainActor
+        func decrementsCountWhenTrainingIsSaved() throws {
+            let viewModel = WorkoutPreviewViewModel()
+            viewModel.count = 5
+            viewModel.plannedCount = 3
+
+            viewModel.updatePlannedCount(id: "plannedCount", action: .decrement)
+
+            let updatedCount = try #require(viewModel.count)
+            #expect(updatedCount == 4)
+            let plannedCount = try #require(viewModel.plannedCount)
+            #expect(plannedCount == 3)
+        }
+
+        @Test("Должен увеличивать plannedCount при increment для id plannedCount когда тренировка не сохранена")
+        @MainActor
+        func incrementsPlannedCountWhenTrainingNotSaved() throws {
+            let viewModel = WorkoutPreviewViewModel()
+            viewModel.count = nil
             viewModel.plannedCount = 5
 
             viewModel.updatePlannedCount(id: "plannedCount", action: .increment)
 
             let updatedPlannedCount = try #require(viewModel.plannedCount)
             #expect(updatedPlannedCount == 6)
+            #expect(viewModel.count == nil)
         }
 
-        @Test("Должен уменьшать plannedCount при decrement для id plannedCount")
+        @Test("Должен уменьшать plannedCount при decrement для id plannedCount когда тренировка не сохранена")
         @MainActor
-        func decrementsPlannedCount() throws {
+        func decrementsPlannedCountWhenTrainingNotSaved() throws {
             let viewModel = WorkoutPreviewViewModel()
+            viewModel.count = nil
             viewModel.plannedCount = 5
 
             viewModel.updatePlannedCount(id: "plannedCount", action: .decrement)
 
             let updatedPlannedCount = try #require(viewModel.plannedCount)
             #expect(updatedPlannedCount == 4)
+            #expect(viewModel.count == nil)
         }
 
-        @Test("Должен устанавливать plannedCount в 0 при decrement с plannedCount = 0")
+        @Test("Должен устанавливать count в 0 при decrement с count = 0 для сохраненной тренировки")
+        @MainActor
+        func setsCountToZeroWhenDecrementingFromZeroForSavedTraining() throws {
+            let viewModel = WorkoutPreviewViewModel()
+            viewModel.count = 0
+            viewModel.plannedCount = 3
+
+            viewModel.updatePlannedCount(id: "plannedCount", action: .decrement)
+
+            let updatedCount = try #require(viewModel.count)
+            #expect(updatedCount == 0)
+        }
+
+        @Test("Должен устанавливать plannedCount в 0 при decrement с plannedCount = 0 для непройденной тренировки")
         @MainActor
         func setsPlannedCountToZeroWhenDecrementingFromZero() throws {
             let viewModel = WorkoutPreviewViewModel()
+            viewModel.count = nil
             viewModel.plannedCount = 0
 
             viewModel.updatePlannedCount(id: "plannedCount", action: .decrement)
@@ -152,10 +200,11 @@ extension WorkoutPreviewViewModelTests {
             #expect(updatedPlannedCount == 0)
         }
 
-        @Test("Должен устанавливать plannedCount в 1 при increment с plannedCount = nil")
+        @Test("Должен устанавливать plannedCount в 1 при increment с plannedCount = nil для непройденной тренировки")
         @MainActor
         func setsPlannedCountToOneWhenIncrementingFromNil() throws {
             let viewModel = WorkoutPreviewViewModel()
+            viewModel.count = nil
             viewModel.plannedCount = nil
 
             viewModel.updatePlannedCount(id: "plannedCount", action: .increment)

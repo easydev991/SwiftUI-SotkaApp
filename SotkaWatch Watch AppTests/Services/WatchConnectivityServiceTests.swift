@@ -534,4 +534,120 @@ struct WatchConnectivityServiceTests {
         #expect(callbackCalled)
         #expect(callbackActivity == nil)
     }
+
+    // MARK: - Тесты обработки команды PHONE_COMMAND_SEND_WORKOUT_DATA
+
+    @Test("Должен обрабатывать команду PHONE_COMMAND_SEND_WORKOUT_DATA и вызывать callback")
+    func shouldHandleSendWorkoutDataCommandAndCallCallback() throws {
+        let authService = WatchAuthService()
+        let service = WatchConnectivityService(authService: authService)
+
+        let trainings = [
+            WorkoutPreviewTraining(
+                id: "training-1",
+                count: 10,
+                typeId: 0,
+                customTypeId: nil,
+                sortOrder: 0
+            )
+        ]
+        let workoutData = WorkoutData(
+            day: 15,
+            executionType: 0,
+            trainings: trainings,
+            plannedCount: 3
+        )
+        let response = WorkoutDataResponse(
+            workoutData: workoutData,
+            executionCount: 4,
+            comment: "Отличная тренировка!"
+        )
+
+        let encoder = JSONEncoder()
+        let responseJSON = try JSONSerialization.jsonObject(with: encoder.encode(response)) as? [String: Any]
+
+        var callbackCalled = false
+        var callbackResponse: WorkoutDataResponse?
+
+        service.onWorkoutDataReceived = { response in
+            callbackCalled = true
+            callbackResponse = response
+        }
+
+        var message: [String: Any] = responseJSON ?? [:]
+        message["command"] = Constants.WatchCommand.sendWorkoutData.rawValue
+
+        service.testHandleReceivedMessage(message)
+
+        #expect(callbackCalled)
+        let receivedResponse = try #require(callbackResponse)
+        #expect(receivedResponse.workoutData.day == 15)
+        #expect(receivedResponse.workoutData.trainings.count == 1)
+        #expect(receivedResponse.workoutData.plannedCount == 3)
+        let executionCount = try #require(receivedResponse.executionCount)
+        #expect(executionCount == 4)
+        let comment = try #require(receivedResponse.comment)
+        #expect(comment == "Отличная тренировка!")
+    }
+
+    @Test("Должен обрабатывать команду PHONE_COMMAND_SEND_WORKOUT_DATA без опциональных полей")
+    func shouldHandleSendWorkoutDataCommandWithoutOptionalFields() throws {
+        let authService = WatchAuthService()
+        let service = WatchConnectivityService(authService: authService)
+
+        let workoutData = WorkoutData(
+            day: 15,
+            executionType: 0,
+            trainings: [],
+            plannedCount: 3
+        )
+        let response = WorkoutDataResponse(
+            workoutData: workoutData,
+            executionCount: nil,
+            comment: nil
+        )
+
+        let encoder = JSONEncoder()
+        let responseJSON = try JSONSerialization.jsonObject(with: encoder.encode(response)) as? [String: Any]
+
+        var callbackCalled = false
+        var callbackResponse: WorkoutDataResponse?
+
+        service.onWorkoutDataReceived = { response in
+            callbackCalled = true
+            callbackResponse = response
+        }
+
+        var message: [String: Any] = responseJSON ?? [:]
+        message["command"] = Constants.WatchCommand.sendWorkoutData.rawValue
+
+        service.testHandleReceivedMessage(message)
+
+        #expect(callbackCalled)
+        let receivedResponse = try #require(callbackResponse)
+        #expect(receivedResponse.workoutData.day == 15)
+        #expect(receivedResponse.executionCount == nil)
+        #expect(receivedResponse.comment == nil)
+    }
+
+    @Test("Должен игнорировать команду PHONE_COMMAND_SEND_WORKOUT_DATA с неверным форматом данных")
+    func shouldIgnoreSendWorkoutDataCommandWithInvalidFormat() throws {
+        let authService = WatchAuthService()
+        let service = WatchConnectivityService(authService: authService)
+
+        var callbackCalled = false
+
+        service.onWorkoutDataReceived = { _ in
+            callbackCalled = true
+        }
+
+        let message: [String: Any] = [
+            "command": Constants.WatchCommand.sendWorkoutData.rawValue,
+            "invalid": "data"
+        ]
+
+        service.testHandleReceivedMessage(message)
+
+        #expect(!callbackCalled)
+    }
 }

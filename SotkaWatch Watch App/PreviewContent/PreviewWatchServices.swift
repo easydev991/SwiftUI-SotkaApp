@@ -21,6 +21,8 @@ final class PreviewWatchAuthService: WatchAuthServiceProtocol {
 
 @MainActor
 final class PreviewWatchConnectivityService: WatchConnectivityServiceProtocol {
+    var onCurrentActivityChanged: ((DayActivityType?) -> Void)?
+    var onWorkoutDataReceived: ((WorkoutDataResponse) -> Void)?
     var currentDay: Int?
     var currentActivity: DayActivityType?
 

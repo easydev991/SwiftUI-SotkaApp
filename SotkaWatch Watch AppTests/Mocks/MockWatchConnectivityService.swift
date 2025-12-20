@@ -7,6 +7,7 @@ final class MockWatchConnectivityService: WatchConnectivityServiceProtocol {
     var currentDay: Int?
     var currentActivity: DayActivityType?
     var onCurrentActivityChanged: ((DayActivityType?) -> Void)?
+    var onWorkoutDataReceived: ((WorkoutDataResponse) -> Void)?
     var shouldSucceed = true
     var mockError: Error?
     var mockCurrentActivity: DayActivityType?

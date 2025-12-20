@@ -224,6 +224,8 @@ private extension WorkoutPreviewScreen {
                         currentDay: currentDay,
                         currentActivity: currentActivity
                     )
+                    // Отправляем полные данные тренировки на часы
+                    statusManager.sendWorkoutDataToWatch(day: day)
                 }
                 dismiss()
             },

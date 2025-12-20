@@ -371,6 +371,65 @@ final class StatusManager: NSObject {
         }
     }
 
+    /// Отправляет полные данные тренировки на часы для указанного дня
+    /// - Parameters:
+    ///   - day: Номер дня
+    func sendWorkoutDataToWatch(day: Int) {
+        guard let sessionProtocol, sessionProtocol.isReachable else {
+            logger.debug("Часы недоступны для отправки данных тренировки дня \(day)")
+            return
+        }
+
+        let context = modelContainer.mainContext
+        let activity = dailyActivitiesService.getActivity(dayNumber: day, context: context)
+        let workoutData: WorkoutData
+        let executionCount: Int?
+        let comment: String?
+
+        if let existingActivity = activity {
+            // Если активность существует, проверяем, является ли она тренировкой
+            guard let existingWorkoutData = existingActivity.workoutData else {
+                logger.debug("Активность дня \(day) не является тренировкой, данные не отправляются")
+                return
+            }
+            // Используем существующую активность типа workout
+            workoutData = existingWorkoutData
+            executionCount = existingActivity.count
+            comment = existingActivity.comment
+        } else {
+            // Если активность не найдена, создаем данные через WorkoutProgramCreator
+            let creator = WorkoutProgramCreator(day: day)
+            let newActivity = creator.dayActivity
+
+            guard let newWorkoutData = newActivity.workoutData else {
+                logger.debug("Не удалось создать данные тренировки для дня \(day)")
+                return
+            }
+
+            workoutData = newWorkoutData
+            executionCount = nil
+            comment = nil
+        }
+
+        let response = WorkoutDataResponse(
+            workoutData: workoutData,
+            executionCount: executionCount,
+            comment: comment
+        )
+
+        guard let message = response.makeMessageForWatch(command: Constants.WatchCommand.sendWorkoutData.rawValue) else {
+            logger.error("Не удалось создать сообщение для отправки данных тренировки дня \(day)")
+            return
+        }
+
+        sessionProtocol.sendMessageToWatch(
+            message,
+            replyHandler: nil
+        ) { error in
+            logger.error("Ошибка отправки данных тренировки на часы: \(error.localizedDescription)")
+        }
+    }
+
     // MARK: - Обработка команд от часов
 
     /// Обрабатывает команду от часов

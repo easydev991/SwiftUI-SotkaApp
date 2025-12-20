@@ -31,9 +31,9 @@ extension WorkoutPreviewViewModelTests {
             #expect(!viewModel.isPlannedCountDisabled)
         }
 
-        @Test("Должен возвращать plannedCount когда оба установлены (приоритет у plannedCount)")
+        @Test("Должен возвращать count когда оба установлены (приоритет у count для сохраненных тренировок)")
         @MainActor
-        func returnsPlannedCountWhenBothAreSet() throws {
+        func returnsCountWhenBothAreSet() throws {
             let connectivityService = MockWatchConnectivityService()
             let viewModel = WorkoutPreviewViewModel(
                 connectivityService: connectivityService
@@ -43,10 +43,10 @@ extension WorkoutPreviewViewModelTests {
             viewModel.plannedCount = 3
 
             let displayedCount = try #require(viewModel.displayedCount)
-            #expect(displayedCount == 3)
+            #expect(displayedCount == 5)
         }
 
-        @Test("Должен возвращать plannedCount когда count == nil")
+        @Test("Должен возвращать plannedCount когда count == nil (непройденная тренировка)")
         @MainActor
         func returnsPlannedCountWhenCountIsNil() throws {
             let connectivityService = MockWatchConnectivityService()
@@ -61,7 +61,7 @@ extension WorkoutPreviewViewModelTests {
             #expect(displayedCount == 4)
         }
 
-        @Test("Должен возвращать count когда plannedCount == nil")
+        @Test("Должен возвращать count когда plannedCount == nil (сохраненная тренировка)")
         @MainActor
         func returnsCountWhenPlannedCountIsNil() throws {
             let connectivityService = MockWatchConnectivityService()
