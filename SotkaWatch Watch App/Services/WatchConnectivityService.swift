@@ -13,6 +13,9 @@ final class WatchConnectivityService: NSObject {
     private let authService: WatchAuthService
     private let sessionProtocol: WatchSessionProtocol?
 
+    /// Последние обработанные данные статуса для дедупликации
+    private var lastProcessedStatus: (isAuthorized: Bool, currentDay: Int?, currentActivity: DayActivityType?)?
+
     /// Текущий день программы (обновляется при получении команды PHONE_COMMAND_CURRENT_DAY или applicationContext)
     private(set) var currentDay: Int? {
         didSet {
@@ -275,8 +278,6 @@ extension WatchConnectivityService: WCSessionDelegate {
             if let sessionProtocol, !sessionProtocol.receivedApplicationContext.isEmpty {
                 logger.info("Получен Application Context при активации: \(sessionProtocol.receivedApplicationContext)")
                 handleApplicationContext(sessionProtocol.receivedApplicationContext)
-            } else {
-                logger.info("Application context data is nil")
             }
         }
     }
@@ -343,9 +344,35 @@ private extension WatchConnectivityService {
         switch command {
         case .authStatus:
             if let isAuthorized = message["isAuthorized"] as? Bool {
-                logger.info("Получена команда изменения статуса авторизации: \(isAuthorized)")
-                authService.updateAuthStatus(isAuthorized)
-                // currentDay передается отдельной командой PHONE_COMMAND_CURRENT_DAY
+                let currentDay = message["currentDay"] as? Int
+                let currentActivityRaw = message["currentActivity"] as? Int
+                let currentActivity = currentActivityRaw.flatMap { DayActivityType(rawValue: $0) }
+
+                // Дедупликация только для isAuthorized - проверяем, изменился ли статус авторизации
+                let shouldUpdateAuth = lastProcessedStatus?.isAuthorized != isAuthorized
+
+                // Обновляем isAuthorized только если он изменился (дедупликация)
+                if shouldUpdateAuth {
+                    logger.info("Получена команда изменения статуса авторизации: \(isAuthorized)")
+                    authService.updateAuthStatus(isAuthorized)
+                } else {
+                    logger.debug("Статус авторизации не изменился, пропускаем обновление isAuthorized")
+                }
+
+                // Всегда обновляем currentDay и currentActivity, если они присутствуют в сообщении
+                // Это необходимо для загрузки данных тренировки
+                if let currentDay {
+                    logger.info("Обновление currentDay из PHONE_COMMAND_AUTH_STATUS: \(currentDay)")
+                    self.currentDay = currentDay
+                }
+
+                if let currentActivity {
+                    logger.info("Обновление currentActivity из PHONE_COMMAND_AUTH_STATUS: \(currentActivity.rawValue)")
+                    self.currentActivity = currentActivity
+                }
+
+                // Обновляем последние обработанные данные
+                lastProcessedStatus = (isAuthorized: isAuthorized, currentDay: currentDay, currentActivity: currentActivity)
             } else {
                 logger.warning("Отсутствует значение isAuthorized в команде PHONE_COMMAND_AUTH_STATUS")
             }
@@ -367,29 +394,68 @@ private extension WatchConnectivityService {
         }
     }
 
-    func handleApplicationContext(_ context: [String: Any]) {
-        // Обработка статуса авторизации
-        if let isAuthorized = context["isAuthorized"] as? Bool {
-            logger.info("Обновление статуса авторизации из Application Context: \(isAuthorized)")
-            authService.updateAuthStatus(isAuthorized)
+    /// Проверяет, изменился ли статус по сравнению с последними обработанными данными
+    /// - Parameters:
+    ///   - isAuthorized: Статус авторизации
+    ///   - currentDay: Номер текущего дня (опционально)
+    ///   - currentActivity: Текущая активность (опционально)
+    /// - Returns: `true` если статус изменился, `false` если идентичен
+    func hasStatusChanged(
+        isAuthorized: Bool,
+        currentDay: Int?,
+        currentActivity: DayActivityType?
+    ) -> Bool {
+        guard let lastProcessed = lastProcessedStatus else {
+            // Если это первая обработка, считаем что статус изменился
+            return true
         }
 
-        // Обработка currentDay
-        if let currentDay = context["currentDay"] as? Int {
+        // Сравниваем все поля
+        return lastProcessed.isAuthorized != isAuthorized ||
+            lastProcessed.currentDay != currentDay ||
+            lastProcessed.currentActivity != currentActivity
+    }
+
+    func handleApplicationContext(_ context: [String: Any]) {
+        // Извлекаем данные из контекста
+        let isAuthorized = context["isAuthorized"] as? Bool
+        let currentDay = context["currentDay"] as? Int
+        let currentActivityRaw = context["currentActivity"] as? Int
+        let currentActivity = currentActivityRaw.flatMap { DayActivityType(rawValue: $0) }
+
+        // Если isAuthorized отсутствует, используем текущее значение
+        let finalIsAuthorized = isAuthorized ?? authService.isAuthorized
+
+        // Дедупликация только для isAuthorized - проверяем, изменился ли статус авторизации
+        let shouldUpdateAuth = lastProcessedStatus?.isAuthorized != finalIsAuthorized
+
+        // Обновляем isAuthorized только если он изменился (дедупликация)
+        if shouldUpdateAuth, let isAuthorized {
+            logger.info("Обновление статуса авторизации из Application Context: \(isAuthorized)")
+            authService.updateAuthStatus(isAuthorized)
+        } else if !shouldUpdateAuth {
+            logger.debug("Статус авторизации не изменился, пропускаем обновление isAuthorized")
+        }
+
+        // Всегда обновляем currentDay и currentActivity, если они присутствуют в контексте
+        // Это необходимо для загрузки данных тренировки
+        if let currentDay {
             logger.info("Обновление currentDay из Application Context: \(currentDay)")
             self.currentDay = currentDay
         }
 
         // Обработка currentActivity
-        if let currentActivityRaw = context["currentActivity"] as? Int,
-           let currentActivity = DayActivityType(rawValue: currentActivityRaw) {
+        if let currentActivity {
             logger.info("Обновление currentActivity из Application Context: \(currentActivity.rawValue)")
             self.currentActivity = currentActivity
         } else if context["currentActivity"] == nil, context["currentDay"] != nil {
             // Если currentActivity отсутствует в контексте, но есть currentDay, значит активность была удалена
             logger.info("Удаление currentActivity из Application Context (активность удалена)")
-            currentActivity = nil
+            self.currentActivity = nil
         }
+
+        // Обновляем последние обработанные данные
+        lastProcessedStatus = (isAuthorized: finalIsAuthorized, currentDay: currentDay, currentActivity: currentActivity)
     }
 
     func handleSendWorkoutDataCommand(_ message: [String: Any]) {

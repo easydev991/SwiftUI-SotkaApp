@@ -33,6 +33,44 @@ struct WatchConnectivityServiceTests {
         #expect(authService.isAuthorized)
     }
 
+    @Test("Должен дедуплицировать isAuthorized, но всегда обновлять currentDay и currentActivity")
+    func handleReceivedMessageDeduplicatesAuthStatus() throws {
+        let authService = WatchAuthService()
+        let service = WatchConnectivityService(authService: authService)
+
+        #expect(!authService.isAuthorized)
+        #expect(service.currentDay == nil)
+        #expect(service.currentActivity == nil)
+
+        let message: [String: Any] = [
+            "command": Constants.WatchCommand.authStatus.rawValue,
+            "isAuthorized": true,
+            "currentDay": 10,
+            "currentActivity": DayActivityType.workout.rawValue
+        ]
+
+        // Первый вызов - должен обработать все данные
+        service.testHandleReceivedMessage(message)
+        #expect(authService.isAuthorized)
+        let firstCurrentDay = try #require(service.currentDay)
+        #expect(firstCurrentDay == 10)
+        let firstCurrentActivity = try #require(service.currentActivity)
+        #expect(firstCurrentActivity == .workout)
+
+        // Сбрасываем isAuthorized для проверки дедупликации
+        authService.updateAuthStatus(false)
+        #expect(!authService.isAuthorized)
+
+        // Второй вызов с теми же данными - isAuthorized не должен обновиться (дедупликация)
+        // но currentDay и currentActivity должны обновиться (они всегда обновляются)
+        service.testHandleReceivedMessage(message)
+        #expect(!authService.isAuthorized) // Дедупликация для isAuthorized
+        let secondCurrentDay = try #require(service.currentDay)
+        #expect(secondCurrentDay == 10) // currentDay обновляется всегда
+        let secondCurrentActivity = try #require(service.currentActivity)
+        #expect(secondCurrentActivity == .workout) // currentActivity обновляется всегда
+    }
+
     @Test("Обрабатывает команду изменения статуса авторизации с replyHandler")
     func handlesAuthStatusCommandWithReplyHandler() throws {
         let authService = WatchAuthService()
@@ -49,6 +87,43 @@ struct WatchConnectivityServiceTests {
         service.testHandleReceivedMessage(message)
 
         #expect(authService.isAuthorized)
+    }
+
+    @Test("Должен дедуплицировать isAuthorized, но всегда обновлять currentDay и currentActivity в applicationContext")
+    func handleApplicationContextDeduplicates() throws {
+        let authService = WatchAuthService()
+        let service = WatchConnectivityService(authService: authService)
+
+        #expect(!authService.isAuthorized)
+        #expect(service.currentDay == nil)
+        #expect(service.currentActivity == nil)
+
+        let context: [String: Any] = [
+            "isAuthorized": true,
+            "currentDay": 10,
+            "currentActivity": DayActivityType.workout.rawValue
+        ]
+
+        // Первый вызов - должен обработать все данные
+        service.testHandleApplicationContext(context)
+        #expect(authService.isAuthorized)
+        let firstCurrentDay = try #require(service.currentDay)
+        #expect(firstCurrentDay == 10)
+        let firstCurrentActivity = try #require(service.currentActivity)
+        #expect(firstCurrentActivity == .workout)
+
+        // Сбрасываем isAuthorized для проверки дедупликации
+        authService.updateAuthStatus(false)
+        #expect(!authService.isAuthorized)
+
+        // Второй вызов с теми же данными - isAuthorized не должен обновиться (дедупликация)
+        // но currentDay и currentActivity должны обновиться (они всегда обновляются)
+        service.testHandleApplicationContext(context)
+        #expect(!authService.isAuthorized) // Дедупликация для isAuthorized
+        let secondCurrentDay = try #require(service.currentDay)
+        #expect(secondCurrentDay == 10) // currentDay обновляется всегда
+        let secondCurrentActivity = try #require(service.currentActivity)
+        #expect(secondCurrentActivity == .workout) // currentActivity обновляется всегда
     }
 
     @Test("Обрабатывает команду изменения текущего дня")

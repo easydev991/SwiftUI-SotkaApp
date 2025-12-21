@@ -15,6 +15,7 @@ final class HomeViewModel {
     @ObservationIgnored let connectivityService: any WatchConnectivityServiceProtocol
 
     private(set) var isLoading = false
+    private var lastLoggedActivityState: (day: Int, hasActivity: Bool)?
     private(set) var error: Error?
     private(set) var currentDay: Int?
     private(set) var currentActivity: DayActivityType?
@@ -54,6 +55,11 @@ final class HomeViewModel {
 
     /// Загрузка данных (проверка авторизации, получение текущего дня, запрос активности)
     func loadData() async {
+        guard !isLoading else {
+            logger.debug("loadData уже выполняется, пропускаем параллельный вызов")
+            return
+        }
+
         isLoading = true
         error = nil
 
@@ -90,13 +96,19 @@ final class HomeViewModel {
                     workoutExecutionCount = response.executionCount
                     workoutComment = response.comment
                     logger.info("Загружены данные тренировки для дня \(currentDayValue)")
+                    lastLoggedActivityState = (day: currentDayValue, hasActivity: true)
                 } catch {
                     logger.error("Ошибка загрузки данных тренировки дня \(currentDayValue): \(error.localizedDescription)")
                     // Не устанавливаем error здесь, чтобы не перезаписать ошибку загрузки активности
                     // Не очищаем данные тренировки при ошибке - оставляем старые данные
                 }
             } else {
-                logger.info("Активность дня \(currentDayValue) не является тренировкой")
+                let hasActivity = true
+                let shouldLog = lastLoggedActivityState?.day != currentDayValue || lastLoggedActivityState?.hasActivity != hasActivity
+                if shouldLog {
+                    logger.info("Активность дня \(currentDayValue) не является тренировкой")
+                    lastLoggedActivityState = (day: currentDayValue, hasActivity: hasActivity)
+                }
                 clearWorkoutData()
             }
         } else {
@@ -107,6 +119,7 @@ final class HomeViewModel {
 
                 if let activity, activity == .workout {
                     logger.info("Загружена активность дня \(currentDayValue): \(activity.rawValue)")
+                    lastLoggedActivityState = (day: currentDayValue, hasActivity: true)
                     // Загружаем данные тренировки, если активность типа .workout
                     do {
                         let response = try await connectivityService.requestWorkoutData(day: currentDayValue)
@@ -120,7 +133,12 @@ final class HomeViewModel {
                         // Не очищаем данные тренировки при ошибке - оставляем старые данные
                     }
                 } else {
-                    logger.info("Активность дня \(currentDayValue) не установлена")
+                    let hasActivity = false
+                    let shouldLog = lastLoggedActivityState?.day != currentDayValue || lastLoggedActivityState?.hasActivity != hasActivity
+                    if shouldLog {
+                        logger.info("Активность дня \(currentDayValue) не установлена")
+                        lastLoggedActivityState = (day: currentDayValue, hasActivity: hasActivity)
+                    }
                     clearWorkoutData()
                 }
             } catch {

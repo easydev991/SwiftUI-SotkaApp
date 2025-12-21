@@ -451,4 +451,35 @@ struct HomeViewModelTests {
         let comment = try #require(viewModel.workoutComment)
         #expect(comment == "Новый комментарий")
     }
+
+    @Test("Должен предотвращать параллельные вызовы loadData")
+    func preventsConcurrentLoadDataCalls() async throws {
+        let authService = MockWatchAuthService(isAuthorized: true)
+        let connectivityService = MockWatchConnectivityService()
+        connectivityService.currentDay = 5
+        connectivityService.currentActivity = nil
+        connectivityService.requestCurrentActivityDelay = 10_000_000
+
+        let viewModel = HomeViewModel(
+            authService: authService,
+            connectivityService: connectivityService
+        )
+
+        let initialCallCount = connectivityService.requestedCurrentActivityCallCount
+
+        let task1 = Task {
+            await viewModel.loadData()
+        }
+
+        let task2 = Task {
+            await viewModel.loadData()
+        }
+
+        await task1.value
+        await task2.value
+
+        let finalCallCount = connectivityService.requestedCurrentActivityCallCount
+        let actualCalls = finalCallCount - initialCallCount
+        #expect(actualCalls == 1)
+    }
 }

@@ -24,6 +24,9 @@ final class StatusManager: NSObject {
     @ObservationIgnored let modelContainer: ModelContainer
     private let statusClient: StatusClient
 
+    /// Последние отправленные данные статуса для дедупликации
+    @ObservationIgnored private var lastSentStatus: (isAuthorized: Bool, currentDay: Int?, currentActivity: DayActivityType?)?
+
     /// Проверяет, доступны ли часы для отправки сообщений
     var isReachable: Bool {
         sessionProtocol?.isReachable ?? false
@@ -134,11 +137,6 @@ final class StatusManager: NSObject {
         let context = modelContainer.mainContext
         let now = Date.now
         currentDayCalculator = .init(startDate, now)
-
-        // Отправляем текущий статус сразу после первой установки currentDayCalculator (до синхронизации)
-        let currentDay = currentDayCalculator?.currentDay
-        let currentActivity = currentDay.map { dailyActivitiesService.getActivityType(day: $0, context: context) } ?? nil
-        sendCurrentStatus(isAuthorized: true, currentDay: currentDay, currentActivity: currentActivity)
 
         guard !state.isLoading else { return }
         state = .init(didLoadInitialData: didLoadInitialData)
@@ -270,6 +268,13 @@ final class StatusManager: NSObject {
             return
         }
 
+        // Не отправляем данные до завершения первичной загрузки (при запуске приложения)
+        // Это предотвращает лишние синхронизации при первом изменении currentDayCalculator
+        guard didLoadInitialData else {
+            logger.debug("Пропускаем отправку данных на часы: первичная загрузка еще не завершена")
+            return
+        }
+
         // Получаем текущую активность из SwiftData
         let context = modelContainer.mainContext
         let currentActivity = dailyActivitiesService.getActivityType(day: currentDay, context: context)
@@ -292,6 +297,19 @@ final class StatusManager: NSObject {
             return
         }
 
+        // Проверяем, изменились ли данные по сравнению с последними отправленными
+        let hasStatusChanged = hasStatusChanged(
+            isAuthorized: isAuthorized,
+            currentDay: currentDay,
+            currentActivity: currentActivity
+        )
+
+        // Отправляем sendMessage только если данные изменились
+        guard hasStatusChanged else {
+            logger.debug("Статус не изменился, пропускаем отправку sendMessage")
+            return
+        }
+
         let model = WatchStatusMessage(
             isAuthorized: isAuthorized,
             currentDay: currentDay,
@@ -304,6 +322,31 @@ final class StatusManager: NSObject {
         ) { error in
             logger.error("Ошибка отправки текущего статуса на часы: \(error.localizedDescription)")
         }
+
+        // Обновляем последние отправленные данные
+        lastSentStatus = (isAuthorized: isAuthorized, currentDay: currentDay, currentActivity: currentActivity)
+    }
+
+    /// Проверяет, изменился ли статус по сравнению с последними отправленными данными
+    /// - Parameters:
+    ///   - isAuthorized: Статус авторизации
+    ///   - currentDay: Номер текущего дня (опционально)
+    ///   - currentActivity: Текущая активность (опционально)
+    /// - Returns: `true` если статус изменился, `false` если идентичен
+    private func hasStatusChanged(
+        isAuthorized: Bool,
+        currentDay: Int?,
+        currentActivity: DayActivityType?
+    ) -> Bool {
+        guard let lastSent = lastSentStatus else {
+            // Если это первый вызов, считаем что статус изменился
+            return true
+        }
+
+        // Сравниваем все поля
+        return lastSent.isAuthorized != isAuthorized ||
+            lastSent.currentDay != currentDay ||
+            lastSent.currentActivity != currentActivity
     }
 
     /// Отправляет applicationContext при активации WCSession (если пользователь авторизован)
@@ -311,15 +354,53 @@ final class StatusManager: NSObject {
         let context = modelContainer.mainContext
         let isAuthorized = (try? context.fetch(FetchDescriptor<User>()).first) != nil
 
+        // Если данные еще не загружены, отправляем только isAuthorized без currentDay
+        // currentDay будет добавлен позже через sendCurrentStatus() после инициализации currentDayCalculator
+        let currentDay: Int?
+        let currentActivity: DayActivityType?
+
+        if didLoadInitialData {
+            // Данные загружены, можем получить currentDay
+            currentDay = isAuthorized ? currentDayCalculator?.currentDay : nil
+            currentActivity = currentDay.map { dailyActivitiesService.getActivityType(day: $0, context: context) } ?? nil
+        } else {
+            // Данные еще не загружены, отправляем только isAuthorized
+            currentDay = nil
+            currentActivity = nil
+            logger.debug("ApplicationContext отправлен при активации без currentDay: данные еще не загружены")
+        }
+
+        // Проверяем, не дублирует ли это данные, которые уже были отправлены через sendCurrentStatus
+        let hasStatusChanged = hasStatusChanged(
+            isAuthorized: isAuthorized,
+            currentDay: currentDay,
+            currentActivity: currentActivity
+        )
+
+        // Отправляем только если данные изменились или это первый вызов
+        guard hasStatusChanged else {
+            logger.debug("ApplicationContext не отправлен при активации: данные идентичны последним отправленным")
+            return
+        }
+
         if isAuthorized {
-            let currentDay = currentDayCalculator?.currentDay
-            let currentActivity = currentDay.map { dailyActivitiesService.getActivityType(day: $0, context: context) } ?? nil
             updateApplicationContextOnWatch(isAuthorized: true, currentDay: currentDay, currentActivity: currentActivity)
-            logger.debug("ApplicationContext отправлен при активации WCSession: пользователь авторизован")
+            if didLoadInitialData {
+                logger
+                    .debug(
+                        "ApplicationContext отправлен при активации WCSession: пользователь авторизован, день \(currentDay?.description ?? "nil")"
+                    )
+            } else {
+                logger.debug("ApplicationContext отправлен при активации WCSession: пользователь авторизован, данные еще не загружены")
+            }
         } else {
             updateApplicationContextOnWatch(isAuthorized: false, currentDay: nil, currentActivity: nil)
             logger.debug("ApplicationContext отправлен при активации WCSession: пользователь не авторизован")
         }
+
+        // Обновляем последние отправленные данные (только для applicationContext, не для sendMessage)
+        // Это нужно для предотвращения дублирования при последующих вызовах
+        lastSentStatus = (isAuthorized: isAuthorized, currentDay: currentDay, currentActivity: currentActivity)
     }
 
     /// Обновляет applicationContext для часов (работает даже когда приложение закрыто)
@@ -715,6 +796,12 @@ final class StatusManager: NSObject {
     }
 
     #if DEBUG
+    /// Устанавливает флаг didLoadInitialData для тестирования
+    /// - Parameter value: Значение флага
+    func setDidLoadInitialDataForDebug(_ value: Bool) {
+        didLoadInitialData = value
+    }
+
     /// Устанавливает текущий день программы для дебага и тестирования
     /// - Parameter day: Номер дня от 1 до 100
     func setCurrentDayForDebug(_ day: Int) {

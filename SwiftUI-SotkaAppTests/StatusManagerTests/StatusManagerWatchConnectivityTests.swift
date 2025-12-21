@@ -154,6 +154,102 @@ struct StatusManagerWatchConnectivityTests {
         #expect(mockSession.sentMessages.count >= 1)
     }
 
+    @Test("Должен отправлять sendMessage только один раз после синхронизации в getStatus")
+    func getStatusSendsStatusOnlyOnceAfterSync() async throws {
+        let mockSession = MockWCSession(isReachable: true)
+        let statusManager = try MockStatusManager.create(
+            daysClient: MockDaysClient(),
+            userDefaults: MockUserDefaults.create(),
+            watchConnectivitySessionProtocol: mockSession
+        )
+
+        statusManager.setCurrentDayForDebug(10)
+
+        await statusManager.getStatus()
+
+        // Проверяем, что sendMessage (PHONE_COMMAND_AUTH_STATUS) отправляется только один раз
+        let authStatusMessages = mockSession.sentMessages.filter { message in
+            (message["command"] as? String) == Constants.WatchCommand.authStatus.rawValue
+        }
+        #expect(authStatusMessages.count == 1)
+    }
+
+    @Test("Должен дедуплицировать одинаковые данные при последовательных вызовах sendCurrentStatus")
+    func sendCurrentStatusDeduplicatesIdenticalData() throws {
+        let mockSession = MockWCSession(isReachable: true)
+        let statusManager = try MockStatusManager.create(
+            daysClient: MockDaysClient(),
+            userDefaults: MockUserDefaults.create(),
+            watchConnectivitySessionProtocol: mockSession
+        )
+
+        statusManager.setCurrentDayForDebug(10)
+
+        // Первый вызов - должен отправить sendMessage
+        statusManager.sendCurrentStatus(isAuthorized: true, currentDay: 10, currentActivity: .workout)
+
+        // Второй вызов с теми же данными - sendMessage не должен отправляться
+        statusManager.sendCurrentStatus(isAuthorized: true, currentDay: 10, currentActivity: .workout)
+
+        // Проверяем, что sendMessage отправлен только один раз
+        let authStatusMessages = mockSession.sentMessages.filter { message in
+            (message["command"] as? String) == Constants.WatchCommand.authStatus.rawValue
+        }
+        #expect(authStatusMessages.count == 1)
+
+        // Проверяем, что applicationContext обновляется оба раза (это нормально)
+        #expect(mockSession.applicationContexts.count == 2)
+    }
+
+    @Test("Должен всегда отправлять applicationContext даже если часы недоступны")
+    func updateApplicationContextAlwaysSends() throws {
+        let mockSession = MockWCSession(isReachable: false)
+        let statusManager = try MockStatusManager.create(
+            daysClient: MockDaysClient(),
+            userDefaults: MockUserDefaults.create(),
+            watchConnectivitySessionProtocol: mockSession
+        )
+
+        statusManager.setCurrentDayForDebug(10)
+
+        // Вызываем sendCurrentStatus - applicationContext должен отправиться даже если часы недоступны
+        statusManager.sendCurrentStatus(isAuthorized: true, currentDay: 10, currentActivity: .workout)
+
+        // Проверяем, что applicationContext отправлен
+        #expect(mockSession.applicationContexts.count == 1)
+        // Проверяем, что sendMessage не отправлен (часы недоступны)
+        #expect(mockSession.sentMessages.isEmpty)
+    }
+
+    @Test("Должен отправлять sendMessage только если часы доступны")
+    func sendMessageOnlyWhenReachable() throws {
+        let mockSessionUnreachable = MockWCSession(isReachable: false)
+        let statusManagerUnreachable = try MockStatusManager.create(
+            daysClient: MockDaysClient(),
+            userDefaults: MockUserDefaults.create(),
+            watchConnectivitySessionProtocol: mockSessionUnreachable
+        )
+
+        statusManagerUnreachable.setCurrentDayForDebug(10)
+        statusManagerUnreachable.sendCurrentStatus(isAuthorized: true, currentDay: 10, currentActivity: .workout)
+
+        // Проверяем, что sendMessage не отправлен когда часы недоступны
+        #expect(mockSessionUnreachable.sentMessages.isEmpty)
+
+        let mockSessionReachable = MockWCSession(isReachable: true)
+        let statusManagerReachable = try MockStatusManager.create(
+            daysClient: MockDaysClient(),
+            userDefaults: MockUserDefaults.create(),
+            watchConnectivitySessionProtocol: mockSessionReachable
+        )
+
+        statusManagerReachable.setCurrentDayForDebug(10)
+        statusManagerReachable.sendCurrentStatus(isAuthorized: true, currentDay: 10, currentActivity: .workout)
+
+        // Проверяем, что sendMessage отправлен когда часы доступны
+        #expect(mockSessionReachable.sentMessages.count == 1)
+    }
+
     @Test("Должен отправлять текущий статус при изменении currentDayCalculator")
     func shouldSendCurrentStatusWhenCurrentDayCalculatorChanges() throws {
         let mockSession = MockWCSession(isReachable: true)
@@ -164,6 +260,8 @@ struct StatusManagerWatchConnectivityTests {
         )
 
         statusManager.setCurrentDayForDebug(10)
+        // Устанавливаем флаг, чтобы sendDayDataToWatch не пропустил отправку
+        statusManager.setDidLoadInitialDataForDebug(true)
         statusManager.sendDayDataToWatch(currentDay: 10)
 
         #expect(mockSession.sentMessages.count >= 1)
@@ -505,6 +603,65 @@ struct StatusManagerWatchConnectivityTests {
         let applicationContext = try #require(mockSession.applicationContexts.first)
         let isAuthorized = try #require(applicationContext["isAuthorized"] as? Bool)
         #expect(!isAuthorized)
+    }
+
+    @Test(
+        "Должен отправлять applicationContext с currentDay при активации, если didLoadInitialData = true и currentDayCalculator инициализирован"
+    )
+    func shouldSendApplicationContextWithCurrentDayWhenDataLoaded() async throws {
+        let mockSession = MockWCSession(isReachable: false)
+        let statusManager = try MockStatusManager.create(
+            daysClient: MockDaysClient(),
+            userDefaults: MockUserDefaults.create(),
+            watchConnectivitySessionProtocol: mockSession
+        )
+
+        let context = statusManager.modelContainer.mainContext
+        let user = User(id: 1, userName: "testuser", fullName: "Test User", email: "test@example.com")
+        context.insert(user)
+        try context.save()
+
+        // Устанавливаем didLoadInitialData = true и инициализируем currentDayCalculator
+        statusManager.setDidLoadInitialDataForDebug(true)
+        statusManager.setCurrentDayForDebug(15)
+
+        // Симулируем активацию WCSession
+        await statusManager.simulateWCSessionActivation()
+
+        // Проверяем, что applicationContext был отправлен с currentDay
+        #expect(mockSession.applicationContexts.count >= 1)
+        let applicationContext = try #require(mockSession.applicationContexts.first)
+        let isAuthorized = try #require(applicationContext["isAuthorized"] as? Bool)
+        #expect(isAuthorized)
+        let currentDay = try #require(applicationContext["currentDay"] as? Int)
+        #expect(currentDay == 15)
+    }
+
+    @Test("Должен отправлять applicationContext без currentDay при активации, если didLoadInitialData = false")
+    func shouldSendApplicationContextWithoutCurrentDayWhenDataNotLoaded() async throws {
+        let mockSession = MockWCSession(isReachable: false)
+        let statusManager = try MockStatusManager.create(
+            daysClient: MockDaysClient(),
+            userDefaults: MockUserDefaults.create(),
+            watchConnectivitySessionProtocol: mockSession
+        )
+
+        let context = statusManager.modelContainer.mainContext
+        let user = User(id: 1, userName: "testuser", fullName: "Test User", email: "test@example.com")
+        context.insert(user)
+        try context.save()
+
+        // didLoadInitialData = false (по умолчанию), currentDayCalculator не инициализирован
+
+        // Симулируем активацию WCSession
+        await statusManager.simulateWCSessionActivation()
+
+        // Проверяем, что applicationContext был отправлен только с isAuthorized, без currentDay
+        #expect(mockSession.applicationContexts.count >= 1)
+        let applicationContext = try #require(mockSession.applicationContexts.first)
+        let isAuthorized = try #require(applicationContext["isAuthorized"] as? Bool)
+        #expect(isAuthorized)
+        #expect(applicationContext["currentDay"] == nil)
     }
 
     // MARK: - Тесты отправки статуса при удалении активности
