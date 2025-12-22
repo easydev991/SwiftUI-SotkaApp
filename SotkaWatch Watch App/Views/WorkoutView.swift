@@ -197,6 +197,7 @@ private extension WorkoutView {
 
 // MARK: - Preview
 
+#if DEBUG
 #Preview("Подход") {
     let connectivityService = PreviewWatchConnectivityService()
     WorkoutView(
@@ -222,3 +223,4 @@ private extension WorkoutView {
     )
     .currentDay(2)
 }
+#endif
