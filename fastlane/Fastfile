@@ -67,8 +67,8 @@ platform :ios do
 
   desc "Сгенерировать скриншоты для Apple Watch"
   lane :watch_screenshots do
-    # Получаем путь к проекту
-    project_path = File.expand_path("..", __dir__)
+    # Получаем путь к проекту (__dir__ указывает на fastlane/, поэтому поднимаемся на уровень выше)
+    project_path = File.expand_path(File.dirname(__FILE__) + "/..")
     snapfile_path = File.join(project_path, "fastlane", "Snapfile")
     snapfile_backup_path = File.join(project_path, "fastlane", "Snapfile.backup")
     
