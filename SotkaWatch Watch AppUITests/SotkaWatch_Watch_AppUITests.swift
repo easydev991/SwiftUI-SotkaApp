@@ -1,34 +1,79 @@
 import XCTest
 
+@MainActor
 final class SotkaWatch_Watch_AppUITests: XCTestCase {
-    override func setUpWithError() throws {
-        // Put setup code here. This method is called before the invocation of each test method in the class.
+    private var app: XCUIApplication!
 
-        // In UI tests it is usually best to stop immediately when a failure occurs.
+    override func setUp() async throws {
         continueAfterFailure = false
-
-        // In UI tests it’s important to set the initial state - such as interface orientation - required for your tests before they run.
-        // The setUp method is a good place to do this.
-    }
-
-    override func tearDownWithError() throws {
-        // Put teardown code here. This method is called after the invocation of each test method in the class.
-    }
-
-    @MainActor
-    func testExample() throws {
-        // UI tests must launch the application that they test.
-        let app = XCUIApplication()
+        app = XCUIApplication()
+        app.launchArguments.append("UITest")
+//        setupSnapshot(app)
         app.launch()
-        print(app)
-        // Use XCTAssert and related functions to verify your tests produce the correct results.
+    }
+
+    override func tearDown() async throws {
+        try super.tearDownWithError()
+        app.launchArguments.removeAll()
+        app = nil
     }
 
     @MainActor
-    func testLaunchPerformance() throws {
-        // This measures how long it takes to launch your application.
-        measure(metrics: [XCTApplicationLaunchMetric()]) {
-            XCUIApplication().launch()
-        }
+    func testMakeScreenshots() throws {
+        // TODO: скриншот №2 (тренировка)
+        waitAndTapOrFail(element: editActivityButton)
+        // TODO: скриншот №3 (превью для тренировки)
+        waitAndTapOrFail(element: firstTrainingButton)
+        // TODO: скриншот №4 (настройка повторов для упражнения)
+        waitAndTapOrFail(element: stepperDoneButton)
+        waitAndTapOrFail(element: editWorkoutPreviewButton)
+        // TODO: скриншот №5 (редактор упражнений для тренировки)
+        waitAndTapOrFail(element: backButton)
+        waitAndTapOrFail(element: closeButton)
+        waitAndTapOrFail(element: deleteActivityButton)
+        waitAndTapOrFail(element: confirmDeleteActivityButton)
+        // TODO: скриншот №1 (выбор активности дня)
+    }
+}
+
+private extension SotkaWatch_Watch_AppUITests {
+    var editActivityButton: XCUIElement {
+        app.buttons["SelectedActivityView.editButton"].firstMatch
+    }
+
+    var firstTrainingButton: XCUIElement {
+        app.buttons["WorkoutPreview.trainingRowView"].firstMatch
+    }
+
+    var stepperDoneButton: XCUIElement {
+        app.buttons["WorkoutStepperView.doneButton"]
+    }
+
+    var editWorkoutPreviewButton: XCUIElement {
+        app.buttons["WorkoutPreviewView.editButton"].firstMatch
+    }
+
+    var backButton: XCUIElement {
+        app.buttons["BackButton"]
+    }
+
+    var closeButton: XCUIElement {
+        app.buttons["xmark"].firstMatch
+    }
+
+    var deleteActivityButton: XCUIElement {
+        app.buttons["SelectedActivityView.deleteButton"].firstMatch
+    }
+
+    var confirmDeleteActivityButton: XCUIElement {
+        app.buttons.element(for: "Journal.Delete")
+    }
+}
+
+private extension XCUIElementQuery {
+    func element(for localizationKey: String) -> XCUIElement {
+        let bundle = Bundle(for: SotkaWatch_Watch_AppUITests.self)
+        let localizedString = NSLocalizedString(localizationKey, bundle: bundle, comment: "")
+        return self[localizedString]
     }
 }

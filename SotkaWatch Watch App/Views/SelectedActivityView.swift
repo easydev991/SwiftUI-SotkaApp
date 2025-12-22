@@ -59,9 +59,11 @@ struct SelectedActivityView: View {
         .toolbar {
             ToolbarItem(placement: .topBarLeading) {
                 deleteButton
+                    .accessibilityIdentifier("SelectedActivityView.deleteButton")
             }
             ToolbarItem(placement: .topBarTrailing) {
                 editButton
+                    .accessibilityIdentifier("SelectedActivityView.editButton")
             }
         }
     }
@@ -118,6 +120,7 @@ private extension SelectedActivityView {
         } label: {
             Image(systemName: "trash")
         }
+        .accessibilityIdentifier("SelectedActivityView.deleteButton")
         .confirmationDialog(
             .journalDeleteEntry,
             isPresented: $shouldShowDeleteConfirmation,

@@ -33,6 +33,7 @@ private extension DayActivitySelectionView {
         }
         .tint(activity.color)
         .buttonStyle(.borderedProminent)
+        .accessibilityIdentifier("DayActivitySelectionButton.\(activity.rawValue)")
     }
 }
 

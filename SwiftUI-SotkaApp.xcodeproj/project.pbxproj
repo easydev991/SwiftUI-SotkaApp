@@ -77,6 +77,13 @@
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
+		671855AC2EF997A500F064F6 /* Exceptions for "SwiftUI-SotkaAppUITests" folder in "SotkaWatch Watch AppUITests" target */ = {
+			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
+			membershipExceptions = (
+				Extensions.swift,
+			);
+			target = 67156B542EDD853700334DEF /* SotkaWatch Watch AppUITests */;
+		};
 		67569A272EDD9BBA0078089C /* Exceptions for "SwiftUI-SotkaApp" folder in "SwiftUI-SotkaAppTests" target */ = {
 			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
 			membershipExceptions = (
@@ -183,6 +190,9 @@
 		};
 		674A8A7D2DC758BC003F6E50 /* SwiftUI-SotkaAppUITests */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
+			exceptions = (
+				671855AC2EF997A500F064F6 /* Exceptions for "SwiftUI-SotkaAppUITests" folder in "SotkaWatch Watch AppUITests" target */,
+			);
 			path = "SwiftUI-SotkaAppUITests";
 			sourceTree = "<group>";
 		};
@@ -914,7 +924,7 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				MARKETING_VERSION = 4.1.0;
+				MARKETING_VERSION = 4.2.0;
 				PRODUCT_BUNDLE_IDENTIFIER = "com.oleg991.SwiftUI-SotkaApp";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
@@ -956,7 +966,7 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				MARKETING_VERSION = 4.1.0;
+				MARKETING_VERSION = 4.2.0;
 				PRODUCT_BUNDLE_IDENTIFIER = "com.oleg991.SwiftUI-SotkaApp";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";

@@ -72,9 +72,14 @@ final class WatchConnectivityService: NSObject {
             // Устанавливаем делегат только для реальной сессии
             session.delegate = self
             session.activate()
-        } else {
+        } else if let sessionProtocol {
             // Для моков активируем через протокол
-            sessionProtocol?.activate()
+            sessionProtocol.activate()
+            // Для моков сразу обрабатываем applicationContext, если он есть
+            if !sessionProtocol.receivedApplicationContext.isEmpty {
+                logger.info("Обработка Application Context из мок-сессии при инициализации: \(sessionProtocol.receivedApplicationContext)")
+                handleApplicationContext(sessionProtocol.receivedApplicationContext)
+            }
         }
     }
 

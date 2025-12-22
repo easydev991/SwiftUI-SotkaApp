@@ -22,10 +22,12 @@ struct WorkoutStepperView: View {
             ) {
                 Text(localValue.description)
             }
+            .accessibilityIdentifier("WorkoutStepperView.stepper")
             Button(.done) {
                 value = localValue
                 dismiss()
             }
+            .accessibilityIdentifier("WorkoutStepperView.doneButton")
         }
         .navigationTitle(title)
     }

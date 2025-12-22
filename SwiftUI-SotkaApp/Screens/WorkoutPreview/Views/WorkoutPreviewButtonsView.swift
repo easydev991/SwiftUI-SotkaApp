@@ -27,12 +27,14 @@ struct WorkoutPreviewButtonsView: View {
             #else
                 .buttonStyle(SWButtonStyle(mode: .filled, size: .large))
             #endif
+                .accessibilityIdentifier("WorkoutPreview.startTrainingButton")
             Button(.workoutPreviewSaveAsPassed, action: onSave)
             #if os(watchOS)
                 .tint(Color.swAccent)
                 .buttonStyle(.bordered)
             #else
                 .buttonStyle(SWButtonStyle(mode: .tinted, size: .large))
+                .accessibilityIdentifier("WorkoutPreview.saveAsPassedButton")
             #endif
         }
     }
@@ -47,6 +49,7 @@ struct WorkoutPreviewButtonsView: View {
                 .buttonStyle(SWButtonStyle(mode: .filled, size: .large))
             #endif
                 .disabled(!hasChanges)
+                .accessibilityIdentifier("WorkoutPreview.saveButton")
             // TODO: Кнопка "Продолжить" - показывается только если тренировка была начата, но не завершена
         }
     }
@@ -59,6 +62,7 @@ struct WorkoutPreviewButtonsView: View {
         #else
             .buttonStyle(SWButtonStyle(mode: .filled, size: .large))
         #endif
+            .accessibilityIdentifier("WorkoutPreview.saveButton")
     }
 }
 

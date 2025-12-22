@@ -4,7 +4,23 @@ import SwiftUI
 struct SotkaWatchApp: App {
     @State private var viewModel: HomeViewModel = {
         let authService = WatchAuthService()
+
+        #if DEBUG
+        // При аргументе UITest используем мок-сессию вместо реальной
+        let connectivityService: WatchConnectivityService
+        if ProcessInfo.processInfo.arguments.contains("UITest") {
+            let mockSession = MockWatchSession()
+            connectivityService = WatchConnectivityService(
+                authService: authService,
+                sessionProtocol: mockSession
+            )
+        } else {
+            connectivityService = WatchConnectivityService(authService: authService)
+        }
+        #else
         let connectivityService = WatchConnectivityService(authService: authService)
+        #endif
+
         return HomeViewModel(
             authService: authService,
             connectivityService: connectivityService

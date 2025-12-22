@@ -85,6 +85,7 @@ private extension WorkoutPreviewView {
         NavigationLink(destination: WorkoutEditView(viewModel: viewModel)) {
             Image(systemName: "pencil")
         }
+        .accessibilityIdentifier("WorkoutPreviewView.editButton")
     }
 
     @ViewBuilder
@@ -101,6 +102,7 @@ private extension WorkoutPreviewView {
                 }
             }
             .pickerStyle(.navigationLink)
+            .accessibilityIdentifier("WorkoutPreview.executionTypePicker")
         }
     }
 
@@ -108,6 +110,7 @@ private extension WorkoutPreviewView {
         LazyVStack(spacing: 8) {
             ForEach(viewModel.visibleTrainings) { training in
                 makeTrainingRowView(for: training)
+                    .accessibilityIdentifier("WorkoutPreview.trainingRowView")
             }
             if let selectedExecutionType = viewModel.selectedExecutionType {
                 Divider()
@@ -213,6 +216,8 @@ private extension WorkoutPreviewView {
                 showWorkoutView = true
             }
         )
+        .accessibilityElement(children: .contain)
+        .accessibilityIdentifier("WorkoutPreview.bottomButtonsView")
     }
 }
 
