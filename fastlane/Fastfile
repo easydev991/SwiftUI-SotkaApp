@@ -58,7 +58,56 @@ end
 platform :ios do
   desc "Сгенерировать новые локализованные скриншоты"
   lane :screenshots do
-    capture_screenshots(scheme: UITESTS_SCHEME_FOR_SCREENSHOTS)
+    snapshot(
+      scheme: UITESTS_SCHEME_FOR_SCREENSHOTS,
+      output_directory: "./fastlane/screenshots/iphone",
+      clear_previous_screenshots: true
+    )
+  end
+
+  desc "Сгенерировать скриншоты для Apple Watch"
+  lane :watch_screenshots do
+    # Получаем путь к проекту
+    project_path = File.expand_path("..", __dir__)
+    snapfile_path = File.join(project_path, "fastlane", "Snapfile")
+    snapfile_backup_path = File.join(project_path, "fastlane", "Snapfile.backup")
+    
+    # Временно переименовываем Snapfile, чтобы snapshot не использовал его
+    snapfile_backup = nil
+    snapfile_exists = File.exist?(snapfile_path)
+    if snapfile_exists
+      File.rename(snapfile_path, snapfile_backup_path)
+    end
+    
+    # Создаем временный пустой Snapfile для Watch, чтобы snapshot не искал основной
+    File.write(snapfile_path, "# Temporary Snapfile for Watch screenshots\n")
+    
+    begin
+      # Используем отдельный симулятор часов, созданный специально для скриншотов
+      snapshot(
+        scheme: "SotkaWatch Watch AppUITests",
+        devices: ["Watch for screenshots (46mm)"],
+        languages: ["en-US", "ru"],
+        output_directory: "./fastlane/screenshots/watch",
+        clear_previous_screenshots: true,
+        reinstall_app: true,
+        localize_simulator: true,
+        stop_after_first_error: true,
+        number_of_retries: 0,
+        skip_open_summary: true,
+        output_simulator_logs: true,
+        skip_package_dependencies_resolution: true,
+        disable_package_automatic_updates: true
+      )
+    ensure
+      # Удаляем временный Snapfile
+      File.delete(snapfile_path) if File.exist?(snapfile_path)
+      
+      # Восстанавливаем оригинальный Snapfile обратно
+      if snapfile_exists && File.exist?(snapfile_backup_path)
+        File.rename(snapfile_backup_path, snapfile_path)
+      end
+    end
   end
 
   desc "Загрузить существующие скриншоты в App Store Connect"

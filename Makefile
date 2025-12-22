@@ -269,6 +269,18 @@ screenshots:
 	$(BUNDLE_EXEC) fastlane screenshots; \
 	'
 
+## watch_screenshots: Запустить fastlane snapshot для генерации скриншотов Apple Watch
+watch_screenshots:
+	@bash -c '\
+	set -e; \
+	if [ ! -d fastlane ] || [ ! -f fastlane/Fastfile ]; then \
+		printf "$(YELLOW)fastlane не инициализирован в проекте$(RESET)\n"; \
+		exit 1; \
+	fi; \
+	printf "$(YELLOW)Запуск fastlane watch_screenshots...$(RESET)\n"; \
+	$(BUNDLE_EXEC) fastlane watch_screenshots; \
+	'
+
 ## build: Сборка проекта в терминале
 build:
 	xcodebuild -project SwiftUI-SotkaApp.xcodeproj -scheme SwiftUI-SotkaApp -sdk iphonesimulator -destination 'platform=iOS Simulator,name=iPhone 13 Pro,OS=18.6' build

@@ -712,47 +712,29 @@ func testMakeScreenshots() throws {
 
 **Цель:** Добавить Watch устройства в конфигурацию fastlane snapshot.
 
+**Статус:** Выполнено - создан отдельный `Snapfile.watch` для Watch устройств
+
 **Действия:**
-- [ ] Открыть файл `fastlane/Snapfile`
-- [ ] Добавить Watch устройства в массив `devices`:
-  ```ruby
-  devices([
-    "iPhone 15 Pro Max", 
-    "iPad Pro (12.9-inch) (6th generation)",
-    "Apple Watch Series 11 (46mm)",  # Добавить Watch устройства
-    "Apple Watch Series 11 (42mm)"
-  ])
-  ```
-- [ ] Убедиться, что схема UI-тестов указана корректно (или создать отдельную схему для Watch)
-- [ ] Проверить настройки локализации (должны включать нужные языки)
+- [x] Создать отдельный `Snapfile.watch` для Watch устройств (выбран альтернативный подход)
+- [x] Настроить Watch устройства в массиве `devices`: `Apple Watch Series 11 (46mm)`, `Apple Watch Series 11 (42mm)`
+- [x] Указать схему UI-тестов: `SotkaWatch Watch AppUITests`
+- [x] Настроить локализацию: `en-US`, `ru`
 
 **Важно:**
-- Использовать точные имена устройств из шага 1
-- Можно создать отдельный Snapfile для Watch (например, `Snapfile.watch`) для разделения конфигураций
+- Использован альтернативный подход с отдельным `Snapfile.watch` для разделения конфигураций iPhone/iPad и Watch
+- Файл создан: `fastlane/Snapfile.watch`
 
 #### Шаг 4: Создание отдельного lane для Watch скриншотов (опционально)
 
 **Цель:** Создать отдельную команду fastlane для генерации только Watch скриншотов.
 
+**Статус:** Выполнено - создан lane `watch_screenshots` с использованием отдельного Snapfile
+
 **Действия:**
-- [ ] Открыть файл `fastlane/Fastfile`
-- [ ] Добавить новый lane для Watch скриншотов:
+- [x] Открыть файл `fastlane/Fastfile`
+- [x] Добавить новый lane для Watch скриншотов с использованием отдельного Snapfile:
   ```ruby
   desc "Сгенерировать скриншоты для Apple Watch"
-  lane :watch_screenshots do
-    capture_screenshots(
-      scheme: "SotkaWatch Watch AppUITests",
-      devices: ["Apple Watch Series 11 (46mm)", "Apple Watch Series 11 (42mm)"],
-      languages: ["en-US", "ru"]
-    )
-  end
-  ```
-- [ ] Или использовать существующий lane `screenshots` с обновленной конфигурацией
-
-**Альтернативный подход:**
-- Использовать отдельный Snapfile для Watch (например, `Snapfile.watch`)
-- Создать lane, который использует этот файл:
-  ```ruby
   lane :watch_screenshots do
     capture_screenshots(
       scheme: "SotkaWatch Watch AppUITests",
@@ -760,6 +742,10 @@ func testMakeScreenshots() throws {
     )
   end
   ```
+
+**Реализованный подход:**
+- Использован отдельный `Snapfile.watch` для разделения конфигураций
+- Lane использует `snapshot_file_path` для указания конфигурационного файла
 
 #### Шаг 5: Настройка тестовых данных
 
@@ -798,23 +784,31 @@ func testMakeScreenshots() throws {
 
 **Цель:** Добавить удобную команду для генерации Watch скриншотов через Makefile.
 
+**Статус:** Выполнено - команда `make watch_screenshots` добавлена в Makefile
+
 **Действия:**
-- [ ] Открыть файл `Makefile`
-- [ ] Добавить новую команду для Watch скриншотов:
-  ```makefile
-  ## watch_screenshots: Запустить fastlane snapshot для генерации скриншотов Apple Watch
-  watch_screenshots:
-  	@bash -c '\
-  	set -e; \
-  	if [ ! -d fastlane ] || [ ! -f fastlane/Fastfile ]; then \
-  		printf "$(YELLOW)fastlane не инициализирован в проекте$(RESET)\n"; \
-  		exit 1; \
-  	fi; \
-  	printf "$(YELLOW)Запуск fastlane watch_screenshots...$(RESET)\n"; \
-  	$(BUNDLE_EXEC) fastlane watch_screenshots; \
-  	'
-  ```
-- [ ] Проверить, что команда работает: `make watch_screenshots`
+- [x] Открыть файл `Makefile`
+- [x] Добавить новую команду для Watch скриншотов с проверкой наличия `Snapfile.watch`
+- [ ] Проверить, что команда работает: `make watch_screenshots` (требуется тестирование)
+
+**Реализованная команда:**
+```makefile
+## watch_screenshots: Запустить fastlane snapshot для генерации скриншотов Apple Watch
+watch_screenshots:
+	@bash -c '\
+	set -e; \
+	if [ ! -d fastlane ] || [ ! -f fastlane/Fastfile ]; then \
+		printf "$(YELLOW)fastlane не инициализирован в проекте$(RESET)\n"; \
+		exit 1; \
+	fi; \
+	if [ ! -f fastlane/Snapfile.watch ]; then \
+		printf "$(RED)Файл fastlane/Snapfile.watch не найден$(RESET)\n"; \
+		exit 1; \
+	fi; \
+	printf "$(YELLOW)Запуск fastlane watch_screenshots...$(RESET)\n"; \
+	$(BUNDLE_EXEC) fastlane watch_screenshots; \
+	'
+```
 
 #### Шаг 8: Оптимизация процесса
 

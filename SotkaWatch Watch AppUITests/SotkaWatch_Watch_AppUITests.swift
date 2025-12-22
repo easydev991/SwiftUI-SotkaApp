@@ -8,7 +8,7 @@ final class SotkaWatch_Watch_AppUITests: XCTestCase {
         continueAfterFailure = false
         app = XCUIApplication()
         app.launchArguments.append("UITest")
-//        TODO: setupSnapshot(app)
+        setupSnapshot(app)
         app.launch()
     }
 

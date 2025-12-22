@@ -81,6 +81,7 @@
 			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
 			membershipExceptions = (
 				Extensions.swift,
+				SnapshotHelper.swift,
 			);
 			target = 67156B542EDD853700334DEF /* SotkaWatch Watch AppUITests */;
 		};
