@@ -28,6 +28,8 @@ extension StatusManagerTests {
             context.insert(user)
             try context.save()
 
+            // Устанавливаем флаг didLoadInitialData, чтобы sendDayDataToWatch мог отправить сообщение
+            statusManager.setDidLoadInitialDataForDebug(true)
             statusManager.sendDayDataToWatch(currentDay: 42)
 
             #expect(mockSession.sentMessages.count == 1)

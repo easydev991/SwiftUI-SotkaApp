@@ -105,7 +105,10 @@ struct StatusManagerWatchConnectivityIntegrationTests {
         let reply = try #require(replyReceived)
         #expect(reply.isEmpty)
 
-        #expect(mockSession.sentMessages.count == 1)
+        // После сохранения тренировки отправляются два сообщения:
+        // 1. sendCurrentActivity - для синхронизации текущей активности
+        // 2. sendWorkoutDataToWatch - для синхронизации данных тренировки
+        #expect(mockSession.sentMessages.count == 2)
     }
 
     @Test("Должен синхронизировать получение текущей активности с часов на iPhone")
