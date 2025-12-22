@@ -2,7 +2,6 @@ import Foundation
 import SwiftData
 @testable import SwiftUI_SotkaApp
 import Testing
-import WatchConnectivity
 
 @MainActor
 @Suite("Тесты для WatchConnectivity в StatusManager")
