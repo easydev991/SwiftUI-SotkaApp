@@ -20,7 +20,7 @@ final class SotkaWatch_Watch_AppUITests: XCTestCase {
         // UI tests must launch the application that they test.
         let app = XCUIApplication()
         app.launch()
-
+        print(app)
         // Use XCTAssert and related functions to verify your tests produce the correct results.
     }
 
