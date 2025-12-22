@@ -30,7 +30,7 @@
       shouldUseLaunchSchemeArgsEnv = "YES">
       <TestPlans>
          <TestPlanReference
-            reference = "container:SwiftUI-SotkaAppTests/SwiftUI-SotkaApp.xctestplan"
+            reference = "container:SwiftUI-SotkaAppTests/SwiftUI-SotkaAppTests.xctestplan"
             default = "YES">
          </TestPlanReference>
       </TestPlans>
