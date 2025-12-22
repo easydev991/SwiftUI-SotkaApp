@@ -669,36 +669,36 @@ Apple Watch Series 11 (46mm)
 
 **Цель:** Подготовить UI-тесты для создания скриншотов основных экранов Watch приложения.
 
-**Действия:**
-- [ ] Открыть файл `SotkaWatch Watch AppUITests/SotkaWatch_Watch_AppUITests.swift`
-- [ ] Добавить методы тестирования для каждого экрана, который нужно заскриншотить:
-  - [ ] Главный экран (`HomeView`)
-  - [ ] Экран выбора активности (`DayActivitySelectionView`)
-  - [ ] Экран выбранной активности (`SelectedActivityView`)
-  - [ ] Экран превью тренировки (`WorkoutPreviewView`)
-  - [ ] Экран выполнения тренировки (`WorkoutView`)
-- [ ] Использовать `snapshot()` для создания скриншотов в нужных точках тестов
-- [ ] Настроить навигацию между экранами для получения нужных состояний
+**Статус:** Частично выполнено - сценарий навигации готов, требуется добавить вызовы `snapshot()`
 
-**Пример структуры тестов:**
+**Действия:**
+- [x] Открыть файл `SotkaWatch Watch AppUITests/SotkaWatch_Watch_AppUITests.swift`
+- [x] Создать единый тест-метод `testMakeScreenshots()` с навигацией по всем экранам
+- [ ] Добавить `setupSnapshot(app)` в метод `setUp()` (раскомментировать и настроить)
+- [ ] Добавить вызовы `snapshot()` в нужных точках теста для следующих экранов:
+  - [ ] Скриншот №1: Экран выбора активности дня (`DayActivitySelectionView`) - в конце теста
+  - [ ] Скриншот №2: Экран выбранной активности/тренировки (`SelectedActivityView`) - после нажатия на кнопку редактирования
+  - [ ] Скриншот №3: Экран превью тренировки (`WorkoutPreviewView`) - после выбора первой тренировки
+  - [ ] Скриншот №4: Настройка повторов для упражнения (`WorkoutStepperView`) - после нажатия кнопки "Готово"
+  - [ ] Скриншот №5: Редактор упражнений для тренировки - после нажатия кнопки редактирования превью тренировки
+
+**Текущая структура теста:**
 ```swift
 @MainActor
-func testHomeScreenScreenshot() throws {
-    let app = XCUIApplication()
-    app.launch()
-    
-    // Ожидание загрузки данных
-    // Навигация к нужному состоянию
-    snapshot("01_home_screen")
-}
-
-@MainActor
-func testActivitySelectionScreenshot() throws {
-    let app = XCUIApplication()
-    app.launch()
-    
-    // Навигация к экрану выбора активности
-    snapshot("02_activity_selection")
+func testMakeScreenshots() throws {
+    // TODO: скриншот №2 (тренировка)
+    waitAndTapOrFail(element: editActivityButton)
+    // TODO: скриншот №3 (превью для тренировки)
+    waitAndTapOrFail(element: firstTrainingButton)
+    // TODO: скриншот №4 (настройка повторов для упражнения)
+    waitAndTapOrFail(element: stepperDoneButton)
+    waitAndTapOrFail(element: editWorkoutPreviewButton)
+    // TODO: скриншот №5 (редактор упражнений для тренировки)
+    waitAndTapOrFail(element: backButton)
+    waitAndTapOrFail(element: closeButton)
+    waitAndTapOrFail(element: deleteActivityButton)
+    waitAndTapOrFail(element: confirmDeleteActivityButton)
+    // TODO: скриншот №1 (выбор активности дня)
 }
 ```
 
@@ -706,6 +706,7 @@ func testActivitySelectionScreenshot() throws {
 - Использовать `snapshot()` из SnapshotHelper (если используется) или стандартный API
 - Убедиться, что приложение находится в нужном состоянии перед созданием скриншота
 - Добавить задержки при необходимости для завершения анимаций
+- Все скриншоты создаются в одном тест-методе, который проходит полный сценарий навигации
 
 #### Шаг 3: Обновление Snapfile для Watch устройств
 

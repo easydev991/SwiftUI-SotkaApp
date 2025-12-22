@@ -8,7 +8,7 @@ final class SotkaWatch_Watch_AppUITests: XCTestCase {
         continueAfterFailure = false
         app = XCUIApplication()
         app.launchArguments.append("UITest")
-//        setupSnapshot(app)
+//        TODO: setupSnapshot(app)
         app.launch()
     }
 
@@ -18,7 +18,6 @@ final class SotkaWatch_Watch_AppUITests: XCTestCase {
         app = nil
     }
 
-    @MainActor
     func testMakeScreenshots() throws {
         // TODO: скриншот №2 (тренировка)
         waitAndTapOrFail(element: editActivityButton)
