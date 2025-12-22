@@ -67,18 +67,7 @@ final class HomeViewModel {
             isLoading = false
         }
 
-        guard authService.checkAuthStatus() else {
-            logger.info("Пользователь не авторизован, пропускаем загрузку данных")
-            return
-        }
-
-        // Получаем currentDay из WatchConnectivityService (обновляется при получении команды от iPhone)
-        let currentDayValue = connectivityService.currentDay
-        currentDay = currentDayValue
-
-        guard let currentDayValue else {
-            logger.warning("Текущий день еще не получен от iPhone, ожидаем команду PHONE_COMMAND_CURRENT_DAY")
-            error = WatchConnectivityError.sessionUnavailable
+        guard let currentDayValue = ensureAuthorizedAndGetCurrentDay() else {
             return
         }
 
@@ -86,61 +75,12 @@ final class HomeViewModel {
         // Это избегает лишних запросов к iPhone
         if let activityFromContext = connectivityService.currentActivity {
             logger.info("Используем currentActivity из applicationContext: \(activityFromContext.rawValue)")
-            currentActivity = activityFromContext
-
-            if activityFromContext == .workout {
-                // Загружаем данные тренировки, если активность типа .workout
-                do {
-                    let response = try await connectivityService.requestWorkoutData(day: currentDayValue)
-                    workoutData = response.workoutData
-                    workoutExecutionCount = response.executionCount
-                    workoutComment = response.comment
-                    logger.info("Загружены данные тренировки для дня \(currentDayValue)")
-                    lastLoggedActivityState = (day: currentDayValue, hasActivity: true)
-                } catch {
-                    logger.error("Ошибка загрузки данных тренировки дня \(currentDayValue): \(error.localizedDescription)")
-                    // Не устанавливаем error здесь, чтобы не перезаписать ошибку загрузки активности
-                    // Не очищаем данные тренировки при ошибке - оставляем старые данные
-                }
-            } else {
-                let hasActivity = true
-                let shouldLog = lastLoggedActivityState?.day != currentDayValue || lastLoggedActivityState?.hasActivity != hasActivity
-                if shouldLog {
-                    logger.info("Активность дня \(currentDayValue) не является тренировкой")
-                    lastLoggedActivityState = (day: currentDayValue, hasActivity: hasActivity)
-                }
-                clearWorkoutData()
-            }
+            await processActivityFromContext(activityFromContext, day: currentDayValue)
         } else {
             // Если currentActivity нет в applicationContext, запрашиваем с iPhone
             do {
-                let activity = try await connectivityService.requestCurrentActivity(day: currentDayValue)
-                currentActivity = activity
-
-                if let activity, activity == .workout {
-                    logger.info("Загружена активность дня \(currentDayValue): \(activity.rawValue)")
-                    lastLoggedActivityState = (day: currentDayValue, hasActivity: true)
-                    // Загружаем данные тренировки, если активность типа .workout
-                    do {
-                        let response = try await connectivityService.requestWorkoutData(day: currentDayValue)
-                        workoutData = response.workoutData
-                        workoutExecutionCount = response.executionCount
-                        workoutComment = response.comment
-                        logger.info("Загружены данные тренировки для дня \(currentDayValue)")
-                    } catch {
-                        logger.error("Ошибка загрузки данных тренировки дня \(currentDayValue): \(error.localizedDescription)")
-                        // Не устанавливаем error здесь, чтобы не перезаписать ошибку загрузки активности
-                        // Не очищаем данные тренировки при ошибке - оставляем старые данные
-                    }
-                } else {
-                    let hasActivity = false
-                    let shouldLog = lastLoggedActivityState?.day != currentDayValue || lastLoggedActivityState?.hasActivity != hasActivity
-                    if shouldLog {
-                        logger.info("Активность дня \(currentDayValue) не установлена")
-                        lastLoggedActivityState = (day: currentDayValue, hasActivity: hasActivity)
-                    }
-                    clearWorkoutData()
-                }
+                let activity = try await requestActivityFromPhone(day: currentDayValue)
+                await processActivityFromContext(activity, day: currentDayValue)
             } catch {
                 logger.error("Ошибка загрузки активности дня \(currentDayValue): \(error.localizedDescription)")
                 self.error = error
@@ -313,5 +253,92 @@ private extension HomeViewModel {
         workoutData = nil
         workoutExecutionCount = nil
         workoutComment = nil
+    }
+
+    /// Проверка авторизации и получение текущего дня
+    /// - Returns: Номер текущего дня или `nil` если пользователь не авторизован или день не получен
+    func ensureAuthorizedAndGetCurrentDay() -> Int? {
+        guard authService.checkAuthStatus() else {
+            logger.info("Пользователь не авторизован, пропускаем загрузку данных")
+            return nil
+        }
+
+        // Получаем currentDay из WatchConnectivityService (обновляется при получении команды от iPhone)
+        let currentDayValue = connectivityService.currentDay
+        currentDay = currentDayValue
+
+        guard let currentDayValue else {
+            logger.warning("Текущий день еще не получен от iPhone, ожидаем команду PHONE_COMMAND_CURRENT_DAY")
+            error = WatchConnectivityError.sessionUnavailable
+            return nil
+        }
+
+        return currentDayValue
+    }
+
+    /// Обработка активности из applicationContext или запрошенной с iPhone
+    /// - Parameters:
+    ///   - activity: Активность или `nil` если активность не установлена
+    ///   - day: Номер дня программы
+    func processActivityFromContext(_ activity: DayActivityType?, day: Int) async {
+        currentActivity = activity
+
+        if let activity {
+            if activity == .workout {
+                await loadWorkoutDataIfNeeded(day: day, activity: activity)
+            } else {
+                let shouldLog = lastLoggedActivityState?.day != day || lastLoggedActivityState?.hasActivity != true
+                if shouldLog {
+                    logger.info("Активность дня \(day) не является тренировкой")
+                    lastLoggedActivityState = (day: day, hasActivity: true)
+                }
+                clearWorkoutData()
+            }
+        } else {
+            let shouldLog = lastLoggedActivityState?.day != day || lastLoggedActivityState?.hasActivity != false
+            if shouldLog {
+                logger.info("Активность дня \(day) не установлена")
+                lastLoggedActivityState = (day: day, hasActivity: false)
+            }
+            clearWorkoutData()
+        }
+    }
+
+    /// Запрос текущей активности с iPhone
+    /// - Parameter day: Номер дня программы
+    /// - Returns: Текущая активность или `nil` если активность не установлена
+    /// - Throws: Ошибка при запросе активности
+    func requestActivityFromPhone(day: Int) async throws -> DayActivityType? {
+        let activity = try await connectivityService.requestCurrentActivity(day: day)
+
+        if let activity {
+            logger.info("Загружена активность дня \(day): \(activity.rawValue)")
+            lastLoggedActivityState = (day: day, hasActivity: true)
+        }
+
+        return activity
+    }
+
+    /// Загрузка данных тренировки, если активность типа workout
+    /// - Parameters:
+    ///   - day: Номер дня программы
+    ///   - activity: Тип активности
+    func loadWorkoutDataIfNeeded(day: Int, activity: DayActivityType) async {
+        guard activity == .workout else {
+            return
+        }
+
+        do {
+            let response = try await connectivityService.requestWorkoutData(day: day)
+            workoutData = response.workoutData
+            workoutExecutionCount = response.executionCount
+            workoutComment = response.comment
+            logger.info("Загружены данные тренировки для дня \(day)")
+            lastLoggedActivityState = (day: day, hasActivity: true)
+        } catch {
+            logger.error("Ошибка загрузки данных тренировки дня \(day): \(error.localizedDescription)")
+            // Не устанавливаем error здесь, чтобы не перезаписать ошибку загрузки активности
+            // Не очищаем данные тренировки при ошибке - оставляем старые данные
+        }
     }
 }
