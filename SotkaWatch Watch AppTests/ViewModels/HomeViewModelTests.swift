@@ -443,6 +443,16 @@ struct HomeViewModelTests {
         connectivityService.mockWorkoutComment = "Новый комментарий"
 
         viewModel.updateCurrentActivityFromConnectivity(.workout)
+        
+        // Ждем начала загрузки (Task запускается асинхронно, может быть задержка)
+        while !viewModel.isLoading && viewModel.workoutData == nil {
+            await Task.yield()
+        }
+        
+        // Ждем завершения загрузки (isLoading устанавливается в false в defer loadWorkoutData)
+        while viewModel.isLoading {
+            await Task.yield()
+        }
 
         let loadedWorkoutData = try #require(viewModel.workoutData)
         #expect(loadedWorkoutData.day == 5)
