@@ -278,13 +278,9 @@ struct WorkoutProgramCreator {
     }
 
     static func defaultExecutionType(for day: Int) -> ExerciseExecutionType {
-        if day < 92 {
-            return .cycles
-        }
-        if day < 99 {
-            return .turbo
-        }
-        return .cycles
+        (92 ... 98).contains(day)
+            ? .turbo
+            : .cycles
     }
 }
 
