@@ -6,7 +6,18 @@ import SwiftUI
 /// В старом приложении это `HomeCountCell`
 struct HomeDayCountView: View {
     @Environment(\.isIPad) private var isIpad
-    let calculator: DayCalculator
+    private let calculator: DayCalculator
+    private let isSolvingConflict: Bool
+
+    /// Инициализатор
+    /// - Parameters:
+    ///   - calculator: Калькулятор текущего дня
+    ///   - isSolvingConflict: `true` - вьюха отображается на экране решения конфликта дат
+    ///   при синхронизации, `false` - обычное отображение
+    init(calculator: DayCalculator, isSolvingConflict: Bool = false) {
+        self.calculator = calculator
+        self.isSolvingConflict = isSolvingConflict
+    }
 
     var body: some View {
         ZStack {
@@ -79,7 +90,7 @@ private extension HomeDayCountView {
 
     @ViewBuilder
     private var rateAppButton: some View {
-        if let appReviewLink = Constants.appReviewURL {
+        if let appReviewLink = Constants.appReviewURL, !isSolvingConflict {
             Link(.rateTheApp, destination: appReviewLink)
                 .buttonStyle(SWButtonStyle(icon: .star, mode: .filled, size: .small))
                 .padding(.top, 8)
@@ -102,5 +113,13 @@ private extension HomeDayCountView {
 #Preview("День 100") {
     HomeDayCountView(calculator: .init(previewDay: 100))
         .padding()
+}
+
+#Preview("День 100, конфликт дат") {
+    HomeDayCountView(
+        calculator: .init(previewDay: 100),
+        isSolvingConflict: true
+    )
+    .padding()
 }
 #endif

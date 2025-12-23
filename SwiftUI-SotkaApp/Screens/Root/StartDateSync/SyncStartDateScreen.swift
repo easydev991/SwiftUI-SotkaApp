@@ -14,8 +14,11 @@ struct SyncStartDateView: View {
                 VStack(spacing: 32) {
                     Text(.dateSyncDescription)
                     VStack(spacing: 12) {
-                        HomeDayCountView(calculator: model.appDayCalculator)
-                            .opacity(makeOpacity(model.appDayCalculator))
+                        HomeDayCountView(
+                            calculator: model.appDayCalculator,
+                            isSolvingConflict: true
+                        )
+                        .opacity(makeOpacity(model.appDayCalculator))
                         Button(.dateSyncSelectAppDate) {
                             selectedOption = .app(model.appDayCalculator)
                         }
@@ -29,8 +32,11 @@ struct SyncStartDateView: View {
                     }
                     SWDivider()
                     VStack(spacing: 12) {
-                        HomeDayCountView(calculator: model.siteDayCalculator)
-                            .opacity(makeOpacity(model.siteDayCalculator))
+                        HomeDayCountView(
+                            calculator: model.siteDayCalculator,
+                            isSolvingConflict: true
+                        )
+                        .opacity(makeOpacity(model.siteDayCalculator))
                         Button(.dateSyncSelectSiteDate) {
                             selectedOption = .site(model.siteDayCalculator)
                         }
@@ -121,7 +127,7 @@ extension SyncStartDateView {
 
 #if DEBUG
 #Preview {
-    let siteStartDate = Calendar.current.date(byAdding: .day, value: -25, to: .now)!
+    let siteStartDate = Calendar.current.date(byAdding: .day, value: -100, to: .now)!
     let appStartDate = Calendar.current.date(byAdding: .day, value: -12, to: .now)!
     SyncStartDateView(model: .init(appStartDate, siteStartDate))
         .environment(AuthHelperImp())
