@@ -224,8 +224,8 @@ private extension WorkoutPreviewView {
 #if DEBUG
 #Preview {
     WorkoutPreviewView(
-        connectivityService: PreviewWatchConnectivityService()
+        connectivityService: PreviewWatchConnectivityService(currentDay: 92)
     )
-    .currentDay(50)
+    .currentDay(92)
 }
 #endif
