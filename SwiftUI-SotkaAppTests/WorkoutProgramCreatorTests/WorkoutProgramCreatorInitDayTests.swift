@@ -377,11 +377,11 @@ extension AllWorkoutProgramCreatorTests {
         #expect(creator91.defaultExecutionType == .cycles)
     }
 
-    @Test("Должен возвращать только cycles для дней 1-49")
-    func returnsOnlyCyclesForDays1To49() {
+    @Test("Должен возвращать cycles и sets для дней 1-49")
+    func returnsCyclesAndSetsForDays1To49() {
         let creator = WorkoutProgramCreator(day: 1)
 
-        #expect(creator.availableExecutionTypes == [.cycles])
+        #expect(creator.availableExecutionTypes == [.cycles, .sets])
     }
 
     @Test("Должен возвращать cycles и sets для дней 50-91")
@@ -393,15 +393,22 @@ extension AllWorkoutProgramCreatorTests {
 
     @Test("Должен возвращать все три типа для дней 92-98")
     func returnsAllThreeTypesForDays92To98() {
-        let creator = WorkoutProgramCreator(day: 92)
+        let creator92 = WorkoutProgramCreator(day: 92)
+        #expect(creator92.availableExecutionTypes == [.cycles, .sets, .turbo])
 
-        #expect(creator.availableExecutionTypes == [.cycles, .sets, .turbo])
+        let creator98 = WorkoutProgramCreator(day: 98)
+        #expect(creator98.availableExecutionTypes == [.cycles, .sets, .turbo])
+    }
+
+    @Test("Должен возвращать cycles и sets для дня 91")
+    func returnsCyclesAndSetsForDay91() {
+        let creator = WorkoutProgramCreator(day: 91)
+        #expect(creator.availableExecutionTypes == [.cycles, .sets])
     }
 
     @Test("Должен возвращать cycles и sets для дней 99-100")
     func returnsCyclesAndSetsForDays99To100() {
         let creator = WorkoutProgramCreator(day: 99)
-
         #expect(creator.availableExecutionTypes == [.cycles, .sets])
     }
 }
