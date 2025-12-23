@@ -86,7 +86,7 @@ platform :ios do
       # Используем отдельный симулятор часов, созданный специально для скриншотов
       snapshot(
         scheme: "SotkaWatch Watch AppUITests",
-        devices: ["Watch for screenshots (46mm)"],
+        devices: ["Apple Watch Series 8 (45mm)"],
         languages: ["en-US", "ru"],
         output_directory: "./fastlane/screenshots/watch",
         clear_previous_screenshots: true,
