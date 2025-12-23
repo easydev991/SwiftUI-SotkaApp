@@ -241,6 +241,121 @@ SotkaWatch Watch App/
 - [ ] Оптимизация производительности
 - [ ] Оптимизация энергопотребления
 
+### Этап 9: Известные баги и проблемы
+
+#### 9.1 Проблема с синхронизацией currentDay при запуске приложения на часах ⚠️ **АКТИВНЫЙ БАГ**
+
+**Описание проблемы:**
+При запуске приложения на часах иногда отображается неправильный день (например, "день 1" вместо реального дня программы). Проблема проявляется, когда:
+- Приложение на часах запускается до того, как iPhone полностью загрузил данные (`didLoadInitialData = false`)
+- WCSession активируется на часах и получает Application Context только с `isAuthorized`, но без `currentDay`
+- После загрузки данных на iPhone, обновление `currentDay` может не дойти до часов, если они уже получили Application Context без этого поля
+
+**Логи проблемы:**
+```
+Application context data is nil
+WCSession активирована с состоянием: 2
+Получен Application Context при активации: ["isAuthorized": 1]
+Обновление статуса авторизации из Application Context: true
+Обновление статуса авторизации: true
+Application context data is nil
+Проверка статуса авторизации: true
+Проверка статуса авторизации: true
+Текущий день еще не получен от iPhone, ожидаем команду PHONE_COMMAND_CURRENT_DAY.
+```
+
+**Анализ проблемы:**
+
+1. **Race condition при активации WCSession:**
+   - При активации WCSession на iPhone вызывается `sendApplicationContextOnActivation()`
+   - Если `didLoadInitialData = false`, то Application Context отправляется только с `isAuthorized`, без `currentDay` (строки 357-370 в `StatusManager.swift`)
+   - Часы получают Application Context без `currentDay` и устанавливают его в `nil`
+   - После загрузки данных на iPhone вызывается `sendCurrentStatus()`, но часы могут не получить обновление, если они уже обработали Application Context
+
+2. **Проблема с обновлением Application Context:**
+   - `updateApplicationContextOnWatch()` вызывается в `sendCurrentStatus()`, но если часы уже получили Application Context без `currentDay`, они могут не обработать обновление корректно
+   - Метод `handleApplicationContext()` на часах обновляет `currentDay` только если он присутствует в контексте (строка 447 в `WatchConnectivityService.swift`), но если контекст был получен без `currentDay`, то значение остается `nil`
+
+3. **Отсутствие явного запроса currentDay:**
+   - Часы ожидают команду `PHONE_COMMAND_CURRENT_DAY` (строка 271 в `HomeViewModel.swift`), но эта команда отправляется только при изменении дня, а не при запуске приложения
+   - Если Application Context был получен без `currentDay`, часы не могут запросить его явно
+
+4. **Проблема с nil Application Context:**
+   - Лог "Application context data is nil" указывает на то, что иногда Application Context может быть `nil` при получении на часах
+   - Это может происходить, если iPhone еще не отправил Application Context или если произошла ошибка при передаче
+
+**Детальный анализ причин:**
+
+1. **Последовательность событий при проблеме:**
+   - iPhone запускается, WCSession активируется → вызывается `sendApplicationContextOnActivation()`
+   - В этот момент `didLoadInitialData = false`, поэтому Application Context отправляется только с `isAuthorized: true`, без `currentDay`
+   - Часы получают Application Context без `currentDay` и устанавливают `connectivityService.currentDay = nil`
+   - iPhone продолжает загрузку данных через `getStatus()`
+   - После завершения `getStatus()` вызывается `sendCurrentStatus()` с актуальным `currentDay` (строка 172)
+   - `updateApplicationContextOnWatch()` вызывается и обновляет Application Context с `currentDay`
+   - Но часы уже обработали Application Context без `currentDay` и могут не получить обновление, если:
+     - Часы недоступны (`isReachable = false`) - тогда `sendMessage` не отправляется (строка 295)
+     - Application Context обновляется, но часы могут не обработать обновление, если приложение уже запущено и обработало предыдущий контекст
+
+2. **Проблема с обработкой Application Context на часах:**
+   - Метод `handleApplicationContext()` обновляет `currentDay` только если он присутствует в контексте (строка 447 в `WatchConnectivityService.swift`)
+   - Если Application Context был получен без `currentDay`, значение остается `nil`
+   - При получении обновленного Application Context с `currentDay`, метод должен обновить значение, но может быть race condition
+
+3. **Проблема с nil Application Context:**
+   - Лог "Application context data is nil" может означать, что `sessionProtocol.receivedApplicationContext` пуст при проверке (строка 283 в `WatchConnectivityService.swift`)
+   - Это может происходить, если iPhone еще не отправил Application Context или если произошла ошибка при передаче
+
+4. **Отсутствие явного запроса currentDay:**
+   - Часы ожидают команду `PHONE_COMMAND_CURRENT_DAY` (строка 271 в `HomeViewModel.swift`), но эта команда отправляется только при изменении дня через `sendDayDataToWatch()` (строка 128 в `SwiftUI_SotkaAppApp.swift`)
+   - При запуске приложения на часах, если `currentDay` не получен, часы не могут запросить его явно
+
+5. **Проблема с дедупликацией:**
+   - Метод `hasStatusChanged()` проверяет, изменился ли статус по сравнению с `lastSentStatus` (строка 336)
+   - Если Application Context был отправлен без `currentDay` (при активации), а затем `sendCurrentStatus()` вызывается с `currentDay`, то `hasStatusChanged()` вернет `true` и обновление должно быть отправлено
+   - Но если часы уже обработали Application Context без `currentDay`, они могут не обработать обновление корректно
+
+**Возможные решения:**
+
+1. **Отправка currentDay после загрузки данных:**
+   - ✅ Уже реализовано: `sendCurrentStatus()` вызывается в `getStatus()` после завершения синхронизации (строка 172)
+   - ⚠️ Проблема: если WCSession активируется до завершения `getStatus()`, Application Context отправляется без `currentDay`
+   - **Решение:** После установки `didLoadInitialData = true` всегда вызывать `sendCurrentStatus()` повторно, чтобы гарантировать отправку `currentDay`
+
+2. **Явный запрос currentDay с часов:**
+   - Добавить механизм явного запроса `currentDay` с часов, если он не был получен в Application Context
+   - Использовать существующую команду или добавить новую команду `WATCH_COMMAND_GET_CURRENT_DAY`
+   - При запуске приложения на часах, если `currentDay = nil` и пользователь авторизован, запросить `currentDay` с iPhone
+
+3. **Повторная отправка Application Context:**
+   - ✅ Уже реализовано: `updateApplicationContextOnWatch()` вызывается всегда, даже если часы недоступны (строка 292)
+   - ⚠️ Проблема: Application Context может быть обновлен, но часы могут не обработать обновление, если уже обработали предыдущий контекст
+   - **Решение:** Убедиться, что `handleApplicationContext()` на часах всегда обрабатывает обновления, даже если `currentDay` был `nil` ранее
+
+4. **Обработка nil Application Context:**
+   - Добавить проверку на пустой Application Context при активации WCSession на часах
+   - Если Application Context пуст или не содержит `currentDay`, но пользователь авторизован, явно запросить `currentDay` с iPhone через `sendMessage`
+
+5. **Улучшение логики обработки Application Context на часах:**
+   - Если Application Context получен без `currentDay`, но пользователь авторизован, явно запросить `currentDay` с iPhone
+   - Добавить таймаут для ожидания `currentDay` и повторный запрос, если он не получен в течение определенного времени
+   - Улучшить логику в `handleApplicationContext()` для обработки случаев, когда `currentDay` отсутствует в контексте
+
+6. **Гарантированная отправка currentDay после активации:**
+   - После активации WCSession на iPhone, если `didLoadInitialData = false`, установить флаг для повторной отправки Application Context после загрузки данных
+   - После установки `didLoadInitialData = true`, проверить флаг и отправить Application Context с `currentDay`, если он был отправлен без него ранее
+
+**Приоритет:** ВЫСОКИЙ - проблема влияет на корректность отображения данных на часах
+
+**Статус:** ⚠️ Требуется анализ и исправление
+
+**Воспроизводимость:** Иногда (зависит от порядка запуска приложений на iPhone и часах)
+
+**Связанные файлы:**
+- `SwiftUI-SotkaApp/Services/StatusManager.swift` - отправка Application Context и `sendCurrentStatus()`
+- `SotkaWatch Watch App/Services/WatchConnectivityService.swift` - обработка Application Context на часах
+- `SotkaWatch Watch App/ViewModels/HomeViewModel.swift` - проверка `currentDay` и загрузка данных
+
 ## Технические детали
 
 ### Модели данных
