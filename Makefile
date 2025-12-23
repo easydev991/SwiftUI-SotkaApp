@@ -298,7 +298,7 @@ test:
 
 ## test_watch: Запускает unit-тесты для Apple Watch в терминале
 test_watch:
-	xcodebuild -project SwiftUI-SotkaApp.xcodeproj -scheme "SotkaWatch Watch AppTests" -sdk watchsimulator -destination 'platform=watchOS Simulator,name=Apple Watch Series 11 (46mm)' test -testPlan "SotkaWatch-UnitTests"
+	xcodebuild -project SwiftUI-SotkaApp.xcodeproj -scheme "SotkaWatch Watch AppTests" -sdk watchsimulator -destination 'platform=watchOS Simulator,name=Apple Watch Series 8 (45mm)' test -testPlan "SotkaWatch-UnitTests"
 
 ## setup_cursor: Настроить языковой сервер Swift для работы в Cursor
 setup_cursor:
