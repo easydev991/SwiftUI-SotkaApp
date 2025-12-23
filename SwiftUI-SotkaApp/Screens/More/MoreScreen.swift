@@ -168,7 +168,7 @@ struct MoreScreen: View {
     private func makeRestTimePicker(_ value: Binding<Int>) -> some View {
         Picker(.restTimePicker, selection: value) {
             ForEach(Constants.restPickerOptions, id: \.self) { seconds in
-                Text(.sec(seconds)).tag(seconds)
+                Text(RestTimeComponents(totalSeconds: seconds).localizedString).tag(seconds)
             }
         }
         .pickerStyle(.navigationLink)
