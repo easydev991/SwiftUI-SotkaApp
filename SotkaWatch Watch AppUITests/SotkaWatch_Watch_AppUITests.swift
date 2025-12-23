@@ -19,20 +19,17 @@ final class SotkaWatch_Watch_AppUITests: XCTestCase {
     }
 
     func testMakeScreenshots() throws {
-        // Скриншот №2 (тренировка)
+        _ = editActivityButton.waitForExistence(timeout: 5)
+        snapshot("02_training_info")
         waitAndTapOrFail(element: editActivityButton)
-        snapshot("02_training")
-
-        // Скриншот №3 (превью для тренировки)
-        waitAndTapOrFail(element: firstTrainingButton)
+        
         snapshot("03_workout_preview")
+        waitAndTapOrFail(element: firstTrainingButton)
 
-        // Скриншот №4 (настройка повторов для упражнения)
-        waitAndTapOrFail(element: stepperDoneButton)
         snapshot("04_stepper")
+        waitAndTapOrFail(element: stepperDoneButton)
 
         waitAndTapOrFail(element: editWorkoutPreviewButton)
-        // Скриншот №5 (редактор упражнений для тренировки)
         snapshot("05_workout_editor")
 
         waitAndTapOrFail(element: backButton)
@@ -40,7 +37,6 @@ final class SotkaWatch_Watch_AppUITests: XCTestCase {
         waitAndTapOrFail(element: deleteActivityButton)
         waitAndTapOrFail(element: confirmDeleteActivityButton)
 
-        // Скриншот №1 (выбор активности дня)
         snapshot("01_activity_selection")
     }
 }

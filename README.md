@@ -19,9 +19,9 @@
 | <img src="./fastlane/screenshots/iphone/ru/iPhone 15 Pro Max-1-mainScreen.png"> | <img src="./fastlane/screenshots/iphone/ru/iPhone 15 Pro Max-2-todayInfopost.png"> | <img src="./fastlane/screenshots/iphone/ru/iPhone 15 Pro Max-3-workoutPreview.png"> | <img src="./fastlane/screenshots/iphone/ru/iPhone 15 Pro Max-4-workoutEditor.png"> | <img src="./fastlane/screenshots/iphone/ru/iPhone 15 Pro Max-5-userProgress.png"> | <img src="./fastlane/screenshots/iphone/ru/iPhone 15 Pro Max-6-userJournalGrid.png"> | <img src="./fastlane/screenshots/iphone/ru/iPhone 15 Pro Max-7-userJournalList.png"> | <img src="./fastlane/screenshots/iphone/ru/iPhone 15 Pro Max-8-userExercises.png"> |
 
 ### Apple Watch
-| Выбор активности | Тренировка | Превью тренировки | Настройка повторов | Редактор упражнений |
+| Выбор активности | Информация о тренировке | Превью тренировки | Настройка повторов | Редактор тренировки |
 | --- | --- | --- | --- | --- |
-| <img src="./fastlane/screenshots/watch/ru/Apple Watch Series 8 (45mm)-01_activity_selection.png"> | <img src="./fastlane/screenshots/watch/ru/Apple Watch Series 8 (45mm)-02_training.png"> | <img src="./fastlane/screenshots/watch/ru/Apple Watch Series 8 (45mm)-03_workout_preview.png"> | <img src="./fastlane/screenshots/watch/ru/Apple Watch Series 8 (45mm)-04_stepper.png"> | <img src="./fastlane/screenshots/watch/ru/Apple Watch Series 8 (45mm)-05_workout_editor.png"> |
+| <img src="./fastlane/screenshots/watch/ru/Apple Watch Series 8 (45mm)-01_activity_selection.png"> | <img src="./fastlane/screenshots/watch/ru/Apple Watch Series 8 (45mm)-02_training_info.png"> | <img src="./fastlane/screenshots/watch/ru/Apple Watch Series 8 (45mm)-03_workout_preview.png"> | <img src="./fastlane/screenshots/watch/ru/Apple Watch Series 8 (45mm)-04_stepper.png"> | <img src="./fastlane/screenshots/watch/ru/Apple Watch Series 8 (45mm)-05_workout_editor.png"> |
 
 ### iPad
 | Главный экран | Инфопост | Превью тренировки | Редактор тренировки | Прогресс | Дневник (сетка) | Дневник (список) | Пользовательские упражнения |
