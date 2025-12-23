@@ -171,7 +171,7 @@ private extension WorkoutPreviewView {
     func makeRestTimePicker(_ value: Binding<Int>) -> some View {
         Picker(selection: value) {
             ForEach(Constants.restPickerOptions, id: \.self) { seconds in
-                Text(.sec(seconds)).tag(seconds)
+                Text(RestTimeComponents(totalSeconds: seconds).localizedString).tag(seconds)
             }
         } label: {
             Label(.workoutPreviewRestTimePicker, systemImage: "timer")

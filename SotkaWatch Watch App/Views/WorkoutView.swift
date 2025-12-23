@@ -64,8 +64,8 @@ struct WorkoutView: View {
             }
             .navigationTitle(viewModel.getNavigationTitle())
             .toolbar {
-                ToolbarItem(placement: .topBarLeading) {
-                    stopWorkoutButtonSection
+                ToolbarItem(placement: .cancellationAction) {
+                    stopWorkoutButton
                 }
             }
             .onAppear {
@@ -173,7 +173,7 @@ private extension WorkoutView {
         Button(.done, action: viewModel.completeCurrentStep)
     }
 
-    var stopWorkoutButtonSection: some View {
+    var stopWorkoutButton: some View {
         Button {
             showStopWorkoutConfirmation = true
         } label: {

@@ -22,7 +22,7 @@ final class SotkaWatch_Watch_AppUITests: XCTestCase {
         _ = editActivityButton.waitForExistence(timeout: 5)
         snapshot("02_training_info")
         waitAndTapOrFail(element: editActivityButton)
-        
+
         snapshot("03_workout_preview")
         waitAndTapOrFail(element: firstTrainingButton)
 

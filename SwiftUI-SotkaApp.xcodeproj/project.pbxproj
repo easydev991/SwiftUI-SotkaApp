@@ -98,6 +98,7 @@
 				Extensions/CurrentDayEnvironmentKey.swift,
 				Models/DayCalculator.swift,
 				Models/SWSharedModels/Constants.swift,
+				Models/SWSharedModels/RestTimeComponents.swift,
 				Models/SWSharedModels/WorkoutData.swift,
 				Models/SWSharedModels/WorkoutDataResponse.swift,
 				Models/Workout/DayActivityType.swift,
