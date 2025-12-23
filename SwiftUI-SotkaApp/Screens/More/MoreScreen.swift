@@ -119,7 +119,9 @@ struct MoreScreen: View {
                 if settings.playTimerSound {
                     makeTimerSoundPicker($settings.timerSound)
                 }
-                makeVibrateToggle($settings.vibrate)
+                if UIDevice.current.userInterfaceIdiom == .phone {
+                    makeVibrateToggle($settings.vibrate)
+                }
             }
         }
     }
