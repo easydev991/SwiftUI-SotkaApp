@@ -65,7 +65,9 @@ private extension SotkaWatch_Watch_AppUITests {
     }
 
     var confirmDeleteActivityButton: XCUIElement {
-        app.buttons.element(for: "Journal.Delete")
+        let ruButton = app.buttons["Удалить"].firstMatch
+        let enButton = app.buttons["Delete"].firstMatch
+        return ruButton.exists ? ruButton : enButton
     }
 }
 
