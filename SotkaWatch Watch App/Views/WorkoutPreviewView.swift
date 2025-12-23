@@ -144,7 +144,7 @@ private extension WorkoutPreviewView {
             selectedExecutionType: viewModel.selectedExecutionType
         )
         return NavigationLink(destination: WorkoutStepperView(value: value, from: 1, title: title)) {
-            WatchActivityRowView(
+            ActivityRowView(
                 image: training.exerciseImage,
                 title: title,
                 count: training.count
@@ -159,7 +159,7 @@ private extension WorkoutPreviewView {
         )
         let title = viewModel.displayExecutionType(for: executionType).localizedTitle
         return NavigationLink(destination: WorkoutStepperView(value: value, from: 1, title: title)) {
-            WatchActivityRowView(
+            ActivityRowView(
                 image: viewModel.displayExecutionType(for: executionType).image,
                 title: title,
                 count: viewModel.displayedCount

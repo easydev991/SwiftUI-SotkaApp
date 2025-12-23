@@ -11,7 +11,9 @@ struct DayActivityCommentView: View {
                 .foregroundStyle(.secondary)
                 .frame(maxWidth: .infinity, alignment: .leading)
                 .lineLimit(isExpanded ? nil : 3)
+            #if !os(watchOS)
                 .textSelection(.enabled)
+            #endif
                 .onTapGesture {
                     withAnimation(.easeInOut) {
                         isExpanded.toggle()

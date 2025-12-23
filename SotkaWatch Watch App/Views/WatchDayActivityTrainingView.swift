@@ -9,7 +9,7 @@ struct WatchDayActivityTrainingView: View {
         VStack(alignment: .leading, spacing: 8) {
             if let executeType = workoutData.exerciseExecutionType,
                let executionCount {
-                WatchActivityRowView(
+                ActivityRowView(
                     image: executeType.image,
                     title: executeType.localizedTitle,
                     count: executionCount
@@ -17,70 +17,17 @@ struct WatchDayActivityTrainingView: View {
             }
             ForEach(workoutData.trainings.sorted, id: \.id) { training in
                 if let count = training.count {
-                    WatchActivityRowView(
-                        image: exerciseImage(for: training),
-                        title: exerciseTitle(for: training),
+                    ActivityRowView(
+                        image: training.exerciseImage,
+                        title: training.makeExerciseTitle(
+                            dayNumber: workoutData.day,
+                            selectedExecutionType: workoutData.exerciseExecutionType
+                        ),
                         count: count
                     )
                 }
             }
         }
-    }
-
-    private func exerciseImage(for training: WorkoutPreviewTraining) -> Image {
-        if let typeId = training.typeId,
-           let exerciseType = ExerciseType(rawValue: typeId) {
-            exerciseType.image
-        } else {
-            .init(systemName: "questionmark.circle")
-        }
-    }
-
-    private func exerciseTitle(for training: WorkoutPreviewTraining) -> String {
-        if let typeId = training.typeId,
-           let exerciseType = ExerciseType(rawValue: typeId),
-           let executeType = workoutData.exerciseExecutionType {
-            return exerciseType.makeLocalizedTitle(
-                workoutData.day,
-                executionType: executeType,
-                sortOrder: training.sortOrder
-            )
-        } else if let typeId = training.typeId,
-                  let exerciseType = ExerciseType(rawValue: typeId) {
-            return exerciseType.localizedTitle
-        }
-        return String(localized: .exerciseTypeUnknown)
-    }
-}
-
-/// Упрощенная версия `ActivityRowView` для Apple Watch
-struct WatchActivityRowView: View {
-    @ScaledMetric(relativeTo: .caption) private var imageSize: CGFloat = 16
-    let image: Image
-    let title: String
-    let count: Int?
-
-    init(image: Image, title: String, count: Int? = nil) {
-        self.image = image
-        self.title = title
-        self.count = count
-    }
-
-    var body: some View {
-        HStack(spacing: 6) {
-            image
-                .resizable()
-                .scaledToFit()
-                .frame(width: imageSize, height: imageSize)
-                .foregroundStyle(.blue)
-            Text(title)
-                .frame(maxWidth: .infinity, alignment: .leading)
-            if let count {
-                Text("\(count)")
-                    .bold()
-            }
-        }
-        .font(.caption)
     }
 }
 

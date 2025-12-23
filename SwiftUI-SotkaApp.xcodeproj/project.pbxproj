@@ -111,6 +111,7 @@
 				Models/Workout/WorkoutStepState.swift,
 				"PreviewContent/WorkoutPreviewTraining+.swift",
 				Screens/Profile/Journal/Views/ActivityRowView.swift,
+				Screens/Profile/Journal/Views/DayActivityCommentView.swift,
 				Screens/Workout/Views/CircularTimerView.swift,
 				Screens/WorkoutPreview/Views/WorkoutExerciseEditorRowView.swift,
 				Screens/WorkoutPreview/Views/WorkoutPreviewButtonsView.swift,

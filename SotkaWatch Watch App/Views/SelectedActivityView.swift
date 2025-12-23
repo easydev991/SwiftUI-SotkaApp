@@ -37,7 +37,7 @@ struct SelectedActivityView: View {
                             workoutData: data,
                             executionCount: executionCount
                         )
-                        WatchDayActivityCommentView(comment: comment)
+                        DayActivityCommentView(comment: comment)
                     }
                 }
             case let .nonWorkout(activity):
@@ -46,7 +46,7 @@ struct SelectedActivityView: View {
                         VStack(spacing: 8) {
                             makeHeaderView(for: activity)
                                 .frame(maxWidth: .infinity, alignment: .leading)
-                            WatchDayActivityCommentView(comment: comment)
+                            DayActivityCommentView(comment: comment)
                         }
                     }
                 } else {
