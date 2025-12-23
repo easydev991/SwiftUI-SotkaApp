@@ -32,7 +32,7 @@ struct TrainingRowView: View {
                 title: title,
                 count: count
             )
-            Stepper(.trainingRowViewStepperLabel, value: countBinding, in: 0 ... Int.max)
+            Stepper(.trainingRowViewStepperLabel, value: countBinding, in: 1 ... Int.max)
                 .labelsHidden()
                 .disabled(isDisabled)
         }
@@ -40,9 +40,9 @@ struct TrainingRowView: View {
 
     private var countBinding: Binding<Int> {
         .init(
-            get: { count ?? 0 },
+            get: { count ?? 1 },
             set: { newValue in
-                let oldValue = count ?? 0
+                let oldValue = count ?? 1
                 if newValue > oldValue {
                     onAction(id, .increment)
                 } else if newValue < oldValue {
@@ -55,12 +55,20 @@ struct TrainingRowView: View {
 
 #if DEBUG
 #Preview {
+    @Previewable @State var count = 10
     TrainingRowView(
         id: "test-id",
         image: ExerciseType.pullups.image,
         title: ExerciseType.pullups.localizedTitle,
-        count: 10,
-        onAction: { _, _ in }
+        count: count,
+        onAction: { _, actionKind in
+            switch actionKind {
+            case .increment:
+                count += 1
+            case .decrement:
+                count -= 1
+            }
+        }
     )
 }
 #endif
