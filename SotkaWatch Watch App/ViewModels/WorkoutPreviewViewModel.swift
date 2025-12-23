@@ -499,7 +499,7 @@ extension WorkoutPreviewViewModel {
         case trainingsListEmpty
         case saveFailed(String)
 
-        nonisolated var errorDescription: String? {
+        var errorDescription: String? {
             switch self {
             case .executionTypeNotSelected:
                 String(localized: .errorTrainingExecutionTypeNotSelected)
