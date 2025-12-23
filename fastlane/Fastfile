@@ -16,6 +16,7 @@
 default_platform(:ios)
 
 require 'shellwords'
+require 'fileutils'
 
 # Проектные константы
 APP_SCHEME_FOR_BUILD                  = "SwiftUI-SotkaApp"
@@ -112,18 +113,102 @@ platform :ios do
 
   desc "Загрузить существующие скриншоты в App Store Connect"
   lane :upload_screenshots do
-    upload_to_app_store(
-      api_key: asc_key,
-      skip_metadata: true,
-      skip_screenshots: false,
-      force: true,
-      submit_for_review: false,
-      reject_if_possible: false,
-      overwrite_screenshots: true,
-      run_precheck_before_submit: false,
-      skip_binary_upload: true,
-      automatic_release: false
-    )
+    project_path = File.expand_path(File.dirname(__FILE__) + "/..")
+    screenshots_base = File.join(project_path, "fastlane", "screenshots")
+    
+    # Временно перемещаем папки iphone и watch, чтобы upload_to_app_store их не видел
+    iphone_dir = File.join(screenshots_base, "iphone")
+    watch_dir = File.join(screenshots_base, "watch")
+    temp_backup_dir = File.join(project_path, "fastlane", ".screenshots_backup")
+    
+    iphone_moved = false
+    watch_moved = false
+    temp_lang_dirs = []
+    
+    begin
+      # Создаем временную папку для бэкапа
+      FileUtils.mkdir_p(temp_backup_dir) unless File.exist?(temp_backup_dir)
+      
+      # Перемещаем папки iphone и watch во временную папку
+      if File.exist?(iphone_dir)
+        FileUtils.mv(iphone_dir, File.join(temp_backup_dir, "iphone"))
+        iphone_moved = true
+      end
+      
+      if File.exist?(watch_dir)
+        FileUtils.mv(watch_dir, File.join(temp_backup_dir, "watch"))
+        watch_moved = true
+      end
+      
+      # Создаем временные папки для языков
+      ["en-US", "ru"].each do |lang|
+        lang_dir = File.join(screenshots_base, lang)
+        temp_lang_dirs << lang_dir
+        
+        # Удаляем папку, если она существует (от предыдущего запуска)
+        FileUtils.rm_rf(lang_dir) if File.exist?(lang_dir)
+        
+        # Создаем новую папку для языка
+        FileUtils.mkdir_p(lang_dir)
+        
+        copied_count = 0
+        
+        # Копируем скриншоты из iphone (из временной папки бэкапа)
+        iphone_lang_dir = File.join(temp_backup_dir, "iphone", lang)
+        if File.exist?(iphone_lang_dir)
+          Dir.glob(File.join(iphone_lang_dir, "*.png")).each do |file|
+            FileUtils.cp(file, lang_dir)
+            copied_count += 1
+          end
+        end
+        
+        # Копируем скриншоты из watch (из временной папки бэкапа)
+        watch_lang_dir = File.join(temp_backup_dir, "watch", lang)
+        if File.exist?(watch_lang_dir)
+          Dir.glob(File.join(watch_lang_dir, "*.png")).each do |file|
+            FileUtils.cp(file, lang_dir)
+            copied_count += 1
+          end
+        end
+        
+        UI.success("Собрано #{copied_count} скриншотов для языка #{lang}")
+      end
+      
+      # Загружаем скриншоты
+      upload_to_app_store(
+        api_key: asc_key,
+        skip_metadata: true,
+        skip_screenshots: false,
+        force: true,
+        submit_for_review: false,
+        reject_if_possible: false,
+        overwrite_screenshots: true,
+        run_precheck_before_submit: false,
+        skip_binary_upload: true,
+        automatic_release: false
+      )
+    ensure
+      # Удаляем временные языковые папки
+      temp_lang_dirs.each do |lang_dir|
+        if File.exist?(lang_dir)
+          FileUtils.rm_rf(lang_dir)
+        end
+      end
+      
+      # Возвращаем папки iphone и watch обратно
+      if iphone_moved && File.exist?(File.join(temp_backup_dir, "iphone"))
+        FileUtils.mv(File.join(temp_backup_dir, "iphone"), iphone_dir)
+      end
+      
+      if watch_moved && File.exist?(File.join(temp_backup_dir, "watch"))
+        FileUtils.mv(File.join(temp_backup_dir, "watch"), watch_dir)
+      end
+      
+      # Удаляем временную папку бэкапа, если она пустая
+      if File.exist?(temp_backup_dir) && Dir.empty?(temp_backup_dir)
+        FileUtils.rmdir(temp_backup_dir)
+      end
+    end
   end
 
   desc "Получить следующий номер сборки для отправки"
