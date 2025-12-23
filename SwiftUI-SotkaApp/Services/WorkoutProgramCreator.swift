@@ -333,15 +333,8 @@ struct WorkoutProgramCreator {
     }
 
     private static func availableExecutionTypes(for day: Int) -> [ExerciseExecutionType] {
-        if day < 50 {
-            return [.cycles]
-        }
-        if day < 92 {
-            return [.cycles, .sets]
-        }
-        if day < 99 {
-            return [.cycles, .sets, .turbo]
-        }
-        return [.cycles, .sets]
+        (92 ... 98).contains(day)
+            ? [.cycles, .sets, .turbo]
+            : [.cycles, .sets]
     }
 }
