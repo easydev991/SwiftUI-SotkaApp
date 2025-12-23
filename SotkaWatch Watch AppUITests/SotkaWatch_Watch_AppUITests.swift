@@ -22,24 +22,24 @@ final class SotkaWatch_Watch_AppUITests: XCTestCase {
         // Скриншот №2 (тренировка)
         waitAndTapOrFail(element: editActivityButton)
         snapshot("02_training")
-        
+
         // Скриншот №3 (превью для тренировки)
         waitAndTapOrFail(element: firstTrainingButton)
         snapshot("03_workout_preview")
-        
+
         // Скриншот №4 (настройка повторов для упражнения)
         waitAndTapOrFail(element: stepperDoneButton)
         snapshot("04_stepper")
-        
+
         waitAndTapOrFail(element: editWorkoutPreviewButton)
         // Скриншот №5 (редактор упражнений для тренировки)
         snapshot("05_workout_editor")
-        
+
         waitAndTapOrFail(element: backButton)
         waitAndTapOrFail(element: closeButton)
         waitAndTapOrFail(element: deleteActivityButton)
         waitAndTapOrFail(element: confirmDeleteActivityButton)
-        
+
         // Скриншот №1 (выбор активности дня)
         snapshot("01_activity_selection")
     }
