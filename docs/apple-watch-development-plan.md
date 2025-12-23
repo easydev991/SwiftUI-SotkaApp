@@ -356,6 +356,94 @@ Application context data is nil
 - `SotkaWatch Watch App/Services/WatchConnectivityService.swift` - обработка Application Context на часах
 - `SotkaWatch Watch App/ViewModels/HomeViewModel.swift` - проверка `currentDay` и загрузка данных
 
+#### 9.2 Неправильный выбор executionType по умолчанию для дней 92-98 на часах ⚠️ **АКТИВНЫЙ БАГ**
+
+**Описание проблемы:**
+На часах для дней 92-98 всегда выбирается тип выполнения "круги" (`.cycles`) вместо "турбо" (`.turbo`), который должен быть по умолчанию для этих дней. В основном приложении (iPhone) дефолтный тип выбирается корректно.
+
+**Анализ проблемы:**
+
+1. **В основном приложении (iPhone):**
+   - В методе `updateData()` (строка 76-121 в `WorkoutPreviewViewModel.swift`) используется `WorkoutProgramCreator(from: dayActivity)` если есть DayActivity, или `WorkoutProgramCreator(day: dayNumber)` для нового дня
+   - `WorkoutProgramCreator` имеет метод `defaultExecutionType(for: day)` который возвращает `.turbo` для дней 92-98 (строка 280-284 в `WorkoutProgramCreator.swift`)
+   - В инициализаторе `WorkoutProgramCreator(day: Int, executionType: ExerciseExecutionType? = nil)` используется `executionType ?? Self.defaultExecutionType(for: day)`, что правильно устанавливает дефолтный тип
+   - Затем `selectedExecutionType = creator.executionType` (строка 107) устанавливает правильный тип
+
+2. **На часах:**
+   - В методе `updateData()` (строка 142-164 в `WorkoutPreviewViewModel.swift` для часов) используется `selectedExecutionType = workoutData.exerciseExecutionType` (строка 145)
+   - Проблема: `workoutData.exerciseExecutionType` может быть `nil` или неправильным значением
+   - В `DayActivity.workoutData` (строка 267-272 в `DayActivity.swift`) используется `executeTypeRaw ?? ExerciseExecutionType.cycles.rawValue` - fallback на `.cycles` вместо дефолтного типа для дня
+   - Если `executeTypeRaw == nil` для нового дня 92-98, то отправляется `.cycles` вместо `.turbo`
+   - В часах при получении данных используется это значение напрямую без проверки на дефолтный тип для дня
+
+3. **Корневая причина:**
+   - В `DayActivity.workoutData` используется жестко заданный fallback на `.cycles` вместо использования `WorkoutProgramCreator.defaultExecutionType(for: day)`
+   - В часах в методе `updateData()` не проверяется, нужно ли использовать дефолтный тип для дня, если `exerciseExecutionType` не установлен или равен неправильному значению
+
+**Возможные решения:**
+
+1. **Исправление в `DayActivity.workoutData`:**
+   - Заменить `executeTypeRaw ?? ExerciseExecutionType.cycles.rawValue` на использование `WorkoutProgramCreator.defaultExecutionType(for: day)`
+   - Это гарантирует, что для дней 92-98 будет отправляться правильный дефолтный тип `.turbo`
+
+2. **Исправление в часах `updateData()`:**
+   - Если `workoutData.exerciseExecutionType == nil`, использовать `WorkoutProgramCreator.defaultExecutionType(for: dayNumber)`
+   - Это обеспечит правильный дефолтный тип даже если iPhone отправил неправильное значение
+
+3. **Комбинированный подход (рекомендуется):**
+   - Исправить `DayActivity.workoutData` для правильной отправки дефолтного типа
+   - Добавить fallback в часах для дополнительной надежности
+
+**План исправления с соблюдением TDD:**
+
+**Шаг 1: Написать тесты для `DayActivity.workoutData`**
+- Создать статическое свойство для дней 92-98: `static let turboDays = Array(92...98)`
+- Создать статическое свойство для всех остальных дней (не 92-98) используя функциональный подход: `static let nonTurboDays = Array(1...100).filter { !(92...98).contains($0) }`
+- Параметризированный тест: `workoutData` должен возвращать `.turbo` для дней 92-98, если `executeTypeRaw == nil`
+  - Аргументы: `turboDays` (статическое свойство)
+  - Ожидаемый результат: `.turbo`
+- Параметризированный тест: `workoutData` должен возвращать `.cycles` для всех остальных дней (не 92-98), если `executeTypeRaw == nil`
+  - Аргументы: `nonTurboDays` (статическое свойство)
+  - Ожидаемый результат: `.cycles`
+- Тест: `workoutData` должен возвращать сохраненное значение, если `executeTypeRaw != nil`
+  - Проверка, что при установленном `executeTypeRaw` используется это значение, а не дефолтный тип
+
+**Шаг 2: Написать тесты для часов `WorkoutPreviewViewModel.updateData()`**
+- Использовать те же статические свойства из Шага 1 (или создать аналогичные в тестовом файле для часов)
+- Параметризированный тест: `updateData()` должен устанавливать `.turbo` для дней 92-98, если `workoutData.exerciseExecutionType == nil`
+  - Аргументы: `turboDays` (статическое свойство)
+  - Ожидаемый результат: `selectedExecutionType == .turbo`
+- Параметризированный тест: `updateData()` должен устанавливать `.cycles` для всех остальных дней (не 92-98), если `workoutData.exerciseExecutionType == nil`
+  - Аргументы: `nonTurboDays` (статическое свойство)
+  - Ожидаемый результат: `selectedExecutionType == .cycles`
+- Тест: `updateData()` должен использовать значение из `workoutData.exerciseExecutionType`, если оно установлено
+  - Проверка, что при установленном `workoutData.exerciseExecutionType` используется это значение, а не дефолтный тип
+
+**Шаг 3: Реализовать исправление в `DayActivity.workoutData`**
+- Заменить fallback на `.cycles` на использование `WorkoutProgramCreator.defaultExecutionType(for: day)`
+- Запустить тесты из Шага 1 - они должны пройти
+
+**Шаг 4: Реализовать исправление в часах `WorkoutPreviewViewModel.updateData()`**
+- Добавить проверку: если `workoutData.exerciseExecutionType == nil`, использовать `WorkoutProgramCreator.defaultExecutionType(for: dayNumber)`
+- Запустить тесты из Шага 2 - они должны пройти
+
+**Шаг 5: Запустить все тесты и форматирование**
+- Запустить `make format`
+- Запустить `make test` для основного приложения
+- Запустить `make test_watch` для часов
+- Убедиться, что все тесты проходят
+
+**Приоритет:** ВЫСОКИЙ - проблема влияет на корректность отображения и работы тренировок для дней 92-98 на часах
+
+**Статус:** ⚠️ Требуется исправление
+
+**Воспроизводимость:** Всегда для дней 92-98 на часах
+
+**Связанные файлы:**
+- `SwiftUI-SotkaApp/Models/Workout/DayActivity.swift` - метод `workoutData` (строка 258-273)
+- `SotkaWatch Watch App/ViewModels/WorkoutPreviewViewModel.swift` - метод `updateData()` (строка 142-164)
+- `SwiftUI-SotkaApp/Services/WorkoutProgramCreator.swift` - метод `defaultExecutionType(for:)` (строка 280-284)
+
 ## Технические детали
 
 ### Модели данных
