@@ -127,32 +127,16 @@ final class WorkoutViewModel {
             let setsPerExercise = isTurboWithSets ? 1 : (plannedCount ?? 0)
 
             if setsPerExercise > 0 {
-                if isTurboWithSets {
-                    // Для турбо-дней с подходами: используем порядковый номер подхода турбо-дня (1, 2, 3...)
-                    var globalSetNumber = 1
-                    for _ in trainings {
-                        for _ in 1 ... setsPerExercise {
-                            stepStates.append(
-                                WorkoutStepState(
-                                    step: .exercise(.sets, number: globalSetNumber),
-                                    state: .inactive
-                                )
+                var setNumber = 1
+                for _ in trainings {
+                    for _ in 1 ... setsPerExercise {
+                        stepStates.append(
+                            WorkoutStepState(
+                                step: .exercise(.sets, number: setNumber),
+                                state: .inactive
                             )
-                            globalSetNumber += 1
-                        }
-                    }
-                } else {
-                    var setNumber = 1
-                    for _ in trainings {
-                        for _ in 1 ... setsPerExercise {
-                            stepStates.append(
-                                WorkoutStepState(
-                                    step: .exercise(.sets, number: setNumber),
-                                    state: .inactive
-                                )
-                            )
-                            setNumber += 1
-                        }
+                        )
+                        setNumber += 1
                     }
                 }
             }
