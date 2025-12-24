@@ -179,11 +179,11 @@ struct WorkoutViewModelStepManagementTests {
         let cycleSteps = viewModel.getCycleSteps()
         #expect(cycleSteps.count == 4)
 
-        for stepState in cycleSteps {
+        let expectedNumbers = [1, 2, 3, 4]
+        for (index, stepState) in cycleSteps.enumerated() {
             if case let .exercise(executionType, number) = stepState.step {
                 #expect(executionType == .cycles)
-                #expect(number >= 1)
-                #expect(number <= 4)
+                #expect(number == expectedNumbers[index])
             } else {
                 Issue.record("Ожидался этап с типом .exercise(.cycles, number: ...)")
             }
@@ -214,11 +214,11 @@ struct WorkoutViewModelStepManagementTests {
         let firstExerciseSteps = viewModel.getExerciseSteps(for: firstTrainingId)
         #expect(firstExerciseSteps.count == 6)
 
-        for stepState in firstExerciseSteps {
+        let expectedNumbers = [1, 2, 3, 4, 5, 6]
+        for (index, stepState) in firstExerciseSteps.enumerated() {
             if case let .exercise(executionType, number) = stepState.step {
                 #expect(executionType == .sets)
-                #expect(number >= 1)
-                #expect(number <= 6)
+                #expect(number == expectedNumbers[index])
             } else {
                 Issue.record("Ожидался этап с типом .exercise(.sets, number: ...)")
             }

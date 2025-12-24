@@ -89,11 +89,11 @@ extension WorkoutScreenViewModelTests {
             let cycleSteps = viewModel.getCycleSteps()
             #expect(cycleSteps.count == 4)
 
-            for stepState in cycleSteps {
+            let expectedNumbers = [1, 2, 3, 4]
+            for (index, stepState) in cycleSteps.enumerated() {
                 if case let .exercise(executionType, number) = stepState.step {
                     #expect(executionType == .cycles)
-                    #expect(number >= 1)
-                    #expect(number <= 4)
+                    #expect(number == expectedNumbers[index])
                 } else {
                     Issue.record("Ожидался этап с типом .exercise(.cycles, number: ...)")
                 }
@@ -111,11 +111,10 @@ extension WorkoutScreenViewModelTests {
             let turboDaySteps = viewModel.getCycleSteps()
             #expect(turboDaySteps.count == 40)
 
-            for stepState in turboDaySteps {
+            for (index, stepState) in turboDaySteps.enumerated() {
                 if case let .exercise(executionType, number) = stepState.step {
                     #expect(executionType == .cycles)
-                    #expect(number >= 1)
-                    #expect(number <= 40)
+                    #expect(number == index + 1)
                 } else {
                     Issue.record("Ожидался этап с типом .exercise(.cycles, number: ...)")
                 }
@@ -145,11 +144,10 @@ extension WorkoutScreenViewModelTests {
             let firstExerciseSteps = viewModel.getExerciseSteps(for: firstTrainingId)
             #expect(firstExerciseSteps.count == 6)
 
-            for stepState in firstExerciseSteps {
+            for (index, stepState) in firstExerciseSteps.enumerated() {
                 if case let .exercise(executionType, number) = stepState.step {
                     #expect(executionType == .sets)
-                    #expect(number >= 1)
-                    #expect(number <= 6)
+                    #expect(number == index + 1)
                 } else {
                     Issue.record("Ожидался этап с типом .exercise(.sets, number: ...)")
                 }
@@ -159,11 +157,10 @@ extension WorkoutScreenViewModelTests {
             let secondExerciseSteps = viewModel.getExerciseSteps(for: secondTrainingId)
             #expect(secondExerciseSteps.count == 6)
 
-            for stepState in secondExerciseSteps {
+            for (index, stepState) in secondExerciseSteps.enumerated() {
                 if case let .exercise(executionType, number) = stepState.step {
                     #expect(executionType == .sets)
-                    #expect(number >= 1)
-                    #expect(number <= 6)
+                    #expect(number == index + 1)
                 } else {
                     Issue.record("Ожидался этап с типом .exercise(.sets, number: ...)")
                 }
@@ -179,7 +176,7 @@ extension WorkoutScreenViewModelTests {
             let plannedCount = try #require(viewModel.plannedCount)
             let firstStartIndex = 1 + firstIndex * plannedCount
             let secondStartIndex = 1 + secondIndex * plannedCount
-            #expect(secondStartIndex - firstStartIndex >= plannedCount)
+            #expect(secondStartIndex - firstStartIndex == plannedCount)
 
             viewModel.setupWorkoutData(
                 dayNumber: 1,

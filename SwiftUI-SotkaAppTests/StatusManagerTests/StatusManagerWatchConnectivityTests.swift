@@ -13,7 +13,8 @@ struct StatusManagerWatchConnectivityTests {
         let message = WatchStatusMessage(
             isAuthorized: true,
             currentDay: 42,
-            currentActivity: .workout
+            currentActivity: .workout,
+            restTime: nil
         )
 
         let result = message.message
@@ -33,7 +34,8 @@ struct StatusManagerWatchConnectivityTests {
         let message = WatchStatusMessage(
             isAuthorized: true,
             currentDay: 42,
-            currentActivity: .workout
+            currentActivity: .workout,
+            restTime: nil
         )
         let applicationContext = message.applicationContext
 
@@ -51,7 +53,8 @@ struct StatusManagerWatchConnectivityTests {
         let message = WatchStatusMessage(
             isAuthorized: true,
             currentDay: 42,
-            currentActivity: nil
+            currentActivity: nil,
+            restTime: nil
         )
         let applicationContext = message.applicationContext
 
@@ -68,7 +71,8 @@ struct StatusManagerWatchConnectivityTests {
         let message = WatchStatusMessage(
             isAuthorized: false,
             currentDay: nil,
-            currentActivity: nil
+            currentActivity: nil,
+            restTime: nil
         )
         let applicationContext = message.applicationContext
 
@@ -84,7 +88,8 @@ struct StatusManagerWatchConnectivityTests {
         let message = WatchStatusMessage(
             isAuthorized: true,
             currentDay: 42,
-            currentActivity: nil
+            currentActivity: nil,
+            restTime: nil
         )
 
         let result = message.message
@@ -103,7 +108,8 @@ struct StatusManagerWatchConnectivityTests {
         let message = WatchStatusMessage(
             isAuthorized: false,
             currentDay: nil,
-            currentActivity: nil
+            currentActivity: nil,
+            restTime: nil
         )
 
         let result = message.message
@@ -909,7 +915,7 @@ struct StatusManagerWatchConnectivityTests {
     @Test("Должен читать restTime из UserDefaults при создании WatchStatusMessage")
     func shouldReadRestTimeFromUserDefaults() throws {
         let mockSession = MockWCSession(isReachable: true)
-        let userDefaults = MockUserDefaults.create()
+        let userDefaults = try MockUserDefaults.create()
         userDefaults.set(90, forKey: Constants.restTimeKey)
         let statusManager = try MockStatusManager.create(
             daysClient: MockDaysClient(),
@@ -928,7 +934,7 @@ struct StatusManagerWatchConnectivityTests {
     @Test("Должен использовать дефолтное значение restTime если в UserDefaults значение равно 0")
     func shouldUseDefaultRestTimeWhenUserDefaultsIsZero() throws {
         let mockSession = MockWCSession(isReachable: true)
-        let userDefaults = MockUserDefaults.create()
+        let userDefaults = try MockUserDefaults.create()
         userDefaults.set(0, forKey: Constants.restTimeKey)
         let statusManager = try MockStatusManager.create(
             daysClient: MockDaysClient(),
@@ -947,7 +953,7 @@ struct StatusManagerWatchConnectivityTests {
     @Test("Должен использовать сохраненное значение restTime из UserDefaults")
     func shouldUseSavedRestTimeFromUserDefaults() throws {
         let mockSession = MockWCSession(isReachable: true)
-        let userDefaults = MockUserDefaults.create()
+        let userDefaults = try MockUserDefaults.create()
         userDefaults.set(120, forKey: Constants.restTimeKey)
         let statusManager = try MockStatusManager.create(
             daysClient: MockDaysClient(),
@@ -966,7 +972,7 @@ struct StatusManagerWatchConnectivityTests {
     @Test("Должен передавать restTime в updateApplicationContextOnWatch")
     func shouldPassRestTimeToUpdateApplicationContextOnWatch() throws {
         let mockSession = MockWCSession(isReachable: false)
-        let userDefaults = MockUserDefaults.create()
+        let userDefaults = try MockUserDefaults.create()
         userDefaults.set(90, forKey: Constants.restTimeKey)
         let statusManager = try MockStatusManager.create(
             daysClient: MockDaysClient(),
@@ -985,7 +991,7 @@ struct StatusManagerWatchConnectivityTests {
     @Test("Должен передавать restTime в sendMessageToWatch через WatchStatusMessage")
     func shouldPassRestTimeToSendMessageToWatch() throws {
         let mockSession = MockWCSession(isReachable: true)
-        let userDefaults = MockUserDefaults.create()
+        let userDefaults = try MockUserDefaults.create()
         userDefaults.set(90, forKey: Constants.restTimeKey)
         let statusManager = try MockStatusManager.create(
             daysClient: MockDaysClient(),
