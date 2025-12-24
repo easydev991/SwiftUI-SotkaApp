@@ -818,6 +818,17 @@ final class StatusManager: NSObject {
         logger.info("Установка дня \(day) для дебага. Новая дата старта: \(newStartDate.description)")
         startDate = newStartDate
         currentDayCalculator = .init(newStartDate, now)
+
+        // Отправляем обновленный статус на часы
+        let updatedCurrentDay = currentDayCalculator?.currentDay
+        let updatedCurrentActivity = updatedCurrentDay.map {
+            dailyActivitiesService.getActivityType(day: $0, context: modelContainer.mainContext)
+        } ?? nil
+        sendCurrentStatus(
+            isAuthorized: true,
+            currentDay: updatedCurrentDay,
+            currentActivity: updatedCurrentActivity
+        )
     }
     #endif
 }
