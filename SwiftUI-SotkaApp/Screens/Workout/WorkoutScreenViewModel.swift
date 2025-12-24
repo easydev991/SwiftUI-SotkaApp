@@ -256,7 +256,13 @@ final class WorkoutScreenViewModel {
         }
 
         let count = if interrupt {
-            exerciseSteps.count(where: { $0.state == .completed })
+            // Для прерванных тренировок с подходами возвращаем plannedCount
+            // Для прерванных тренировок с кругами возвращаем количество завершенных этапов
+            if getEffectiveExecutionType() == .sets {
+                plannedCount ?? 0
+            } else {
+                exerciseSteps.count(where: { $0.state == .completed })
+            }
         } else {
             exerciseSteps.count
         }
