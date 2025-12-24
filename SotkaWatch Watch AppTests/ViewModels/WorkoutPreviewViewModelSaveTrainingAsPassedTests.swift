@@ -329,7 +329,7 @@ extension WorkoutPreviewViewModelTests {
             await viewModel.saveTrainingAsPassed()
 
             let sentResult = try #require(connectivityService.sentWorkoutResult)
-            let sentTrainings = try #require(sentResult.trainings)
+            let sentTrainings = sentResult.trainings
             #expect(sentTrainings.count == 2)
             #expect(sentTrainings[0].count == 5)
             #expect(sentTrainings[0].typeId == ExerciseType.pullups.rawValue)

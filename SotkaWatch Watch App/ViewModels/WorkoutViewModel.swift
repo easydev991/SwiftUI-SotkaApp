@@ -64,6 +64,11 @@ final class WorkoutViewModel {
         WorkoutProgramCreator.getEffectiveExecutionType(for: dayNumber, executionType: executionType)
     }
 
+    /// Определяет, является ли текущая тренировка турбо-днем с подходами
+    var isTurboWithSets: Bool {
+        WorkoutProgramCreator.isTurboWithSets(day: dayNumber, executionType: executionType)
+    }
+
     /// Настройка данных тренировки
     /// - Parameters:
     ///   - dayNumber: Номер дня программы
@@ -123,7 +128,6 @@ final class WorkoutViewModel {
         case .sets:
             stepStates.append(WorkoutStepState(step: .warmUp, state: .inactive))
 
-            let isTurboWithSets = WorkoutProgramCreator.isTurboWithSets(day: dayNumber, executionType: executionType)
             let setsPerExercise = isTurboWithSets ? 1 : (plannedCount ?? 0)
 
             if setsPerExercise > 0 {
@@ -356,7 +360,6 @@ final class WorkoutViewModel {
             return []
         }
 
-        let isTurboWithSets = WorkoutProgramCreator.isTurboWithSets(day: dayNumber, executionType: executionType)
         let setsPerExercise = isTurboWithSets ? 1 : (plannedCount ?? 0)
 
         guard setsPerExercise > 0 else {
@@ -388,8 +391,6 @@ final class WorkoutViewModel {
             return nil
         }
 
-        let isTurboWithSets = WorkoutProgramCreator.isTurboWithSets(day: dayNumber, executionType: executionType)
-
         if isTurboWithSets {
             // Для турбо-дней с подходами: по одному подходу на упражнение
             let exerciseIndex = globalSetNumber - 1
@@ -412,14 +413,12 @@ final class WorkoutViewModel {
         switch currentStep {
         case .warmUp:
             return ""
-        case let .exercise(executionType, globalNumber):
+        case let .exercise(_, globalNumber):
             let effectiveType = getEffectiveExecutionType()
             if effectiveType == .cycles {
                 let totalCount = plannedCount ?? 0
                 return String(localized: .workoutViewCycle(globalNumber, totalCount))
             } else {
-                let isTurboWithSets = WorkoutProgramCreator.isTurboWithSets(day: dayNumber, executionType: executionType)
-
                 if isTurboWithSets {
                     // Для турбо-дней с подходами показываем порядковый номер подхода турбо-дня и общее количество подходов
                     let totalSets = trainings.count
