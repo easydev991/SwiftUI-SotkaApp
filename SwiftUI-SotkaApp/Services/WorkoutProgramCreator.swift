@@ -229,7 +229,7 @@ struct WorkoutProgramCreator {
             []
         }
     }
-    
+
     /// Определяет фактический тип выполнения упражнений
     /// - Parameters:
     ///   - day: Номер дня

@@ -289,20 +289,25 @@ final class StatusManager: NSObject {
     ///   - currentDay: Номер текущего дня (опционально)
     ///   - currentActivity: Текущая активность (опционально)
     func sendCurrentStatus(isAuthorized: Bool, currentDay: Int?, currentActivity: DayActivityType?) {
-        // Отправляем applicationContext всегда, даже если часы недоступны (работает когда приложение закрыто)
-        updateApplicationContextOnWatch(isAuthorized: isAuthorized, currentDay: currentDay, currentActivity: currentActivity)
-
-        guard let sessionProtocol, sessionProtocol.isReachable else {
-            logger.debug("Часы недоступны для отправки текущего статуса")
-            return
-        }
-
         // Проверяем, изменились ли данные по сравнению с последними отправленными
         let hasStatusChanged = hasStatusChanged(
             isAuthorized: isAuthorized,
             currentDay: currentDay,
             currentActivity: currentActivity
         )
+
+        // Отправляем applicationContext всегда, даже если часы недоступны (работает когда приложение закрыто)
+        // Но applicationContext отправляется при каждом вызове, так как он может обновляться даже при одинаковых данных
+        updateApplicationContextOnWatch(isAuthorized: isAuthorized, currentDay: currentDay, currentActivity: currentActivity)
+
+        guard let sessionProtocol, sessionProtocol.isReachable else {
+            logger.debug("Часы недоступны для отправки текущего статуса")
+            // Обновляем lastSentStatus даже если часы недоступны, чтобы applicationContext не дублировался
+            if hasStatusChanged {
+                lastSentStatus = (isAuthorized: isAuthorized, currentDay: currentDay, currentActivity: currentActivity)
+            }
+            return
+        }
 
         // Отправляем sendMessage только если данные изменились
         guard hasStatusChanged else {

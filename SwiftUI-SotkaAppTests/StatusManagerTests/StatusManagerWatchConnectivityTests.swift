@@ -182,22 +182,27 @@ struct StatusManagerWatchConnectivityTests {
             watchConnectivitySessionProtocol: mockSession
         )
 
+        // setCurrentDayForDebug вызывает sendCurrentStatus с currentActivity: nil (если активности нет)
+        // Это отправляет sendMessage (данные изменились)
         statusManager.setCurrentDayForDebug(10)
 
-        // Первый вызов - должен отправить sendMessage
+        // Первый вызов с currentActivity: .workout - данные изменились (nil -> .workout), поэтому sendMessage отправляется
         statusManager.sendCurrentStatus(isAuthorized: true, currentDay: 10, currentActivity: .workout)
 
-        // Второй вызов с теми же данными - sendMessage не должен отправляться
+        // Второй вызов с теми же данными - sendMessage не должен отправляться (данные не изменились)
         statusManager.sendCurrentStatus(isAuthorized: true, currentDay: 10, currentActivity: .workout)
 
-        // Проверяем, что sendMessage отправлен только один раз
+        // Проверяем, что sendMessage отправлен дважды:
+        // 1. От setCurrentDayForDebug (currentActivity: nil)
+        // 2. От первого sendCurrentStatus (currentActivity: nil -> .workout)
         let authStatusMessages = mockSession.sentMessages.filter { message in
             (message["command"] as? String) == Constants.WatchCommand.authStatus.rawValue
         }
-        #expect(authStatusMessages.count == 1)
+        #expect(authStatusMessages.count == 2)
 
-        // Проверяем, что applicationContext обновляется оба раза (это нормально)
-        #expect(mockSession.applicationContexts.count == 2)
+        // Проверяем, что applicationContext обновляется каждый раз (от setCurrentDayForDebug и от каждого sendCurrentStatus)
+        // setCurrentDayForDebug отправляет 1 раз, затем 2 вызова sendCurrentStatus отправляют еще 2 раза = 3 раза
+        #expect(mockSession.applicationContexts.count == 3)
     }
 
     @Test("Должен всегда отправлять applicationContext даже если часы недоступны")
@@ -209,13 +214,15 @@ struct StatusManagerWatchConnectivityTests {
             watchConnectivitySessionProtocol: mockSession
         )
 
+        // setCurrentDayForDebug вызывает sendCurrentStatus, что отправляет applicationContext
         statusManager.setCurrentDayForDebug(10)
 
-        // Вызываем sendCurrentStatus - applicationContext должен отправиться даже если часы недоступны
+        // Вызываем sendCurrentStatus еще раз - applicationContext должен отправиться даже если часы недоступны
+        // Но так как данные не изменились, applicationContext все равно отправляется (это нормально для applicationContext)
         statusManager.sendCurrentStatus(isAuthorized: true, currentDay: 10, currentActivity: .workout)
 
-        // Проверяем, что applicationContext отправлен
-        #expect(mockSession.applicationContexts.count == 1)
+        // Проверяем, что applicationContext отправлен (2 раза: от setCurrentDayForDebug и от sendCurrentStatus)
+        #expect(mockSession.applicationContexts.count == 2)
         // Проверяем, что sendMessage не отправлен (часы недоступны)
         #expect(mockSession.sentMessages.isEmpty)
     }
@@ -229,7 +236,9 @@ struct StatusManagerWatchConnectivityTests {
             watchConnectivitySessionProtocol: mockSessionUnreachable
         )
 
+        // setCurrentDayForDebug вызывает sendCurrentStatus, но sendMessage не отправляется если часы недоступны
         statusManagerUnreachable.setCurrentDayForDebug(10)
+        // Второй вызов с currentActivity: .workout - данные изменились, но sendMessage не отправляется (часы недоступны)
         statusManagerUnreachable.sendCurrentStatus(isAuthorized: true, currentDay: 10, currentActivity: .workout)
 
         // Проверяем, что sendMessage не отправлен когда часы недоступны
@@ -242,11 +251,15 @@ struct StatusManagerWatchConnectivityTests {
             watchConnectivitySessionProtocol: mockSessionReachable
         )
 
+        // setCurrentDayForDebug вызывает sendCurrentStatus с currentActivity: nil, что отправляет sendMessage
         statusManagerReachable.setCurrentDayForDebug(10)
+        // Второй вызов с currentActivity: .workout - данные изменились (nil -> .workout), поэтому sendMessage отправляется
         statusManagerReachable.sendCurrentStatus(isAuthorized: true, currentDay: 10, currentActivity: .workout)
 
-        // Проверяем, что sendMessage отправлен когда часы доступны
-        #expect(mockSessionReachable.sentMessages.count == 1)
+        // Проверяем, что sendMessage отправлен дважды:
+        // 1. От setCurrentDayForDebug (currentActivity: nil)
+        // 2. От sendCurrentStatus (currentActivity: nil -> .workout)
+        #expect(mockSessionReachable.sentMessages.count == 2)
     }
 
     @Test("Должен отправлять текущий статус при изменении currentDayCalculator")
