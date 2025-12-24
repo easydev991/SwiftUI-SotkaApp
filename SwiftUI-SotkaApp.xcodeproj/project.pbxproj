@@ -96,6 +96,7 @@
 			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
 			membershipExceptions = (
 				Extensions/CurrentDayEnvironmentKey.swift,
+				Extensions/RestTimeEnvironmentKey.swift,
 				Models/DayCalculator.swift,
 				Models/SWSharedModels/Constants.swift,
 				Models/SWSharedModels/RestTimeComponents.swift,

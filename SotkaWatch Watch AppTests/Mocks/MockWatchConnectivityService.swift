@@ -6,6 +6,7 @@ import Foundation
 final class MockWatchConnectivityService: WatchConnectivityServiceProtocol {
     var currentDay: Int?
     var currentActivity: DayActivityType?
+    var restTime: Int?
     var onCurrentActivityChanged: ((DayActivityType?) -> Void)?
     var onWorkoutDataReceived: ((WorkoutDataResponse) -> Void)?
     var shouldSucceed = true

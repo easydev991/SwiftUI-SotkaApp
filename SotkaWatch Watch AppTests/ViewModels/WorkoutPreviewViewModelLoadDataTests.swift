@@ -138,12 +138,7 @@ extension WorkoutPreviewViewModelTests {
                 await viewModel.loadData(day: 50)
             }
 
-            // Даем время на установку isLoading
-            try await Task.sleep(nanoseconds: 10_000_000) // 0.01 секунды
-
-            // isLoading должен быть true во время загрузки
-            // Но так как загрузка быстрая, мы можем не успеть поймать момент
-            // Поэтому просто проверяем, что после загрузки isLoading = false
+            try await Task.sleep(nanoseconds: 10_000_000)
             await loadTask.value
 
             #expect(!viewModel.isLoading)
@@ -162,8 +157,7 @@ extension WorkoutPreviewViewModelTests {
 
             await viewModel.loadData(day: 50)
 
-            // TrainingError используется только для валидации, не для сетевых ошибок
-            #expect(viewModel.error == nil)
+            #expect(viewModel.error == nil, "TrainingError используется только для валидации, не для сетевых ошибок")
             #expect(!viewModel.isLoading)
         }
 
@@ -216,6 +210,84 @@ extension WorkoutPreviewViewModelTests {
             #expect(viewModel.availableExecutionTypes.contains(.cycles))
             #expect(viewModel.availableExecutionTypes.contains(.sets))
             #expect(viewModel.availableExecutionTypes.contains(.turbo))
+        }
+
+        @Test("Должен использовать restTime из connectivityService.restTime если оно доступно")
+        @MainActor
+        func shouldUseRestTimeFromConnectivityService() async throws {
+            let connectivityService = MockWatchConnectivityService()
+            connectivityService.restTime = 90
+            let viewModel = WorkoutPreviewViewModel(
+                connectivityService: connectivityService
+            )
+
+            let workoutData = WorkoutData(
+                day: 50,
+                executionType: ExerciseExecutionType.cycles.rawValue,
+                trainings: [
+                    WorkoutPreviewTraining(count: 5, typeId: ExerciseType.pullups.rawValue, sortOrder: 0)
+                ],
+                plannedCount: 4
+            )
+            connectivityService.mockWorkoutData = workoutData
+            connectivityService.mockWorkoutExecutionCount = nil
+            connectivityService.mockWorkoutComment = nil
+
+            await viewModel.loadData(day: 50)
+
+            #expect(viewModel.restTime == 90)
+        }
+
+        @Test("Должен использовать дефолтное значение restTime если connectivityService.restTime == nil")
+        @MainActor
+        func shouldUseDefaultRestTimeWhenConnectivityServiceRestTimeIsNil() async throws {
+            let connectivityService = MockWatchConnectivityService()
+            connectivityService.restTime = nil
+            let viewModel = WorkoutPreviewViewModel(
+                connectivityService: connectivityService
+            )
+
+            let workoutData = WorkoutData(
+                day: 50,
+                executionType: ExerciseExecutionType.cycles.rawValue,
+                trainings: [
+                    WorkoutPreviewTraining(count: 5, typeId: ExerciseType.pullups.rawValue, sortOrder: 0)
+                ],
+                plannedCount: 4
+            )
+            connectivityService.mockWorkoutData = workoutData
+            connectivityService.mockWorkoutExecutionCount = nil
+            connectivityService.mockWorkoutComment = nil
+
+            await viewModel.loadData(day: 50)
+
+            #expect(viewModel.restTime == Constants.defaultRestTime)
+        }
+
+        @Test("Должен передавать restTime в метод updateData при загрузке данных")
+        @MainActor
+        func shouldPassRestTimeToUpdateDataMethod() async throws {
+            let connectivityService = MockWatchConnectivityService()
+            connectivityService.restTime = 120
+            let viewModel = WorkoutPreviewViewModel(
+                connectivityService: connectivityService
+            )
+
+            let workoutData = WorkoutData(
+                day: 50,
+                executionType: ExerciseExecutionType.cycles.rawValue,
+                trainings: [
+                    WorkoutPreviewTraining(count: 5, typeId: ExerciseType.pullups.rawValue, sortOrder: 0)
+                ],
+                plannedCount: 4
+            )
+            connectivityService.mockWorkoutData = workoutData
+            connectivityService.mockWorkoutExecutionCount = nil
+            connectivityService.mockWorkoutComment = nil
+
+            await viewModel.loadData(day: 50)
+
+            #expect(viewModel.restTime == 120)
         }
     }
 }

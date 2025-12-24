@@ -5,6 +5,7 @@ import Foundation
 protocol WatchConnectivityServiceProtocol {
     var currentDay: Int? { get }
     var currentActivity: DayActivityType? { get }
+    var restTime: Int? { get }
     var onCurrentActivityChanged: ((DayActivityType?) -> Void)? { get set }
     var onWorkoutDataReceived: ((WorkoutDataResponse) -> Void)? { get set }
     func sendActivityType(day: Int, activityType: DayActivityType) async throws

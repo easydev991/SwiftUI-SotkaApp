@@ -116,6 +116,54 @@ struct StatusManagerWatchConnectivityTests {
         #expect(result["currentActivity"] == nil)
     }
 
+    // MARK: - Тесты для restTime в WatchStatusMessage
+
+    @Test("Должен включать restTime в message словарь")
+    func shouldIncludeRestTimeInMessage() throws {
+        let message = WatchStatusMessage(
+            isAuthorized: true,
+            currentDay: 42,
+            currentActivity: .workout,
+            restTime: 90
+        )
+
+        let result = message.message
+
+        let restTime = try #require(result["restTime"] as? Int)
+        #expect(restTime == 90)
+    }
+
+    @Test("Должен включать restTime в applicationContext словарь")
+    func shouldIncludeRestTimeInApplicationContext() throws {
+        let message = WatchStatusMessage(
+            isAuthorized: true,
+            currentDay: 42,
+            currentActivity: .workout,
+            restTime: 90
+        )
+
+        let applicationContext = message.applicationContext
+
+        let restTime = try #require(applicationContext["restTime"] as? Int)
+        #expect(restTime == 90)
+    }
+
+    @Test("Не должен включать restTime в словарь если restTime == nil")
+    func shouldNotIncludeRestTimeWhenNil() throws {
+        let message = WatchStatusMessage(
+            isAuthorized: true,
+            currentDay: 42,
+            currentActivity: .workout,
+            restTime: nil
+        )
+
+        let result = message.message
+        let applicationContext = message.applicationContext
+
+        #expect(result["restTime"] == nil)
+        #expect(applicationContext["restTime"] == nil)
+    }
+
     // MARK: - Тесты методов отправки данных
 
     @Test("Должен отправлять текущий статус в начале getStatus")
@@ -854,5 +902,104 @@ struct StatusManagerWatchConnectivityTests {
         #expect(isAuthorized)
         let currentDay = try #require(applicationContext["currentDay"] as? Int)
         #expect(currentDay > 0)
+    }
+
+    // MARK: - Тесты для restTime в StatusManager
+
+    @Test("Должен читать restTime из UserDefaults при создании WatchStatusMessage")
+    func shouldReadRestTimeFromUserDefaults() throws {
+        let mockSession = MockWCSession(isReachable: true)
+        let userDefaults = MockUserDefaults.create()
+        userDefaults.set(90, forKey: Constants.restTimeKey)
+        let statusManager = try MockStatusManager.create(
+            daysClient: MockDaysClient(),
+            userDefaults: userDefaults,
+            watchConnectivitySessionProtocol: mockSession
+        )
+
+        statusManager.setCurrentDayForDebug(10)
+        statusManager.sendCurrentStatus(isAuthorized: true, currentDay: 10, currentActivity: nil)
+
+        let sentMessage = try #require(mockSession.sentMessages.first)
+        let restTime = try #require(sentMessage["restTime"] as? Int)
+        #expect(restTime == 90)
+    }
+
+    @Test("Должен использовать дефолтное значение restTime если в UserDefaults значение равно 0")
+    func shouldUseDefaultRestTimeWhenUserDefaultsIsZero() throws {
+        let mockSession = MockWCSession(isReachable: true)
+        let userDefaults = MockUserDefaults.create()
+        userDefaults.set(0, forKey: Constants.restTimeKey)
+        let statusManager = try MockStatusManager.create(
+            daysClient: MockDaysClient(),
+            userDefaults: userDefaults,
+            watchConnectivitySessionProtocol: mockSession
+        )
+
+        statusManager.setCurrentDayForDebug(10)
+        statusManager.sendCurrentStatus(isAuthorized: true, currentDay: 10, currentActivity: nil)
+
+        let sentMessage = try #require(mockSession.sentMessages.first)
+        let restTime = try #require(sentMessage["restTime"] as? Int)
+        #expect(restTime == Constants.defaultRestTime)
+    }
+
+    @Test("Должен использовать сохраненное значение restTime из UserDefaults")
+    func shouldUseSavedRestTimeFromUserDefaults() throws {
+        let mockSession = MockWCSession(isReachable: true)
+        let userDefaults = MockUserDefaults.create()
+        userDefaults.set(120, forKey: Constants.restTimeKey)
+        let statusManager = try MockStatusManager.create(
+            daysClient: MockDaysClient(),
+            userDefaults: userDefaults,
+            watchConnectivitySessionProtocol: mockSession
+        )
+
+        statusManager.setCurrentDayForDebug(10)
+        statusManager.sendCurrentStatus(isAuthorized: true, currentDay: 10, currentActivity: nil)
+
+        let sentMessage = try #require(mockSession.sentMessages.first)
+        let restTime = try #require(sentMessage["restTime"] as? Int)
+        #expect(restTime == 120)
+    }
+
+    @Test("Должен передавать restTime в updateApplicationContextOnWatch")
+    func shouldPassRestTimeToUpdateApplicationContextOnWatch() throws {
+        let mockSession = MockWCSession(isReachable: false)
+        let userDefaults = MockUserDefaults.create()
+        userDefaults.set(90, forKey: Constants.restTimeKey)
+        let statusManager = try MockStatusManager.create(
+            daysClient: MockDaysClient(),
+            userDefaults: userDefaults,
+            watchConnectivitySessionProtocol: mockSession
+        )
+
+        statusManager.setCurrentDayForDebug(10)
+        statusManager.sendCurrentStatus(isAuthorized: true, currentDay: 10, currentActivity: nil)
+
+        let applicationContext = try #require(mockSession.applicationContexts.first)
+        let restTime = try #require(applicationContext["restTime"] as? Int)
+        #expect(restTime == 90)
+    }
+
+    @Test("Должен передавать restTime в sendMessageToWatch через WatchStatusMessage")
+    func shouldPassRestTimeToSendMessageToWatch() throws {
+        let mockSession = MockWCSession(isReachable: true)
+        let userDefaults = MockUserDefaults.create()
+        userDefaults.set(90, forKey: Constants.restTimeKey)
+        let statusManager = try MockStatusManager.create(
+            daysClient: MockDaysClient(),
+            userDefaults: userDefaults,
+            watchConnectivitySessionProtocol: mockSession
+        )
+
+        statusManager.setCurrentDayForDebug(10)
+        statusManager.sendCurrentStatus(isAuthorized: true, currentDay: 10, currentActivity: nil)
+
+        let sentMessage = try #require(mockSession.sentMessages.first)
+        let restTime = try #require(sentMessage["restTime"] as? Int)
+        #expect(restTime == 90)
+        let command = try #require(sentMessage["command"] as? String)
+        #expect(command == Constants.WatchCommand.authStatus.rawValue)
     }
 }

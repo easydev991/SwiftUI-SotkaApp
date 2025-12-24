@@ -8,6 +8,8 @@ struct WatchStatusMessage {
     let currentDay: Int?
     /// Текущая активность (опционально)
     let currentActivity: DayActivityType?
+    /// Время отдыха между подходами/кругами в секундах (опционально)
+    let restTime: Int?
 
     /// Преобразует данные в словарь для отправки через WatchConnectivity
     /// - Returns: Словарь с данными для отправки на часы
@@ -23,6 +25,10 @@ struct WatchStatusMessage {
 
         if let currentActivity {
             result["currentActivity"] = currentActivity.rawValue
+        }
+
+        if let restTime {
+            result["restTime"] = restTime
         }
 
         return result
@@ -41,6 +47,10 @@ struct WatchStatusMessage {
 
         if let currentActivity {
             context["currentActivity"] = currentActivity.rawValue
+        }
+
+        if let restTime {
+            context["restTime"] = restTime
         }
 
         return context

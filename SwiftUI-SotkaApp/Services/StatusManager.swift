@@ -318,7 +318,8 @@ final class StatusManager: NSObject {
         let model = WatchStatusMessage(
             isAuthorized: isAuthorized,
             currentDay: currentDay,
-            currentActivity: currentActivity
+            currentActivity: currentActivity,
+            restTime: restTimeFromUserDefaults
         )
 
         sessionProtocol.sendMessageToWatch(
@@ -409,6 +410,13 @@ final class StatusManager: NSObject {
         lastSentStatus = (isAuthorized: isAuthorized, currentDay: currentDay, currentActivity: currentActivity)
     }
 
+    /// Читает restTime из UserDefaults
+    /// - Returns: Время отдыха в секундах (дефолтное значение, если не установлено)
+    private var restTimeFromUserDefaults: Int {
+        let storedValue = defaults.integer(forKey: Constants.restTimeKey)
+        return storedValue == 0 ? Constants.defaultRestTime : storedValue
+    }
+
     /// Обновляет applicationContext для часов (работает даже когда приложение закрыто)
     /// - Parameters:
     ///   - isAuthorized: Статус авторизации
@@ -422,14 +430,16 @@ final class StatusManager: NSObject {
         let statusMessage = WatchStatusMessage(
             isAuthorized: isAuthorized,
             currentDay: currentDay,
-            currentActivity: currentActivity
+            currentActivity: currentActivity,
+            restTime: restTimeFromUserDefaults
         )
         let applicationContext = statusMessage.applicationContext
 
         sessionProtocol.updateApplicationContextOnWatch(applicationContext)
+        let restTimeForLogs = restTimeFromUserDefaults
         logger
             .debug(
-                "ApplicationContext обновлен для часов: isAuthorized=\(isAuthorized), currentDay=\(currentDay?.description ?? "nil"), currentActivity=\(currentActivity?.rawValue.description ?? "nil")"
+                "ApplicationContext обновлен для часов: isAuthorized=\(isAuthorized), currentDay=\(currentDay?.description ?? "nil"), currentActivity=\(currentActivity?.rawValue.description ?? "nil"), restTime=\(restTimeForLogs)"
             )
     }
 
@@ -448,7 +458,8 @@ final class StatusManager: NSObject {
         let model = WatchStatusMessage(
             isAuthorized: true,
             currentDay: day,
-            currentActivity: activityType
+            currentActivity: activityType,
+            restTime: restTimeFromUserDefaults
         )
         sessionProtocol.sendMessageToWatch(
             model.message,

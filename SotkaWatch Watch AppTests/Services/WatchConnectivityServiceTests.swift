@@ -725,4 +725,85 @@ struct WatchConnectivityServiceTests {
 
         #expect(!callbackCalled)
     }
+
+    // MARK: - Тесты для restTime в WatchConnectivityService
+
+    @Test("Должен извлекать restTime из applicationContext и сохранять в свойство")
+    func shouldExtractRestTimeFromApplicationContext() throws {
+        let authService = WatchAuthService()
+        let service = WatchConnectivityService(authService: authService)
+
+        #expect(service.restTime == nil)
+
+        let applicationContext: [String: Any] = [
+            "isAuthorized": true,
+            "currentDay": 42,
+            "restTime": 90
+        ]
+
+        service.testHandleApplicationContext(applicationContext)
+
+        let restTime = try #require(service.restTime)
+        #expect(restTime == 90)
+    }
+
+    @Test("Должен извлекать restTime из команды PHONE_COMMAND_AUTH_STATUS и сохранять в свойство")
+    func shouldExtractRestTimeFromAuthStatusCommand() throws {
+        let authService = WatchAuthService()
+        let service = WatchConnectivityService(authService: authService)
+
+        #expect(service.restTime == nil)
+
+        let message: [String: Any] = [
+            "command": Constants.WatchCommand.authStatus.rawValue,
+            "isAuthorized": true,
+            "currentDay": 42,
+            "restTime": 90
+        ]
+
+        service.testHandleReceivedMessage(message)
+
+        let restTime = try #require(service.restTime)
+        #expect(restTime == 90)
+    }
+
+    @Test("Должен использовать дефолтное значение restTime если restTime отсутствует в сообщении")
+    func shouldUseDefaultRestTimeWhenMissing() throws {
+        let authService = WatchAuthService()
+        let service = WatchConnectivityService(authService: authService)
+
+        #expect(service.restTime == nil)
+
+        let applicationContext: [String: Any] = [
+            "isAuthorized": true,
+            "currentDay": 42
+        ]
+
+        service.testHandleApplicationContext(applicationContext)
+
+        // restTime должен остаться nil, если не передан в сообщении
+        #expect(service.restTime == nil)
+    }
+
+    @Test("Должен делать restTime доступным через протокол WatchConnectivityServiceProtocol")
+    func shouldMakeRestTimeAvailableThroughProtocol() throws {
+        let authService = WatchAuthService()
+        let service: any WatchConnectivityServiceProtocol = WatchConnectivityService(authService: authService)
+
+        #expect(service.restTime == nil)
+
+        let applicationContext: [String: Any] = [
+            "isAuthorized": true,
+            "currentDay": 42,
+            "restTime": 90
+        ]
+
+        // Используем тестовый метод через приведение типа
+        if let watchService = service as? WatchConnectivityService {
+            watchService.testHandleApplicationContext(applicationContext)
+        }
+
+        let restTime = try #require(service.restTime)
+        #expect(restTime == 90)
+    }
 }

@@ -125,8 +125,9 @@ final class WorkoutPreviewViewModel {
 
         do {
             let response = try await connectivityService.requestWorkoutData(day: day)
-            updateData(workoutDataResponse: response, restTime: Constants.defaultRestTime)
-            logger.info("Данные тренировки для дня \(day) загружены успешно")
+            let restTime = connectivityService.restTime ?? Constants.defaultRestTime
+            updateData(workoutDataResponse: response, restTime: restTime)
+            logger.info("Данные тренировки для дня \(day) загружены успешно, restTime=\(restTime)")
         } catch {
             logger.error("Ошибка загрузки данных тренировки для дня \(day): \(error.localizedDescription)")
             // Для сетевых ошибок не устанавливаем error, так как TrainingError только для валидации

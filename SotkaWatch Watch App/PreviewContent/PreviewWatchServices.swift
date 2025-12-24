@@ -25,10 +25,12 @@ final class PreviewWatchConnectivityService: WatchConnectivityServiceProtocol {
     var onWorkoutDataReceived: ((WorkoutDataResponse) -> Void)?
     var currentDay: Int?
     var currentActivity: DayActivityType?
+    var restTime: Int?
 
-    init(currentDay: Int? = 5, currentActivity: DayActivityType? = .workout) {
+    init(currentDay: Int? = 5, currentActivity: DayActivityType? = .workout, restTime: Int? = nil) {
         self.currentDay = currentDay
         self.currentActivity = currentActivity
+        self.restTime = restTime
     }
 
     func sendActivityType(day _: Int, activityType _: DayActivityType) async throws {

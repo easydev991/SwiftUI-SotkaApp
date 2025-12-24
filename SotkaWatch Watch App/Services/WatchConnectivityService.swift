@@ -37,6 +37,9 @@ final class WatchConnectivityService: NSObject {
         }
     }
 
+    /// Время отдыха между подходами/кругами в секундах (обновляется при получении сообщений от iPhone)
+    private(set) var restTime: Int?
+
     /// Callback для уведомления об изменении currentActivity
     /// - Parameter activity: Новая активность или `nil` если активность удалена
     var onCurrentActivityChanged: ((DayActivityType?) -> Void)?
@@ -352,6 +355,7 @@ private extension WatchConnectivityService {
                 let currentDay = message["currentDay"] as? Int
                 let currentActivityRaw = message["currentActivity"] as? Int
                 let currentActivity = currentActivityRaw.flatMap { DayActivityType(rawValue: $0) }
+                let restTime = message["restTime"] as? Int
 
                 // Дедупликация только для isAuthorized - проверяем, изменился ли статус авторизации
                 let shouldUpdateAuth = lastProcessedStatus?.isAuthorized != isAuthorized
@@ -374,6 +378,12 @@ private extension WatchConnectivityService {
                 if let currentActivity {
                     logger.info("Обновление currentActivity из PHONE_COMMAND_AUTH_STATUS: \(currentActivity.rawValue)")
                     self.currentActivity = currentActivity
+                }
+
+                // Обновляем restTime, если он присутствует в сообщении
+                if let restTime {
+                    logger.info("Обновление restTime из PHONE_COMMAND_AUTH_STATUS: \(restTime)")
+                    self.restTime = restTime
                 }
 
                 // Обновляем последние обработанные данные
@@ -427,6 +437,7 @@ private extension WatchConnectivityService {
         let currentDay = context["currentDay"] as? Int
         let currentActivityRaw = context["currentActivity"] as? Int
         let currentActivity = currentActivityRaw.flatMap { DayActivityType(rawValue: $0) }
+        let restTime = context["restTime"] as? Int
 
         // Если isAuthorized отсутствует, используем текущее значение
         let finalIsAuthorized = isAuthorized ?? authService.isAuthorized
@@ -457,6 +468,12 @@ private extension WatchConnectivityService {
             // Если currentActivity отсутствует в контексте, но есть currentDay, значит активность была удалена
             logger.info("Удаление currentActivity из Application Context (активность удалена)")
             self.currentActivity = nil
+        }
+
+        // Обновляем restTime, если он присутствует в контексте
+        if let restTime {
+            logger.info("Обновление restTime из Application Context: \(restTime)")
+            self.restTime = restTime
         }
 
         // Обновляем последние обработанные данные
