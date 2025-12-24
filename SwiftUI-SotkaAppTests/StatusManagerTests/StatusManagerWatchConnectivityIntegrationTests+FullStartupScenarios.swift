@@ -45,20 +45,19 @@ extension StatusManagerWatchConnectivityTests.IntegrationTests {
             context.insert(dayActivity)
             try context.save()
 
-            statusManager.setCurrentDayForDebug(42)
-
-            let initialApplicationContextCount = mockSession.applicationContexts.count
             let initialSentMessagesCount = mockSession.sentMessages.count
+
+            statusManager.setCurrentDayForDebug(42)
+            // setCurrentDayForDebug вызывает sendCurrentStatus, что отправляет applicationContext и sendMessage
+            let applicationContextAfterSetDay = mockSession.applicationContexts.count
+            let sentMessagesAfterSetDay = mockSession.sentMessages.count
 
             await statusManager.simulateWCSessionActivation()
 
-            let applicationContextAfterActivation = try #require(mockSession.applicationContexts.last)
-            let isAuthorizedAfterActivation = try #require(applicationContextAfterActivation["isAuthorized"] as? Bool)
-            #expect(isAuthorizedAfterActivation)
-            #expect(applicationContextAfterActivation["currentDay"] == nil)
-            #expect(applicationContextAfterActivation["currentActivity"] == nil)
-            #expect(mockSession.applicationContexts.count == initialApplicationContextCount + 1)
-            #expect(mockSession.sentMessages.count == initialSentMessagesCount)
+            // Application Context НЕ отправляется при активации, если didLoadInitialData = false и пользователь авторизован
+            // Будет отправлен после завершения синхронизации с полными данными
+            #expect(mockSession.applicationContexts.count == applicationContextAfterSetDay)
+            #expect(mockSession.sentMessages.count == sentMessagesAfterSetDay)
 
             statusManager.setDidLoadInitialDataForDebug(true)
             statusManager.sendDayDataToWatch(currentDay: 42)
@@ -70,7 +69,8 @@ extension StatusManagerWatchConnectivityTests.IntegrationTests {
             #expect(isAuthorizedAfterLoad)
             #expect(currentDayAfterLoad == 42)
             #expect(currentActivityAfterLoad == DayActivityType.workout.rawValue)
-            #expect(mockSession.applicationContexts.count == initialApplicationContextCount + 2)
+            // applicationContext отправляется: 1) от setCurrentDayForDebug, 2) от sendDayDataToWatch
+            #expect(mockSession.applicationContexts.count == applicationContextAfterSetDay + 1)
 
             let sentMessage = try #require(mockSession.sentMessages.last)
             let command = try #require(sentMessage["command"] as? String)
@@ -163,12 +163,9 @@ extension StatusManagerWatchConnectivityTests.IntegrationTests {
 
             await statusManager.simulateWCSessionActivation()
 
-            let applicationContextAfterActivation = try #require(mockSession.applicationContexts.last)
-            let isAuthorizedAfterActivation = try #require(applicationContextAfterActivation["isAuthorized"] as? Bool)
-            #expect(isAuthorizedAfterActivation)
-            #expect(applicationContextAfterActivation["currentDay"] == nil)
-            #expect(applicationContextAfterActivation["currentActivity"] == nil)
-            #expect(mockSession.applicationContexts.count == initialApplicationContextCount + 1)
+            // Application Context НЕ отправляется при активации, если didLoadInitialData = false и пользователь авторизован
+            // Будет отправлен после завершения синхронизации с полными данными
+            #expect(mockSession.applicationContexts.count == initialApplicationContextCount)
             #expect(mockSession.sentMessages.count == initialSentMessagesCount)
 
             // setCurrentDayForDebug вызывает sendCurrentStatus, что отправляет applicationContext
@@ -184,8 +181,8 @@ extension StatusManagerWatchConnectivityTests.IntegrationTests {
             #expect(isAuthorizedAfterLoad)
             #expect(currentDayAfterLoad == 42)
             #expect(currentActivityAfterLoad == DayActivityType.workout.rawValue)
-            // applicationContext отправляется: 1) от simulateWCSessionActivation, 2) от setCurrentDayForDebug, 3) от sendDayDataToWatch
-            #expect(mockSession.applicationContexts.count == initialApplicationContextCount + 3)
+            // applicationContext отправляется: 1) от setCurrentDayForDebug, 2) от sendDayDataToWatch
+            #expect(mockSession.applicationContexts.count == initialApplicationContextCount + 2)
 
             let sentMessage = try #require(mockSession.sentMessages.last)
             let command = try #require(sentMessage["command"] as? String)

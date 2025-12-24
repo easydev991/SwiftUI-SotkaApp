@@ -359,8 +359,14 @@ final class StatusManager: NSObject {
         let context = modelContainer.mainContext
         let isAuthorized = (try? context.fetch(FetchDescriptor<User>()).first) != nil
 
-        // Если данные еще не загружены, отправляем только isAuthorized без currentDay
-        // currentDay будет добавлен позже через sendCurrentStatus() после инициализации currentDayCalculator
+        // Если данные еще не загружены и пользователь авторизован, не отправляем Application Context
+        // Application Context будет отправлен после завершения синхронизации с полными данными (currentDay)
+        // Это предотвращает отображение неправильного дня на часах
+        if !didLoadInitialData, isAuthorized {
+            logger.debug("ApplicationContext не отправлен при активации: данные еще не загружены, будет отправлен после синхронизации")
+            return
+        }
+
         let currentDay: Int?
         let currentActivity: DayActivityType?
 
@@ -369,10 +375,9 @@ final class StatusManager: NSObject {
             currentDay = isAuthorized ? currentDayCalculator?.currentDay : nil
             currentActivity = currentDay.map { dailyActivitiesService.getActivityType(day: $0, context: context) } ?? nil
         } else {
-            // Данные еще не загружены, отправляем только isAuthorized
+            // Данные еще не загружены, пользователь не авторизован - отправляем статус неавторизации
             currentDay = nil
             currentActivity = nil
-            logger.debug("ApplicationContext отправлен при активации без currentDay: данные еще не загружены")
         }
 
         // Проверяем, не дублирует ли это данные, которые уже были отправлены через sendCurrentStatus
@@ -390,14 +395,10 @@ final class StatusManager: NSObject {
 
         if isAuthorized {
             updateApplicationContextOnWatch(isAuthorized: true, currentDay: currentDay, currentActivity: currentActivity)
-            if didLoadInitialData {
-                logger
-                    .debug(
-                        "ApplicationContext отправлен при активации WCSession: пользователь авторизован, день \(currentDay?.description ?? "nil")"
-                    )
-            } else {
-                logger.debug("ApplicationContext отправлен при активации WCSession: пользователь авторизован, данные еще не загружены")
-            }
+            logger
+                .debug(
+                    "ApplicationContext отправлен при активации WCSession: пользователь авторизован, день \(currentDay?.description ?? "nil")"
+                )
         } else {
             updateApplicationContextOnWatch(isAuthorized: false, currentDay: nil, currentActivity: nil)
             logger.debug("ApplicationContext отправлен при активации WCSession: пользователь не авторизован")

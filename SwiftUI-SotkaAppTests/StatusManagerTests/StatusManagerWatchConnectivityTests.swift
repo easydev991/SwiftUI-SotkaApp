@@ -649,8 +649,8 @@ struct StatusManagerWatchConnectivityTests {
         #expect(currentDay == 15)
     }
 
-    @Test("Должен отправлять applicationContext без currentDay при активации, если didLoadInitialData = false")
-    func shouldSendApplicationContextWithoutCurrentDayWhenDataNotLoaded() async throws {
+    @Test("Не должен отправлять applicationContext при активации, если didLoadInitialData = false и пользователь авторизован")
+    func shouldNotSendApplicationContextWhenDataNotLoadedAndUserAuthorized() async throws {
         let mockSession = MockWCSession(isReachable: false)
         let statusManager = try MockStatusManager.create(
             daysClient: MockDaysClient(),
@@ -668,12 +668,8 @@ struct StatusManagerWatchConnectivityTests {
         // Симулируем активацию WCSession
         await statusManager.simulateWCSessionActivation()
 
-        // Проверяем, что applicationContext был отправлен только с isAuthorized, без currentDay
-        #expect(mockSession.applicationContexts.count >= 1)
-        let applicationContext = try #require(mockSession.applicationContexts.first)
-        let isAuthorized = try #require(applicationContext["isAuthorized"] as? Bool)
-        #expect(isAuthorized)
-        #expect(applicationContext["currentDay"] == nil)
+        // Проверяем, что applicationContext НЕ был отправлен (будет отправлен после завершения синхронизации)
+        #expect(mockSession.applicationContexts.isEmpty)
     }
 
     // MARK: - Тесты отправки статуса при удалении активности
@@ -816,5 +812,47 @@ struct StatusManagerWatchConnectivityTests {
         #expect(isAuthorized)
         let currentDay = try #require(context["currentDay"] as? Int)
         #expect(currentDay == 10)
+    }
+
+    @Test(
+        "Должен отправлять applicationContext с currentDay после завершения синхронизации в getStatus, если данные не были загружены при активации"
+    )
+    func shouldSendApplicationContextWithCurrentDayAfterSyncWhenDataNotLoadedOnActivation() async throws {
+        let mockSession = MockWCSession(isReachable: false)
+        let now = Date.now
+        let startDate = try #require(Calendar.current.date(byAdding: .day, value: -20, to: now))
+        let mockStatusClient = MockStatusClient(
+            startResult: .success(CurrentRunResponse(date: nil, maxForAllRunsDay: nil)),
+            currentResult: .success(CurrentRunResponse(date: startDate, maxForAllRunsDay: nil))
+        )
+        let statusManager = try MockStatusManager.create(
+            statusClient: mockStatusClient,
+            daysClient: MockDaysClient(),
+            userDefaults: MockUserDefaults.create(),
+            watchConnectivitySessionProtocol: mockSession
+        )
+
+        let context = statusManager.modelContainer.mainContext
+        let user = User(id: 1, userName: "testuser", fullName: "Test User", email: "test@example.com")
+        context.insert(user)
+        try context.save()
+
+        // didLoadInitialData = false (по умолчанию)
+        // Симулируем активацию WCSession - Application Context НЕ должен отправиться
+        await statusManager.simulateWCSessionActivation()
+        #expect(mockSession.applicationContexts.isEmpty)
+
+        // Вызываем getStatus - после завершения синхронизации Application Context должен отправиться с currentDay
+        await statusManager.getStatus()
+
+        // Проверяем, что applicationContext был отправлен с currentDay после завершения синхронизации
+        #expect(mockSession.applicationContexts.count >= 1)
+        let applicationContext = try #require(mockSession.applicationContexts.first { ctx in
+            (ctx["currentDay"] as? Int) != nil
+        })
+        let isAuthorized = try #require(applicationContext["isAuthorized"] as? Bool)
+        #expect(isAuthorized)
+        let currentDay = try #require(applicationContext["currentDay"] as? Int)
+        #expect(currentDay > 0)
     }
 }
