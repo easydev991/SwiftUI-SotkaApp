@@ -229,7 +229,12 @@ struct WorkoutProgramCreator {
             []
         }
     }
-
+    
+    /// Определяет фактический тип выполнения упражнений
+    /// - Parameters:
+    ///   - day: Номер дня
+    ///   - executionType: Выбранный тип выполнения упражнений
+    /// - Returns: Либо подходы, либо круги, в зависимости от вводных данных
     static func getEffectiveExecutionType(for day: Int, executionType: ExerciseExecutionType) -> ExerciseExecutionType {
         if executionType == .turbo {
             let setsDays = [93, 95, 98]

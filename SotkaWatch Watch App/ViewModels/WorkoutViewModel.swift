@@ -106,12 +106,10 @@ final class WorkoutViewModel {
         stepStates = []
         currentStepIndex = 0
 
+        stepStates.append(WorkoutStepState(step: .warmUp, state: .inactive))
         let effectiveType = getEffectiveExecutionType()
-
         switch effectiveType {
         case .cycles:
-            stepStates.append(WorkoutStepState(step: .warmUp, state: .inactive))
-
             if let plannedCount {
                 for i in 1 ... plannedCount {
                     stepStates.append(
@@ -122,14 +120,8 @@ final class WorkoutViewModel {
                     )
                 }
             }
-
-            stepStates.append(WorkoutStepState(step: .coolDown, state: .inactive))
-
         case .sets:
-            stepStates.append(WorkoutStepState(step: .warmUp, state: .inactive))
-
             let setsPerExercise = isTurboWithSets ? 1 : (plannedCount ?? 0)
-
             if setsPerExercise > 0 {
                 var setNumber = 1
                 for _ in trainings {
@@ -144,13 +136,10 @@ final class WorkoutViewModel {
                     }
                 }
             }
-
-            stepStates.append(WorkoutStepState(step: .coolDown, state: .inactive))
-
         case .turbo:
-            break
+            assertionFailure("Кейс .turbo недостижим: getEffectiveExecutionType() всегда преобразует .turbo в .cycles или .sets")
         }
-
+        stepStates.append(WorkoutStepState(step: .coolDown, state: .inactive))
         let executionTypeValue = executionType.rawValue
         let plannedCountValue = plannedCount ?? 0
         logger.info("Инициализация этапов: тип выполнения \(executionTypeValue), количество \(plannedCountValue)")

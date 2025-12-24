@@ -56,6 +56,11 @@ final class WorkoutScreenViewModel {
         WorkoutProgramCreator.getEffectiveExecutionType(for: dayNumber, executionType: executionType)
     }
 
+    /// Определяет, является ли текущая тренировка турбо-днем с подходами
+    var isTurboWithSets: Bool {
+        WorkoutProgramCreator.isTurboWithSets(day: dayNumber, executionType: executionType)
+    }
+
     // Методы инициализации
     func setupWorkoutData(
         dayNumber: Int,
@@ -86,12 +91,10 @@ final class WorkoutScreenViewModel {
         stepStates = []
         currentStepIndex = 0
 
+        stepStates.append(WorkoutStepState(step: .warmUp, state: .inactive))
         let effectiveType = getEffectiveExecutionType()
-
         switch effectiveType {
         case .cycles:
-            stepStates.append(WorkoutStepState(step: .warmUp, state: .inactive))
-
             if let plannedCount {
                 for i in 1 ... plannedCount {
                     stepStates.append(
@@ -102,15 +105,8 @@ final class WorkoutScreenViewModel {
                     )
                 }
             }
-
-            stepStates.append(WorkoutStepState(step: .coolDown, state: .inactive))
-
         case .sets:
-            stepStates.append(WorkoutStepState(step: .warmUp, state: .inactive))
-
-            let isTurboWithSets = WorkoutProgramCreator.isTurboWithSets(day: dayNumber, executionType: executionType)
             let setsPerExercise = isTurboWithSets ? 1 : (plannedCount ?? 0)
-
             if setsPerExercise > 0 {
                 for _ in trainings {
                     for setNumber in 1 ... setsPerExercise {
@@ -123,13 +119,10 @@ final class WorkoutScreenViewModel {
                     }
                 }
             }
-
-            stepStates.append(WorkoutStepState(step: .coolDown, state: .inactive))
-
         case .turbo:
-            break
+            assertionFailure("Кейс .turbo недостижим: getEffectiveExecutionType() всегда преобразует .turbo в .cycles или .sets")
         }
-
+        stepStates.append(WorkoutStepState(step: .coolDown, state: .inactive))
         let executionTypeValue = executionType.rawValue
         let plannedCountValue = plannedCount ?? 0
         logger.info("Инициализация этапов: тип выполнения \(executionTypeValue), количество \(plannedCountValue)")
@@ -317,7 +310,6 @@ final class WorkoutScreenViewModel {
             return []
         }
 
-        let isTurboWithSets = WorkoutProgramCreator.isTurboWithSets(day: dayNumber, executionType: executionType)
         let setsPerExercise = isTurboWithSets ? 1 : (plannedCount ?? 0)
 
         guard setsPerExercise > 0 else {
