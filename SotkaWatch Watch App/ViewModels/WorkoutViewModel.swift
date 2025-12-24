@@ -127,16 +127,32 @@ final class WorkoutViewModel {
             let setsPerExercise = isTurboWithSets ? 1 : (plannedCount ?? 0)
 
             if setsPerExercise > 0 {
-                var setNumber = 1
-                for _ in trainings {
-                    for _ in 1 ... setsPerExercise {
-                        stepStates.append(
-                            WorkoutStepState(
-                                step: .exercise(.sets, number: setNumber),
-                                state: .inactive
+                if isTurboWithSets {
+                    // Для турбо-дней с подходами: используем порядковый номер подхода турбо-дня (1, 2, 3...)
+                    var globalSetNumber = 1
+                    for _ in trainings {
+                        for _ in 1 ... setsPerExercise {
+                            stepStates.append(
+                                WorkoutStepState(
+                                    step: .exercise(.sets, number: globalSetNumber),
+                                    state: .inactive
+                                )
                             )
-                        )
-                        setNumber += 1
+                            globalSetNumber += 1
+                        }
+                    }
+                } else {
+                    var setNumber = 1
+                    for _ in trainings {
+                        for _ in 1 ... setsPerExercise {
+                            stepStates.append(
+                                WorkoutStepState(
+                                    step: .exercise(.sets, number: setNumber),
+                                    state: .inactive
+                                )
+                            )
+                            setNumber += 1
+                        }
                     }
                 }
             }
@@ -379,6 +395,29 @@ final class WorkoutViewModel {
         }
     }
 
+    /// Определяет индекс текущего упражнения на основе глобального номера подхода
+    /// - Parameter globalSetNumber: Глобальный номер подхода
+    /// - Returns: Индекс упражнения или nil если индекс невалиден
+    func getCurrentExerciseIndex(for globalSetNumber: Int) -> Int? {
+        let effectiveType = getEffectiveExecutionType()
+        guard effectiveType == .sets else {
+            return nil
+        }
+
+        let isTurboWithSets = WorkoutProgramCreator.isTurboWithSets(day: dayNumber, executionType: executionType)
+
+        if isTurboWithSets {
+            // Для турбо-дней с подходами: по одному подходу на упражнение
+            let exerciseIndex = globalSetNumber - 1
+            return exerciseIndex < trainings.count ? exerciseIndex : nil
+        } else {
+            // Для обычных дней с подходами: используем формулу для определения упражнения
+            let setsPerExercise = plannedCount ?? 1
+            let exerciseIndex = (globalSetNumber - 1) / setsPerExercise
+            return exerciseIndex < trainings.count ? exerciseIndex : nil
+        }
+    }
+
     /// Получение заголовка для навигации на основе текущего этапа тренировки
     /// - Returns: Локализованный заголовок для текущего этапа
     func getNavigationTitle() -> String {
@@ -395,18 +434,24 @@ final class WorkoutViewModel {
                 let totalCount = plannedCount ?? 0
                 return String(localized: .workoutViewCycle(globalNumber, totalCount))
             } else {
-                // Для типа .sets нужно вычислить номер подхода для конкретного упражнения
                 let isTurboWithSets = WorkoutProgramCreator.isTurboWithSets(day: dayNumber, executionType: executionType)
-                let setsPerExercise = isTurboWithSets ? 1 : (plannedCount ?? 0)
 
-                guard setsPerExercise > 0 else {
-                    return String(localized: .workoutViewSet(globalNumber, 0))
+                if isTurboWithSets {
+                    // Для турбо-дней с подходами показываем порядковый номер подхода турбо-дня и общее количество подходов
+                    let totalSets = trainings.count
+                    return String(localized: .workoutViewSet(globalNumber, totalSets))
+                } else {
+                    // Для обычных дней с подходами показываем номер подхода для конкретного упражнения
+                    let setsPerExercise = plannedCount ?? 0
+                    guard setsPerExercise > 0 else {
+                        return String(localized: .workoutViewSet(globalNumber, 0))
+                    }
+
+                    // Вычисляем номер подхода для конкретного упражнения
+                    // Формула: ((globalNumber - 1) % setsPerExercise) + 1
+                    let setNumberForExercise = ((globalNumber - 1) % setsPerExercise) + 1
+                    return String(localized: .workoutViewSet(setNumberForExercise, setsPerExercise))
                 }
-
-                // Вычисляем номер подхода для конкретного упражнения
-                // Формула: ((globalNumber - 1) % setsPerExercise) + 1
-                let setNumberForExercise = ((globalNumber - 1) % setsPerExercise) + 1
-                return String(localized: .workoutViewSet(setNumberForExercise, setsPerExercise))
             }
         case .coolDown:
             return ""

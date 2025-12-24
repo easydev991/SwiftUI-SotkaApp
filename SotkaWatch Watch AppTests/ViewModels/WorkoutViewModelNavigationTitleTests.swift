@@ -360,4 +360,145 @@ struct WorkoutViewModelNavigationTitleTests {
         let expectedTitle = String(localized: .workoutViewSet(2, 2))
         #expect(title == expectedTitle)
     }
+
+    @Test("Должен возвращать правильный заголовок для первого подхода турбо-дня 93")
+    func navigationTitleForTurboDay93FirstSet() throws {
+        let connectivityService = MockWatchConnectivityService()
+        let viewModel = WorkoutViewModel(
+            connectivityService: connectivityService
+        )
+
+        let trainings = [
+            WorkoutPreviewTraining(count: 3, typeId: ExerciseType.turbo93_1.rawValue, sortOrder: 0),
+            WorkoutPreviewTraining(count: 3, typeId: ExerciseType.turbo93_2.rawValue, sortOrder: 1),
+            WorkoutPreviewTraining(count: 2, typeId: ExerciseType.turbo93_3.rawValue, sortOrder: 2),
+            WorkoutPreviewTraining(count: 3, typeId: ExerciseType.turbo93_4.rawValue, sortOrder: 3),
+            WorkoutPreviewTraining(count: 10, typeId: ExerciseType.turbo93_5.rawValue, sortOrder: 4)
+        ]
+
+        viewModel.setupWorkoutData(
+            dayNumber: 93,
+            executionType: .turbo,
+            trainings: trainings,
+            plannedCount: 5,
+            restTime: 60
+        )
+
+        viewModel.completeCurrentStep()
+
+        let title = viewModel.getNavigationTitle()
+        let expectedTitle = String(localized: .workoutViewSet(1, 5))
+        #expect(title == expectedTitle)
+    }
+
+    @Test("Должен возвращать правильный заголовок для третьего подхода турбо-дня 93")
+    func navigationTitleForTurboDay93ThirdSet() throws {
+        let connectivityService = MockWatchConnectivityService()
+        let viewModel = WorkoutViewModel(
+            connectivityService: connectivityService
+        )
+
+        let trainings = [
+            WorkoutPreviewTraining(count: 3, typeId: ExerciseType.turbo93_1.rawValue, sortOrder: 0),
+            WorkoutPreviewTraining(count: 3, typeId: ExerciseType.turbo93_2.rawValue, sortOrder: 1),
+            WorkoutPreviewTraining(count: 2, typeId: ExerciseType.turbo93_3.rawValue, sortOrder: 2),
+            WorkoutPreviewTraining(count: 3, typeId: ExerciseType.turbo93_4.rawValue, sortOrder: 3),
+            WorkoutPreviewTraining(count: 10, typeId: ExerciseType.turbo93_5.rawValue, sortOrder: 4)
+        ]
+
+        viewModel.setupWorkoutData(
+            dayNumber: 93,
+            executionType: .turbo,
+            trainings: trainings,
+            plannedCount: 5,
+            restTime: 60
+        )
+
+        viewModel.completeCurrentStep()
+        viewModel.completeCurrentStep()
+        if viewModel.showTimer {
+            viewModel.handleRestTimerFinish(force: false)
+        }
+        viewModel.completeCurrentStep()
+        if viewModel.showTimer {
+            viewModel.handleRestTimerFinish(force: false)
+        }
+
+        let title = viewModel.getNavigationTitle()
+        let expectedTitle = String(localized: .workoutViewSet(3, 5))
+        #expect(title == expectedTitle)
+    }
+
+    @Test("Должен возвращать правильный заголовок для последнего подхода турбо-дня 93")
+    func navigationTitleForTurboDay93LastSet() throws {
+        let connectivityService = MockWatchConnectivityService()
+        let viewModel = WorkoutViewModel(
+            connectivityService: connectivityService
+        )
+
+        let trainings = [
+            WorkoutPreviewTraining(count: 3, typeId: ExerciseType.turbo93_1.rawValue, sortOrder: 0),
+            WorkoutPreviewTraining(count: 3, typeId: ExerciseType.turbo93_2.rawValue, sortOrder: 1),
+            WorkoutPreviewTraining(count: 2, typeId: ExerciseType.turbo93_3.rawValue, sortOrder: 2),
+            WorkoutPreviewTraining(count: 3, typeId: ExerciseType.turbo93_4.rawValue, sortOrder: 3),
+            WorkoutPreviewTraining(count: 10, typeId: ExerciseType.turbo93_5.rawValue, sortOrder: 4)
+        ]
+
+        viewModel.setupWorkoutData(
+            dayNumber: 93,
+            executionType: .turbo,
+            trainings: trainings,
+            plannedCount: 5,
+            restTime: 60
+        )
+
+        viewModel.completeCurrentStep()
+        for _ in 1 ..< 5 {
+            viewModel.completeCurrentStep()
+            if viewModel.showTimer {
+                viewModel.handleRestTimerFinish(force: false)
+            }
+        }
+
+        let title = viewModel.getNavigationTitle()
+        let expectedTitle = String(localized: .workoutViewSet(5, 5))
+        #expect(title == expectedTitle)
+    }
+
+    @Test("Должен возвращать правильный заголовок для турбо-дня 98")
+    func navigationTitleForTurboDay98() throws {
+        let connectivityService = MockWatchConnectivityService()
+        let viewModel = WorkoutViewModel(
+            connectivityService: connectivityService
+        )
+
+        let trainings = [
+            WorkoutPreviewTraining(count: 10, typeId: ExerciseType.turbo98Pullups.rawValue, sortOrder: 0),
+            WorkoutPreviewTraining(count: 20, typeId: ExerciseType.turbo98Pushups.rawValue, sortOrder: 1),
+            WorkoutPreviewTraining(count: 30, typeId: ExerciseType.turbo98Squats.rawValue, sortOrder: 2)
+        ]
+
+        viewModel.setupWorkoutData(
+            dayNumber: 98,
+            executionType: .turbo,
+            trainings: trainings,
+            plannedCount: 3,
+            restTime: 60
+        )
+
+        viewModel.completeCurrentStep()
+
+        let title = viewModel.getNavigationTitle()
+        let expectedTitle = String(localized: .workoutViewSet(1, 3))
+        #expect(title == expectedTitle)
+
+        viewModel.completeCurrentStep()
+        if viewModel.showTimer {
+            viewModel.handleRestTimerFinish(force: false)
+        }
+
+        let title2 = viewModel.getNavigationTitle()
+        let expectedTitle2 = String(localized: .workoutViewSet(2, 3))
+        #expect(title2 == expectedTitle2)
+    }
 }

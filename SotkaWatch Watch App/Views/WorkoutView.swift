@@ -120,16 +120,13 @@ private extension WorkoutView {
 
     func makeExerciseView(executionType: ExerciseExecutionType, number: Int) -> some View {
         let effectiveType = viewModel.getEffectiveExecutionType()
-        let currentTrainings: [WorkoutPreviewTraining]
-        // TODO: вынести эту логику во вьюмодель и написать тесты, а тут просто обращаться к вьюмодели
-        if effectiveType == .cycles {
-            currentTrainings = viewModel.trainings
+        let currentTrainings: [WorkoutPreviewTraining] = if effectiveType == .cycles {
+            viewModel.trainings
         } else {
-            let exerciseIndex = (number - 1) / (viewModel.plannedCount ?? 1)
-            if exerciseIndex < viewModel.trainings.count {
-                currentTrainings = [viewModel.trainings[exerciseIndex]]
+            if let exerciseIndex = viewModel.getCurrentExerciseIndex(for: number) {
+                [viewModel.trainings[exerciseIndex]]
             } else {
-                currentTrainings = []
+                []
             }
         }
 
