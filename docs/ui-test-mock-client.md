@@ -2,6 +2,19 @@
 
 Этот документ описывает реализованный функционал мок-клиента для UI-тестов, который обеспечивает полную независимость от сервера при запуске приложения с аргументом "UITest".
 
+## Оглавление
+
+- [Краткий обзор функционала](#краткий-обзор-функционала)
+- [Структура файлов](#структура-файлов)
+- [Мок-клиенты с поддержкой мгновенного ответа](#мок-клиенты-с-поддержкой-мгновенного-ответа)
+- [Единый мок-клиент: `MockSWClient`](#единый-мок-клиент-mockswclient)
+- [Подготовка демо-данных: `ScreenshotDemoData.setup()`](#подготовка-демо-данных-screenshotdemodatasetup)
+- [Инициализация приложения для UI-тестов](#инициализация-приложения-для-ui-тестов)
+- [Полная независимость от сервера](#полная-независимость-от-сервера)
+- [Демо-данные для экранов](#демо-данные-для-экранов)
+- [Принципы расширения](#принципы-расширения)
+- [Ключевые правила](#ключевые-правила)
+
 ### Краткий обзор функционала
 
 - **Мгновенные ответы**: все запросы обрабатываются без задержек
@@ -33,14 +46,14 @@
 ### Единый мок-клиент: `MockSWClient`
 
 Создан единый мок-клиент `MockSWClient` в `PreviewContent/MockSWClient.swift`, реализующий все протоколы:
-- `LoginClient`
-- `StatusClient`
-- `ExerciseClient`
-- `InfopostsClient`
-- `ProgressClient`
-- `DaysClient`
-- `ProfileClient` (без `getUserByID`, так как он уже в `LoginClient`)
-- `CountriesClient`
+- `LoginClient` — методы `logIn(with:)`, `getUserByID(_:)`, `resetPassword(for:)`
+- `StatusClient` — методы `start(date:)`, `current()` (делегируются `MockLoginClient`)
+- `ExerciseClient` — методы `getCustomExercises()`, `saveCustomExercise(id:exercise:)`, `deleteCustomExercise(id:)`
+- `InfopostsClient` — методы `getReadPosts()`, `setPostRead(day:)`, `deleteAllReadPosts()`
+- `ProgressClient` — методы `getProgress()`, `getProgress(day:)`, `createProgress(progress:)`, `updateProgress(day:progress:)`, `deleteProgress(day:)`, `deletePhoto(day:type:)`
+- `DaysClient` — методы `getDays()`, `createDay(_:)`, `updateDay(model:)`, `deleteDay(day:)`
+- `ProfileClient` — методы `editUser(_:model:)`, `changePassword(current:new:)`
+- `CountriesClient` — метод `getCountries()`
 
 Инициализатор принимает `instantResponse: Bool = true` (по умолчанию мгновенные ответы). Каждый метод делегирует вызов соответствующему мок-клиенту.
 
@@ -78,7 +91,9 @@
 - При аргументе "UITest": очищается UserDefaults, создаются мок-сервисы, отключаются анимации (`UIView.setAnimationsEnabled(false)`), устанавливается день № 12 через `setCurrentDayForDebug(12)`, вызывается `authHelper.didAuthorize()` для пропуска авторизации
 - Иначе: обычная инициализация для production
 
-В `.task` модификаторе при аргументе "UITest" дополнительно вызывается `statusManager.loadInfopostsWithUserGender(context: modelContainer.mainContext)` для загрузки инфопостов.
+В `.task` модификаторе при аргументе "UITest" дополнительно вызываются:
+- `ScreenshotDemoData.setup(context: statusManager.modelContainer.mainContext)` для подготовки демо-данных
+- `statusManager.loadInfopostsWithUserGender()` для загрузки инфопостов
 
 ### Полная независимость от сервера
 
