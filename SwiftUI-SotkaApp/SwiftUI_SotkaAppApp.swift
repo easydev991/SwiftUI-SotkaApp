@@ -24,7 +24,8 @@ struct SwiftUI_SotkaAppApp: App {
                 CustomExercise.self,
                 UserProgress.self,
                 DayActivity.self,
-                DayActivityTraining.self
+                DayActivityTraining.self,
+                SyncJournalEntry.self
             ]
         )
         let modelConfiguration = ModelConfiguration(schema: schema, isStoredInMemoryOnly: false)
