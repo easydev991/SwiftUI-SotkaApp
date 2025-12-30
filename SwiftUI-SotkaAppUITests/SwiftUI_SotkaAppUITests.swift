@@ -87,3 +87,11 @@ private extension SwiftUI_SotkaAppUITests {
     var journalDisplayModeOption: XCUIElement { app.buttons["JournalDisplayModeOption.0"].firstMatch }
     var profileExercisesButton: XCUIElement { app.buttons["ProfileExercisesButton"].firstMatch }
 }
+
+private extension XCUIElementQuery {
+    func element(for localizationKey: String) -> XCUIElement {
+        let bundle = Bundle(for: SwiftUI_SotkaAppUITests.self)
+        let localizedString = NSLocalizedString(localizationKey, bundle: bundle, comment: "")
+        return self[localizedString]
+    }
+}

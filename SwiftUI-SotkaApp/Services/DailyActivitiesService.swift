@@ -171,6 +171,37 @@ final class DailyActivitiesService {
         }
     }
 
+    /// Получает активность для указанного дня
+    /// - Parameters:
+    ///   - dayNumber: Номер дня (1-100)
+    ///   - context: Контекст SwiftData
+    /// - Returns: Активность дня или nil, если активность не найдена или помечена на удаление
+    func getActivity(dayNumber: Int, context: ModelContext) -> DayActivity? {
+        // Получаем пользователя с минимальным id для предсказуемости в тестах
+        let userDescriptor = FetchDescriptor<User>(sortBy: [SortDescriptor(\.id)])
+        guard let user = try? context.fetch(userDescriptor).first else {
+            logger.error("Пользователь не найден для получения активности дня")
+            return nil
+        }
+
+        let userId = user.id
+        let predicate = #Predicate<DayActivity> { activity in
+            activity.day == dayNumber && !activity.shouldDelete
+        }
+        let descriptor = FetchDescriptor<DayActivity>(predicate: predicate)
+        let allActivities = (try? context.fetch(descriptor)) ?? []
+        return allActivities.first { $0.user?.id == userId }
+    }
+
+    /// Получает тип активности для указанного дня
+    /// - Parameters:
+    ///   - day: Номер дня (1-100)
+    ///   - context: Контекст SwiftData
+    /// - Returns: Тип активности или nil, если активность не найдена
+    func getActivityType(day: Int, context: ModelContext) -> DayActivityType? {
+        getActivity(dayNumber: day, context: context)?.activityType
+    }
+
     /// Обновляет комментарий для активности дня (офлайн-приоритет)
     /// - Parameters:
     ///   - day: Номер дня (1-100)

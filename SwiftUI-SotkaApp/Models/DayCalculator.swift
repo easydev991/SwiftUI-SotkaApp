@@ -1,6 +1,5 @@
 import Foundation
 import OSLog
-import SWUtils
 
 private let logger = Logger(
     subsystem: Bundle.main.bundleIdentifier!,
@@ -42,10 +41,25 @@ struct DayCalculator: Identifiable, Equatable {
             self.currentDay = 1
             self.daysLeft = 99
         } else {
-            let daysBetween = DateFormatterService.days(from: startDate, to: currentDate)
+            let daysBetween = Self.daysBetween(startDate, and: currentDate)
             let currentDay = min(daysBetween + 1, 100)
             self.currentDay = currentDay
             self.daysLeft = 100 - currentDay
         }
+    }
+
+    /// Считает количество дней между двумя датами
+    /// - Parameters:
+    ///   - date1: Дата 1
+    ///   - date2: Дата 2
+    /// - Returns: Количество дней между датами
+    private static func daysBetween(_ date1: Date, and date2: Date) -> Int {
+        let calendar = Calendar(identifier: .iso8601)
+        let components = calendar.dateComponents(
+            [.day],
+            from: calendar.startOfDay(for: date1),
+            to: calendar.startOfDay(for: date2)
+        )
+        return components.day ?? 0
     }
 }

@@ -18,13 +18,6 @@ extension StatusManagerTests {
             let mockExerciseClient = MockExerciseClient()
             let mockDaysClient = MockDaysClient()
 
-            let statusManager = try MockStatusManager.create(
-                statusClient: mockStatusClient,
-                exerciseClient: mockExerciseClient,
-                progressClient: mockProgressClient,
-                daysClient: mockDaysClient
-            )
-
             let modelConfiguration = ModelConfiguration(isStoredInMemoryOnly: true)
             let modelContainer = try ModelContainer(
                 for: User.self,
@@ -40,14 +33,22 @@ extension StatusManagerTests {
             context.insert(user)
             try context.save()
 
+            let statusManager = try MockStatusManager.create(
+                statusClient: mockStatusClient,
+                exerciseClient: mockExerciseClient,
+                progressClient: mockProgressClient,
+                daysClient: mockDaysClient,
+                modelContainer: modelContainer
+            )
+
             await statusManager.startNewRun(appDate: startDate)
-            await statusManager.getStatus(context: context)
+            await statusManager.getStatus()
 
             let initialProgressCalls = mockProgressClient.getProgressCallCount
             let initialExerciseCalls = mockExerciseClient.getCustomExercisesCallCount
             let initialDaysCalls = mockDaysClient.getDaysCallCount
 
-            await statusManager.getStatus(context: context)
+            await statusManager.getStatus()
 
             #expect(mockProgressClient.getProgressCallCount >= initialProgressCalls)
             #expect(mockExerciseClient.getCustomExercisesCallCount >= initialExerciseCalls)
@@ -65,13 +66,6 @@ extension StatusManagerTests {
             let mockExerciseClient = MockExerciseClient()
             let mockDaysClient = MockDaysClient()
 
-            let statusManager = try MockStatusManager.create(
-                statusClient: mockStatusClient,
-                exerciseClient: mockExerciseClient,
-                progressClient: mockProgressClient,
-                daysClient: mockDaysClient
-            )
-
             let modelConfiguration = ModelConfiguration(isStoredInMemoryOnly: true)
             let modelContainer = try ModelContainer(
                 for: User.self,
@@ -87,11 +81,19 @@ extension StatusManagerTests {
             context.insert(user)
             try context.save()
 
+            let statusManager = try MockStatusManager.create(
+                statusClient: mockStatusClient,
+                exerciseClient: mockExerciseClient,
+                progressClient: mockProgressClient,
+                daysClient: mockDaysClient,
+                modelContainer: modelContainer
+            )
+
             await statusManager.startNewRun(appDate: startDate)
 
             let initialCalls = mockProgressClient.getProgressCallCount
 
-            await statusManager.start(appDate: startDate, context: context)
+            await statusManager.start(appDate: startDate)
 
             #expect(mockProgressClient.getProgressCallCount > initialCalls)
         }
@@ -107,13 +109,6 @@ extension StatusManagerTests {
             let mockExerciseClient = MockExerciseClient()
             let mockDaysClient = MockDaysClient()
 
-            let statusManager = try MockStatusManager.create(
-                statusClient: mockStatusClient,
-                exerciseClient: mockExerciseClient,
-                progressClient: mockProgressClient,
-                daysClient: mockDaysClient
-            )
-
             let modelConfiguration = ModelConfiguration(isStoredInMemoryOnly: true)
             let modelContainer = try ModelContainer(
                 for: User.self,
@@ -129,11 +124,19 @@ extension StatusManagerTests {
             context.insert(user)
             try context.save()
 
+            let statusManager = try MockStatusManager.create(
+                statusClient: mockStatusClient,
+                exerciseClient: mockExerciseClient,
+                progressClient: mockProgressClient,
+                daysClient: mockDaysClient,
+                modelContainer: modelContainer
+            )
+
             await statusManager.startNewRun(appDate: startDate)
 
             let initialCalls = mockExerciseClient.getCustomExercisesCallCount
 
-            await statusManager.start(appDate: startDate, context: context)
+            await statusManager.start(appDate: startDate)
 
             #expect(mockExerciseClient.getCustomExercisesCallCount > initialCalls)
         }
@@ -149,13 +152,6 @@ extension StatusManagerTests {
             let mockExerciseClient = MockExerciseClient()
             let mockDaysClient = MockDaysClient()
 
-            let statusManager = try MockStatusManager.create(
-                statusClient: mockStatusClient,
-                exerciseClient: mockExerciseClient,
-                progressClient: mockProgressClient,
-                daysClient: mockDaysClient
-            )
-
             let modelConfiguration = ModelConfiguration(isStoredInMemoryOnly: true)
             let modelContainer = try ModelContainer(
                 for: User.self,
@@ -171,11 +167,19 @@ extension StatusManagerTests {
             context.insert(user)
             try context.save()
 
+            let statusManager = try MockStatusManager.create(
+                statusClient: mockStatusClient,
+                exerciseClient: mockExerciseClient,
+                progressClient: mockProgressClient,
+                daysClient: mockDaysClient,
+                modelContainer: modelContainer
+            )
+
             await statusManager.startNewRun(appDate: startDate)
 
             let initialCalls = mockDaysClient.getDaysCallCount
 
-            await statusManager.start(appDate: startDate, context: context)
+            await statusManager.start(appDate: startDate)
 
             #expect(mockDaysClient.getDaysCallCount > initialCalls)
         }
@@ -187,8 +191,6 @@ extension StatusManagerTests {
             let mockStatusClient = MockStatusClient(
                 currentResult: .success(CurrentRunResponse(date: startDate, maxForAllRunsDay: nil))
             )
-            let statusManager = try MockStatusManager.create(statusClient: mockStatusClient)
-
             let modelConfiguration = ModelConfiguration(isStoredInMemoryOnly: true)
             let modelContainer = try ModelContainer(
                 for: User.self,
@@ -204,8 +206,13 @@ extension StatusManagerTests {
             context.insert(user)
             try context.save()
 
+            let statusManager = try MockStatusManager.create(
+                statusClient: mockStatusClient,
+                modelContainer: modelContainer
+            )
+
             await statusManager.startNewRun(appDate: startDate)
-            await statusManager.start(appDate: startDate, context: context)
+            await statusManager.start(appDate: startDate)
 
             #expect(!statusManager.state.isLoading)
         }
@@ -218,8 +225,6 @@ extension StatusManagerTests {
             let mockStatusClient = MockStatusClient(
                 currentResult: .success(CurrentRunResponse(date: siteDate, maxForAllRunsDay: nil))
             )
-            let statusManager = try MockStatusManager.create(statusClient: mockStatusClient)
-
             let modelConfiguration = ModelConfiguration(isStoredInMemoryOnly: true)
             let modelContainer = try ModelContainer(
                 for: User.self,
@@ -235,12 +240,17 @@ extension StatusManagerTests {
             context.insert(user)
             try context.save()
 
+            let statusManager = try MockStatusManager.create(
+                statusClient: mockStatusClient,
+                modelContainer: modelContainer
+            )
+
             await statusManager.startNewRun(appDate: appDate)
-            await statusManager.getStatus(context: context)
+            await statusManager.getStatus()
 
             #expect(statusManager.conflictingSyncModel != nil)
 
-            await statusManager.syncWithSiteDate(siteDate: siteDate, context: context)
+            await statusManager.syncWithSiteDate(siteDate: siteDate)
 
             #expect(statusManager.conflictingSyncModel == nil)
         }
@@ -252,7 +262,6 @@ extension StatusManagerTests {
             let mockStatusClient = MockStatusClient(
                 currentResult: .success(CurrentRunResponse(date: startDate, maxForAllRunsDay: nil))
             )
-            let statusManager = try MockStatusManager.create(statusClient: mockStatusClient)
 
             let modelConfiguration = ModelConfiguration(isStoredInMemoryOnly: true)
             let modelContainer = try ModelContainer(
@@ -270,8 +279,13 @@ extension StatusManagerTests {
             context.insert(user)
             try context.save()
 
+            let statusManager = try MockStatusManager.create(
+                statusClient: mockStatusClient,
+                modelContainer: modelContainer
+            )
+
             await statusManager.startNewRun(appDate: startDate)
-            await statusManager.start(appDate: startDate, context: context)
+            await statusManager.start(appDate: startDate)
 
             let entries = try context.fetch(FetchDescriptor<SyncJournalEntry>())
             #expect(entries.count == 1)
@@ -288,7 +302,6 @@ extension StatusManagerTests {
             let mockStatusClient = MockStatusClient(
                 currentResult: .success(CurrentRunResponse(date: startDate, maxForAllRunsDay: nil))
             )
-            let statusManager = try MockStatusManager.create(statusClient: mockStatusClient)
 
             let modelConfiguration = ModelConfiguration(isStoredInMemoryOnly: true)
             let modelContainer = try ModelContainer(
@@ -306,8 +319,13 @@ extension StatusManagerTests {
             context.insert(user)
             try context.save()
 
+            let statusManager = try MockStatusManager.create(
+                statusClient: mockStatusClient,
+                modelContainer: modelContainer
+            )
+
             await statusManager.startNewRun(appDate: startDate)
-            await statusManager.start(appDate: startDate, context: context)
+            await statusManager.start(appDate: startDate)
 
             let entries = try context.fetch(FetchDescriptor<SyncJournalEntry>())
             let entry = try #require(entries.first)
@@ -323,7 +341,6 @@ extension StatusManagerTests {
             let mockStatusClient = MockStatusClient(
                 currentResult: .success(CurrentRunResponse(date: startDate, maxForAllRunsDay: nil))
             )
-            let statusManager = try MockStatusManager.create(statusClient: mockStatusClient)
 
             let modelConfiguration = ModelConfiguration(isStoredInMemoryOnly: true)
             let modelContainer = try ModelContainer(
@@ -341,8 +358,13 @@ extension StatusManagerTests {
             context.insert(user)
             try context.save()
 
+            let statusManager = try MockStatusManager.create(
+                statusClient: mockStatusClient,
+                modelContainer: modelContainer
+            )
+
             await statusManager.startNewRun(appDate: startDate)
-            await statusManager.start(appDate: startDate, context: context)
+            await statusManager.start(appDate: startDate)
 
             let entries = try context.fetch(FetchDescriptor<SyncJournalEntry>())
             let entry = try #require(entries.first)
@@ -361,13 +383,6 @@ extension StatusManagerTests {
             let mockExerciseClient = MockExerciseClient()
             let mockDaysClient = MockDaysClient()
 
-            let statusManager = try MockStatusManager.create(
-                statusClient: mockStatusClient,
-                exerciseClient: mockExerciseClient,
-                progressClient: mockProgressClient,
-                daysClient: mockDaysClient
-            )
-
             let modelConfiguration = ModelConfiguration(isStoredInMemoryOnly: true)
             let modelContainer = try ModelContainer(
                 for: User.self,
@@ -384,8 +399,16 @@ extension StatusManagerTests {
             context.insert(user)
             try context.save()
 
+            let statusManager = try MockStatusManager.create(
+                statusClient: mockStatusClient,
+                exerciseClient: mockExerciseClient,
+                progressClient: mockProgressClient,
+                daysClient: mockDaysClient,
+                modelContainer: modelContainer
+            )
+
             await statusManager.startNewRun(appDate: startDate)
-            await statusManager.start(appDate: startDate, context: context)
+            await statusManager.start(appDate: startDate)
 
             let entries = try context.fetch(FetchDescriptor<SyncJournalEntry>())
             let entry = try #require(entries.first)
@@ -404,13 +427,6 @@ extension StatusManagerTests {
             let mockExerciseClient = MockExerciseClient()
             let mockDaysClient = MockDaysClient()
 
-            let statusManager = try MockStatusManager.create(
-                statusClient: mockStatusClient,
-                exerciseClient: mockExerciseClient,
-                progressClient: mockProgressClient,
-                daysClient: mockDaysClient
-            )
-
             let modelConfiguration = ModelConfiguration(isStoredInMemoryOnly: true)
             let modelContainer = try ModelContainer(
                 for: User.self,
@@ -427,8 +443,16 @@ extension StatusManagerTests {
             context.insert(user)
             try context.save()
 
+            let statusManager = try MockStatusManager.create(
+                statusClient: mockStatusClient,
+                exerciseClient: mockExerciseClient,
+                progressClient: mockProgressClient,
+                daysClient: mockDaysClient,
+                modelContainer: modelContainer
+            )
+
             await statusManager.startNewRun(appDate: startDate)
-            await statusManager.start(appDate: startDate, context: context)
+            await statusManager.start(appDate: startDate)
 
             let entries = try context.fetch(FetchDescriptor<SyncJournalEntry>())
             let entry = try #require(entries.first)
@@ -446,13 +470,6 @@ extension StatusManagerTests {
             let mockExerciseClient = MockExerciseClient()
             let mockDaysClient = MockDaysClient()
 
-            let statusManager = try MockStatusManager.create(
-                statusClient: mockStatusClient,
-                exerciseClient: mockExerciseClient,
-                progressClient: mockProgressClient,
-                daysClient: mockDaysClient
-            )
-
             let modelConfiguration = ModelConfiguration(isStoredInMemoryOnly: true)
             let modelContainer = try ModelContainer(
                 for: User.self,
@@ -469,8 +486,16 @@ extension StatusManagerTests {
             context.insert(user)
             try context.save()
 
+            let statusManager = try MockStatusManager.create(
+                statusClient: mockStatusClient,
+                exerciseClient: mockExerciseClient,
+                progressClient: mockProgressClient,
+                daysClient: mockDaysClient,
+                modelContainer: modelContainer
+            )
+
             await statusManager.startNewRun(appDate: startDate)
-            await statusManager.start(appDate: startDate, context: context)
+            await statusManager.start(appDate: startDate)
 
             let entries = try context.fetch(FetchDescriptor<SyncJournalEntry>())
             let entry = try #require(entries.first)
@@ -490,13 +515,6 @@ extension StatusManagerTests {
             mockExerciseClient.shouldThrowError = true
             let mockDaysClient = MockDaysClient()
 
-            let statusManager = try MockStatusManager.create(
-                statusClient: mockStatusClient,
-                exerciseClient: mockExerciseClient,
-                progressClient: mockProgressClient,
-                daysClient: mockDaysClient
-            )
-
             let modelConfiguration = ModelConfiguration(isStoredInMemoryOnly: true)
             let modelContainer = try ModelContainer(
                 for: User.self,
@@ -513,8 +531,16 @@ extension StatusManagerTests {
             context.insert(user)
             try context.save()
 
+            let statusManager = try MockStatusManager.create(
+                statusClient: mockStatusClient,
+                exerciseClient: mockExerciseClient,
+                progressClient: mockProgressClient,
+                daysClient: mockDaysClient,
+                modelContainer: modelContainer
+            )
+
             await statusManager.startNewRun(appDate: startDate)
-            await statusManager.start(appDate: startDate, context: context)
+            await statusManager.start(appDate: startDate)
 
             let entries = try context.fetch(FetchDescriptor<SyncJournalEntry>())
             let entry = try #require(entries.first)
@@ -532,13 +558,6 @@ extension StatusManagerTests {
             let mockExerciseClient = MockExerciseClient()
             let mockDaysClient = MockDaysClient()
 
-            let statusManager = try MockStatusManager.create(
-                statusClient: mockStatusClient,
-                exerciseClient: mockExerciseClient,
-                progressClient: mockProgressClient,
-                daysClient: mockDaysClient
-            )
-
             let modelConfiguration = ModelConfiguration(isStoredInMemoryOnly: true)
             let modelContainer = try ModelContainer(
                 for: User.self,
@@ -555,8 +574,16 @@ extension StatusManagerTests {
             context.insert(user)
             try context.save()
 
+            let statusManager = try MockStatusManager.create(
+                statusClient: mockStatusClient,
+                exerciseClient: mockExerciseClient,
+                progressClient: mockProgressClient,
+                daysClient: mockDaysClient,
+                modelContainer: modelContainer
+            )
+
             await statusManager.startNewRun(appDate: startDate)
-            await statusManager.start(appDate: startDate, context: context)
+            await statusManager.start(appDate: startDate)
 
             let entries = try context.fetch(FetchDescriptor<SyncJournalEntry>())
             let entry = try #require(entries.first)
@@ -576,13 +603,6 @@ extension StatusManagerTests {
             let mockExerciseClient = MockExerciseClient()
             let mockDaysClient = MockDaysClient()
 
-            let statusManager = try MockStatusManager.create(
-                statusClient: mockStatusClient,
-                exerciseClient: mockExerciseClient,
-                progressClient: mockProgressClient,
-                daysClient: mockDaysClient
-            )
-
             let modelConfiguration = ModelConfiguration(isStoredInMemoryOnly: true)
             let modelContainer = try ModelContainer(
                 for: User.self,
@@ -599,8 +619,16 @@ extension StatusManagerTests {
             context.insert(user)
             try context.save()
 
+            let statusManager = try MockStatusManager.create(
+                statusClient: mockStatusClient,
+                exerciseClient: mockExerciseClient,
+                progressClient: mockProgressClient,
+                daysClient: mockDaysClient,
+                modelContainer: modelContainer
+            )
+
             await statusManager.startNewRun(appDate: startDate)
-            await statusManager.start(appDate: startDate, context: context)
+            await statusManager.start(appDate: startDate)
 
             let entries = try context.fetch(FetchDescriptor<SyncJournalEntry>())
             let entry = try #require(entries.first)

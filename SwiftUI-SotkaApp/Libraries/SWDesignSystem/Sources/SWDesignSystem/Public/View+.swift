@@ -1,4 +1,7 @@
 import SwiftUI
+#if canImport(UIKit)
+import UIKit
+#endif
 
 public extension View {
     /// Придает вьюшке форму `circle` с бордюром цвета `swAccent`
@@ -34,7 +37,9 @@ public extension View {
     }
 
     /// Вызывает habtic feedback
+    #if !os(watchOS)
     func hapticFeedback(_ style: UIImpactFeedbackGenerator.FeedbackStyle) {
         UIImpactFeedbackGenerator(style: style).impactOccurred()
     }
+    #endif
 }

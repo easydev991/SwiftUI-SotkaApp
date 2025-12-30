@@ -1,6 +1,7 @@
 import SwiftUI
 
 /// Многострочное поле для ввода текста
+@available(watchOS, unavailable)
 public struct SWTextEditor: View {
     @Binding private var text: String
     private let placeholder: String?
@@ -51,6 +52,7 @@ public struct SWTextEditor: View {
     }
 }
 
+@available(watchOS, unavailable)
 private extension SWTextEditor {
     var textEditorView: some View {
         TextEditor(text: $text)
@@ -59,7 +61,7 @@ private extension SWTextEditor {
     }
 }
 
-#if DEBUG
+#if DEBUG && !os(watchOS)
 #Preview {
     VStack(spacing: 20) {
         SWTextEditor(

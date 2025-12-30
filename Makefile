@@ -1,4 +1,4 @@
-.PHONY: help setup setup_hook setup_snapshot setup_fastlane setup_cursor setup_ssh update update_fastlane update_swiftformat format screenshots upload_screenshots testflight fastlane increment_build build test
+.PHONY: help setup setup_hook setup_snapshot setup_fastlane setup_cursor setup_ssh update update_fastlane update_swiftformat format screenshots upload_screenshots testflight fastlane increment_build build test test_watch
 
 # Цвета и шрифт
 YELLOW=\033[1;33m
@@ -269,13 +269,36 @@ screenshots:
 	$(BUNDLE_EXEC) fastlane screenshots; \
 	'
 
+## watch_screenshots: Запустить fastlane snapshot для генерации скриншотов Apple Watch
+watch_screenshots:
+	@bash -c '\
+	set -e; \
+	if [ ! -d fastlane ] || [ ! -f fastlane/Fastfile ]; then \
+		printf "$(YELLOW)fastlane не инициализирован в проекте$(RESET)\n"; \
+		exit 1; \
+	fi; \
+	printf "$(YELLOW)Запуск fastlane watch_screenshots...$(RESET)\n"; \
+	$(BUNDLE_EXEC) fastlane watch_screenshots; \
+	'
+
 ## build: Сборка проекта в терминале
 build:
 	xcodebuild -project SwiftUI-SotkaApp.xcodeproj -scheme SwiftUI-SotkaApp -sdk iphonesimulator -destination 'platform=iOS Simulator,name=iPhone 13 Pro,OS=18.6' build
 
 ## test: Запускает unit-тесты в терминале
 test:
-	xcodebuild -project SwiftUI-SotkaApp.xcodeproj -scheme SwiftUI-SotkaApp -sdk iphonesimulator -destination 'platform=iOS Simulator,name=iPhone 13 Pro,OS=18.6' test -testPlan SwiftUI-SotkaApp
+	xcodebuild -project SwiftUI-SotkaApp.xcodeproj \
+		-scheme SwiftUI-SotkaAppTests \
+		-resolvePackageDependencies && \
+	xcodebuild -project SwiftUI-SotkaApp.xcodeproj \
+		-scheme SwiftUI-SotkaAppTests \
+		-sdk iphonesimulator \
+		-destination 'platform=iOS Simulator,name=iPhone 13 Pro,OS=18.6' \
+		test -testPlan SwiftUI-SotkaAppTests
+
+## test_watch: Запускает unit-тесты для Apple Watch в терминале
+test_watch:
+	xcodebuild -project SwiftUI-SotkaApp.xcodeproj -scheme "SotkaWatch Watch AppTests" -sdk watchsimulator -destination 'platform=watchOS Simulator,name=Apple Watch Series 8 (45mm)' test -testPlan "SotkaWatch-UnitTests"
 
 ## setup_cursor: Настроить языковой сервер Swift для работы в Cursor
 setup_cursor:

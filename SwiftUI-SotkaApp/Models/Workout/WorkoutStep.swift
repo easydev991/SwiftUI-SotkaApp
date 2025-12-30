@@ -1,3 +1,5 @@
+import Foundation
+
 enum WorkoutStep: Equatable {
     case warmUp
     case exercise(ExerciseExecutionType, number: Int)

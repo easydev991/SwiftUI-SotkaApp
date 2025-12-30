@@ -23,6 +23,14 @@ For _fastlane_ installation instructions, see [Installing _fastlane_](https://do
 
 Сгенерировать новые локализованные скриншоты
 
+### ios watch_screenshots
+
+```sh
+[bundle exec] fastlane ios watch_screenshots
+```
+
+Сгенерировать скриншоты для Apple Watch
+
 ### ios upload_screenshots
 
 ```sh

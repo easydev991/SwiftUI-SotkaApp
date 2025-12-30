@@ -1,13 +1,10 @@
 import SWDesignSystem
-import SwiftData
 import SwiftUI
-import SWUtils
 
 struct WorkoutPreviewButtonsView: View {
     let isPassed: Bool
     let hasChanges: Bool
     let isWorkoutCompleted: Bool
-    let showCommentField: Bool
     let onSave: () -> Void
     let onStartTraining: () -> Void
 
@@ -24,24 +21,48 @@ struct WorkoutPreviewButtonsView: View {
     private var notPassedDayButtons: some View {
         VStack(spacing: 12) {
             Button(.workoutPreviewStartTraining, action: onStartTraining)
+            #if os(watchOS)
+                .tint(Color.swAccent)
+                .buttonStyle(.borderedProminent)
+            #else
                 .buttonStyle(SWButtonStyle(mode: .filled, size: .large))
+            #endif
+                .accessibilityIdentifier("WorkoutPreview.startTrainingButton")
             Button(.workoutPreviewSaveAsPassed, action: onSave)
+            #if os(watchOS)
+                .tint(Color.swAccent)
+                .buttonStyle(.bordered)
+            #else
                 .buttonStyle(SWButtonStyle(mode: .tinted, size: .large))
+                .accessibilityIdentifier("WorkoutPreview.saveAsPassedButton")
+            #endif
         }
     }
 
     private var passedDayButtons: some View {
         HStack(spacing: 12) {
             Button(.workoutPreviewSave, action: onSave)
+            #if os(watchOS)
+                .tint(Color.swAccent)
+                .buttonStyle(.borderedProminent)
+            #else
                 .buttonStyle(SWButtonStyle(mode: .filled, size: .large))
+            #endif
                 .disabled(!hasChanges)
+                .accessibilityIdentifier("WorkoutPreview.saveButton")
             // TODO: Кнопка "Продолжить" - показывается только если тренировка была начата, но не завершена
         }
     }
 
     private var workoutCompletedButtons: some View {
         Button(.workoutPreviewSave, action: onSave)
+        #if os(watchOS)
+            .tint(Color.swAccent)
+            .buttonStyle(.borderedProminent)
+        #else
             .buttonStyle(SWButtonStyle(mode: .filled, size: .large))
+        #endif
+            .accessibilityIdentifier("WorkoutPreview.saveButton")
     }
 }
 
@@ -51,7 +72,6 @@ struct WorkoutPreviewButtonsView: View {
         isPassed: false,
         hasChanges: false,
         isWorkoutCompleted: false,
-        showCommentField: false,
         onSave: {},
         onStartTraining: {}
     )
@@ -62,7 +82,6 @@ struct WorkoutPreviewButtonsView: View {
         isPassed: true,
         hasChanges: false,
         isWorkoutCompleted: false,
-        showCommentField: false,
         onSave: {},
         onStartTraining: {}
     )
@@ -73,7 +92,6 @@ struct WorkoutPreviewButtonsView: View {
         isPassed: true,
         hasChanges: true,
         isWorkoutCompleted: false,
-        showCommentField: false,
         onSave: {},
         onStartTraining: {}
     )
@@ -84,7 +102,6 @@ struct WorkoutPreviewButtonsView: View {
         isPassed: false,
         hasChanges: false,
         isWorkoutCompleted: true,
-        showCommentField: true,
         onSave: {},
         onStartTraining: {}
     )

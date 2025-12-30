@@ -31,7 +31,7 @@ extension StatusManagerTests {
             context.insert(user)
             try context.save()
 
-            await statusManager.start(appDate: appDate, context: context)
+            await statusManager.start(appDate: appDate)
 
             let calculator = try #require(statusManager.currentDayCalculator)
             #expect(calculator.startDate.isTheSameDayIgnoringTime(appDate))
@@ -49,13 +49,6 @@ extension StatusManagerTests {
             let mockExerciseClient = MockExerciseClient()
             let mockDaysClient = MockDaysClient()
 
-            let statusManager = try MockStatusManager.create(
-                statusClient: mockStatusClient,
-                exerciseClient: mockExerciseClient,
-                progressClient: mockProgressClient,
-                daysClient: mockDaysClient
-            )
-
             let modelConfiguration = ModelConfiguration(isStoredInMemoryOnly: true)
             let modelContainer = try ModelContainer(
                 for: User.self,
@@ -71,11 +64,19 @@ extension StatusManagerTests {
             context.insert(user)
             try context.save()
 
+            let statusManager = try MockStatusManager.create(
+                statusClient: mockStatusClient,
+                exerciseClient: mockExerciseClient,
+                progressClient: mockProgressClient,
+                daysClient: mockDaysClient,
+                modelContainer: modelContainer
+            )
+
             let initialProgressCalls = mockProgressClient.getProgressCallCount
             let initialExerciseCalls = mockExerciseClient.getCustomExercisesCallCount
             let initialDaysCalls = mockDaysClient.getDaysCallCount
 
-            await statusManager.start(appDate: appDate, context: context)
+            await statusManager.start(appDate: appDate)
 
             #expect(mockProgressClient.getProgressCallCount > initialProgressCalls)
             #expect(mockExerciseClient.getCustomExercisesCallCount > initialExerciseCalls)
@@ -105,7 +106,7 @@ extension StatusManagerTests {
             context.insert(user)
             try context.save()
 
-            await statusManager.start(appDate: nil, context: context)
+            await statusManager.start(appDate: nil)
 
             let calculator = try #require(statusManager.currentDayCalculator)
             #expect(calculator.startDate.isTheSameDayIgnoringTime(now))

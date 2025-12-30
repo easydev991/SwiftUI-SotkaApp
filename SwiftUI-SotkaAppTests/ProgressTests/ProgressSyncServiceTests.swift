@@ -454,8 +454,9 @@ extension AllProgressTests {
 
             try context.save()
 
-            // Настраиваем мок-ответ сервера для синхронизированной записи
-            // Это необходимо, чтобы handleDeletedProgress не помечал её как удаленную
+            // Настраиваем мок-ответы сервера для всех записей
+            // Это необходимо, чтобы handleDeletedProgress не помечал их как удаленные
+            // и чтобы downloadServerProgress корректно обработал все записи
             let syncedProgressResponse = ProgressResponse(
                 id: 1,
                 pullups: 10,
@@ -465,7 +466,16 @@ extension AllProgressTests {
                 createDate: syncedProgress.lastModified,
                 modifyDate: syncedProgress.lastModified
             )
-            mockClient.mockedProgressResponses = [syncedProgressResponse]
+            let unsyncedProgressResponse = ProgressResponse(
+                id: 2,
+                pullups: 15,
+                pushups: 25,
+                squats: 35,
+                weight: 72.0,
+                createDate: unsyncedProgress.lastModified,
+                modifyDate: unsyncedProgress.lastModified
+            )
+            mockClient.mockedProgressResponses = [syncedProgressResponse, unsyncedProgressResponse]
 
             // Act - тестируем приватный метод через публичный интерфейс
             _ = try await service.syncProgress(context: context)

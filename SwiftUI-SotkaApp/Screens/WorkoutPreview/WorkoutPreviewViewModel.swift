@@ -32,6 +32,9 @@ final class WorkoutPreviewViewModel {
     }
 
     /// Отображаемое количество кругов/подходов
+    ///
+    /// Для сохраненных тренировок (`count != nil`) возвращает фактическое значение `count`
+    /// Для непройденных тренировок (`count == nil`) возвращает плановое значение `plannedCount`
     var displayedCount: Int? {
         count ?? plannedCount
     }
@@ -225,20 +228,34 @@ final class WorkoutPreviewViewModel {
         return availableExecutionTypes.count > 1
     }
 
-    /// Обновляет количество повторений для конкретной тренировки или plannedCount
+    /// Обновляет количество повторений для конкретной тренировки или `plannedCount`/`count`
+    ///
+    /// Для сохраненных тренировок (`count != nil`) обновляет фактическое значение `count`
+    /// Для непройденных тренировок (`count == nil`) обновляет плановое значение `plannedCount`
     /// - Parameters:
-    ///   - id: Идентификатор тренировки или "plannedCount" для обновления plannedCount
+    ///   - id: Идентификатор тренировки или "plannedCount" для обновления `plannedCount`/`count`
     ///   - action: Действие (increment или decrement)
     func updatePlannedCount(id: String, action: TrainingRowAction) {
         if id == "plannedCount" {
-            let currentCount = plannedCount ?? 0
-            let newCount: Int = switch action {
-            case .increment:
-                currentCount + 1
-            case .decrement:
-                max(0, currentCount - 1)
+            if count != nil {
+                let currentCount = count ?? 0
+                let newCount: Int = switch action {
+                case .increment:
+                    currentCount + 1
+                case .decrement:
+                    max(0, currentCount - 1)
+                }
+                count = newCount
+            } else {
+                let currentCount = plannedCount ?? 0
+                let newCount: Int = switch action {
+                case .increment:
+                    currentCount + 1
+                case .decrement:
+                    max(0, currentCount - 1)
+                }
+                plannedCount = newCount
             }
-            plannedCount = newCount
         } else {
             trainings = trainings.map { existingTraining in
                 guard existingTraining.id == id else { return existingTraining }

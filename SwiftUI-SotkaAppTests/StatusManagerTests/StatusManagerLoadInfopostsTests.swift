@@ -36,9 +36,9 @@ extension StatusManagerTests {
             try context.save()
 
             await statusManager.startNewRun(appDate: startDate)
-            await statusManager.getStatus(context: context)
+            await statusManager.getStatus()
 
-            statusManager.loadInfopostsWithUserGender(context: context)
+            statusManager.loadInfopostsWithUserGender()
 
             if let task = statusManager.syncReadPostsTask {
                 try? await task.value
@@ -54,18 +54,7 @@ extension StatusManagerTests {
             let mockInfopostsClient = MockInfopostsClient(getReadPostsResult: .success([]))
             let statusManager = try MockStatusManager.create(infopostsClient: mockInfopostsClient)
 
-            let modelConfiguration = ModelConfiguration(isStoredInMemoryOnly: true)
-            let modelContainer = try ModelContainer(
-                for: User.self,
-                DayActivity.self,
-                DayActivityTraining.self,
-                UserProgress.self,
-                CustomExercise.self,
-                configurations: modelConfiguration
-            )
-            let context = modelContainer.mainContext
-
-            statusManager.loadInfopostsWithUserGender(context: context)
+            statusManager.loadInfopostsWithUserGender()
 
             if let task = statusManager.syncReadPostsTask {
                 try? await task.value
@@ -94,7 +83,7 @@ extension StatusManagerTests {
             context.insert(user)
             try context.save()
 
-            statusManager.loadInfopostsWithUserGender(context: context)
+            statusManager.loadInfopostsWithUserGender()
 
             if let task = statusManager.syncReadPostsTask {
                 try? await task.value
@@ -123,7 +112,7 @@ extension StatusManagerTests {
             context.insert(user)
             try context.save()
 
-            statusManager.loadInfopostsWithUserGender(context: context)
+            statusManager.loadInfopostsWithUserGender()
 
             if let task = statusManager.syncReadPostsTask {
                 try? await task.value

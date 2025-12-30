@@ -24,7 +24,7 @@ struct WorkoutPreviewTrainingTests {
         #expect(sortOrder == 0)
     }
 
-    @Test("Должен создаваться из DayActivityTraining через init(from:)")
+    @Test("Должен создаваться из DayActivityTraining через workoutPreviewTraining")
     @MainActor
     func createsFromDayActivityTraining() throws {
         let container = try ModelContainer(
@@ -42,7 +42,7 @@ struct WorkoutPreviewTrainingTests {
         context.insert(dayActivityTraining)
         try context.save()
 
-        let previewTraining = WorkoutPreviewTraining(from: dayActivityTraining)
+        let previewTraining = dayActivityTraining.workoutPreviewTraining
 
         let count = try #require(previewTraining.count)
         let typeId = try #require(previewTraining.typeId)
@@ -73,7 +73,7 @@ struct WorkoutPreviewTrainingTests {
         context.insert(dayActivityTraining)
         try context.save()
 
-        let previewTraining = WorkoutPreviewTraining(from: dayActivityTraining)
+        let previewTraining = dayActivityTraining.workoutPreviewTraining
 
         #expect(previewTraining.count == nil)
         #expect(previewTraining.typeId == nil)
@@ -117,7 +117,7 @@ struct WorkoutPreviewTrainingTests {
         context.insert(dayActivityTraining)
         try context.save()
 
-        let previewTraining = WorkoutPreviewTraining(from: dayActivityTraining)
+        let previewTraining = dayActivityTraining.workoutPreviewTraining
 
         #expect(!previewTraining.id.isEmpty)
     }
@@ -283,5 +283,138 @@ struct WorkoutPreviewTrainingTests {
         let exercise = WorkoutPreviewTraining(typeId: 93)
 
         #expect(exercise.isTurboExercise)
+    }
+
+    @Test("Должен сериализоваться в JSON и десериализоваться обратно")
+    func serializesAndDeserializesJSON() throws {
+        let training = WorkoutPreviewTraining(
+            id: "test-id",
+            count: 10,
+            typeId: 0,
+            customTypeId: "custom-123",
+            sortOrder: 1
+        )
+
+        let encoder = JSONEncoder()
+        let data = try encoder.encode(training)
+
+        let decoder = JSONDecoder()
+        let decoded = try decoder.decode(WorkoutPreviewTraining.self, from: data)
+
+        #expect(decoded.id == "test-id")
+        let count = try #require(decoded.count)
+        #expect(count == 10)
+        let typeId = try #require(decoded.typeId)
+        #expect(typeId == 0)
+        let customTypeId = try #require(decoded.customTypeId)
+        #expect(customTypeId == "custom-123")
+        let sortOrder = try #require(decoded.sortOrder)
+        #expect(sortOrder == 1)
+    }
+
+    @Test("Должен корректно обрабатывать опциональные поля")
+    func handlesOptionalFields() throws {
+        let training = WorkoutPreviewTraining(
+            id: "test-id-2",
+            count: nil,
+            typeId: nil,
+            customTypeId: nil,
+            sortOrder: nil
+        )
+
+        let encoder = JSONEncoder()
+        let data = try encoder.encode(training)
+
+        let decoder = JSONDecoder()
+        let decoded = try decoder.decode(WorkoutPreviewTraining.self, from: data)
+
+        #expect(decoded.id == "test-id-2")
+        #expect(decoded.count == nil)
+        #expect(decoded.typeId == nil)
+        #expect(decoded.customTypeId == nil)
+        #expect(decoded.sortOrder == nil)
+    }
+
+    @Test("Должен корректно кодировать и декодировать все поля")
+    func encodesAndDecodesAllFields() throws {
+        let training = WorkoutPreviewTraining(
+            id: "test-id-3",
+            count: 15,
+            typeId: 3,
+            customTypeId: "custom-456",
+            sortOrder: 5
+        )
+
+        let encoder = JSONEncoder()
+        let data = try encoder.encode(training)
+
+        let decoder = JSONDecoder()
+        let decoded = try decoder.decode(WorkoutPreviewTraining.self, from: data)
+
+        #expect(decoded.id == training.id)
+        let decodedCount = try #require(decoded.count)
+        let originalCount = try #require(training.count)
+        #expect(decodedCount == originalCount)
+        let decodedTypeId = try #require(decoded.typeId)
+        let originalTypeId = try #require(training.typeId)
+        #expect(decodedTypeId == originalTypeId)
+        let decodedCustomTypeId = try #require(decoded.customTypeId)
+        let originalCustomTypeId = try #require(training.customTypeId)
+        #expect(decodedCustomTypeId == originalCustomTypeId)
+        let decodedSortOrder = try #require(decoded.sortOrder)
+        let originalSortOrder = try #require(training.sortOrder)
+        #expect(decodedSortOrder == originalSortOrder)
+    }
+
+    @Test("Должен корректно декодироваться из JSON строки")
+    func decodesFromJSONString() throws {
+        let jsonString = """
+        {
+            "id": "json-id",
+            "count": 20,
+            "typeId": 1,
+            "customTypeId": "json-custom",
+            "sortOrder": 2
+        }
+        """
+        let jsonData = jsonString.data(using: .utf8)
+        let data = try #require(jsonData)
+
+        let decoder = JSONDecoder()
+        let decoded = try decoder.decode(WorkoutPreviewTraining.self, from: data)
+
+        #expect(decoded.id == "json-id")
+        let count = try #require(decoded.count)
+        #expect(count == 20)
+        let typeId = try #require(decoded.typeId)
+        #expect(typeId == 1)
+        let customTypeId = try #require(decoded.customTypeId)
+        #expect(customTypeId == "json-custom")
+        let sortOrder = try #require(decoded.sortOrder)
+        #expect(sortOrder == 2)
+    }
+
+    @Test("Должен корректно декодироваться из JSON строки с null опциональными полями")
+    func decodesFromJSONStringWithNullOptionalFields() throws {
+        let jsonString = """
+        {
+            "id": "json-id-null",
+            "count": null,
+            "typeId": null,
+            "customTypeId": null,
+            "sortOrder": null
+        }
+        """
+        let jsonData = jsonString.data(using: .utf8)
+        let data = try #require(jsonData)
+
+        let decoder = JSONDecoder()
+        let decoded = try decoder.decode(WorkoutPreviewTraining.self, from: data)
+
+        #expect(decoded.id == "json-id-null")
+        #expect(decoded.count == nil)
+        #expect(decoded.typeId == nil)
+        #expect(decoded.customTypeId == nil)
+        #expect(decoded.sortOrder == nil)
     }
 }

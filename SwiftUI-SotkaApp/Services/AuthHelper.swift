@@ -1,11 +1,14 @@
 import Foundation
 import Observation
+import OSLog
 import SWKeychain
 
 @MainActor
 protocol AuthHelper: AnyObject, Sendable {
     /// Токен авторизации для запросов к серверу
     var authToken: String? { get }
+    /// Статус авторизации
+    var isAuthorized: Bool { get }
     /// Логаут с удалением всех данных пользователя
     func triggerLogout()
 }
@@ -13,20 +16,32 @@ protocol AuthHelper: AnyObject, Sendable {
 @MainActor
 @Observable
 final class AuthHelperImp: AuthHelper {
-    private let defaults = UserDefaults.standard
+    @ObservationIgnored private let logger = Logger(
+        subsystem: Bundle.main.bundleIdentifier ?? "SotkaApp",
+        category: String(describing: AuthHelperImp.self)
+    )
+    @ObservationIgnored private let defaults: UserDefaults
 
     @ObservationIgnored
     @KeychainWrapper(Key.authData.rawValue)
     private var authData: AuthData?
 
+    init(userDefaults: UserDefaults? = nil) {
+        if let userDefaults {
+            self.defaults = userDefaults
+        } else {
+            self.defaults = UserDefaults.standard
+        }
+    }
+
     private(set) var isAuthorized: Bool {
         get {
             access(keyPath: \.isAuthorized)
-            return defaults.bool(forKey: Key.isAuthorized.rawValue)
+            return defaults.bool(forKey: Constants.isAuthorizedKey)
         }
         set {
             withMutation(keyPath: \.isAuthorized) {
-                defaults.set(newValue, forKey: Key.isAuthorized.rawValue)
+                defaults.set(newValue, forKey: Constants.isAuthorizedKey)
             }
         }
     }
@@ -62,6 +77,5 @@ final class AuthHelperImp: AuthHelper {
 private extension AuthHelperImp {
     enum Key: String {
         case authData
-        case isAuthorized
     }
 }

@@ -35,7 +35,7 @@ extension StatusManagerTests {
             let initialCalculator = try #require(statusManager.currentDayCalculator)
             #expect(initialCalculator.currentDay == 1)
 
-            await statusManager.syncWithSiteDate(siteDate: siteDate, context: context)
+            await statusManager.syncWithSiteDate(siteDate: siteDate)
 
             let updatedCalculator = try #require(statusManager.currentDayCalculator)
             #expect(updatedCalculator.currentDay == 100)
@@ -67,7 +67,7 @@ extension StatusManagerTests {
 
             await statusManager.startNewRun(appDate: initialStartDate)
 
-            await statusManager.syncWithSiteDate(siteDate: siteDate, context: context)
+            await statusManager.syncWithSiteDate(siteDate: siteDate)
 
             let calculator = try #require(statusManager.currentDayCalculator)
             #expect(calculator.startDate.isTheSameDayIgnoringTime(siteDate))
@@ -78,12 +78,6 @@ extension StatusManagerTests {
             let mockProgressClient = MockProgressClient()
             let mockExerciseClient = MockExerciseClient()
             let mockDaysClient = MockDaysClient()
-
-            let statusManager = try MockStatusManager.create(
-                exerciseClient: mockExerciseClient,
-                progressClient: mockProgressClient,
-                daysClient: mockDaysClient
-            )
 
             let modelConfiguration = ModelConfiguration(isStoredInMemoryOnly: true)
             let modelContainer = try ModelContainer(
@@ -100,6 +94,13 @@ extension StatusManagerTests {
             context.insert(user)
             try context.save()
 
+            let statusManager = try MockStatusManager.create(
+                exerciseClient: mockExerciseClient,
+                progressClient: mockProgressClient,
+                daysClient: mockDaysClient,
+                modelContainer: modelContainer
+            )
+
             let now = Date.now
             let siteDate = try #require(Calendar.current.date(byAdding: .day, value: -25, to: now))
 
@@ -107,7 +108,7 @@ extension StatusManagerTests {
             let initialExerciseCallCount = mockExerciseClient.getCustomExercisesCallCount
             let initialDaysCallCount = mockDaysClient.getDaysCallCount
 
-            await statusManager.syncWithSiteDate(siteDate: siteDate, context: context)
+            await statusManager.syncWithSiteDate(siteDate: siteDate)
 
             #expect(mockProgressClient.getProgressCallCount > initialProgressCallCount)
             #expect(mockExerciseClient.getCustomExercisesCallCount > initialExerciseCallCount)
@@ -138,10 +139,7 @@ extension StatusManagerTests {
             )
             let statusManagerWithClient = try MockStatusManager.create(statusClient: mockStatusClient)
 
-            await statusManagerWithClient.start(
-                appDate: newStartDate,
-                context: context
-            )
+            await statusManagerWithClient.start(appDate: newStartDate)
 
             let calculator = try #require(statusManagerWithClient.currentDayCalculator)
             #expect(calculator.currentDay == 100)

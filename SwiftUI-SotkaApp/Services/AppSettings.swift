@@ -18,8 +18,8 @@ final class AppSettings {
     var showNotificationError = false
     var notificationError: NotificationError?
 
-    init(userDefaults: UserDefaults = UserDefaults.standard) {
-        self.defaults = userDefaults
+    init(userDefaults: UserDefaults? = nil) {
+        self.defaults = userDefaults ?? UserDefaults.standard
     }
 
     var appTheme: AppTheme {
@@ -133,12 +133,12 @@ final class AppSettings {
     var restTime: Int {
         get {
             access(keyPath: \.restTime)
-            let storedValue = defaults.integer(forKey: Key.restTime.rawValue)
+            let storedValue = defaults.integer(forKey: Constants.restTimeKey)
             return storedValue == 0 ? Constants.defaultRestTime : storedValue
         }
         set {
             withMutation(keyPath: \.restTime) {
-                defaults.set(newValue, forKey: Key.restTime.rawValue)
+                defaults.set(newValue, forKey: Constants.restTimeKey)
             }
         }
     }
@@ -263,10 +263,6 @@ private extension AppSettings {
         ///
         /// Значение взял из старого приложения
         case vibrate = "WorkoutPlayVibrate"
-        /// Время отдыха между подходами/кругами (в секундах)
-        ///
-        /// Значение взял из старого приложения
-        case restTime = "WorkoutTimer"
         /// Мелодия для уведомления об окончании отдыха
         case timerSound = "WorkoutTimerSound"
         /// Идентификатор для ежедневного уведомления

@@ -69,7 +69,7 @@ extension StatusManagerTests {
             try context.save()
 
             await statusManager.startNewRun(appDate: startDate)
-            await statusManager.getStatus(context: context)
+            await statusManager.getStatus()
 
             #expect(statusManager.maxReadInfoPostDay == 50)
 
@@ -140,7 +140,7 @@ extension StatusManagerTests {
             try context.save()
 
             await statusManager.startNewRun(appDate: startDate)
-            await statusManager.getStatus(context: context)
+            await statusManager.getStatus()
 
             let key = "WorkoutMaxReadInfoPostDay"
             #expect(userDefaults.integer(forKey: key) == 50)

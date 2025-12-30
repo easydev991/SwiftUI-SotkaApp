@@ -254,4 +254,21 @@ extension DayActivity {
 
         return activity
     }
+
+    /// Преобразование в WorkoutData для передачи на Apple Watch
+    /// - Returns: WorkoutData если активность является тренировкой, иначе nil
+    var workoutData: WorkoutData? {
+        guard activityType == .workout else { return nil }
+
+        let trainings = trainings.map { training in
+            training.workoutPreviewTraining
+        }
+
+        return WorkoutData(
+            day: day,
+            executionType: executeTypeRaw ?? ExerciseExecutionType.cycles.rawValue,
+            trainings: trainings,
+            plannedCount: plannedCount
+        )
+    }
 }

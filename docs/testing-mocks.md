@@ -2,6 +2,25 @@
 
 Документ описывает моки, используемые в unit-тестах проекта для изоляции тестируемого кода от внешних зависимостей.
 
+## Оглавление
+
+- [Назначение моков](#назначение-моков)
+- [Список моков](#список-моков)
+  - [MockCountriesClient](#mockcountriesclient)
+  - [MockProgressClient](#mockprogressclient)
+  - [MockDailyActivitiesService](#mockdailyactivitiesservice)
+  - [MockDaysClient](#mockdaysclient)
+  - [MockExerciseClient](#mockexerciseclient)
+  - [MockInfopostsClient](#mockinfopostsclient)
+  - [MockStatusClient](#mockstatusclient)
+  - [MockStatusManager](#mockstatusmanager)
+  - [MockUserDefaults](#mockuserdefaults)
+  - [MockPhotoDownloadService](#mockphotodownloadservice)
+  - [MockAuthHelper](#mockauthhelper)
+  - [MockWCSession](#mockwcsession)
+- [Общие паттерны использования](#общие-паттерны-использования)
+- [Расположение](#расположение)
+
 ## Назначение моков
 
 Моки используются для:
@@ -31,11 +50,15 @@
 **Основные возможности**:
 - Возврат списка прогрессов через `mockedProgressResponses`
 - Методы `getProgress()` и `getProgress(day: Int)` для получения прогресса
+- Методы `createProgress(progress:)`, `updateProgress(day:progress:)`, `deleteProgress(day:)` для управления прогрессом
+- Метод `deletePhoto(day:type:)` для удаления фотографий
 - Имитация ошибок через `shouldThrowError` и `shouldThrowErrorOnGetProgress`
 - Кастомная ошибка `MockError.demoError` в extension
 - Специфичные ошибки для `deletePhoto` через `deletePhotoError`
 - Счетчики вызовов методов (`getProgressCallCount`, `createProgressCallCount`, `updateProgressCallCount`, `deletePhotoCallCount`)
 - Отслеживание параметров вызовов (`deletePhotoCalls`, `updateProgressCalls`)
+- Отслеживание последних параметров `deletePhoto` через `lastDeletePhotoDay` и `lastDeletePhotoType`
+- Последовательный возврат ответов через внутренний `responseIndex`
 - Метод `reset()` для сброса состояния
 - Extension `ProgressSyncService.makeMock()` для создания сервиса с моками
 
@@ -49,6 +72,10 @@
 - Счетчик вызовов `createDailyActivityCallCount`
 - Отслеживание последних параметров (`lastActivity`, `lastContext`)
 - Массив всех вызовов `createDailyActivityCalls`
+- Метод `set(_:for:context:)` для установки типа активности
+- Счетчик вызовов `set` через `setCallCount`
+- Отслеживание последних параметров `set` через `lastSetActivityType`, `lastSetDay`, `lastSetContext`
+- Массив всех вызовов `set` через `setCalls`
 - Имитация ошибок через `shouldThrowError` и кастомную ошибку `MockError.demoError` в extension
 - Метод `reset()` для сброса состояния
 
@@ -64,7 +91,7 @@
 - Имитация ошибок через `shouldThrowError` и кастомную ошибку `MockError.demoError` в extension
 - Счетчики вызовов методов (`getDaysCallCount`, `createDayCallCount`, `updateDayCallCount`, `deleteDayCallCount`)
 - Отслеживание параметров вызовов (`createDayCalls`, `updateDayCalls`, `deleteDayCalls`)
-- Методы `setServerActivity()` и `removeServerActivity()` для прямого управления состоянием сервера
+- Методы `setServerActivity()` и `removeServerActivity(day:)` для прямого управления состоянием сервера
 - Активности, установленные через `setServerActivity()`, сохраняются даже после `deleteDay()` (через `preservedDays`)
 - Метод `reset()` для сброса состояния
 
@@ -126,6 +153,8 @@
   - `daysClient` - мок клиента дней
 - Настройка языка для `InfopostsService`
 - Использование изолированного `UserDefaults` через `MockUserDefaults`
+- Поддержка кастомного `ModelContainer` для тестирования
+- Поддержка мокирования `WCSessionProtocol` через параметр `watchConnectivitySessionProtocol`
 
 **Использование**: Тестирование `StatusManager` с полным контролем над всеми зависимостями.
 
@@ -151,6 +180,34 @@
 - Реализует протокол `PhotoDownloadServiceProtocol`
 
 **Использование**: Тестирование логики загрузки фотографий прогресса, используется в `ProgressSyncService.makeMock()`.
+
+### MockAuthHelper
+
+**Назначение**: Мок для `AuthHelper` для тестирования `WatchConnectivityManager`.
+
+**Основные возможности**:
+- Управление состоянием авторизации через `isAuthorized` и `authToken`
+- Счетчики вызовов методов (`didAuthorizeCallCount`, `triggerLogoutCallCount`, `saveAuthDataCallCount`)
+- Отслеживание последних параметров через `lastAuthData`
+- Замыкания для обработки событий (`onDidAuthorize`, `onTriggerLogout`)
+
+**Использование**: Тестирование логики авторизации и работы с `WatchConnectivityManager`.
+
+### MockWCSession
+
+**Назначение**: Мок для `WCSessionProtocol` для тестирования `WatchConnectivityManager` на iPhone.
+
+**Основные возможности**:
+- Управление доступностью сессии через `isReachable`
+- Имитация успешных/неуспешных операций через `shouldSucceed` и `mockError`
+- Настройка ответов через `mockReply`
+- Отслеживание отправленных сообщений через `sentMessages`
+- Отслеживание полученных сообщений через `receivedMessages`
+- Отслеживание контекстов приложения через `applicationContexts`
+- Счетчик вызовов активации через `activateCallCount`
+- Методы `simulateReceivedMessage()` и `simulateReceivedMessageWithReply()` для симуляции получения сообщений (оставлены для обратной совместимости)
+
+**Использование**: Тестирование логики синхронизации между iPhone и Apple Watch.
 
 ## Общие паттерны использования
 
@@ -218,4 +275,5 @@ mockClient.reset()
 
 - Основные моки находятся в папке `SwiftUI-SotkaAppTests/Mocks/`
 - `MockPhotoDownloadService` находится в `SwiftUI-SotkaAppTests/ProgressTests/`
+- Моки для Watch приложения находятся в `SotkaWatch Watch AppTests/Mocks/`
 

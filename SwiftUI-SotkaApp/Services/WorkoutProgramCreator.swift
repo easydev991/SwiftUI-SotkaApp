@@ -1,5 +1,4 @@
 import Foundation
-import SwiftData
 
 /// Модель для работы с данными тренировки
 struct WorkoutProgramCreator {
@@ -17,17 +16,6 @@ struct WorkoutProgramCreator {
 
     var defaultExecutionType: ExerciseExecutionType {
         Self.defaultExecutionType(for: day)
-    }
-
-    /// Инициализатор из DayActivity (для загрузки существующей активности)
-    init(from dayActivity: DayActivity) {
-        self.day = dayActivity.day
-        let executionType = dayActivity.executeType ?? Self.defaultExecutionType(for: dayActivity.day)
-        self.executionType = executionType
-        self.count = dayActivity.count
-        self.plannedCount = dayActivity.plannedCount ?? Self.calculatePlannedCircles(for: dayActivity.day, executionType: executionType)
-        self.trainings = dayActivity.trainings.map { WorkoutPreviewTraining(from: $0) }
-        self.comment = dayActivity.comment
     }
 
     /// Инициализатор для нового дня (создает данные с дефолтными значениями)
@@ -154,31 +142,6 @@ struct WorkoutProgramCreator {
         )
     }
 
-    var dayActivity: DayActivity {
-        let activity = DayActivity(
-            day: day,
-            activityTypeRaw: DayActivityType.workout.rawValue,
-            count: count,
-            plannedCount: plannedCount,
-            executeTypeRaw: executionType.rawValue,
-            createDate: .now,
-            modifyDate: .now
-        )
-        activity.isSynced = false
-        activity.shouldDelete = false
-        activity.comment = comment
-
-        let activityTrainings = trainings.enumerated().map { _, training in
-            DayActivityTraining(
-                from: training,
-                dayActivity: activity
-            )
-        }
-        activity.trainings = activityTrainings
-
-        return activity
-    }
-
     // MARK: - Приватные статические методы для генерации (используются внутри структуры)
     private static func generateExercises(for day: Int, executionType: ExerciseExecutionType) -> [WorkoutPreviewTraining] {
         if executionType == .turbo {
@@ -267,6 +230,11 @@ struct WorkoutProgramCreator {
         }
     }
 
+    /// Определяет фактический тип выполнения упражнений
+    /// - Parameters:
+    ///   - day: Номер дня
+    ///   - executionType: Выбранный тип выполнения упражнений
+    /// - Returns: Либо подходы, либо круги, в зависимости от вводных данных
     static func getEffectiveExecutionType(for day: Int, executionType: ExerciseExecutionType) -> ExerciseExecutionType {
         if executionType == .turbo {
             let setsDays = [93, 95, 98]
@@ -287,7 +255,7 @@ struct WorkoutProgramCreator {
         executionType == .turbo && getEffectiveExecutionType(for: day, executionType: executionType) == .sets
     }
 
-    private static func calculatePlannedCircles(for day: Int, executionType: ExerciseExecutionType) -> Int {
+    static func calculatePlannedCircles(for day: Int, executionType: ExerciseExecutionType) -> Int {
         let effectiveType = getEffectiveExecutionType(for: day, executionType: executionType)
 
         if effectiveType == .sets {
@@ -314,7 +282,15 @@ struct WorkoutProgramCreator {
         return result
     }
 
-    private static func calculateTurboCircles(for day: Int) -> Int {
+    static func defaultExecutionType(for day: Int) -> ExerciseExecutionType {
+        (92 ... 98).contains(day)
+            ? .turbo
+            : .cycles
+    }
+}
+
+private extension WorkoutProgramCreator {
+    static func calculateTurboCircles(for day: Int) -> Int {
         switch day {
         case 92: 40
         case 94, 96, 97: 5
@@ -322,17 +298,7 @@ struct WorkoutProgramCreator {
         }
     }
 
-    private static func defaultExecutionType(for day: Int) -> ExerciseExecutionType {
-        if day < 92 {
-            return .cycles
-        }
-        if day < 99 {
-            return .turbo
-        }
-        return .cycles
-    }
-
-    private static func availableExecutionTypes(for day: Int) -> [ExerciseExecutionType] {
+    static func availableExecutionTypes(for day: Int) -> [ExerciseExecutionType] {
         (92 ... 98).contains(day)
             ? [.cycles, .sets, .turbo]
             : [.cycles, .sets]

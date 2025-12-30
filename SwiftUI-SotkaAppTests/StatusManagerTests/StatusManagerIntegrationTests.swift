@@ -33,7 +33,7 @@ extension StatusManagerTests {
             try context.save()
 
             await statusManager.startNewRun(appDate: startDate)
-            await statusManager.getStatus(context: context)
+            await statusManager.getStatus()
 
             #expect(!statusManager.state.isLoading)
             #expect(statusManager.maxReadInfoPostDay == 50)
@@ -65,7 +65,7 @@ extension StatusManagerTests {
             context.insert(user)
             try context.save()
 
-            await statusManager.getStatus(context: context)
+            await statusManager.getStatus()
 
             #expect(!statusManager.state.isLoading)
             #expect(statusManager.currentDayCalculator != nil)
@@ -84,13 +84,6 @@ extension StatusManagerTests {
             let mockExerciseClient = MockExerciseClient()
             let mockDaysClient = MockDaysClient()
 
-            let statusManager = try MockStatusManager.create(
-                statusClient: mockStatusClient,
-                exerciseClient: mockExerciseClient,
-                progressClient: mockProgressClient,
-                daysClient: mockDaysClient
-            )
-
             let modelConfiguration = ModelConfiguration(isStoredInMemoryOnly: true)
             let modelContainer = try ModelContainer(
                 for: User.self,
@@ -106,13 +99,21 @@ extension StatusManagerTests {
             context.insert(user)
             try context.save()
 
+            let statusManager = try MockStatusManager.create(
+                statusClient: mockStatusClient,
+                exerciseClient: mockExerciseClient,
+                progressClient: mockProgressClient,
+                daysClient: mockDaysClient,
+                modelContainer: modelContainer
+            )
+
             await statusManager.startNewRun(appDate: startDate)
 
             let initialProgressCalls = mockProgressClient.getProgressCallCount
             let initialExerciseCalls = mockExerciseClient.getCustomExercisesCallCount
             let initialDaysCalls = mockDaysClient.getDaysCallCount
 
-            await statusManager.getStatus(context: context)
+            await statusManager.getStatus()
 
             #expect(mockProgressClient.getProgressCallCount > initialProgressCalls)
             #expect(mockExerciseClient.getCustomExercisesCallCount > initialExerciseCalls)
@@ -148,13 +149,13 @@ extension StatusManagerTests {
             try context.save()
 
             await statusManager.startNewRun(appDate: appDate)
-            await statusManager.getStatus(context: context)
+            await statusManager.getStatus()
 
             let conflictingModel = try #require(statusManager.conflictingSyncModel)
             #expect(conflictingModel.appDayCalculator.startDate.isTheSameDayIgnoringTime(appDate))
             #expect(conflictingModel.siteDayCalculator.startDate.isTheSameDayIgnoringTime(siteDate))
 
-            await statusManager.syncWithSiteDate(siteDate: siteDate, context: context)
+            await statusManager.syncWithSiteDate(siteDate: siteDate)
 
             #expect(statusManager.conflictingSyncModel == nil)
             #expect(!statusManager.state.isLoading)

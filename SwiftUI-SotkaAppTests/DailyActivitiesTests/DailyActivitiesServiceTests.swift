@@ -267,4 +267,153 @@ struct DailyActivitiesServiceTests {
         let errors = result.details.errors ?? []
         #expect(!errors.isEmpty)
     }
+
+    @Test("Возвращает активность для существующего дня")
+    func returnsActivityForExistingDay() throws {
+        let mockClient = MockDaysClient()
+        let service = DailyActivitiesService(client: mockClient)
+        let container = try ModelContainer(
+            for: DayActivity.self,
+            User.self,
+            configurations: ModelConfiguration(isStoredInMemoryOnly: true)
+        )
+        let context = container.mainContext
+
+        let user = User(id: 1, userName: "testuser", fullName: "Test User", email: "test@example.com")
+        context.insert(user)
+        try context.save()
+
+        let activity = DayActivity(
+            day: 42,
+            activityTypeRaw: DayActivityType.rest.rawValue,
+            count: nil,
+            plannedCount: nil,
+            executeTypeRaw: nil,
+            trainingTypeRaw: nil,
+            duration: nil,
+            comment: nil,
+            createDate: Date(),
+            modifyDate: Date(),
+            user: user
+        )
+        context.insert(activity)
+        try context.save()
+
+        let result = service.getActivity(dayNumber: 42, context: context)
+
+        let foundActivity = try #require(result)
+        #expect(foundActivity.day == 42)
+        #expect(foundActivity.activityType == .rest)
+    }
+
+    @Test("Возвращает nil для несуществующего дня")
+    func returnsNilForNonExistentDay() throws {
+        let mockClient = MockDaysClient()
+        let service = DailyActivitiesService(client: mockClient)
+        let container = try ModelContainer(
+            for: DayActivity.self,
+            User.self,
+            configurations: ModelConfiguration(isStoredInMemoryOnly: true)
+        )
+        let context = container.mainContext
+
+        let user = User(id: 1, userName: "testuser", fullName: "Test User", email: "test@example.com")
+        context.insert(user)
+        try context.save()
+
+        let result = service.getActivity(dayNumber: 42, context: context)
+
+        #expect(result == nil)
+    }
+
+    @Test("Возвращает nil для активности помеченной на удаление")
+    func returnsNilForDeletedActivity() throws {
+        let mockClient = MockDaysClient()
+        let service = DailyActivitiesService(client: mockClient)
+        let container = try ModelContainer(
+            for: DayActivity.self,
+            User.self,
+            configurations: ModelConfiguration(isStoredInMemoryOnly: true)
+        )
+        let context = container.mainContext
+
+        let user = User(id: 1, userName: "testuser", fullName: "Test User", email: "test@example.com")
+        context.insert(user)
+        try context.save()
+
+        let activity = DayActivity(
+            day: 42,
+            activityTypeRaw: DayActivityType.rest.rawValue,
+            count: nil,
+            plannedCount: nil,
+            executeTypeRaw: nil,
+            trainingTypeRaw: nil,
+            duration: nil,
+            comment: nil,
+            createDate: Date(),
+            modifyDate: Date(),
+            user: user
+        )
+        activity.shouldDelete = true
+        context.insert(activity)
+        try context.save()
+
+        let result = service.getActivity(dayNumber: 42, context: context)
+
+        #expect(result == nil)
+    }
+
+    @Test("Возвращает активность только для текущего пользователя")
+    func returnsActivityOnlyForCurrentUser() throws {
+        let mockClient = MockDaysClient()
+        let service = DailyActivitiesService(client: mockClient)
+        let container = try ModelContainer(
+            for: DayActivity.self,
+            User.self,
+            configurations: ModelConfiguration(isStoredInMemoryOnly: true)
+        )
+        let context = container.mainContext
+
+        let user1 = User(id: 1, userName: "user1", fullName: "User 1", email: "user1@example.com")
+        let user2 = User(id: 2, userName: "user2", fullName: "User 2", email: "user2@example.com")
+        context.insert(user1)
+        context.insert(user2)
+        try context.save()
+
+        let activity1 = DayActivity(
+            day: 42,
+            activityTypeRaw: DayActivityType.rest.rawValue,
+            count: nil,
+            plannedCount: nil,
+            executeTypeRaw: nil,
+            trainingTypeRaw: nil,
+            duration: nil,
+            comment: nil,
+            createDate: Date(),
+            modifyDate: Date(),
+            user: user1
+        )
+        let activity2 = DayActivity(
+            day: 42,
+            activityTypeRaw: DayActivityType.stretch.rawValue,
+            count: nil,
+            plannedCount: nil,
+            executeTypeRaw: nil,
+            trainingTypeRaw: nil,
+            duration: nil,
+            comment: nil,
+            createDate: Date(),
+            modifyDate: Date(),
+            user: user2
+        )
+        context.insert(activity1)
+        context.insert(activity2)
+        try context.save()
+
+        let result = service.getActivity(dayNumber: 42, context: context)
+
+        let foundActivity = try #require(result)
+        #expect(foundActivity.user?.id == user1.id)
+        #expect(foundActivity.activityType == .rest)
+    }
 }

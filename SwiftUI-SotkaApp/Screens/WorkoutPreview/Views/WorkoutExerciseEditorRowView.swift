@@ -1,3 +1,4 @@
+import SWDesignSystem
 import SwiftUI
 
 enum WorkoutExerciseEditorRowMode {
@@ -26,9 +27,7 @@ struct WorkoutExerciseEditorRowView: View {
                 title: title,
                 count: nil
             )
-            if mode == .removable {
-                dragHandle
-            }
+            dragHandle
         }
     }
 
@@ -39,16 +38,21 @@ struct WorkoutExerciseEditorRowView: View {
         ) {
             Image(systemName: mode.systemImageName)
                 .symbolVariant(.circle.fill)
-                .foregroundStyle(mode == .removable ? .red : .accentColor)
+                .foregroundStyle(mode == .removable ? .red : .swAccent)
                 .font(.title3)
         }
         .buttonStyle(.plain)
     }
 
+    @ViewBuilder
     private var dragHandle: some View {
-        Image(systemName: "line.3.horizontal")
-            .foregroundStyle(.secondary)
-            .font(.body)
+        #if !os(watchOS)
+        if mode == .removable {
+            Image(systemName: "line.3.horizontal")
+                .foregroundStyle(.secondary)
+                .font(.body)
+        }
+        #endif
     }
 }
 

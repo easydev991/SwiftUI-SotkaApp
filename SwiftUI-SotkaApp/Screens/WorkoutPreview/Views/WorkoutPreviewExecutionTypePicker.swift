@@ -8,7 +8,7 @@ struct WorkoutPreviewExecutionTypePicker: View {
     var body: some View {
         Picker(.exerciseExecutionType, selection: $selection) {
             ForEach(availableTypes, id: \.self) { type in
-                Text(type.localizedTitle).tag(type as ExerciseExecutionType?)
+                Text(type.localizedTitle).tag(type)
             }
         }
         .pickerStyle(.segmented)

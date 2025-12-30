@@ -3,9 +3,9 @@ import SwiftUI
 
 struct SyncStartDateView: View {
     @Environment(StatusManager.self) private var statusManager
-    @Environment(\.modelContext) private var modelContext
     @State private var selectedOption = Selection.none
     @State private var syncTask: Task<Void, Never>?
+    private var isLoading: Bool { syncTask != nil }
     let model: ConflictingStartDate
 
     var body: some View {
@@ -70,7 +70,7 @@ struct SyncStartDateView: View {
             .navigationBarTitleDisplayMode(.inline)
         }
         .interactiveDismissDisabled()
-        .loadingOverlay(if: statusManager.state.isLoading)
+        .loadingOverlay(if: isLoading)
     }
 
     private func makeOpacity(_ model: DayCalculator) -> CGFloat {
@@ -86,17 +86,11 @@ struct SyncStartDateView: View {
             assertionFailure("Дата должна быть выбрана до попытки сохранения")
         case let .app(model):
             syncTask = Task {
-                await statusManager.start(
-                    appDate: model.startDate,
-                    context: modelContext
-                )
+                await statusManager.start(appDate: model.startDate)
             }
         case let .site(model):
             syncTask = Task {
-                await statusManager.syncWithSiteDate(
-                    siteDate: model.startDate,
-                    context: modelContext
-                )
+                await statusManager.syncWithSiteDate(siteDate: model.startDate)
             }
         }
     }

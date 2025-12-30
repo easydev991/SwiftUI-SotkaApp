@@ -7,6 +7,8 @@ struct WorkoutPreviewScreen: View {
     @Environment(\.restTime) private var restTime
     @Environment(\.modelContext) private var modelContext
     @Environment(\.dismiss) private var dismiss
+    @Environment(StatusManager.self) private var statusManager
+    @Environment(\.currentDay) private var currentDay
     @State private var viewModel = WorkoutPreviewViewModel()
     @State private var showEditorScreen = false
     @State private var showWorkoutScreen = false
@@ -129,8 +131,8 @@ private extension WorkoutPreviewScreen {
     func makeTrainingRowView(for training: WorkoutPreviewTraining) -> some View {
         TrainingRowView(
             id: training.id,
-            image: exerciseImage(for: training),
-            title: exerciseTitle(for: training),
+            image: makeExerciseImage(for: training),
+            title: makeExerciseTitle(for: training),
             count: training.count,
             onAction: { id, action in
                 viewModel.updatePlannedCount(id: id, action: action)
@@ -177,7 +179,7 @@ private extension WorkoutPreviewScreen {
         .focused($isCommentFocused)
     }
 
-    func exerciseImage(for training: WorkoutPreviewTraining) -> Image {
+    func makeExerciseImage(for training: WorkoutPreviewTraining) -> Image {
         if let customTypeId = training.customTypeId,
            let customExercise = CustomExercise.fetch(by: customTypeId, in: modelContext) {
             customExercise.image
@@ -189,7 +191,7 @@ private extension WorkoutPreviewScreen {
         }
     }
 
-    func exerciseTitle(for training: WorkoutPreviewTraining) -> String {
+    func makeExerciseTitle(for training: WorkoutPreviewTraining) -> String {
         if let customTypeId = training.customTypeId,
            let customExercise = CustomExercise.fetch(by: customTypeId, in: modelContext) {
             return customExercise.name
@@ -209,12 +211,22 @@ private extension WorkoutPreviewScreen {
             isPassed: viewModel.wasOriginallyPassed,
             hasChanges: viewModel.hasChanges,
             isWorkoutCompleted: viewModel.isWorkoutCompleted,
-            showCommentField: viewModel.isWorkoutCompleted,
             onSave: {
                 viewModel.saveTrainingAsPassed(
                     activitiesService: activitiesService,
                     modelContext: modelContext
                 )
+                // Отправляем данные на часы после сохранения
+                if currentDay == day {
+                    let currentActivity = activitiesService.getActivityType(day: day, context: modelContext)
+                    statusManager.sendCurrentStatus(
+                        isAuthorized: true,
+                        currentDay: currentDay,
+                        currentActivity: currentActivity
+                    )
+                    // Отправляем полные данные тренировки на часы
+                    statusManager.sendWorkoutDataToWatch(day: day)
+                }
                 dismiss()
             },
             onStartTraining: {

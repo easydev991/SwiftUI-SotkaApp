@@ -2,6 +2,21 @@
 
 Этот документ описывает реализованный функционал экрана таймера отдыха, логику отслеживания времени, обработку сворачивания/разворачивания приложения и интеграцию с экраном тренировки.
 
+## Оглавление
+
+- [Краткий обзор функционала](#краткий-обзор-функционала)
+- [Компоненты UI](#компоненты-ui)
+- [Реализация](#реализация)
+  - [WorkoutTimerScreen](#workouttimerscreen)
+  - [CircularTimerView](#circulartimerview)
+- [UI: взаимодействие и поведение](#ui-взаимодействие-и-поведение)
+- [Интеграция с экраном тренировки](#интеграция-с-экраном-тренировки)
+- [Обработка фонового режима](#обработка-фонового-режима)
+- [Локализация](#локализация)
+- [Стилизация](#стилизация)
+- [Принципы расширения](#принципы-расширения)
+- [Ключевые правила](#ключевые-правила)
+
 ### Краткий обзор функционала
 
 - **Обратный отсчет времени**: отображение оставшегося времени отдыха с круговым прогресс-баром и текстовым индикатором в формате MM:SS.
@@ -36,29 +51,34 @@
 - Используется `Timer.publish(every: 0.5, on: .main, in: .common).autoconnect()` для автоматического обновления каждые 0.5 секунды.
 - Таймер автоматически отключается при отсутствии подписчиков (например, при закрытии View).
 - В `onDisappear` вызывается `timer.upstream.connect().cancel()` для явной отмены таймера.
+- В `onReceive(timer)` проверяется наличие `startTime` (`guard let startTime else { return }`).
+- Если таймер истек на основе реального времени (`elapsed >= duration`), метод возвращается без вызова `onFinish` (обработка произойдет через `checkAndHandleExpiredRestTimer` в ViewModel).
 
 **Вычисление оставшегося времени**:
 - Вместо простого уменьшения счетчика используется вычисление на основе времени начала (`startTime`).
-- При активном приложении: `elapsed = Date().timeIntervalSince(startTime)`.
-- При свернутом приложении: `elapsed = pausedTime.timeIntervalSince(startTime)` (используется время до паузы).
+- Метод `updateRemainingSeconds()` вычисляет прошедшее время:
+  - Если приложение свернуто (`pausedTime != nil`): `elapsed = pausedTime.timeIntervalSince(startTime)` (используется время до паузы).
+  - Если приложение активно: `elapsed = Date().timeIntervalSince(startTime)`.
 - `remainingSeconds = max(0, duration - Int(elapsed.rounded()))` (округление до ближайшего целого, так как обновление происходит каждые 0.5 секунды).
+- Обновление происходит только если новое значение отличается от текущего (`if newRemaining != remainingSeconds`).
 
 **Обработка сворачивания/разворачивания**:
-- Отслеживается `scenePhase` через `.onChange(of: scenePhase)`.
+- Отслеживается `scenePhase` через `.onChange(of: scenePhase)` с вызовом `handleScenePhaseChange(from:to:)`.
+- Метод `handleScenePhaseChange` проверяет наличие `startTime` в начале (`guard let startTime else { return }`).
 - При сворачивании (`.active` → `.background`/`.inactive`): сохраняется `pausedTime = .now`.
 - При разворачивании (`.background`/`.inactive` → `.active`):
   - Вычисляется правильное оставшееся время на основе реального прошедшего времени: `elapsed = Date().timeIntervalSince(startTime)`.
   - Если таймер уже истек (`elapsed >= duration`), устанавливается `remainingSeconds = 0`, отключается анимация и очищается `pausedTime` (обработка завершения произойдет через `checkAndHandleExpiredRestTimer` в ViewModel).
   - Если таймер не истек, отключается анимация (`shouldAnimate = false`) для резкого перехода.
-  - Обновляется `remainingSeconds` с правильным значением.
-  - Включается анимация обратно после небольшой задержки (0.1 секунды).
+  - Обновляется `remainingSeconds` с правильным значением: `max(0, duration - Int(elapsed))`.
+  - Включается анимация обратно после небольшой задержки (0.1 секунды через `DispatchQueue.main.asyncAfter`).
   - Очищается `pausedTime`.
 
 **Завершение таймера**:
-- Автоматическое: при достижении `remainingSeconds <= 0` в `onReceive(timer)` вызывается `finishTimer(force: false)` с задержкой в 1 секунду.
+- Автоматическое: при достижении `remainingSeconds <= 0` в `onReceive(timer)` вызывается `finishTimer(force: false)` с задержкой в 1 секунду через `DispatchQueue.main.asyncAfter(deadline: .now() + 1.0)`.
 - Досрочное: при нажатии кнопки "Завершить" вызывается `finishTimer(force: true)` без задержки.
-- Если таймер истек на основе реального времени (при разворачивании приложения), он не вызывает `onFinish` сразу, а ждет обработки через `checkAndHandleExpiredRestTimer` в ViewModel.
-- `finishTimer(force:)` отменяет таймер и вызывает `onFinish(force:)` для обработки завершения в ViewModel.
+- Если таймер истек на основе реального времени (при разворачивании приложения или в `updateRemainingSeconds()`), он не вызывает `onFinish` сразу, а ждет обработки через `checkAndHandleExpiredRestTimer` в ViewModel.
+- `finishTimer(force:)` отменяет таймер через `timer.upstream.connect().cancel()` и вызывает `onFinish(force:)` для обработки завершения в ViewModel.
 
 #### CircularTimerView
 

@@ -5,6 +5,7 @@ import SWUtils
 
 struct HomeActivitySectionView: View {
     @Environment(DailyActivitiesService.self) private var activitiesService
+    @Environment(StatusManager.self) private var statusManager
     @Environment(\.currentDay) private var currentDay
     @Environment(\.modelContext) private var modelContext
     @Query private var activities: [DayActivity]
@@ -29,6 +30,11 @@ struct HomeActivitySectionView: View {
             Button(.journalDelete, role: .destructive) {
                 if let currentActivity {
                     activitiesService.deleteDailyActivity(currentActivity, context: modelContext)
+
+                    // Отправляем статус на часы, если это текущий день
+                    if currentActivity.day == currentDay {
+                        statusManager.sendCurrentStatus(isAuthorized: true, currentDay: currentDay, currentActivity: nil)
+                    }
                 }
             }
         } message: {
@@ -114,6 +120,12 @@ private extension HomeActivitySectionView {
             onSheetItem(.workoutPreview(day))
         }
         activitiesService.set(activityType, for: day, context: modelContext)
+
+        // Отправляем статус на часы, если это текущий день
+        if day == currentDay {
+            let currentActivity = activitiesService.getActivityType(day: day, context: modelContext)
+            statusManager.sendCurrentStatus(isAuthorized: true, currentDay: day, currentActivity: currentActivity)
+        }
     }
 }
 

@@ -922,4 +922,224 @@ struct DayActivityTests {
 
         #expect(!dayActivity.isPassed)
     }
+
+    // MARK: - workoutData Tests
+
+    @Test("workoutData возвращает nil для активности типа stretch")
+    @MainActor
+    func workoutDataReturnsNilForStretch() throws {
+        let container = try ModelContainer(
+            for: DayActivity.self,
+            configurations: ModelConfiguration(isStoredInMemoryOnly: true)
+        )
+        let context = container.mainContext
+
+        let dayActivity = DayActivity(
+            day: 1,
+            activityTypeRaw: DayActivityType.stretch.rawValue,
+            createDate: Date(),
+            modifyDate: Date()
+        )
+        context.insert(dayActivity)
+
+        #expect(dayActivity.workoutData == nil)
+    }
+
+    @Test("workoutData возвращает nil для активности типа rest")
+    @MainActor
+    func workoutDataReturnsNilForRest() throws {
+        let container = try ModelContainer(
+            for: DayActivity.self,
+            configurations: ModelConfiguration(isStoredInMemoryOnly: true)
+        )
+        let context = container.mainContext
+
+        let dayActivity = DayActivity(
+            day: 1,
+            activityTypeRaw: DayActivityType.rest.rawValue,
+            createDate: Date(),
+            modifyDate: Date()
+        )
+        context.insert(dayActivity)
+
+        #expect(dayActivity.workoutData == nil)
+    }
+
+    @Test("workoutData возвращает nil для активности типа sick")
+    @MainActor
+    func workoutDataReturnsNilForSick() throws {
+        let container = try ModelContainer(
+            for: DayActivity.self,
+            configurations: ModelConfiguration(isStoredInMemoryOnly: true)
+        )
+        let context = container.mainContext
+
+        let dayActivity = DayActivity(
+            day: 1,
+            activityTypeRaw: DayActivityType.sick.rawValue,
+            createDate: Date(),
+            modifyDate: Date()
+        )
+        context.insert(dayActivity)
+
+        #expect(dayActivity.workoutData == nil)
+    }
+
+    @Test("workoutData возвращает WorkoutData для тренировочной активности")
+    @MainActor
+    func workoutDataReturnsWorkoutDataForWorkout() throws {
+        let container = try ModelContainer(
+            for: DayActivity.self,
+            DayActivityTraining.self,
+            configurations: ModelConfiguration(isStoredInMemoryOnly: true)
+        )
+        let context = container.mainContext
+
+        let dayActivity = DayActivity(
+            day: 5,
+            activityTypeRaw: DayActivityType.workout.rawValue,
+            plannedCount: 4,
+            executeTypeRaw: ExerciseExecutionType.sets.rawValue,
+            createDate: Date(),
+            modifyDate: Date()
+        )
+        let training1 = DayActivityTraining(
+            count: 10,
+            typeId: 0,
+            customTypeId: nil,
+            sortOrder: 0,
+            dayActivity: dayActivity
+        )
+        let training2 = DayActivityTraining(
+            count: 15,
+            typeId: 1,
+            customTypeId: nil,
+            sortOrder: 1,
+            dayActivity: dayActivity
+        )
+        dayActivity.trainings.append(training1)
+        dayActivity.trainings.append(training2)
+        context.insert(dayActivity)
+        try context.save()
+
+        let workoutData = try #require(dayActivity.workoutData)
+
+        #expect(workoutData.day == 5)
+        #expect(workoutData.executionType == ExerciseExecutionType.sets.rawValue)
+        let plannedCount = try #require(workoutData.plannedCount)
+        #expect(plannedCount == 4)
+        #expect(workoutData.trainings.count == 2)
+    }
+
+    @Test("workoutData использует значение по умолчанию для executionType если оно nil")
+    @MainActor
+    func workoutDataUsesDefaultExecutionTypeWhenNil() throws {
+        let container = try ModelContainer(
+            for: DayActivity.self,
+            configurations: ModelConfiguration(isStoredInMemoryOnly: true)
+        )
+        let context = container.mainContext
+
+        let dayActivity = DayActivity(
+            day: 1,
+            activityTypeRaw: DayActivityType.workout.rawValue,
+            executeTypeRaw: nil,
+            createDate: Date(),
+            modifyDate: Date()
+        )
+        context.insert(dayActivity)
+
+        let workoutData = try #require(dayActivity.workoutData)
+
+        #expect(workoutData.executionType == ExerciseExecutionType.cycles.rawValue)
+    }
+
+    @Test("workoutData правильно преобразует trainings в WorkoutPreviewTraining")
+    @MainActor
+    func workoutDataConvertsTrainingsCorrectly() throws {
+        let container = try ModelContainer(
+            for: DayActivity.self,
+            DayActivityTraining.self,
+            configurations: ModelConfiguration(isStoredInMemoryOnly: true)
+        )
+        let context = container.mainContext
+
+        let dayActivity = DayActivity(
+            day: 10,
+            activityTypeRaw: DayActivityType.workout.rawValue,
+            executeTypeRaw: ExerciseExecutionType.cycles.rawValue,
+            createDate: Date(),
+            modifyDate: Date()
+        )
+        let training = DayActivityTraining(
+            count: 20,
+            typeId: 3,
+            customTypeId: "custom-123",
+            sortOrder: 5,
+            dayActivity: dayActivity
+        )
+        dayActivity.trainings.append(training)
+        context.insert(dayActivity)
+        try context.save()
+
+        let workoutData = try #require(dayActivity.workoutData)
+
+        #expect(workoutData.trainings.count == 1)
+        let previewTraining = workoutData.trainings[0]
+        let count = try #require(previewTraining.count)
+        #expect(count == 20)
+        let typeId = try #require(previewTraining.typeId)
+        #expect(typeId == 3)
+        let customTypeId = try #require(previewTraining.customTypeId)
+        #expect(customTypeId == "custom-123")
+        let sortOrder = try #require(previewTraining.sortOrder)
+        #expect(sortOrder == 5)
+    }
+
+    @Test("workoutData возвращает nil для plannedCount если оно nil")
+    @MainActor
+    func workoutDataReturnsNilPlannedCountWhenNil() throws {
+        let container = try ModelContainer(
+            for: DayActivity.self,
+            configurations: ModelConfiguration(isStoredInMemoryOnly: true)
+        )
+        let context = container.mainContext
+
+        let dayActivity = DayActivity(
+            day: 1,
+            activityTypeRaw: DayActivityType.workout.rawValue,
+            plannedCount: nil,
+            executeTypeRaw: ExerciseExecutionType.cycles.rawValue,
+            createDate: Date(),
+            modifyDate: Date()
+        )
+        context.insert(dayActivity)
+
+        let workoutData = try #require(dayActivity.workoutData)
+
+        #expect(workoutData.plannedCount == nil)
+    }
+
+    @Test("workoutData обрабатывает пустой массив trainings")
+    @MainActor
+    func workoutDataHandlesEmptyTrainingsArray() throws {
+        let container = try ModelContainer(
+            for: DayActivity.self,
+            configurations: ModelConfiguration(isStoredInMemoryOnly: true)
+        )
+        let context = container.mainContext
+
+        let dayActivity = DayActivity(
+            day: 1,
+            activityTypeRaw: DayActivityType.workout.rawValue,
+            executeTypeRaw: ExerciseExecutionType.cycles.rawValue,
+            createDate: Date(),
+            modifyDate: Date()
+        )
+        context.insert(dayActivity)
+
+        let workoutData = try #require(dayActivity.workoutData)
+
+        #expect(workoutData.trainings.isEmpty)
+    }
 }

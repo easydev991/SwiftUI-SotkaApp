@@ -1,7 +1,7 @@
 import SwiftUI
 
 /// Пикер для одной фотографии с возможностью обрезки
-public struct SWImagePicker: UIViewControllerRepresentable {
+struct SWImagePicker: UIViewControllerRepresentable {
     private let allowsEditing: Bool
     private let sourceType: UIImagePickerController.SourceType
     private let completion: (UIImage) -> Void
@@ -12,7 +12,7 @@ public struct SWImagePicker: UIViewControllerRepresentable {
     ///   - allowsEditing: Можно ли обрезать фотографию стандартным инструментом, по умолчанию `false`
     ///   - sourceType: Тип источника для пикера, по умолчанию галерея фото
     ///   - completion: Возвращает выбранную фотографию
-    public init(
+    init(
         allowsEditing: Bool = false,
         sourceType: UIImagePickerController.SourceType = .photoLibrary,
         completion: @escaping (UIImage) -> Void
@@ -22,7 +22,7 @@ public struct SWImagePicker: UIViewControllerRepresentable {
         self.completion = completion
     }
 
-    public func makeUIViewController(context: Context) -> UIImagePickerController {
+    func makeUIViewController(context: Context) -> UIImagePickerController {
         let picker = UIImagePickerController()
         picker.sourceType = sourceType
         picker.allowsEditing = allowsEditing
@@ -30,18 +30,18 @@ public struct SWImagePicker: UIViewControllerRepresentable {
         return picker
     }
 
-    public func updateUIViewController(_: UIImagePickerController, context _: Context) {}
+    func updateUIViewController(_: UIImagePickerController, context _: Context) {}
 
-    public func makeCoordinator() -> Coordinator { .init(self) }
+    func makeCoordinator() -> Coordinator { .init(self) }
 
-    public final class Coordinator: NSObject, UINavigationControllerDelegate, UIImagePickerControllerDelegate {
+    final class Coordinator: NSObject, UINavigationControllerDelegate, UIImagePickerControllerDelegate {
         private let parent: SWImagePicker
 
         init(_ parent: SWImagePicker) {
             self.parent = parent
         }
 
-        public func imagePickerController(
+        func imagePickerController(
             _: UIImagePickerController,
             didFinishPickingMediaWithInfo info: [UIImagePickerController.InfoKey: Any]
         ) {
@@ -51,7 +51,7 @@ public struct SWImagePicker: UIViewControllerRepresentable {
             parent.dismiss()
         }
 
-        public func imagePickerControllerDidCancel(_: UIImagePickerController) {
+        func imagePickerControllerDidCancel(_: UIImagePickerController) {
             parent.dismiss()
         }
     }

@@ -704,17 +704,19 @@ private extension ProgressSyncService {
                         logger.info("📌 [TRACE] applySyncEvents() - день \(localId) уже существует на сервере")
                         logger
                             .info(
-                                "📌 [TRACE] applySyncEvents() - до изменения: isSynced=\(local.isSynced), shouldDelete=\(local.shouldDelete)"
+                                "📌 [TRACE] applySyncEvents() - до изменения: isSynced=\(local.isSynced), shouldDelete=\(local.shouldDelete), lastModified=\(local.lastModified)"
                             )
 
                         // Локальная запись уже существует на сервере - помечаем как синхронизированную
+                        // Обновляем lastModified, чтобы защита от race condition в handleDeletedProgress работала правильно
                         local.isSynced = true
                         local.shouldDelete = false
+                        local.lastModified = Date.now
                         updated += 1
 
                         logger
                             .info(
-                                "📌 [TRACE] applySyncEvents() - после изменения: isSynced=\(local.isSynced), shouldDelete=\(local.shouldDelete)"
+                                "📌 [TRACE] applySyncEvents() - после изменения: isSynced=\(local.isSynced), shouldDelete=\(local.shouldDelete), lastModified=\(local.lastModified)"
                             )
                     } else {
                         logger.warning("⚠️ [TRACE] applySyncEvents() - запись дня \(localId) не найдена локально (alreadyExists)")

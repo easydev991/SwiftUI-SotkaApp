@@ -1,3 +1,4 @@
+import SWDesignSystem
 import SwiftUI
 
 struct ActivityRowView: View {
@@ -18,9 +19,10 @@ struct ActivityRowView: View {
                 .resizable()
                 .scaledToFit()
                 .frame(width: imageSize, height: imageSize)
-                .foregroundStyle(.blue)
+                .foregroundStyle(Color.swAccent)
             Text(title)
                 .frame(maxWidth: .infinity, alignment: .leading)
+                .multilineTextAlignment(.leading)
             if let count {
                 Text("\(count)")
             }

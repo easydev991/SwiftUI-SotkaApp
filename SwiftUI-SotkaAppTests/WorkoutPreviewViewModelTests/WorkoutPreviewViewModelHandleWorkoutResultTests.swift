@@ -107,5 +107,84 @@ extension WorkoutPreviewViewModelTests {
             #expect(count == 5)
             #expect(workoutDuration == 200)
         }
+
+        @Test("Для прерванной тренировки с подходами handleWorkoutResult должен установить count = plannedCount из результата")
+        @MainActor
+        func handleWorkoutResultForInterruptedSetsWorkout() throws {
+            let viewModel = WorkoutPreviewViewModel()
+            let modelConfiguration = ModelConfiguration(isStoredInMemoryOnly: true)
+            let modelContainer = try ModelContainer(
+                for: User.self,
+                DayActivity.self,
+                DayActivityTraining.self,
+                configurations: modelConfiguration
+            )
+            let context = modelContainer.mainContext
+
+            viewModel.updateData(modelContext: context, day: 1, restTime: 60)
+            viewModel.plannedCount = 6
+
+            // Результат прерванной тренировки с подходами содержит plannedCount
+            let result = WorkoutResult(count: 6, duration: 120)
+            viewModel.handleWorkoutResult(result)
+
+            let count = try #require(viewModel.count)
+            #expect(count == 6)
+            #expect(viewModel.isWorkoutCompleted)
+        }
+
+        @Test(
+            "Для завершенной тренировки с подходами handleWorkoutResult должен установить count равным фактическому количеству из результата"
+        )
+        @MainActor
+        func handleWorkoutResultForCompletedSetsWorkout() throws {
+            let viewModel = WorkoutPreviewViewModel()
+            let modelConfiguration = ModelConfiguration(isStoredInMemoryOnly: true)
+            let modelContainer = try ModelContainer(
+                for: User.self,
+                DayActivity.self,
+                DayActivityTraining.self,
+                configurations: modelConfiguration
+            )
+            let context = modelContainer.mainContext
+
+            viewModel.updateData(modelContext: context, day: 1, restTime: 60)
+            viewModel.plannedCount = 6
+
+            // Результат завершенной тренировки с подходами содержит фактическое количество (12 подходов = 6 подходов * 2 упражнения)
+            let result = WorkoutResult(count: 12, duration: 300)
+            viewModel.handleWorkoutResult(result)
+
+            let count = try #require(viewModel.count)
+            #expect(count == 12)
+            #expect(viewModel.isWorkoutCompleted)
+        }
+
+        @Test(
+            "Для прерванной тренировки с кругами handleWorkoutResult должен установить count равным количеству завершенных кругов из результата"
+        )
+        @MainActor
+        func handleWorkoutResultForInterruptedCyclesWorkout() throws {
+            let viewModel = WorkoutPreviewViewModel()
+            let modelConfiguration = ModelConfiguration(isStoredInMemoryOnly: true)
+            let modelContainer = try ModelContainer(
+                for: User.self,
+                DayActivity.self,
+                DayActivityTraining.self,
+                configurations: modelConfiguration
+            )
+            let context = modelContainer.mainContext
+
+            viewModel.updateData(modelContext: context, day: 1, restTime: 60)
+            viewModel.plannedCount = 4
+
+            // Результат прерванной тренировки с кругами содержит количество завершенных кругов (прежняя логика)
+            let result = WorkoutResult(count: 2, duration: 90)
+            viewModel.handleWorkoutResult(result)
+
+            let count = try #require(viewModel.count)
+            #expect(count == 2)
+            #expect(viewModel.isWorkoutCompleted)
+        }
     }
 }
