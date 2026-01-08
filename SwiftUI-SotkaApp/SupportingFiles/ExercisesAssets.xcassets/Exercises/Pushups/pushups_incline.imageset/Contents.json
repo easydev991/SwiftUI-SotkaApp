@@ -1,18 +1,8 @@
 {
   "images" : [
     {
-      "idiom" : "universal",
-      "scale" : "1x"
-    },
-    {
-      "filename" : "pushups_incline@2x.png",
-      "idiom" : "universal",
-      "scale" : "2x"
-    },
-    {
-      "filename" : "pushups_incline@3x.png",
-      "idiom" : "universal",
-      "scale" : "3x"
+      "filename" : "pushups_incline.svg",
+      "idiom" : "universal"
     }
   ],
   "info" : {

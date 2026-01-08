@@ -1,18 +1,8 @@
 {
   "images" : [
     {
-      "idiom" : "universal",
-      "scale" : "1x"
-    },
-    {
-      "filename" : "Pushups@2x.png",
-      "idiom" : "universal",
-      "scale" : "2x"
-    },
-    {
-      "filename" : "Pushups@3x.png",
-      "idiom" : "universal",
-      "scale" : "3x"
+      "filename" : "Pushups.svg",
+      "idiom" : "universal"
     }
   ],
   "info" : {

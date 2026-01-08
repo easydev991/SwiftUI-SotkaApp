@@ -1,18 +1,8 @@
 {
   "images" : [
     {
-      "idiom" : "universal",
-      "scale" : "1x"
-    },
-    {
-      "filename" : "standing@2x.png",
-      "idiom" : "universal",
-      "scale" : "2x"
-    },
-    {
-      "filename" : "standing@3x.png",
-      "idiom" : "universal",
-      "scale" : "3x"
+      "filename" : "standing.svg",
+      "idiom" : "universal"
     }
   ],
   "info" : {
