@@ -1,18 +1,8 @@
 {
   "images" : [
     {
-      "idiom" : "universal",
-      "scale" : "1x"
-    },
-    {
-      "filename" : "pushups_knee@2x.png",
-      "idiom" : "universal",
-      "scale" : "2x"
-    },
-    {
-      "filename" : "pushups_knee@3x.png",
-      "idiom" : "universal",
-      "scale" : "3x"
+      "filename" : "pushups_knee.svg",
+      "idiom" : "universal"
     }
   ],
   "info" : {
@@ -20,6 +10,7 @@
     "version" : 1
   },
   "properties" : {
+    "preserves-vector-representation" : true,
     "template-rendering-intent" : "original"
   }
 }
