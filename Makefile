@@ -8,7 +8,7 @@ BOLD=\033[1m
 RESET=\033[0m
 
 # Версия Ruby в проекте
-RUBY_VERSION=3.2.2
+RUBY_VERSION=3.3.6
 
 # Версия Swift в проекте
 SWIFT_VERSION=6.2.0
