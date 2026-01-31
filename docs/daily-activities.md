@@ -59,6 +59,7 @@
 - `trainings: [DayActivityTraining]` — тренировки этого дня (связь с каскадным удалением).
 
 **Вычисляемые свойства**:
+
 - `activityType: DayActivityType?` — тип активности (преобразование из rawValue).
 - `executeType: ExerciseExecutionType?` — тип выполнения упражнений.
 - `trainingType: ExerciseType?` — тип тренировки.
@@ -68,11 +69,13 @@
 - `workoutData: WorkoutData?` — преобразование в `WorkoutData` для передачи на Apple Watch (только для типа `workout`).
 
 **Методы**:
+
 - `hasDataChanged(comparedTo:) -> Bool` — проверяет, изменились ли данные активности по сравнению с ответом сервера.
 - `setNonWorkoutType(_:user:)` — устанавливает тип активности для stretch/rest/sick и очищает тренировочные данные.
 - `createNonWorkoutActivity(day:activityType:user:)` — статический метод для создания активности без тренировочных данных.
 
 **Поддерживаемые типы активностей** (для данного функционала):
+
 - `stretch` — растяжка.
 - `rest` — отдых.
 - `sick` — болезнь.
@@ -94,6 +97,7 @@
 - `DELETE v3/100/days/{day}` — удаление активности для конкретного дня.
 
 Интерфейс клиента:
+
 - `getDays() async throws -> [DayResponse]`
 - `createDay(_ day: DayRequest) async throws -> DayResponse`
 - `updateDay(model: DayRequest) async throws -> DayResponse`

@@ -33,6 +33,7 @@
 ### Мок-клиенты с поддержкой мгновенного ответа
 
 Все моки в `PreviewContent/Client+.swift` поддерживают параметр `instantResponse`:
+
 - `MockLoginClient`
 - `MockExerciseClient`
 - `MockProgressClient`
@@ -46,6 +47,7 @@
 ### Единый мок-клиент: `MockSWClient`
 
 Создан единый мок-клиент `MockSWClient` в `PreviewContent/MockSWClient.swift`, реализующий все протоколы:
+
 - `LoginClient` — методы `logIn(with:)`, `getUserByID(_:)`, `resetPassword(for:)`
 - `StatusClient` — методы `start(date:)`, `current()` (делегируются `MockLoginClient`)
 - `ExerciseClient` — методы `getCustomExercises()`, `saveCustomExercise(id:exercise:)`, `deleteCustomExercise(id:)`
@@ -58,6 +60,7 @@
 Инициализатор принимает `instantResponse: Bool = true` (по умолчанию мгновенные ответы). Каждый метод делегирует вызов соответствующему мок-клиенту.
 
 **Демо-данные в моках:**
+
 - `StatusClient.current()`: дата старта, соответствующая дню № 12 (11 дней назад от текущей даты)
 - `DaysClient.getDays()`: активности от 1 до 11 дня по графику программы (дни 3 и 10: растяжка, день 7: отдых, остальные: тренировки)
 - `ProgressClient.getProgress()`: прогресс для дня 1 (контрольная точка) с метриками (pullups: 7, pushups: 15, squats: 30, weight: 70.0)
@@ -69,9 +72,10 @@
 
 Функция `ScreenshotDemoData.setup()` создает демо-данные в SwiftData:
 
-1. **User** — демо-пользователь (id: 1, userName: "DemoUser", fullName: "Демо Пользователь", email: "demo@example.com", cityID: 1, countryID: 1, genderCode: 0, birthDateIsoString: "1990-01-01")
+1. **User** — демо-пользователь (id: 1, userName: "DemoUser", fullName: "Демо Пользователь", email: "<demo@example.com>", cityID: 1, countryID: 1, genderCode: 0, birthDateIsoString: "1990-01-01")
 
 **Примечание**: UserProgress, DayActivity и CustomExercise не создаются в `ScreenshotDemoData.setup()`. Они загружаются с "сервера" (мока) при синхронизации:
+
 - `MockProgressClient.getProgress()` возвращает прогресс для дня 1 с метриками (pullups: 7, pushups: 15, squats: 30, weight: 70.0)
 - `MockDaysClient.getDays()` возвращает активности от 1 до 11 дня по графику программы
 - `MockExerciseClient.getCustomExercises()` возвращает 3 пользовательских упражнения
@@ -83,21 +87,25 @@
 ### Инициализация приложения для UI-тестов
 
 Функция `createMockServices()` в `SwiftUI_SotkaAppApp.swift`:
+
 - Создает `MockSWClient` с `instantResponse: true`
 - Использует `MockSWClient` для всех сервисов, включая инфопосты
 - Создает настоящий `SWClient` только для свойства `client` (для `LoginScreen`, хотя он не показывается)
 
 В `init()` используется `if-else` структура:
+
 - При аргументе "UITest": очищается UserDefaults, создаются мок-сервисы, отключаются анимации (`UIView.setAnimationsEnabled(false)`), устанавливается день № 12 через `setCurrentDayForDebug(12)`, вызывается `authHelper.didAuthorize()` для пропуска авторизации
 - Иначе: обычная инициализация для production
 
 В `.task` модификаторе при аргументе "UITest" дополнительно вызываются:
+
 - `ScreenshotDemoData.setup(context: statusManager.modelContainer.mainContext)` для подготовки демо-данных
 - `statusManager.loadInfopostsWithUserGender()` для загрузки инфопостов
 
 ### Полная независимость от сервера
 
 При запуске UI-тестов с аргументом "UITest":
+
 - Приложение использует мок-клиент для всех операций, включая инфопосты
 - Инфопосты загружаются из bundle (не требуют сетевых запросов)
 - Синхронизация статуса прочтения работает через мок-клиент
@@ -111,25 +119,30 @@
 ### Демо-данные для экранов
 
 #### HomeScreen
+
 - День № 12 установлен через `setCurrentDayForDebug(12)`
 - Инфопост для дня 12 загружается из bundle через `InfopostsService`
 - Показывается секция активности (день <= 100)
 
 #### InfopostDetailScreen
+
 - Инфопост для дня 12 загружается из bundle через `InfopostsService`
 - Статус прочтения синхронизируется через мок-клиент
 
 #### WorkoutExerciseEditorScreen
+
 - Доступны стандартные упражнения
 - Доступны пользовательские упражнения (CustomExercise) из демо-данных
 - Можно редактировать упражнения дня 12
 
 #### JournalScreen
+
 - Дни от 1 до 11 заполнены по графику программы (дни 3 и 10: растяжка, день 7: отдых, остальные: тренировки)
 - День 12 пустой (текущий день, еще не заполнен)
 - Можно переключаться между списком и сеткой
 
 #### ProgressScreen
+
 - Прогресс для дня 1 (контрольная точка) с метриками (pullups: 7, pushups: 15, squats: 30, weight: 70.0)
 - Фото прогресса отсутствуют
 - Статистика прогресса

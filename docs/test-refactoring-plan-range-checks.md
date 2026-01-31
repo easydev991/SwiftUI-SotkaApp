@@ -1,16 +1,19 @@
 # План рефакторинга проверок >= и <= в тестах
 
 ## Цель
+
 Конкретизировать проверки с диапазонами (`>=`, `<=`) до однозначных сравнений (`==`) там, где это возможно и имеет смысл, для повышения точности тестов.
 
 ## Принципы рефакторинга
 
 ### Проверки, которые МОЖНО конкретизировать
+
 1. **Номера этапов тренировки** - генерируются последовательно от 1 до plannedCount, можно проверить конкретные значения
 2. **Счетчики вызовов** - если логика гарантирует точное количество вызовов, можно конкретизировать
 3. **Количество элементов в списках** - если логика гарантирует точное количество
 
 ### Проверки, которые НУЖНО оставить диапазонами
+
 1. **Время выполнения (duration, totalRestTime)** - зависит от времени выполнения кода, диапазоны оправданы
 2. **Даты (createDate, modifyDate)** - зависят от времени выполнения, диапазоны оправданы
 3. **Валидация размеров изображений** - проверка ограничений, диапазоны оправданы
@@ -27,78 +30,97 @@
 ### 2. Счетчики вызовов (нужно проанализировать каждый случай)
 
 #### 2.1. StatusManagerWatchConnectivityTests.swift
+
 **Файл:** `SwiftUI-SotkaAppTests/StatusManagerTests/StatusManagerWatchConnectivityTests.swift`
 
 **Строки 182, 201, 327, 344, 383, 535:**
+
 ```swift
 #expect(mockSession.sentMessages.count >= 1)
 ```
+
 **Контекст:** Проверка отправки сообщений
 **Действие:** Проанализировать логику - если гарантируется отправка ровно одного сообщения, заменить на `== 1`
 **Требуется анализ:** Изучить контекст каждого теста, определить точное ожидаемое количество
 
 **Строки 641, 662, 692, 819, 836, 855, 897:**
+
 ```swift
 #expect(mockSession.applicationContexts.count >= 1)
 ```
+
 **Контекст:** Проверка отправки applicationContext
 **Действие:** Проанализировать логику - если гарантируется отправка ровно одного контекста, заменить на `== 1`
 **Требуется анализ:** Изучить контекст каждого теста, определить точное ожидаемое количество
 
 **Строка 761:**
+
 ```swift
 #expect(mockSession.applicationContexts.count > initialContextCount)
 ```
+
 **Контекст:** Проверка увеличения количества контекстов
 **Действие:** Определить точное ожидаемое увеличение
 **Требуется анализ:** Изучить логику, определить на сколько именно должно увеличиться
 
 **Строка 802:**
+
 ```swift
 #expect(mockSession.applicationContexts.count <= initialContextCount + 1)
 ```
+
 **Контекст:** Проверка, что контекст не был отправлен при удалении активности не текущего дня
 **Действие:** Заменить на точное равенство
 **Новая проверка:** `#expect(mockSession.applicationContexts.count == initialContextCount + 1)` или `== initialContextCount` в зависимости от логики
 **Требуется анализ:** Изучить логику, определить точное ожидаемое значение
 
 **Строка 904:**
+
 ```swift
 #expect(currentDay > 0)
 ```
+
 **Контекст:** Проверка, что currentDay установлен
 **Действие:** Если в тесте устанавливается конкретное значение (например, 42), заменить на `== 42`
 **Требуется анализ:** Изучить контекст теста
 
 #### 2.2. StatusManagerWatchConnectivityIntegrationTests+FullStartupScenarios.swift
+
 **Файл:** `SwiftUI-SotkaAppTests/StatusManagerTests/StatusManagerWatchConnectivityIntegrationTests+FullStartupScenarios.swift`
 
 **Строки 357, 396:**
+
 ```swift
 #expect(mockSession.applicationContexts.count >= initialApplicationContextCount + 2)
 #expect(mockSession.applicationContexts.count >= initialApplicationContextCount + 5)
 ```
+
 **Контекст:** Проверка отправки applicationContext в интеграционных тестах
 **Действие:** Определить точное ожидаемое количество
 **Требуется анализ:** Изучить логику, определить точное ожидаемое значение
 
 #### 2.3. StatusManagerSyncJournalTests.swift
+
 **Файл:** `SwiftUI-SotkaAppTests/StatusManagerTests/StatusManagerSyncJournalTests.swift`
 
 **Строки 53-55:**
+
 ```swift
 #expect(mockProgressClient.getProgressCallCount >= initialProgressCalls)
 #expect(mockExerciseClient.getCustomExercisesCallCount >= initialExerciseCalls)
 #expect(mockDaysClient.getDaysCallCount >= initialDaysCalls)
 ```
+
 **Контекст:** Проверка вызовов клиентов при синхронизации
 **Действие:** Определить точное ожидаемое количество вызовов
 **Требуется анализ:** Изучить логику синхронизации, определить точное количество вызовов
 
 **Строки 98, 141, 184:**
+
 ```swift
 #expect(mockProgressClient.getProgressCallCount > initialCalls)
 ```
+
 **Контекст:** Проверка увеличения счетчиков вызовов
 **Действие:** Определить точное ожидаемое увеличение
 **Требуется анализ:** Изучить логику, определить на сколько именно должно увеличиться
@@ -149,12 +171,15 @@
 ### 8. Специальные случаи
 
 #### 8.1. InfopostFilenameManagerTests.swift
+
 **Файл:** `SwiftUI-SotkaAppTests/InfopostsTests/InfopostFilenameManagerTests.swift`
 
 **Строка 60:**
+
 ```swift
 #expect(russianFilenames.count >= englishFilenames.count)
 ```
+
 **Контекст:** Проверка, что русских файлов больше или равно английских
 **Действие:** Если в тесте проверяется конкретное количество (103 vs 102), заменить на `== 103` и `== 102`
 **Требуется анализ:** Изучить контекст теста, определить точные значения
@@ -162,10 +187,12 @@
 ## Порядок выполнения рефакторинга
 
 ### Этап 1: Номера этапов тренировки ✅ Выполнено
+
 - WorkoutViewModelStepManagementTests.swift
 - WorkoutScreenViewModelHelperMethodsTests.swift
 
 ### Этап 2: Счетчики вызовов (приоритет: средний)
+
 1. StatusManagerWatchConnectivityTests.swift
 2. StatusManagerWatchConnectivityIntegrationTests+FullStartupScenarios.swift
 3. StatusManagerSyncJournalTests.swift
@@ -173,6 +200,7 @@
 **Обоснование:** Требуется анализ логики для определения точных значений.
 
 ### Этап 3: Счетчики операций синхронизации (приоритет: средний)
+
 1. DailyActivitiesServiceTests.swift
 2. CustomExercisesServiceTests.swift
 3. ProgressSyncServiceTests.swift
@@ -180,6 +208,7 @@
 **Обоснование:** Требуется анализ логики синхронизации для определения точных значений.
 
 ### Этап 4: Специальные случаи (приоритет: низкий)
+
 1. InfopostFilenameManagerTests.swift
 
 **Обоснование:** Требуется анализ контекста теста.
@@ -197,4 +226,3 @@
 - Все тесты проходят после рефакторинга
 - Тесты стали более точными и понятными
 - Не нарушена логика тестирования
-

@@ -39,6 +39,7 @@
 - `user: User?` — связь с пользователем (Relationship в SwiftData).
 
 **Дополнительные методы модели:**
+
 - `fetch(by:id, in:context)` — статический метод для получения упражнения по ID из контекста.
 - `image: Image` — computed property для получения иконки упражнения.
 - `hasDataChanged(comparedTo:)` — проверка изменений данных по сравнению с ответом сервера.
@@ -58,6 +59,7 @@
 - `DELETE v3/100/custom_exercises/<id>` — удаление упражнения.
 
 Интерфейс клиента (сокращенно):
+
 - `getCustomExercises() async throws -> [CustomExerciseResponse]`
 - `saveCustomExercise(id: String, exercise: CustomExerciseRequest) async throws -> CustomExerciseResponse`
 - `deleteCustomExercise(id: String) async throws`
@@ -147,8 +149,8 @@
 ### Тестирование и качество
 
 - Юнит-тесты модели формы (проверка дубликатов, валидация, генерация новой модели) — планируются/поддерживаются средствами Swift Testing.
-- Юнит-тесты сервиса с моками клиента: 
-  - успех/ошибка сохранения, удаления, конфликтов; 
+- Юнит-тесты сервиса с моками клиента:
+  - успех/ошибка сохранения, удаления, конфликтов;
   - корректность применения событий `SyncEvent` и стратегии LWW.
 - Проверки локализации пользовательских строк и корректности логов (на русском).
 
