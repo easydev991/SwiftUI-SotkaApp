@@ -272,7 +272,10 @@ extension SyncResult.SyncResultDetails {
 
         /// Элемент статистики для отображения
         enum Item: Identifiable {
-            var id: Self { self }
+            var id: Self {
+                self
+            }
+
             case created
             case updated
             case deleted

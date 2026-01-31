@@ -112,7 +112,7 @@ struct WorkoutDataTests {
     }
 
     @Test("Должен обрабатывать пустой массив trainings")
-    func handlesEmptyTrainingsArray() throws {
+    func handlesEmptyTrainingsArray() {
         let workoutData = WorkoutData(
             day: 1,
             executionType: 0,

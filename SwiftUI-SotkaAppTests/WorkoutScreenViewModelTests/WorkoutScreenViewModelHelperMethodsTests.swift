@@ -72,7 +72,7 @@ extension WorkoutScreenViewModelTests {
 
         @Test("Должен возвращать только этапы с типом .cycles")
         @MainActor
-        func getCycleSteps() throws {
+        func getCycleSteps() {
             let viewModel = WorkoutScreenViewModel()
             let trainings = [
                 WorkoutPreviewTraining(count: 5, typeId: 0)

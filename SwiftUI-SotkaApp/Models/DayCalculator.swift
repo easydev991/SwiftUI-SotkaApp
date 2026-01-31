@@ -7,7 +7,10 @@ private let logger = Logger(
 )
 
 struct DayCalculator: Identifiable, Equatable {
-    var id: String { "\(currentDay)-\(daysLeft)" }
+    var id: String {
+        "\(currentDay)-\(daysLeft)"
+    }
+
     /// Дата начала прохождения программы
     let startDate: Date
     /// Номер текущего дня
@@ -16,7 +19,9 @@ struct DayCalculator: Identifiable, Equatable {
     let daysLeft: Int
 
     /// `true` - программа завершена, `false` - программа не завершена
-    var isOver: Bool { currentDay == 100 }
+    var isOver: Bool {
+        currentDay == 100
+    }
 
     /// Инициализатор опциональный
     /// - Parameters:

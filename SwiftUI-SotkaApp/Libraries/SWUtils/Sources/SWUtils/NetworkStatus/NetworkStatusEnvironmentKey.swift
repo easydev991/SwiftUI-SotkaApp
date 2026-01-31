@@ -1,16 +1,8 @@
 import SwiftUI
 
-/// Ключ для получения состояния подключения к интернету
-struct NetworkStatusEnvironmentKey: EnvironmentKey {
-    static let defaultValue = false
-}
-
 public extension EnvironmentValues {
-    /// `true` - есть подключение, `false` - нет подключения
-    var isNetworkConnected: Bool {
-        get { self[NetworkStatusEnvironmentKey.self] }
-        set { self[NetworkStatusEnvironmentKey.self] = newValue }
-    }
+    // `true` - есть подключение, `false` - нет подключения
+    @Entry var isNetworkConnected = false
 }
 
 public extension View {

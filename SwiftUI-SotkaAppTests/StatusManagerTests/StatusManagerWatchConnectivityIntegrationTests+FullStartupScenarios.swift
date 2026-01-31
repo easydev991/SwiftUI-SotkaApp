@@ -197,7 +197,7 @@ extension StatusManagerWatchConnectivityTests.IntegrationTests {
         }
 
         @Test("Обработка ошибок при отсутствии связи")
-        func errorHandlingWhenConnectionUnavailable() async throws {
+        func errorHandlingWhenConnectionUnavailable() throws {
             let mockSession = MockWCSession(isReachable: false)
             let modelConfiguration = ModelConfiguration(isStoredInMemoryOnly: true)
             let modelContainer = try ModelContainer(
@@ -284,7 +284,7 @@ extension StatusManagerWatchConnectivityTests.IntegrationTests {
         }
 
         @Test("Последовательность вызовов при изменении currentDay на iPhone")
-        func sequenceWhenCurrentDayChangesOniPhone() async throws {
+        func sequenceWhenCurrentDayChangesOniPhone() throws {
             let mockSession = MockWCSession(isReachable: true)
             let modelConfiguration = ModelConfiguration(isStoredInMemoryOnly: true)
             let modelContainer = try ModelContainer(

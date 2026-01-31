@@ -5,7 +5,7 @@ import Testing
 @MainActor
 struct WorkoutViewModelSetsTests {
     @Test("Должен создавать правильную последовательность этапов для типа .sets с несколькими упражнениями")
-    func initializeStepStatesForSetsWithMultipleExercises() throws {
+    func initializeStepStatesForSetsWithMultipleExercises() {
         let connectivityService = MockWatchConnectivityService()
         let viewModel = WorkoutViewModel(
             connectivityService: connectivityService
@@ -140,7 +140,7 @@ struct WorkoutViewModelSetsTests {
     }
 
     @Test("Должен создавать правильную последовательность для одного упражнения с несколькими подходами")
-    func initializeStepStatesForSingleExerciseWithMultipleSets() throws {
+    func initializeStepStatesForSingleExerciseWithMultipleSets() {
         let connectivityService = MockWatchConnectivityService()
         let viewModel = WorkoutViewModel(
             connectivityService: connectivityService
@@ -175,7 +175,7 @@ struct WorkoutViewModelSetsTests {
     }
 
     @Test("Должен создавать правильное количество подходов для турбо-дня 93 с подходами")
-    func initializeStepStatesForTurboDay93WithSets() throws {
+    func initializeStepStatesForTurboDay93WithSets() {
         let connectivityService = MockWatchConnectivityService()
         let viewModel = WorkoutViewModel(
             connectivityService: connectivityService
@@ -217,7 +217,7 @@ struct WorkoutViewModelSetsTests {
     }
 
     @Test("Должен создавать правильное количество подходов для турбо-дня 95 с подходами")
-    func initializeStepStatesForTurboDay95WithSets() throws {
+    func initializeStepStatesForTurboDay95WithSets() {
         let connectivityService = MockWatchConnectivityService()
         let viewModel = WorkoutViewModel(
             connectivityService: connectivityService
@@ -259,7 +259,7 @@ struct WorkoutViewModelSetsTests {
     }
 
     @Test("Должен создавать правильное количество подходов для турбо-дня 98 с подходами")
-    func initializeStepStatesForTurboDay98WithSets() throws {
+    func initializeStepStatesForTurboDay98WithSets() {
         let connectivityService = MockWatchConnectivityService()
         let viewModel = WorkoutViewModel(
             connectivityService: connectivityService
@@ -299,7 +299,7 @@ struct WorkoutViewModelSetsTests {
     }
 
     @Test("Должен возвращать правильное количество подходов для каждого упражнения в турбо-дне 93")
-    func getExerciseStepsForTurboDay93() throws {
+    func getExerciseStepsForTurboDay93() {
         let connectivityService = MockWatchConnectivityService()
         let viewModel = WorkoutViewModel(
             connectivityService: connectivityService
@@ -328,7 +328,7 @@ struct WorkoutViewModelSetsTests {
     }
 
     @Test("Должен сохранять правильную логику для обычных дней с подходами")
-    func initializeStepStatesForRegularDaysWithSets() throws {
+    func initializeStepStatesForRegularDaysWithSets() {
         let connectivityService = MockWatchConnectivityService()
         let viewModel = WorkoutViewModel(
             connectivityService: connectivityService
@@ -437,7 +437,7 @@ struct WorkoutViewModelSetsTests {
     }
 
     @Test("Должен возвращать nil для getCurrentExerciseIndex когда effectiveType == .cycles")
-    func getCurrentExerciseIndexReturnsNilForCycles() throws {
+    func getCurrentExerciseIndexReturnsNilForCycles() {
         let connectivityService = MockWatchConnectivityService()
         let viewModel = WorkoutViewModel(
             connectivityService: connectivityService

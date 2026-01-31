@@ -8,7 +8,10 @@ struct HomeScreen: View {
     @Environment(\.currentDay) private var currentDay
     @Query private var users: [User]
     @State private var sheetItem: DayActivitySheetItem?
-    private var user: User? { users.first }
+    private var user: User? {
+        users.first
+    }
+
     private var model: Model? {
         let calculator = statusManager.currentDayCalculator
         // Важно: во время логаута объекты SwiftData удаляются, поэтому нельзя обращаться к связям пользователя

@@ -9,9 +9,15 @@ struct ProfileScreen: View {
     @Environment(\.isNetworkConnected) private var isNetworkConnected
     @Environment(\.isIPad) private var isIPad
     @State private var showLogoutDialog = false
-    private var client: ProfileClient { SWClient(with: authHelper) }
+    private var client: ProfileClient {
+        SWClient(with: authHelper)
+    }
+
     @Query private var users: [User]
-    private var user: User? { users.first }
+    private var user: User? {
+        users.first
+    }
+
     @Query private var countries: [Country]
     private var userAddress: String {
         guard let user,

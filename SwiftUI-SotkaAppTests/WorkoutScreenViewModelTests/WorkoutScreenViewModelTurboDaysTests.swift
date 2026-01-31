@@ -97,7 +97,7 @@ extension WorkoutScreenViewModelTests {
 
         @Test("Должен инициализировать этапы для турбо-дня 92 с кругами")
         @MainActor
-        func initializeStepStatesForTurboDay92() throws {
+        func initializeStepStatesForTurboDay92() {
             let viewModel = WorkoutScreenViewModel()
             let creator = WorkoutProgramCreator(day: 92, executionType: .turbo)
             viewModel.setupWorkoutData(
@@ -119,7 +119,7 @@ extension WorkoutScreenViewModelTests {
 
         @Test("Должен инициализировать этапы для турбо-дня 93 с подходами")
         @MainActor
-        func initializeStepStatesForTurboDay93() throws {
+        func initializeStepStatesForTurboDay93() {
             let viewModel = WorkoutScreenViewModel()
             let creator = WorkoutProgramCreator(day: 93, executionType: .turbo)
             viewModel.setupWorkoutData(
@@ -141,7 +141,7 @@ extension WorkoutScreenViewModelTests {
 
         @Test("Должен инициализировать этапы для турбо-дня 94 с кругами")
         @MainActor
-        func initializeStepStatesForTurboDay94() throws {
+        func initializeStepStatesForTurboDay94() {
             let viewModel = WorkoutScreenViewModel()
             let creator = WorkoutProgramCreator(day: 94, executionType: .turbo)
             viewModel.setupWorkoutData(
@@ -163,7 +163,7 @@ extension WorkoutScreenViewModelTests {
 
         @Test("Должен инициализировать этапы для турбо-дня 95 с подходами")
         @MainActor
-        func initializeStepStatesForTurboDay95() throws {
+        func initializeStepStatesForTurboDay95() {
             let viewModel = WorkoutScreenViewModel()
             let creator = WorkoutProgramCreator(day: 95, executionType: .turbo)
             viewModel.setupWorkoutData(
@@ -185,7 +185,7 @@ extension WorkoutScreenViewModelTests {
 
         @Test("Должен инициализировать этапы для турбо-дня 96 с кругами")
         @MainActor
-        func initializeStepStatesForTurboDay96() throws {
+        func initializeStepStatesForTurboDay96() {
             let viewModel = WorkoutScreenViewModel()
             let creator = WorkoutProgramCreator(day: 96, executionType: .turbo)
             viewModel.setupWorkoutData(
@@ -207,7 +207,7 @@ extension WorkoutScreenViewModelTests {
 
         @Test("Должен инициализировать этапы для турбо-дня 97 с кругами")
         @MainActor
-        func initializeStepStatesForTurboDay97() throws {
+        func initializeStepStatesForTurboDay97() {
             let viewModel = WorkoutScreenViewModel()
             let creator = WorkoutProgramCreator(day: 97, executionType: .turbo)
             viewModel.setupWorkoutData(
@@ -229,7 +229,7 @@ extension WorkoutScreenViewModelTests {
 
         @Test("Должен инициализировать этапы для турбо-дня 98 с подходами")
         @MainActor
-        func initializeStepStatesForTurboDay98() throws {
+        func initializeStepStatesForTurboDay98() {
             let viewModel = WorkoutScreenViewModel()
             let creator = WorkoutProgramCreator(day: 98, executionType: .turbo)
             viewModel.setupWorkoutData(

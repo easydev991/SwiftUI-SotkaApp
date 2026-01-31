@@ -2,7 +2,10 @@ import SwiftUI
 
 /// Статус дня в прогрессе тренировки
 enum DayProgressStatus: Identifiable, CaseIterable {
-    var id: Self { self }
+    var id: Self {
+        self
+    }
+
     case notStarted
     case skipped
     case partial

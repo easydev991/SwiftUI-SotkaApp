@@ -6,7 +6,9 @@ struct DateGroup: Identifiable {
     let date: Date
 
     /// Идентификатор группы (используется дата)
-    var id: Date { date }
+    var id: Date {
+        date
+    }
 
     /// Записи в этой группе
     let entries: [SyncJournalEntry]
@@ -33,13 +35,11 @@ struct DateGroup: Identifiable {
         }
 
         // Создаем группы и сортируем их по дате (новые сверху)
-        let groups = grouped.map { date, entries in
+        return grouped.map { date, entries in
             // Сортируем записи внутри группы по startDate (новые сверху)
             let sortedEntries = entries.sorted { $0.startDate > $1.startDate }
             return DateGroup(date: date, entries: sortedEntries)
         }
         .sorted { $0.date > $1.date }
-
-        return groups
     }
 }

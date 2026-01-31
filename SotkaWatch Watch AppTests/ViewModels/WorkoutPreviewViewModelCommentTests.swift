@@ -19,7 +19,7 @@ extension WorkoutPreviewViewModelTests {
         }
 
         @Test("canEditComment должен возвращать true когда wasOriginallyPassed == true")
-        func canEditCommentReturnsTrueWhenOriginallyPassed() async throws {
+        func canEditCommentReturnsTrueWhenOriginallyPassed() async {
             let connectivityService = MockWatchConnectivityService()
             let viewModel = WorkoutPreviewViewModel(
                 connectivityService: connectivityService
@@ -41,7 +41,7 @@ extension WorkoutPreviewViewModelTests {
         }
 
         @Test("canEditComment должен возвращать false когда оба флага false")
-        func canEditCommentReturnsFalseWhenBothFlagsFalse() async throws {
+        func canEditCommentReturnsFalseWhenBothFlagsFalse() async {
             let connectivityService = MockWatchConnectivityService()
             let viewModel = WorkoutPreviewViewModel(
                 connectivityService: connectivityService

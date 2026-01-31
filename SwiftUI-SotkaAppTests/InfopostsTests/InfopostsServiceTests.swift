@@ -377,7 +377,7 @@ extension AllInfopostsTests {
 
         @Test
         @MainActor
-        func infopostFromFilenameWithWomenSuffix() throws {
+        func infopostFromFilenameWithWomenSuffix() {
             // Arrange
             let filename = "d0-women"
             let title = "Test Title"
@@ -397,7 +397,7 @@ extension AllInfopostsTests {
 
         @Test
         @MainActor
-        func infopostFromFilenameWithoutGenderSuffix() throws {
+        func infopostFromFilenameWithoutGenderSuffix() {
             // Arrange
             let filename = "d1"
             let title = "Test Title"
@@ -417,7 +417,7 @@ extension AllInfopostsTests {
 
         @Test
         @MainActor
-        func infopostFromFilenameWithSpecialId() throws {
+        func infopostFromFilenameWithSpecialId() {
             // Arrange
             let filename = "about"
             let title = "Test Title"

@@ -40,7 +40,10 @@ struct JournalScreen: View {
 
 extension JournalScreen {
     enum DisplayMode: Int, Equatable, CaseIterable, Identifiable {
-        var id: Int { rawValue }
+        var id: Int {
+            rawValue
+        }
+
         case list
         case grid
 

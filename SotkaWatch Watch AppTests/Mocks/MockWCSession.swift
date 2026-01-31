@@ -17,7 +17,7 @@ final class MockWCSession: WatchSessionProtocol {
     private(set) var sentMessages: [[String: Any]] = []
     private(set) var activateCallCount = 0
 
-    // Для тестирования receivedApplicationContext
+    /// Для тестирования receivedApplicationContext
     var receivedApplicationContext: [String: Any] = [:]
 
     init(isReachable: Bool = true) {

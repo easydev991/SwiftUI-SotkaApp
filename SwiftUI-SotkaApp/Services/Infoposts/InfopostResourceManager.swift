@@ -46,9 +46,7 @@ struct InfopostResourceManager {
         copyDirectory(from: "js", to: tempDirectory.appendingPathComponent("js"), fileManager: fileManager)
 
         // Копируем изображения и получаем обновленный HTML
-        let updatedHTML = copyImagesFromAssets(to: tempDirectory.appendingPathComponent("img"), from: htmlContent)
-
-        return updatedHTML
+        return copyImagesFromAssets(to: tempDirectory.appendingPathComponent("img"), from: htmlContent)
     }
 
     /// Копирует директорию ресурсов из бандла

@@ -22,7 +22,7 @@ struct HomeViewModelTests {
     }
 
     @Test("Проверяет авторизацию при загрузке данных")
-    func checksAuthorizationWhenLoadingData() async throws {
+    func checksAuthorizationWhenLoadingData() async {
         let authService = MockWatchAuthService(isAuthorized: false)
         let connectivityService = MockWatchConnectivityService()
 
@@ -39,7 +39,7 @@ struct HomeViewModelTests {
     }
 
     @Test("Проверяет авторизацию при смене scenePhase на active")
-    func checksAuthorizationWhenScenePhaseBecomesActive() async throws {
+    func checksAuthorizationWhenScenePhaseBecomesActive() async {
         let authService = MockWatchAuthService(isAuthorized: true)
         let connectivityService = MockWatchConnectivityService()
 
@@ -120,7 +120,7 @@ struct HomeViewModelTests {
     }
 
     @Test("Не загружает данные тренировки при активности не типа workout")
-    func doesNotLoadWorkoutDataWhenActivityIsNotWorkout() async throws {
+    func doesNotLoadWorkoutDataWhenActivityIsNotWorkout() async {
         let authService = MockWatchAuthService(isAuthorized: true)
         let connectivityService = MockWatchConnectivityService()
         connectivityService.currentDay = 5
@@ -231,7 +231,7 @@ struct HomeViewModelTests {
     }
 
     @Test("Обрабатывает случай когда currentDay отсутствует в WatchConnectivityService")
-    func handlesMissingCurrentDayInConnectivityService() async throws {
+    func handlesMissingCurrentDayInConnectivityService() async {
         let authService = MockWatchAuthService(isAuthorized: true)
         let connectivityService = MockWatchConnectivityService()
         connectivityService.currentDay = nil
@@ -248,7 +248,7 @@ struct HomeViewModelTests {
     }
 
     @Test("Реагирует на изменения статуса авторизации через WatchAuthService")
-    func reactsToAuthStatusChangesThroughWatchAuthService() async throws {
+    func reactsToAuthStatusChangesThroughWatchAuthService() {
         let authService = MockWatchAuthService(isAuthorized: false)
         let connectivityService = MockWatchConnectivityService()
 
@@ -463,7 +463,7 @@ struct HomeViewModelTests {
     }
 
     @Test("Должен предотвращать параллельные вызовы loadData")
-    func preventsConcurrentLoadDataCalls() async throws {
+    func preventsConcurrentLoadDataCalls() async {
         let authService = MockWatchAuthService(isAuthorized: true)
         let connectivityService = MockWatchConnectivityService()
         connectivityService.currentDay = 5

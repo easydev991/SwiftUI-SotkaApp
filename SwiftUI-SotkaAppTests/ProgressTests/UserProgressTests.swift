@@ -1124,8 +1124,8 @@ extension AllProgressTests {
             let components = calendar.dateComponents([.year, .month, .day], from: progress.lastModified)
 
             // Проверяем, что дата разумная (не в далеком прошлом или будущем)
-            #expect(components.year! >= 2020)
-            #expect(components.year! <= 2030)
+            #expect(try #require(components.year) >= 2020)
+            #expect(try #require(components.year) <= 2030)
         }
 
         @Test("updateLastModified без modifyDate использует createDate")
@@ -1157,8 +1157,8 @@ extension AllProgressTests {
             let components = calendar.dateComponents([.year, .month, .day], from: progress.lastModified)
 
             // Проверяем, что дата разумная (не в далеком прошлом или будущем)
-            #expect(components.year! >= 2020)
-            #expect(components.year! <= 2030)
+            #expect(try #require(components.year) >= 2020)
+            #expect(try #require(components.year) <= 2030)
         }
 
         // MARK: - Description Tests

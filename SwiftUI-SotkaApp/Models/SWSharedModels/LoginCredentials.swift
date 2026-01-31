@@ -20,7 +20,9 @@ struct LoginCredentials: Equatable {
         !login.isEmpty && password.trueCount >= minPasswordSize
     }
 
-    var canRestorePassword: Bool { !login.isEmpty }
+    var canRestorePassword: Bool {
+        !login.isEmpty
+    }
 
     func canLogIn(isError: Bool) -> Bool {
         isReady && !isError

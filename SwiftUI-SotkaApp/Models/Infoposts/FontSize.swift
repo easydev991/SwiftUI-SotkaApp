@@ -2,7 +2,9 @@ import SwiftUI
 
 /// Размер шрифта для отображения инфопостов
 enum FontSize: String, CaseIterable, Identifiable {
-    var id: Self { self }
+    var id: Self {
+        self
+    }
 
     case small
     case medium

@@ -7,7 +7,7 @@ extension AllInfopostsTests {
         private let youtubeService = YouTubeVideoService()
 
         @Test
-        func prepareHTMLForDisplayWithYouTubeVideo() throws {
+        func prepareHTMLForDisplayWithYouTubeVideo() {
             // Given
             let htmlContent = """
             <html>
@@ -47,7 +47,7 @@ extension AllInfopostsTests {
         }
 
         @Test
-        func prepareHTMLForDisplayWithoutYouTubeVideo() throws {
+        func prepareHTMLForDisplayWithoutYouTubeVideo() {
             // Given
             let htmlContent = """
             <html>
@@ -85,7 +85,7 @@ extension AllInfopostsTests {
         }
 
         @Test
-        func prepareHTMLForDisplayWithZeroDayNumber() throws {
+        func prepareHTMLForDisplayWithZeroDayNumber() {
             // Given
             let htmlContent = """
             <html>
@@ -121,7 +121,7 @@ extension AllInfopostsTests {
         }
 
         @Test
-        func youTubeVideoBlockStructure() throws {
+        func youTubeVideoBlockStructure() {
             // Given
             let htmlContent = """
             <html>
@@ -162,7 +162,7 @@ extension AllInfopostsTests {
         }
 
         @Test
-        func javaScriptErrorHandling() throws {
+        func javaScriptErrorHandling() {
             // Given
             let htmlContent = """
             <html>
@@ -201,7 +201,7 @@ extension AllInfopostsTests {
         }
 
         @Test
-        func multipleYouTubeVideosInHTML() throws {
+        func multipleYouTubeVideosInHTML() {
             // Given
             let htmlContent = """
             <html>

@@ -5,7 +5,7 @@ import Testing
 @MainActor
 struct WorkoutViewModelNavigationTitleTests {
     @Test("Должен возвращать пустой заголовок для разминки")
-    func navigationTitleForWarmUp() throws {
+    func navigationTitleForWarmUp() {
         let connectivityService = MockWatchConnectivityService()
         let viewModel = WorkoutViewModel(
             connectivityService: connectivityService
@@ -28,7 +28,7 @@ struct WorkoutViewModelNavigationTitleTests {
     }
 
     @Test("Должен возвращать заголовок для круга")
-    func navigationTitleForCycle() throws {
+    func navigationTitleForCycle() {
         let connectivityService = MockWatchConnectivityService()
         let viewModel = WorkoutViewModel(
             connectivityService: connectivityService
@@ -55,7 +55,7 @@ struct WorkoutViewModelNavigationTitleTests {
     }
 
     @Test("Должен возвращать заголовок для второго круга")
-    func navigationTitleForSecondCycle() throws {
+    func navigationTitleForSecondCycle() {
         let connectivityService = MockWatchConnectivityService()
         let viewModel = WorkoutViewModel(
             connectivityService: connectivityService
@@ -86,7 +86,7 @@ struct WorkoutViewModelNavigationTitleTests {
     }
 
     @Test("Должен возвращать заголовок для подхода")
-    func navigationTitleForSet() throws {
+    func navigationTitleForSet() {
         let connectivityService = MockWatchConnectivityService()
         let viewModel = WorkoutViewModel(
             connectivityService: connectivityService
@@ -113,7 +113,7 @@ struct WorkoutViewModelNavigationTitleTests {
     }
 
     @Test("Должен возвращать заголовок для второго подхода")
-    func navigationTitleForSecondSet() throws {
+    func navigationTitleForSecondSet() {
         let connectivityService = MockWatchConnectivityService()
         let viewModel = WorkoutViewModel(
             connectivityService: connectivityService
@@ -144,7 +144,7 @@ struct WorkoutViewModelNavigationTitleTests {
     }
 
     @Test("Должен возвращать пустой заголовок для заминки")
-    func navigationTitleForCoolDown() throws {
+    func navigationTitleForCoolDown() {
         let connectivityService = MockWatchConnectivityService()
         let viewModel = WorkoutViewModel(
             connectivityService: connectivityService
@@ -189,7 +189,7 @@ struct WorkoutViewModelNavigationTitleTests {
     }
 
     @Test("Должен возвращать пустой заголовок для заминки когда plannedCount = nil")
-    func navigationTitleForCoolDownWithNilPlannedCount() throws {
+    func navigationTitleForCoolDownWithNilPlannedCount() {
         let connectivityService = MockWatchConnectivityService()
         let viewModel = WorkoutViewModel(
             connectivityService: connectivityService
@@ -216,7 +216,7 @@ struct WorkoutViewModelNavigationTitleTests {
     }
 
     @Test("Должен возвращать правильный заголовок для первого подхода первого упражнения")
-    func navigationTitleForFirstSetOfFirstExercise() throws {
+    func navigationTitleForFirstSetOfFirstExercise() {
         let connectivityService = MockWatchConnectivityService()
         let viewModel = WorkoutViewModel(
             connectivityService: connectivityService
@@ -245,7 +245,7 @@ struct WorkoutViewModelNavigationTitleTests {
     }
 
     @Test("Должен возвращать правильный заголовок для второго подхода первого упражнения")
-    func navigationTitleForSecondSetOfFirstExercise() throws {
+    func navigationTitleForSecondSetOfFirstExercise() {
         let connectivityService = MockWatchConnectivityService()
         let viewModel = WorkoutViewModel(
             connectivityService: connectivityService
@@ -279,7 +279,7 @@ struct WorkoutViewModelNavigationTitleTests {
     }
 
     @Test("Должен возвращать правильный заголовок для первого подхода второго упражнения")
-    func navigationTitleForFirstSetOfSecondExercise() throws {
+    func navigationTitleForFirstSetOfSecondExercise() {
         let connectivityService = MockWatchConnectivityService()
         let viewModel = WorkoutViewModel(
             connectivityService: connectivityService
@@ -318,7 +318,7 @@ struct WorkoutViewModelNavigationTitleTests {
     }
 
     @Test("Должен возвращать правильный заголовок для второго подхода второго упражнения")
-    func navigationTitleForSecondSetOfSecondExercise() throws {
+    func navigationTitleForSecondSetOfSecondExercise() {
         let connectivityService = MockWatchConnectivityService()
         let viewModel = WorkoutViewModel(
             connectivityService: connectivityService
@@ -362,7 +362,7 @@ struct WorkoutViewModelNavigationTitleTests {
     }
 
     @Test("Должен возвращать правильный заголовок для первого подхода турбо-дня 93")
-    func navigationTitleForTurboDay93FirstSet() throws {
+    func navigationTitleForTurboDay93FirstSet() {
         let connectivityService = MockWatchConnectivityService()
         let viewModel = WorkoutViewModel(
             connectivityService: connectivityService
@@ -392,7 +392,7 @@ struct WorkoutViewModelNavigationTitleTests {
     }
 
     @Test("Должен возвращать правильный заголовок для третьего подхода турбо-дня 93")
-    func navigationTitleForTurboDay93ThirdSet() throws {
+    func navigationTitleForTurboDay93ThirdSet() {
         let connectivityService = MockWatchConnectivityService()
         let viewModel = WorkoutViewModel(
             connectivityService: connectivityService
@@ -430,7 +430,7 @@ struct WorkoutViewModelNavigationTitleTests {
     }
 
     @Test("Должен возвращать правильный заголовок для последнего подхода турбо-дня 93")
-    func navigationTitleForTurboDay93LastSet() throws {
+    func navigationTitleForTurboDay93LastSet() {
         let connectivityService = MockWatchConnectivityService()
         let viewModel = WorkoutViewModel(
             connectivityService: connectivityService
@@ -466,7 +466,7 @@ struct WorkoutViewModelNavigationTitleTests {
     }
 
     @Test("Должен возвращать правильный заголовок для турбо-дня 98")
-    func navigationTitleForTurboDay98() throws {
+    func navigationTitleForTurboDay98() {
         let connectivityService = MockWatchConnectivityService()
         let viewModel = WorkoutViewModel(
             connectivityService: connectivityService

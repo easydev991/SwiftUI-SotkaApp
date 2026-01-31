@@ -173,7 +173,7 @@ struct CustomExercisesServiceTests {
     }
 
     @Test
-    func nameConflictResolution() async throws {
+    func nameConflictResolution() throws {
         // Arrange
         let mockClient = MockSWClient()
         let service = CustomExercisesService(client: mockClient)
@@ -272,7 +272,7 @@ struct CustomExercisesServiceTests {
     }
 
     @Test
-    func localSoftDeleteMarksFlags() async throws {
+    func localSoftDeleteMarksFlags() throws {
         // Arrange
         let mockClient = MockSWClient()
         let service = CustomExercisesService(client: mockClient)

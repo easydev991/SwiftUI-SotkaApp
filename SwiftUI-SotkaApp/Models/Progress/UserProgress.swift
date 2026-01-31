@@ -447,11 +447,9 @@ private extension UserProgress {
         }
 
         // Явно убираем trailing zero и разделитель, если они есть
-        let withoutTrailingZero = formattedString
+        return formattedString
             .replacingOccurrences(of: "\\.0$", with: "", options: .regularExpression)
             .replacingOccurrences(of: ",0$", with: "", options: .regularExpression)
-
-        return withoutTrailingZero
     }
 }
 

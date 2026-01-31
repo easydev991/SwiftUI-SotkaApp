@@ -131,7 +131,7 @@ extension WorkoutPreviewViewModelTests {
 
         @Test("Должен возвращать false для hasChanges при первоначальной загрузке")
         @MainActor
-        func returnsFalseForHasChangesOnInitialLoad() async throws {
+        func returnsFalseForHasChangesOnInitialLoad() async {
             let connectivityService = MockWatchConnectivityService()
             let viewModel = WorkoutPreviewViewModel(
                 connectivityService: connectivityService
@@ -153,7 +153,7 @@ extension WorkoutPreviewViewModelTests {
 
         @Test("Должен возвращать true для hasChanges после изменения plannedCount")
         @MainActor
-        func returnsTrueForHasChangesAfterChangingPlannedCount() async throws {
+        func returnsTrueForHasChangesAfterChangingPlannedCount() async {
             let connectivityService = MockWatchConnectivityService()
             let viewModel = WorkoutPreviewViewModel(
                 connectivityService: connectivityService

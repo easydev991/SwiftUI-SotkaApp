@@ -101,7 +101,7 @@ extension AllInfopostsTests {
             #expect(!manager.isInfopostAvailable(day6Post))
         }
 
-        // Вспомогательная функция для создания тестовых инфопостов
+        /// Вспомогательная функция для создания тестовых инфопостов
         private func createInfopost(section: InfopostSection, dayNumber: Int?) -> Infopost {
             Infopost(
                 id: "test_\(section.rawValue)_\(dayNumber ?? 0)",

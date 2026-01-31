@@ -31,7 +31,7 @@ extension WorkoutPreviewViewModelTests {
 
         @Test("Должен получать DayActivity через computed property dayActivity")
         @MainActor
-        func getsDayActivityThroughComputedProperty() throws {
+        func getsDayActivityThroughComputedProperty() {
             let viewModel = WorkoutPreviewViewModel()
             viewModel.dayNumber = 1
             viewModel.selectedExecutionType = .cycles

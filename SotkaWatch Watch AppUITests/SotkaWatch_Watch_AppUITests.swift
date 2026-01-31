@@ -18,7 +18,7 @@ final class SotkaWatch_Watch_AppUITests: XCTestCase {
         app = nil
     }
 
-    func testMakeScreenshots() throws {
+    func testMakeScreenshots() {
         _ = editActivityButton.waitForExistence(timeout: 5)
         snapshot("02_training_info")
         waitAndTapOrFail(element: editActivityButton)

@@ -119,12 +119,12 @@ struct FloatExtensionTests {
     }
 
     @Test("Round-trip: UI String -> Float -> UI String")
-    func roundTripUIStringToFloatToUIString() {
+    func roundTripUIStringToFloatToUIString() throws {
         let originalString = "70,5"
         let floatValue = Float.fromUIString(originalString)
         #expect(floatValue != nil)
 
-        let uiString = floatValue!.formattedForUI()
+        let uiString = try #require(floatValue?.formattedForUI())
         #expect(uiString == originalString)
     }
 

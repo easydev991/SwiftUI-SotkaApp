@@ -2,7 +2,9 @@ import SwiftUI
 
 /// Режимы отображения прогресса
 enum ProgressDisplayMode: CaseIterable, Identifiable {
-    var id: Self { self }
+    var id: Self {
+        self
+    }
 
     case metrics
     case photos

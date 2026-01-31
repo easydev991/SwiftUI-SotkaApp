@@ -3,7 +3,9 @@ import SwiftUI
 
 /// Режимы отображения инфопостов
 enum InfopostsDisplayMode: CaseIterable, Identifiable {
-    var id: Self { self }
+    var id: Self {
+        self
+    }
 
     case all
     case favorites

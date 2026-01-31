@@ -12,7 +12,10 @@ struct ChangePasswordScreen: View {
     @State private var isChangeSuccessful = false
     @State private var changePasswordTask: Task<Void, Never>?
     @FocusState private var focus: FocusableField?
-    private var client: ProfileClient { SWClient(with: authHelper) }
+    private var client: ProfileClient {
+        SWClient(with: authHelper)
+    }
+
     let userName: String
 
     var body: some View {
@@ -42,7 +45,10 @@ private extension ChangePasswordScreen {
     struct PassworModel {
         struct NewPassword {
             var text = ""
-            var isError: Bool { !errorMessage.isEmpty }
+            var isError: Bool {
+                !errorMessage.isEmpty
+            }
+
             var errorMessage: String {
                 text.trueCount < Constants.minPasswordSize
                     && !text.isEmpty

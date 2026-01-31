@@ -7,7 +7,7 @@ extension AllInfopostsTests {
         private typealias SUT = InfopostsService.FilenameManager
 
         @Test("Правильный порядок файлов для русского языка")
-        func orderedFilenamesForRussian() throws {
+        func orderedFilenamesForRussian() {
             let manager = SUT(language: "ru")
             let filenames = manager.getOrderedFilenames()
 
@@ -25,7 +25,7 @@ extension AllInfopostsTests {
         }
 
         @Test("Правильный порядок файлов для английского языка")
-        func orderedFilenamesForEnglish() throws {
+        func orderedFilenamesForEnglish() {
             let manager = SUT(language: "en")
             let filenames = manager.getOrderedFilenames()
 

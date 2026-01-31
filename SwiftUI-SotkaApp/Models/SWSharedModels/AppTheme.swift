@@ -1,7 +1,10 @@
 import SwiftUI
 
 enum AppTheme: Int, CaseIterable, Identifiable {
-    var id: Int { rawValue }
+    var id: Int {
+        rawValue
+    }
+
     case system = 0
     case light = 1
     case dark = 2

@@ -29,7 +29,7 @@ struct ShareAppURLTests {
     }
 
     @Test("Должен возвращать nil для пустого appId")
-    func emptyAppId() throws {
+    func emptyAppId() {
         let model = ShareAppURL(localeIdentifier: "ru_RU", appId: "")
 
         #expect(model == nil)

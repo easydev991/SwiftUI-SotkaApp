@@ -96,7 +96,6 @@ private extension LoginScreen {
         }
     }
 
-    @ViewBuilder
     var loginField: some View {
         SWTextField(
             placeholder: String(localized: .loginOrEmail),
@@ -113,7 +112,6 @@ private extension LoginScreen {
         .accessibilityIdentifier("loginField")
     }
 
-    @ViewBuilder
     var passwordField: some View {
         SWTextField(
             placeholder: String(localized: .password),

@@ -155,7 +155,7 @@ struct StatusManagerWatchConnectivityTests {
     }
 
     @Test("Не должен включать restTime в словарь если restTime == nil")
-    func shouldNotIncludeRestTimeWhenNil() throws {
+    func shouldNotIncludeRestTimeWhenNil() {
         let message = WatchStatusMessage(
             isAuthorized: true,
             currentDay: 42,
@@ -465,7 +465,7 @@ struct StatusManagerWatchConnectivityTests {
     }
 
     @Test("Должен возвращать nil для неизвестной команды")
-    func shouldReturnNilForUnknownCommand() throws {
+    func shouldReturnNilForUnknownCommand() {
         let message: [String: Any] = [
             "command": "UNKNOWN_COMMAND",
             "day": 42
@@ -476,7 +476,7 @@ struct StatusManagerWatchConnectivityTests {
     }
 
     @Test("Должен возвращать nil для сообщения без команды")
-    func shouldReturnNilForMessageWithoutCommand() throws {
+    func shouldReturnNilForMessageWithoutCommand() {
         let message: [String: Any] = [
             "day": 42
         ]

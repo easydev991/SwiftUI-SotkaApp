@@ -61,7 +61,7 @@ final class WorkoutScreenViewModel {
         WorkoutProgramCreator.isTurboWithSets(day: dayNumber, executionType: executionType)
     }
 
-    // Методы инициализации
+    /// Методы инициализации
     func setupWorkoutData(
         dayNumber: Int,
         executionType: ExerciseExecutionType,
@@ -128,7 +128,7 @@ final class WorkoutScreenViewModel {
         logger.info("Инициализация этапов: тип выполнения \(executionTypeValue), количество \(plannedCountValue)")
     }
 
-    // Методы управления тренировкой
+    /// Методы управления тренировкой
     func completeCurrentStep(appSettings: AppSettings) {
         guard currentStepIndex < stepStates.count else { return }
 

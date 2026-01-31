@@ -5,7 +5,10 @@ struct SyncStartDateView: View {
     @Environment(StatusManager.self) private var statusManager
     @State private var selectedOption = Selection.none
     @State private var syncTask: Task<Void, Never>?
-    private var isLoading: Bool { syncTask != nil }
+    private var isLoading: Bool {
+        syncTask != nil
+    }
+
     let model: ConflictingStartDate
 
     var body: some View {

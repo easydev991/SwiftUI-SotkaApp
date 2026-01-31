@@ -63,29 +63,61 @@ private extension SwiftUI_SotkaAppUITests {
 }
 
 private extension SwiftUI_SotkaAppUITests {
-    var tabbar: XCUIElement { app.tabBars.firstMatch }
+    var tabbar: XCUIElement {
+        app.tabBars.firstMatch
+    }
+
     var profileTabButton: XCUIElement {
         let regularProfileTabButton = tabbar.buttons.element(boundBy: 1)
         let ipadProfileTabButton = app.buttons["profileTabButton"].firstMatch
         return regularProfileTabButton.exists ? regularProfileTabButton : ipadProfileTabButton
     }
 
-    var closeButton: XCUIElement { app.buttons["closeButton"].firstMatch }
+    var closeButton: XCUIElement {
+        app.buttons["closeButton"].firstMatch
+    }
+
     var backButton: XCUIElement {
         let regularBackButton = app.buttons["BackButton"].firstMatch
         let ipadBackButton = app.navigationBars.buttons.element(boundBy: 0)
         return regularBackButton.exists ? regularBackButton : ipadBackButton
     }
 
-    var todayInfopostButton: XCUIElement { app.buttons["TodayInfopostButton"].firstMatch }
-    var todayActivityButton: XCUIElement { app.buttons["TodayActivityButton.0"].firstMatch }
-    var openWorkoutEditorButton: XCUIElement { app.buttons["OpenWorkoutEditorButton"].firstMatch }
-    var workoutEditorDoneButton: XCUIElement { app.buttons["WorkoutEditorDoneButton"].firstMatch }
-    var profileProgressButton: XCUIElement { app.buttons["ProfileProgressButton"].firstMatch }
-    var profileJournalButton: XCUIElement { app.buttons["ProfileJournalButton"].firstMatch }
-    var journalDisplayModeButton: XCUIElement { app.buttons["JournalDisplayModeButton"].firstMatch }
-    var journalDisplayModeOption: XCUIElement { app.buttons["JournalDisplayModeOption.0"].firstMatch }
-    var profileExercisesButton: XCUIElement { app.buttons["ProfileExercisesButton"].firstMatch }
+    var todayInfopostButton: XCUIElement {
+        app.buttons["TodayInfopostButton"].firstMatch
+    }
+
+    var todayActivityButton: XCUIElement {
+        app.buttons["TodayActivityButton.0"].firstMatch
+    }
+
+    var openWorkoutEditorButton: XCUIElement {
+        app.buttons["OpenWorkoutEditorButton"].firstMatch
+    }
+
+    var workoutEditorDoneButton: XCUIElement {
+        app.buttons["WorkoutEditorDoneButton"].firstMatch
+    }
+
+    var profileProgressButton: XCUIElement {
+        app.buttons["ProfileProgressButton"].firstMatch
+    }
+
+    var profileJournalButton: XCUIElement {
+        app.buttons["ProfileJournalButton"].firstMatch
+    }
+
+    var journalDisplayModeButton: XCUIElement {
+        app.buttons["JournalDisplayModeButton"].firstMatch
+    }
+
+    var journalDisplayModeOption: XCUIElement {
+        app.buttons["JournalDisplayModeOption.0"].firstMatch
+    }
+
+    var profileExercisesButton: XCUIElement {
+        app.buttons["ProfileExercisesButton"].firstMatch
+    }
 }
 
 private extension XCUIElementQuery {

@@ -4,7 +4,7 @@ import Testing
 
 struct WatchWorkoutServiceTests {
     @Test("Инициализирует тренировку из WorkoutData")
-    func initializesWorkoutFromWorkoutData() throws {
+    func initializesWorkoutFromWorkoutData() {
         let trainings = [
             WorkoutPreviewTraining(
                 id: "training-1",
@@ -30,7 +30,7 @@ struct WatchWorkoutServiceTests {
     }
 
     @Test("Отслеживает прогресс тренировки")
-    func tracksWorkoutProgress() throws {
+    func tracksWorkoutProgress() {
         let trainings = [
             WorkoutPreviewTraining(
                 id: "training-1",
@@ -60,7 +60,7 @@ struct WatchWorkoutServiceTests {
     }
 
     @Test("Завершает круг/подход")
-    func completesRound() throws {
+    func completesRound() {
         let trainings = [
             WorkoutPreviewTraining(
                 id: "training-1",
@@ -87,7 +87,7 @@ struct WatchWorkoutServiceTests {
     }
 
     @Test("Завершает тренировку и формирует результат")
-    func finishesWorkoutAndCreatesResult() throws {
+    func finishesWorkoutAndCreatesResult() {
         let trainings = [
             WorkoutPreviewTraining(
                 id: "training-1",
@@ -118,7 +118,7 @@ struct WatchWorkoutServiceTests {
     }
 
     @Test("Прерывает тренировку")
-    func cancelsWorkout() throws {
+    func cancelsWorkout() {
         let trainings = [
             WorkoutPreviewTraining(
                 id: "training-1",
@@ -148,7 +148,7 @@ struct WatchWorkoutServiceTests {
     }
 
     @Test("Формирует WorkoutResult из прогресса")
-    func createsWorkoutResultFromProgress() throws {
+    func createsWorkoutResultFromProgress() {
         let trainings = [
             WorkoutPreviewTraining(
                 id: "training-1",
@@ -177,7 +177,7 @@ struct WatchWorkoutServiceTests {
     }
 
     @Test("Обрабатывает отсутствие данных тренировки")
-    func handlesMissingWorkoutData() throws {
+    func handlesMissingWorkoutData() {
         let workoutData = WorkoutData(
             day: 5,
             executionType: 0,
@@ -192,7 +192,7 @@ struct WatchWorkoutServiceTests {
     }
 
     @Test("Возвращает значение по умолчанию для времени отдыха")
-    func returnsDefaultRestTime() throws {
+    func returnsDefaultRestTime() {
         let workoutData = WorkoutData(
             day: 5,
             executionType: 0,

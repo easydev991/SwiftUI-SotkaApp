@@ -50,7 +50,6 @@ extension ProgressPhotoRow {
 }
 
 private extension ProgressPhotoRow {
-    @ViewBuilder
     var imageView: some View {
         ZStack {
             // Приоритет локальным данным, fallback на URL

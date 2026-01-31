@@ -6,7 +6,7 @@ import WatchConnectivity
 @MainActor
 struct WatchConnectivityServiceTests {
     @Test("Инициализирует WCSession при создании")
-    func initializesWCSessionOnCreation() throws {
+    func initializesWCSessionOnCreation() {
         let authService = WatchAuthService()
         let mockSession = MockWCSession(isReachable: true)
         _ = WatchConnectivityService(authService: authService, sessionProtocol: mockSession)
@@ -16,7 +16,7 @@ struct WatchConnectivityServiceTests {
     }
 
     @Test("Обрабатывает команду изменения статуса авторизации от iPhone")
-    func handlesAuthStatusCommandFromPhone() throws {
+    func handlesAuthStatusCommandFromPhone() {
         let authService = WatchAuthService()
         let service = WatchConnectivityService(authService: authService)
 
@@ -72,7 +72,7 @@ struct WatchConnectivityServiceTests {
     }
 
     @Test("Обрабатывает команду изменения статуса авторизации с replyHandler")
-    func handlesAuthStatusCommandWithReplyHandler() throws {
+    func handlesAuthStatusCommandWithReplyHandler() {
         let authService = WatchAuthService()
         let service = WatchConnectivityService(authService: authService)
 
@@ -447,7 +447,7 @@ struct WatchConnectivityServiceTests {
     }
 
     @Test("Должен обрабатывать applicationContext только с isAuthorized")
-    func shouldHandleApplicationContextWithOnlyIsAuthorized() throws {
+    func shouldHandleApplicationContextWithOnlyIsAuthorized() {
         let authService = WatchAuthService()
         let service = WatchConnectivityService(authService: authService)
 
@@ -579,7 +579,7 @@ struct WatchConnectivityServiceTests {
     }
 
     @Test("Должен вызывать callback с nil при удалении currentActivity")
-    func shouldCallCallbackWithNilWhenCurrentActivityRemoved() throws {
+    func shouldCallCallbackWithNilWhenCurrentActivityRemoved() {
         let authService = WatchAuthService()
         let service = WatchConnectivityService(authService: authService)
 
@@ -706,7 +706,7 @@ struct WatchConnectivityServiceTests {
     }
 
     @Test("Должен игнорировать команду PHONE_COMMAND_SEND_WORKOUT_DATA с неверным форматом данных")
-    func shouldIgnoreSendWorkoutDataCommandWithInvalidFormat() throws {
+    func shouldIgnoreSendWorkoutDataCommandWithInvalidFormat() {
         let authService = WatchAuthService()
         let service = WatchConnectivityService(authService: authService)
 
@@ -768,7 +768,7 @@ struct WatchConnectivityServiceTests {
     }
 
     @Test("Должен использовать дефолтное значение restTime если restTime отсутствует в сообщении")
-    func shouldUseDefaultRestTimeWhenMissing() throws {
+    func shouldUseDefaultRestTimeWhenMissing() {
         let authService = WatchAuthService()
         let service = WatchConnectivityService(authService: authService)
 

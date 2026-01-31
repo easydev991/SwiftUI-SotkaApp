@@ -7,7 +7,7 @@ struct DayRequestTests {
     // MARK: - Tests
 
     @Test("Минимальный набор параметров: только id")
-    func minimalParametersOnlyId() throws {
+    func minimalParametersOnlyId() {
         let req = DayRequest(
             id: 10,
             activityType: nil,
@@ -27,7 +27,7 @@ struct DayRequestTests {
     }
 
     @Test("Добавление modify_date только при наличии")
-    func modifyDateIncludedOnlyWhenPresent() throws {
+    func modifyDateIncludedOnlyWhenPresent() {
         let withoutModify = DayRequest(
             id: 1,
             activityType: nil,
@@ -60,7 +60,7 @@ struct DayRequestTests {
     }
 
     @Test("Сериализация всех доступных полей")
-    func serializeAllFields() throws {
+    func serializeAllFields() {
         let req = DayRequest(
             id: 2,
             activityType: 0,
@@ -89,7 +89,7 @@ struct DayRequestTests {
     }
 
     @Test("Тренировки: индексация и выбор ключей по типам")
-    func trainingsIndexingAndTypeKeys() throws {
+    func trainingsIndexingAndTypeKeys() {
         let trainings: [DayRequest.Training] = [
             .init(count: 1, typeId: 0, customTypeId: nil),
             .init(count: 2, typeId: nil, customTypeId: "custom-A"),
@@ -128,7 +128,7 @@ struct DayRequestTests {
     }
 
     @Test("Тренировки: отсутствие ключей при nil/пустом массиве")
-    func trainingsKeysAbsentWhenNilOrEmpty() throws {
+    func trainingsKeysAbsentWhenNilOrEmpty() {
         let reqNil = DayRequest(
             id: 1,
             activityType: nil,
@@ -206,7 +206,7 @@ struct DayRequestTests {
     }
 
     @Test("DayRequest.formParameters должен включать training[index][sort_order] для каждой тренировки")
-    func formParametersShouldIncludeSortOrder() throws {
+    func formParametersShouldIncludeSortOrder() {
         let trainings: [DayRequest.Training] = [
             .init(count: 1, typeId: 0, customTypeId: nil, sortOrder: 0),
             .init(count: 2, typeId: 1, customTypeId: nil, sortOrder: 1),
@@ -234,7 +234,7 @@ struct DayRequestTests {
     }
 
     @Test("sort_order должен быть равен индексу в массиве, если не указан явно")
-    func sortOrderShouldEqualIndexWhenNotSpecified() throws {
+    func sortOrderShouldEqualIndexWhenNotSpecified() {
         let trainings: [DayRequest.Training] = [
             .init(count: 1, typeId: 0, customTypeId: nil, sortOrder: nil),
             .init(count: 2, typeId: 1, customTypeId: nil, sortOrder: nil),
@@ -262,7 +262,7 @@ struct DayRequestTests {
     }
 
     @Test("Тренировки должны быть отсортированы по sortOrder перед отправкой, индекс массива должен соответствовать sort_order")
-    func trainingsShouldBeSortedBySortOrder() throws {
+    func trainingsShouldBeSortedBySortOrder() {
         let trainings: [DayRequest.Training] = [
             .init(count: 1, typeId: 0, customTypeId: nil, sortOrder: 2),
             .init(count: 2, typeId: 1, customTypeId: nil, sortOrder: 0),

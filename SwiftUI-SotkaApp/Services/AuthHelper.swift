@@ -46,7 +46,9 @@ final class AuthHelperImp: AuthHelper {
         }
     }
 
-    var authToken: String? { authData?.token }
+    var authToken: String? {
+        authData?.token
+    }
 
     func saveAuthData(_ authData: AuthData) {
         self.authData = authData

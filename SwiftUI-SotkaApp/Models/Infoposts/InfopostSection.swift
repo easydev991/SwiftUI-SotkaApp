@@ -3,7 +3,10 @@ import SwiftUI
 
 /// Секции инфопостов для группировки по блокам программы
 enum InfopostSection: String, Codable, CaseIterable, Identifiable {
-    var id: Self { self }
+    var id: Self {
+        self
+    }
+
     case preparation
     case base
     case advanced

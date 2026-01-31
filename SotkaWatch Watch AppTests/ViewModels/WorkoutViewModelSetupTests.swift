@@ -5,7 +5,7 @@ import Testing
 @MainActor
 struct WorkoutViewModelSetupTests {
     @Test("Должен инициализировать данные тренировки для типа .cycles")
-    func setupWorkoutDataForCycles() throws {
+    func setupWorkoutDataForCycles() {
         let connectivityService = MockWatchConnectivityService()
         let viewModel = WorkoutViewModel(
             connectivityService: connectivityService
@@ -37,7 +37,7 @@ struct WorkoutViewModelSetupTests {
     }
 
     @Test("Должен инициализировать данные тренировки для типа .sets")
-    func setupWorkoutDataForSets() throws {
+    func setupWorkoutDataForSets() {
         let connectivityService = MockWatchConnectivityService()
         let viewModel = WorkoutViewModel(
             connectivityService: connectivityService
@@ -101,7 +101,7 @@ struct WorkoutViewModelSetupTests {
     }
 
     @Test("Должен определять завершенность тренировки")
-    func isWorkoutCompleted() throws {
+    func isWorkoutCompleted() {
         let connectivityService = MockWatchConnectivityService()
         let viewModel = WorkoutViewModel(
             connectivityService: connectivityService
@@ -129,7 +129,7 @@ struct WorkoutViewModelSetupTests {
     }
 
     @Test("Должен определять нужно ли показывать напоминание об упражнениях для .cycles")
-    func shouldShowExercisesReminderForCycles() throws {
+    func shouldShowExercisesReminderForCycles() {
         let connectivityService = MockWatchConnectivityService()
         let viewModel = WorkoutViewModel(
             connectivityService: connectivityService
@@ -151,7 +151,7 @@ struct WorkoutViewModelSetupTests {
     }
 
     @Test("Должен определять нужно ли показывать напоминание об упражнениях для .sets")
-    func shouldShowExercisesReminderForSets() throws {
+    func shouldShowExercisesReminderForSets() {
         let connectivityService = MockWatchConnectivityService()
         let viewModel = WorkoutViewModel(
             connectivityService: connectivityService

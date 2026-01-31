@@ -13,8 +13,13 @@ public enum Icons {
         case profile = "person"
         case settings = "gearshape"
 
-        public var view: some View { Image(systemName: rawValue) }
-        public var imageView: Image { Image(systemName: rawValue) }
+        public var view: some View {
+            Image(systemName: rawValue)
+        }
+
+        public var imageView: Image {
+            Image(systemName: rawValue)
+        }
     }
 
     /// Названия остальных иконок
@@ -49,8 +54,13 @@ public enum Icons {
         case chevron = "chevron.forward"
         case star
 
-        public var view: some View { Image(systemName: rawValue) }
-        public var imageView: Image { Image(systemName: rawValue) }
+        public var view: some View {
+            Image(systemName: rawValue)
+        }
+
+        public var imageView: Image {
+            Image(systemName: rawValue)
+        }
     }
 }
 

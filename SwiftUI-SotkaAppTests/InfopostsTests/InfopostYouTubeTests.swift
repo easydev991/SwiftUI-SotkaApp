@@ -29,7 +29,7 @@ extension AllInfopostsTests {
         }
 
         @Test
-        func infopostWithoutDayNumberHasNoYouTubeVideo() throws {
+        func infopostWithoutDayNumberHasNoYouTubeVideo() {
             // Given
             let infopost = Infopost(
                 id: "about",
@@ -50,7 +50,7 @@ extension AllInfopostsTests {
         }
 
         @Test
-        func infopostWithZeroDayNumberHasNoYouTubeVideo() throws {
+        func infopostWithZeroDayNumberHasNoYouTubeVideo() {
             // Given
             let infopost = Infopost(
                 id: "d0",
@@ -71,7 +71,7 @@ extension AllInfopostsTests {
         }
 
         @Test
-        func infopostWithNegativeDayNumberHasNoYouTubeVideo() throws {
+        func infopostWithNegativeDayNumberHasNoYouTubeVideo() {
             // Given
             let infopost = Infopost(
                 id: "d-1",

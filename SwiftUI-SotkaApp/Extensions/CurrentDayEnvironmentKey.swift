@@ -1,14 +1,7 @@
 import SwiftUI
 
-private struct CurrentDayEnvironmentKey: EnvironmentKey {
-    static let defaultValue = 1
-}
-
 extension EnvironmentValues {
-    var currentDay: Int {
-        get { self[CurrentDayEnvironmentKey.self] }
-        set { self[CurrentDayEnvironmentKey.self] = newValue }
-    }
+    @Entry var currentDay = 1
 }
 
 extension View {

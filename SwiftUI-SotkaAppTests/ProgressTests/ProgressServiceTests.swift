@@ -230,7 +230,7 @@ extension AllProgressTests {
         }
 
         @Test("saveProgress обновляет данные прогресса")
-        func saveProgressUpdatesProgressData() async throws {
+        func saveProgressUpdatesProgressData() throws {
             // Создаем отдельный модельный контекст для этого теста
             let modelConfiguration = ModelConfiguration(isStoredInMemoryOnly: true)
             let modelContainer = try ModelContainer(for: User.self, UserProgress.self, configurations: modelConfiguration)
@@ -266,7 +266,7 @@ extension AllProgressTests {
         }
 
         @Test("saveProgress создает связь с пользователем")
-        func saveProgressCreatesUserRelation() async throws {
+        func saveProgressCreatesUserRelation() throws {
             // Создаем отдельный модельный контекст для этого теста
             let modelConfiguration = ModelConfiguration(isStoredInMemoryOnly: true)
             let modelContainer = try ModelContainer(for: User.self, UserProgress.self, configurations: modelConfiguration)
@@ -295,7 +295,7 @@ extension AllProgressTests {
         }
 
         @Test("deleteProgress помечает прогресс для удаления")
-        func deleteProgressMarksProgressForDeletion() async throws {
+        func deleteProgressMarksProgressForDeletion() throws {
             let progress = UserProgress(id: 1, pullUps: 10)
             let service = ProgressService(progress: progress, mode: .metrics)
 

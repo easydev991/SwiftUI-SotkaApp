@@ -132,12 +132,12 @@ struct DoubleExtensionTests {
     }
 
     @Test("Round-trip: UI String -> Double -> UI String")
-    func roundTripUIStringToDoubleToUIString() {
+    func roundTripUIStringToDoubleToUIString() throws {
         let originalString = "70,5"
         let doubleValue = Double.fromUIString(originalString)
         #expect(doubleValue != nil)
 
-        let uiString = doubleValue!.formattedForUI()
+        let uiString = try #require(doubleValue?.formattedForUI())
         #expect(uiString == originalString)
     }
 

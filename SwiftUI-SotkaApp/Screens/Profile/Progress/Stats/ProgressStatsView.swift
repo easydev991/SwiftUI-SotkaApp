@@ -6,7 +6,9 @@ import TipKit
 struct ProgressStatsTip: Tip {
     static let reachedTenthDay = Event(id: "reachedTenthDay")
 
-    var id: String { "ProgressTip.StatsView" }
+    var id: String {
+        "ProgressTip.StatsView"
+    }
 
     var title: Text {
         Text(.progressTipStatsViewTitle)

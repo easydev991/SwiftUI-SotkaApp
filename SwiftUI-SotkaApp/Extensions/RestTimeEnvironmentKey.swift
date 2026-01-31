@@ -1,14 +1,7 @@
 import SwiftUI
 
-private struct RestTimeEnvironmentKey: EnvironmentKey {
-    static let defaultValue = Constants.defaultRestTime
-}
-
 extension EnvironmentValues {
-    var restTime: Int {
-        get { self[RestTimeEnvironmentKey.self] }
-        set { self[RestTimeEnvironmentKey.self] = newValue }
-    }
+    @Entry var restTime: Int = Constants.defaultRestTime
 }
 
 extension View {

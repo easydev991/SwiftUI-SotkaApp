@@ -40,7 +40,7 @@ struct WorkoutViewModelStepManagementTests {
     }
 
     @Test("Должен показывать таймер отдыха после завершения круга")
-    func showsRestTimerAfterCompletingCycle() throws {
+    func showsRestTimerAfterCompletingCycle() {
         let connectivityService = MockWatchConnectivityService()
         let viewModel = WorkoutViewModel(
             connectivityService: connectivityService
@@ -68,7 +68,7 @@ struct WorkoutViewModelStepManagementTests {
     }
 
     @Test("Не должен показывать таймер отдыха после завершения разминки")
-    func doesNotShowRestTimerAfterWarmUp() throws {
+    func doesNotShowRestTimerAfterWarmUp() {
         let connectivityService = MockWatchConnectivityService()
         let viewModel = WorkoutViewModel(
             connectivityService: connectivityService
@@ -132,7 +132,7 @@ struct WorkoutViewModelStepManagementTests {
     }
 
     @Test("Должен получать состояние этапа")
-    func getStepState() throws {
+    func getStepState() {
         let connectivityService = MockWatchConnectivityService()
         let viewModel = WorkoutViewModel(
             connectivityService: connectivityService
@@ -158,7 +158,7 @@ struct WorkoutViewModelStepManagementTests {
     }
 
     @Test("Должен возвращать список кругов для типа .cycles")
-    func getCycleSteps() throws {
+    func getCycleSteps() {
         let connectivityService = MockWatchConnectivityService()
         let viewModel = WorkoutViewModel(
             connectivityService: connectivityService
@@ -191,7 +191,7 @@ struct WorkoutViewModelStepManagementTests {
     }
 
     @Test("Должен возвращать список подходов для упражнения для типа .sets")
-    func getExerciseSteps() throws {
+    func getExerciseSteps() {
         let connectivityService = MockWatchConnectivityService()
         let viewModel = WorkoutViewModel(
             connectivityService: connectivityService

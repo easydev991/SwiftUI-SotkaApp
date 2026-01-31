@@ -65,7 +65,7 @@ extension WorkoutPreviewViewModelTests {
 
         @Test("Должен устанавливать error если selectedExecutionType == nil")
         @MainActor
-        func setsErrorWhenSelectedExecutionTypeIsNil() async throws {
+        func setsErrorWhenSelectedExecutionTypeIsNil() async {
             let connectivityService = MockWatchConnectivityService()
             let viewModel = WorkoutPreviewViewModel(
                 connectivityService: connectivityService
@@ -84,7 +84,7 @@ extension WorkoutPreviewViewModelTests {
 
         @Test("Должен устанавливать error если trainings пустой")
         @MainActor
-        func setsErrorWhenTrainingsIsEmpty() async throws {
+        func setsErrorWhenTrainingsIsEmpty() async {
             let connectivityService = MockWatchConnectivityService()
             let viewModel = WorkoutPreviewViewModel(
                 connectivityService: connectivityService
@@ -101,7 +101,7 @@ extension WorkoutPreviewViewModelTests {
 
         @Test("Должен не устанавливать error при сетевой ошибке отправки (error только для валидации)")
         @MainActor
-        func doesNotSetErrorOnNetworkSendFailure() async throws {
+        func doesNotSetErrorOnNetworkSendFailure() async {
             let connectivityService = MockWatchConnectivityService()
             let viewModel = WorkoutPreviewViewModel(
                 connectivityService: connectivityService
@@ -242,7 +242,7 @@ extension WorkoutPreviewViewModelTests {
 
         @Test("Должен вызывать callback onSaveCompleted после успешного сохранения")
         @MainActor
-        func callsOnSaveCompletedCallbackAfterSuccessfulSave() async throws {
+        func callsOnSaveCompletedCallbackAfterSuccessfulSave() async {
             let connectivityService = MockWatchConnectivityService()
             let viewModel = WorkoutPreviewViewModel(
                 connectivityService: connectivityService
@@ -272,7 +272,7 @@ extension WorkoutPreviewViewModelTests {
 
         @Test("Не должен вызывать callback onSaveCompleted при ошибке сохранения")
         @MainActor
-        func doesNotCallOnSaveCompletedCallbackOnError() async throws {
+        func doesNotCallOnSaveCompletedCallbackOnError() async {
             let connectivityService = MockWatchConnectivityService()
             let viewModel = WorkoutPreviewViewModel(
                 connectivityService: connectivityService

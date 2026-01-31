@@ -122,7 +122,7 @@ extension StatusManagerTests {
         }
 
         @Test("Удаляет данные пользователя из контекста при логауте")
-        func deletesUserDataFromContextOnLogout() async throws {
+        func deletesUserDataFromContextOnLogout() throws {
             let mockSession = MockWCSession(isReachable: true)
 
             let modelConfiguration = ModelConfiguration(isStoredInMemoryOnly: true)

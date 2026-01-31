@@ -355,7 +355,7 @@ struct DayActivityTests {
 
     @Test("Инициализатор из DayResponse создает DayActivity с правильными полями")
     @MainActor
-    func dayActivityFromResponse() throws {
+    func dayActivityFromResponse() {
         let response = DayResponse(
             id: 5,
             activityType: 0,
@@ -387,7 +387,7 @@ struct DayActivityTests {
 
     @Test("Инициализатор из DayResponse устанавливает isSynced в true")
     @MainActor
-    func dayActivityFromResponseSetsSynced() throws {
+    func dayActivityFromResponseSetsSynced() {
         let response = DayResponse(
             id: 1,
             activityType: 0,

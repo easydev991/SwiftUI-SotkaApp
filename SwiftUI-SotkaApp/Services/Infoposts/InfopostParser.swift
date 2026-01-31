@@ -8,11 +8,6 @@ struct InfopostParser {
     let filename: String
     let language: String
 
-    init(filename: String, language: String) {
-        self.filename = filename
-        self.language = language
-    }
-
     /// Парсит HTML содержимое и создает модель Infopost
     /// - Parameter html: HTML содержимое файла
     /// - Returns: Модель Infopost или nil при ошибке парсинга

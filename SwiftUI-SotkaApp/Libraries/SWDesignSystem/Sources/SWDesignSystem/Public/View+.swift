@@ -36,7 +36,7 @@ public extension View {
         modifier(ShadowIfNeededModifier())
     }
 
-    /// Вызывает habtic feedback
+    // Вызывает habtic feedback
     #if !os(watchOS)
     func hapticFeedback(_ style: UIImpactFeedbackGenerator.FeedbackStyle) {
         UIImpactFeedbackGenerator(style: style).impactOccurred()
