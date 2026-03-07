@@ -187,6 +187,57 @@ extension DailyActivitiesServiceTests {
         )
     }
 
+    @Test("Не перетирает локальную активность серверной версией при timezone skew")
+    func keepsLocalActivityWhenServerTimezoneLessDateMatchesSameInstant() async throws {
+        let utc = try #require(TimeZone(secondsFromGMT: 0))
+        let mockClient = MockDaysClient()
+        let service = DailyActivitiesService(client: mockClient)
+        let container = try ModelContainer(
+            for: DayActivity.self,
+            DayActivityTraining.self,
+            User.self,
+            configurations: ModelConfiguration(isStoredInMemoryOnly: true)
+        )
+        let context = container.mainContext
+
+        let user = User(id: 1, userName: "testuser", fullName: "Test User", email: "test@example.com")
+        context.insert(user)
+        try context.save()
+
+        let localModifyDate = DateFormatterService.dateFromString(
+            "2024-05-12T07:20:30.000",
+            format: .isoDateTimeSec,
+            timeZone: utc
+        )
+        let activity = DayActivity(
+            day: 1,
+            activityTypeRaw: 1,
+            count: 5,
+            createDate: localModifyDate,
+            modifyDate: localModifyDate,
+            user: user
+        )
+        activity.isSynced = true
+        context.insert(activity)
+        try context.save()
+
+        let serverResponse = try makeDayResponse(
+            id: 1,
+            activityType: 1,
+            count: 10,
+            createDate: "2024-05-12T10:20:30",
+            modifyDate: "2024-05-12T10:20:30"
+        )
+        mockClient.setServerActivity(serverResponse)
+
+        _ = try await service.syncDailyActivities(context: context)
+
+        let updatedActivity = try #require(context.fetch(FetchDescriptor<DayActivity>()).first)
+        #expect(updatedActivity.count == 5)
+        #expect(updatedActivity.modifyDate == localModifyDate)
+        #expect(updatedActivity.isSynced)
+    }
+
     @Test("Не перезаписывает несинхронизированные локальные изменения")
     func unsyncedLocalChangesNotOverwritten() async throws {
         let mockClient = MockDaysClient()
@@ -414,4 +465,28 @@ extension DailyActivitiesServiceTests {
         #expect(updatedActivity.count == 10)
         #expect(!updatedActivity.isSynced)
     }
+}
+
+private func makeDayResponse(
+    id: Int,
+    activityType: Int,
+    count: Int,
+    createDate: String,
+    modifyDate: String
+) throws -> DayResponse {
+    let data = Data(
+        """
+        {
+          "id": \(id),
+          "activityType": \(activityType),
+          "count": \(count),
+          "createDate": "\(createDate)",
+          "modifyDate": "\(modifyDate)"
+        }
+        """.utf8
+    )
+
+    let decoder = JSONDecoder()
+    decoder.dateDecodingStrategy = .flexibleDateDecoding
+    return try decoder.decode(DayResponse.self, from: data)
 }

@@ -104,7 +104,7 @@ final class WorkoutPreviewViewModel {
             // Создать WorkoutProgramCreator для нового дня
             // Получаем последнюю пройденную тренировку для подстановки данных
             let baseCreator = WorkoutProgramCreator(day: dayNumber)
-            let lastWorkout = activitiesService.getLastPassedNonTurboWorkoutActivity(context: modelContext)
+            let lastWorkout = activitiesService.getLastPassedNonTurboWorkoutActivity(context: modelContext, currentDay: day)
 
             if let lastWorkout {
                 // Подставляем plannedCount, executionType и повторы из предыдущей тренировки

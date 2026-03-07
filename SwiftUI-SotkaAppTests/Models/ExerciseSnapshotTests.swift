@@ -78,6 +78,38 @@ struct ExerciseSnapshotTests {
         #expect(modifyDateStr == expectedModifyDate)
     }
 
+    @Test("exerciseRequest отправляет даты в UTC с суффиксом Z")
+    func exerciseRequestFormatsDatesAsUTC() throws {
+        let utc = try #require(TimeZone(secondsFromGMT: 0))
+        let createDate = DateFormatterService.dateFromString(
+            "2024-05-12T10:20:30.456",
+            format: .isoDateTimeSec,
+            timeZone: utc
+        )
+        let modifyDate = DateFormatterService.dateFromString(
+            "2024-05-12T11:20:30.456",
+            format: .isoDateTimeSec,
+            timeZone: utc
+        )
+
+        let snapshot = ExerciseSnapshot(
+            id: "exercise-utc",
+            name: "Берпи",
+            imageId: 7,
+            createDate: createDate,
+            modifyDate: modifyDate,
+            isSynced: false,
+            shouldDelete: false,
+            userId: 1
+        )
+
+        let request = snapshot.exerciseRequest
+        let modifyDateStr = try #require(request.modifyDate)
+
+        #expect(request.createDate == "2024-05-12T10:20:30.456Z")
+        #expect(modifyDateStr == "2024-05-12T11:20:30.456Z")
+    }
+
     @Test("exerciseRequest не зависит от флагов isSynced и shouldDelete")
     func exerciseRequestIndependentOfSyncFlags() {
         let snapshot1 = ExerciseSnapshot(

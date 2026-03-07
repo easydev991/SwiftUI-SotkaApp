@@ -74,8 +74,12 @@ extension StatusManagerTests {
 
         @Test("Вызывает statusClient.start с ISO строкой даты")
         func startNewRunCallsStatusClientWithISODate() async throws {
-            let now = Date.now
-            let appDate = try #require(Calendar.current.date(byAdding: .day, value: -30, to: now))
+            let utc = try #require(TimeZone(secondsFromGMT: 0))
+            let appDate = DateFormatterService.dateFromString(
+                "2024-05-12T10:20:30.456",
+                format: .isoDateTimeSec,
+                timeZone: utc
+            )
             let mockStatusClient = MockStatusClient(
                 startResult: .success(CurrentRunResponse(date: nil, maxForAllRunsDay: nil))
             )
@@ -84,8 +88,7 @@ extension StatusManagerTests {
             await statusManager.startNewRun(appDate: appDate)
 
             let lastStartDate = try #require(mockStatusClient.lastStartDate)
-            let expectedDateString = DateFormatterService.stringFromFullDate(appDate, iso: true)
-            #expect(lastStartDate == expectedDateString)
+            #expect(lastStartDate == "2024-05-12T10:20:30.456Z")
         }
 
         @Test("Обновляет currentDayCalculator с установленной датой")

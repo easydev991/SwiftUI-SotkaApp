@@ -59,7 +59,7 @@ extension DailyActivitiesServiceTests {
             _ = createUser(id: 1, context: context)
             try context.save()
 
-            let result = createService().getLastPassedNonTurboWorkoutActivity(context: context)
+            let result = createService().getLastPassedNonTurboWorkoutActivity(context: context, currentDay: 10)
 
             #expect(result == nil)
         }
@@ -74,7 +74,7 @@ extension DailyActivitiesServiceTests {
             createDayActivity(day: 10, activityType: .workout, count: nil, user: user, context: context)
             try context.save()
 
-            let result = createService().getLastPassedNonTurboWorkoutActivity(context: context)
+            let result = createService().getLastPassedNonTurboWorkoutActivity(context: context, currentDay: 10)
 
             #expect(result == nil)
         }
@@ -88,25 +88,25 @@ extension DailyActivitiesServiceTests {
             createDayActivity(day: 5, activityType: .workout, count: 3, user: user, context: context)
             try context.save()
 
-            let result = createService().getLastPassedNonTurboWorkoutActivity(context: context)
+            let result = createService().getLastPassedNonTurboWorkoutActivity(context: context, currentDay: 10)
 
             let activity = try #require(result)
             #expect(activity.day == 5)
             #expect(activity.count == 3)
         }
 
-        @Test("Возвращает самую недавнюю по дате изменения (не по номеру дня)")
-        func getLastPassedNonTurboWorkoutActivity_ReturnsLatestByModifyDate() throws {
+        @Test("Выбирает максимальный day, а не самый новый modifyDate")
+        func getLastPassedNonTurboWorkoutActivity_ReturnsMaxDayNotLatestModifyDate() throws {
             let container = try createContainer()
             let context = container.mainContext
 
             let user = createUser(id: 1, context: context)
-            // День 3 изменён раньше, но день 5 изменён позже - должен вернуться день 5
+            // День 3 изменен позже, но должен проиграть дню 5, так как day-based логика
             createDayActivity(
                 day: 3,
                 activityType: .workout,
                 count: 2,
-                modifyDate: Date.now.addingTimeInterval(-3600), // час назад
+                modifyDate: .now,
                 user: user,
                 context: context
             )
@@ -114,26 +114,34 @@ extension DailyActivitiesServiceTests {
                 day: 5,
                 activityType: .workout,
                 count: 4,
-                modifyDate: .now, // сейчас
-                user: user,
-                context: context
-            )
-            // День 7 изменён ещё раньше - не должен вернуться
-            createDayActivity(
-                day: 7,
-                activityType: .workout,
-                count: 5,
-                modifyDate: Date.now.addingTimeInterval(-7200), // 2 часа назад
+                modifyDate: Date.now.addingTimeInterval(-3600),
                 user: user,
                 context: context
             )
             try context.save()
 
-            let result = createService().getLastPassedNonTurboWorkoutActivity(context: context)
+            let result = createService().getLastPassedNonTurboWorkoutActivity(context: context, currentDay: 10)
 
             let activity = try #require(result)
-            #expect(activity.day == 5) // Самый недавний по modifyDate, а не максимальный день
+            #expect(activity.day == 5)
             #expect(activity.count == 4)
+        }
+
+        @Test("Учитывает только day меньше текущего")
+        func getLastPassedNonTurboWorkoutActivity_UsesOnlyDaysLessThanCurrentDay() throws {
+            let container = try createContainer()
+            let context = container.mainContext
+
+            let user = createUser(id: 1, context: context)
+            createDayActivity(day: 5, activityType: .workout, count: 3, user: user, context: context)
+            createDayActivity(day: 12, activityType: .workout, count: 8, user: user, context: context)
+            try context.save()
+
+            let result = createService().getLastPassedNonTurboWorkoutActivity(context: context, currentDay: 10)
+
+            let activity = try #require(result)
+            #expect(activity.day == 5)
+            #expect(activity.count == 3)
         }
 
         @Test("Игнорирует активности не типа workout")
@@ -147,7 +155,7 @@ extension DailyActivitiesServiceTests {
             createDayActivity(day: 12, activityType: .rest, count: 1, user: user, context: context)
             try context.save()
 
-            let result = createService().getLastPassedNonTurboWorkoutActivity(context: context)
+            let result = createService().getLastPassedNonTurboWorkoutActivity(context: context, currentDay: 10)
 
             let activity = try #require(result)
             #expect(activity.day == 5)
@@ -164,7 +172,7 @@ extension DailyActivitiesServiceTests {
             createDayActivity(day: 3, activityType: .workout, count: 2, user: user, context: context)
             try context.save()
 
-            let result = createService().getLastPassedNonTurboWorkoutActivity(context: context)
+            let result = createService().getLastPassedNonTurboWorkoutActivity(context: context, currentDay: 10)
 
             let activity = try #require(result)
             #expect(activity.day == 3)
@@ -184,7 +192,7 @@ extension DailyActivitiesServiceTests {
             createDayActivity(day: 3, activityType: .workout, count: 4, user: user1, context: context)
             try context.save()
 
-            let result = createService().getLastPassedNonTurboWorkoutActivity(context: context)
+            let result = createService().getLastPassedNonTurboWorkoutActivity(context: context, currentDay: 10)
 
             let activity = try #require(result)
             #expect(activity.day == 3)
@@ -220,7 +228,7 @@ extension DailyActivitiesServiceTests {
             )
             try context.save()
 
-            let result = createService().getLastPassedNonTurboWorkoutActivity(context: context)
+            let result = createService().getLastPassedNonTurboWorkoutActivity(context: context, currentDay: 10)
 
             let activity = try #require(result)
             #expect(activity.day == 5) // Turbo тренировка игнорируется
@@ -237,43 +245,43 @@ extension DailyActivitiesServiceTests {
             createDayActivity(day: 7, activityType: .workout, count: 5, executionType: .turbo, user: user, context: context)
             try context.save()
 
-            let result = createService().getLastPassedNonTurboWorkoutActivity(context: context)
+            let result = createService().getLastPassedNonTurboWorkoutActivity(context: context, currentDay: 10)
 
             #expect(result == nil)
         }
 
-        @Test("Возвращает активность обновлённую позже (modifyDate), даже если создана раньше")
-        func getLastPassedNonTurboWorkoutActivity_ReturnsByModifyDate_NotCreateDate() throws {
+        @Test("Среди подходящих дней выбирает максимальный day независимо от createDate и modifyDate")
+        func getLastPassedNonTurboWorkoutActivity_ReturnsMaxDay_IgnoringModifyDateAndCreateDate() throws {
             let container = try createContainer()
             let context = container.mainContext
 
             let user = createUser(id: 1, context: context)
-            // День 19: создан давно, изменён давно
+            // День 19: создан недавно и изменен сейчас
             createDayActivity(
                 day: 19,
                 activityType: .workout,
                 count: 8,
-                createDate: Date.now.addingTimeInterval(-86400 * 7), // создан неделю назад
-                modifyDate: Date.now.addingTimeInterval(-86400 * 5), // изменён 5 дней назад
+                createDate: Date.now.addingTimeInterval(-3600),
+                modifyDate: .now,
                 user: user,
                 context: context
             )
-            // День 24: создан недавно, изменён сейчас (симуляция сохранения результатов)
+            // День 24: создан и изменен раньше, но должен победить из-за большего day
             createDayActivity(
                 day: 24,
                 activityType: .workout,
                 count: 8,
-                createDate: Date.now.addingTimeInterval(-86400 * 3), // создан 3 дня назад
-                modifyDate: .now, // изменён сейчас - должен вернуться
+                createDate: Date.now.addingTimeInterval(-86400 * 10),
+                modifyDate: Date.now.addingTimeInterval(-86400 * 10),
                 user: user,
                 context: context
             )
             try context.save()
 
-            let result = createService().getLastPassedNonTurboWorkoutActivity(context: context)
+            let result = createService().getLastPassedNonTurboWorkoutActivity(context: context, currentDay: 30)
 
             let activity = try #require(result)
-            #expect(activity.day == 24) // День 24 изменён позже, чем день 19
+            #expect(activity.day == 24)
             #expect(activity.count == 8)
         }
     }

@@ -25,6 +25,53 @@ struct DateFormatterServiceTests {
     }
 
     @Test
+    func stringFromFullDate_isoUsesUTCRegardlessOfPassedTimezone() throws {
+        let utc = try #require(TimeZone(secondsFromGMT: 0))
+        let plus3Zone = TimeZone(secondsFromGMT: 3 * 3600) ?? .autoupdatingCurrent
+        let date = DateFormatterService.dateFromString(
+            "2024-05-12T10:20:30.456",
+            format: .isoDateTimeSec,
+            timeZone: utc
+        )
+
+        let result = DateFormatterService.stringFromFullDate(
+            date,
+            format: .isoDateTimeSec,
+            timeZone: plus3Zone,
+            iso: true
+        )
+
+        #expect(result == "2024-05-12T10:20:30.456Z")
+    }
+
+    @Test
+    func stringFromFullDate_isoIsStableAcrossTimeZones() {
+        let utcZone = TimeZone(secondsFromGMT: 0) ?? .autoupdatingCurrent
+        let plus3Zone = TimeZone(secondsFromGMT: 3 * 3600) ?? .autoupdatingCurrent
+        let date = DateFormatterService.dateFromString(
+            "2024-05-12T10:20:30.456",
+            format: .isoDateTimeSec,
+            timeZone: utcZone
+        )
+
+        let utc = DateFormatterService.stringFromFullDate(
+            date,
+            format: .isoDateTimeSec,
+            timeZone: utcZone,
+            iso: true
+        )
+        let plus3String = DateFormatterService.stringFromFullDate(
+            date,
+            format: .isoDateTimeSec,
+            timeZone: plus3Zone,
+            iso: true
+        )
+
+        #expect(utc == plus3String)
+        #expect(utc == "2024-05-12T10:20:30.456Z")
+    }
+
+    @Test
     func dateFromIsoString_isoDateTimeSec() {
         let stringDate = "2023-01-21T10:05:35+00:00"
         let formattedResult = DateFormatterService.dateFromIsoString(stringDate)

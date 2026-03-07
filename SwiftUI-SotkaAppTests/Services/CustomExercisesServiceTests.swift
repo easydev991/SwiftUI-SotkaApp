@@ -389,6 +389,58 @@ struct CustomExercisesServiceTests {
         #expect(updatedExercise.imageId == 1)
     }
 
+    @Test("Не перетирает локальное упражнение серверной версией при timezone skew")
+    func keepsLocalExerciseWhenServerTimezoneLessDateMatchesSameInstant() async throws {
+        let utc = try #require(TimeZone(secondsFromGMT: 0))
+        let mockClient = MockSWClient()
+        let service = CustomExercisesService(client: mockClient)
+        let container = try ModelContainer(
+            for: CustomExercise.self,
+            User.self,
+            configurations: ModelConfiguration(isStoredInMemoryOnly: true)
+        )
+        let context = container.mainContext
+
+        let user = User(id: 1, userName: "testuser", fullName: "Test User", email: "test@example.com")
+        context.insert(user)
+        try context.save()
+
+        let localModifyDate = DateFormatterService.dateFromString(
+            "2024-05-12T07:20:30.000",
+            format: .isoDateTimeSec,
+            timeZone: utc
+        )
+        let exercise = CustomExercise(
+            id: "test-exercise",
+            name: "Local Name",
+            imageId: 1,
+            createDate: localModifyDate,
+            modifyDate: localModifyDate,
+            user: user
+        )
+        exercise.isSynced = true
+        context.insert(exercise)
+        try context.save()
+
+        mockClient.mockedCustomExercises = try [
+            makeCustomExerciseResponse(
+                id: "test-exercise",
+                name: "Server Name",
+                imageId: 2,
+                createDate: "2024-05-12T10:20:30",
+                modifyDate: "2024-05-12T10:20:30"
+            )
+        ]
+
+        _ = try await service.syncCustomExercises(context: context)
+
+        let updatedExercise = try #require(context.fetch(FetchDescriptor<CustomExercise>()).first)
+        #expect(updatedExercise.name == "Local Name")
+        #expect(updatedExercise.imageId == 1)
+        #expect(updatedExercise.modifyDate == localModifyDate)
+        #expect(updatedExercise.isSynced)
+    }
+
     // MARK: - Тесты для возврата SyncResult
 
     @Test("Возвращает результат успешной синхронизации с подсчетом созданных записей")
@@ -596,4 +648,29 @@ extension MockSWClient {
     enum MockError: Error {
         case demoError
     }
+}
+
+private func makeCustomExerciseResponse(
+    id: String,
+    name: String,
+    imageId: Int,
+    createDate: String,
+    modifyDate: String
+) throws -> CustomExerciseResponse {
+    let data = Data(
+        """
+        {
+          "id": "\(id)",
+          "name": "\(name)",
+          "imageId": \(imageId),
+          "createDate": "\(createDate)",
+          "modifyDate": "\(modifyDate)",
+          "isHidden": false
+        }
+        """.utf8
+    )
+
+    let decoder = JSONDecoder()
+    decoder.dateDecodingStrategy = .flexibleDateDecoding
+    return try decoder.decode(CustomExerciseResponse.self, from: data)
 }

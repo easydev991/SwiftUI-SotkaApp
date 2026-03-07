@@ -535,5 +535,112 @@ extension WorkoutPreviewViewModelTests {
             #expect(viewModel.count == initialCount)
             #expect(viewModel.comment == initialComment)
         }
+
+        @Test("Для новой тренировки использует предыдущую по day, а не по modifyDate")
+        @MainActor
+        func usesPreviousWorkoutByDayNotModifyDate() throws {
+            let container = try ModelContainer(
+                for: DayActivity.self,
+                DayActivityTraining.self,
+                User.self,
+                configurations: ModelConfiguration(isStoredInMemoryOnly: true)
+            )
+            let context = container.mainContext
+            let user = User(id: 1)
+            context.insert(user)
+
+            let day4 = DayActivity(
+                day: 4,
+                activityTypeRaw: DayActivityType.workout.rawValue,
+                count: 8,
+                plannedCount: 7,
+                executeTypeRaw: ExerciseExecutionType.cycles.rawValue,
+                createDate: Date.now.addingTimeInterval(-86_400),
+                modifyDate: .now,
+                user: user
+            )
+            day4.trainings = [
+                DayActivityTraining(count: 8, typeId: ExerciseType.pullups.rawValue, sortOrder: 0)
+            ]
+
+            let day6 = DayActivity(
+                day: 6,
+                activityTypeRaw: DayActivityType.workout.rawValue,
+                count: 5,
+                plannedCount: 4,
+                executeTypeRaw: ExerciseExecutionType.sets.rawValue,
+                createDate: Date.now.addingTimeInterval(-10 * 86_400),
+                modifyDate: Date.now.addingTimeInterval(-10 * 86_400),
+                user: user
+            )
+            day6.trainings = [
+                DayActivityTraining(count: 5, typeId: ExerciseType.pullups.rawValue, sortOrder: 0)
+            ]
+
+            context.insert(day4)
+            context.insert(day6)
+            try context.save()
+
+            let viewModel = WorkoutPreviewViewModel()
+            viewModel.updateData(
+                modelContext: context,
+                day: 10,
+                restTime: 60,
+                activitiesService: DailyActivitiesService(client: MockDaysClient())
+            )
+
+            #expect(viewModel.plannedCount == 5)
+            #expect(viewModel.selectedExecutionType == .sets)
+        }
+
+        @Test("Для новой тренировки не использует записи из будущих дней")
+        @MainActor
+        func ignoresFutureDaysWhenPrefillingWorkout() throws {
+            let container = try ModelContainer(
+                for: DayActivity.self,
+                DayActivityTraining.self,
+                User.self,
+                configurations: ModelConfiguration(isStoredInMemoryOnly: true)
+            )
+            let context = container.mainContext
+            let user = User(id: 1)
+            context.insert(user)
+
+            let day8 = DayActivity(
+                day: 8,
+                activityTypeRaw: DayActivityType.workout.rawValue,
+                count: 6,
+                plannedCount: 5,
+                executeTypeRaw: ExerciseExecutionType.cycles.rawValue,
+                createDate: .now,
+                modifyDate: .now,
+                user: user
+            )
+            let day12 = DayActivity(
+                day: 12,
+                activityTypeRaw: DayActivityType.workout.rawValue,
+                count: 11,
+                plannedCount: 10,
+                executeTypeRaw: ExerciseExecutionType.sets.rawValue,
+                createDate: .now,
+                modifyDate: .now,
+                user: user
+            )
+
+            context.insert(day8)
+            context.insert(day12)
+            try context.save()
+
+            let viewModel = WorkoutPreviewViewModel()
+            viewModel.updateData(
+                modelContext: context,
+                day: 10,
+                restTime: 60,
+                activitiesService: DailyActivitiesService(client: MockDaysClient())
+            )
+
+            #expect(viewModel.plannedCount == 6)
+            #expect(viewModel.selectedExecutionType == .cycles)
+        }
     }
 }

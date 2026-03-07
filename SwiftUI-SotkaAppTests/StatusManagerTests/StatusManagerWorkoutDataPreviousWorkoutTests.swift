@@ -34,6 +34,7 @@ extension StatusManagerTests {
             plannedCount: Int?,
             executionType: ExerciseExecutionType = .cycles,
             trainings: [DayActivityTraining] = [],
+            modifyDate: Date = .now,
             user: User,
             context: ModelContext
         ) {
@@ -45,7 +46,7 @@ extension StatusManagerTests {
                 executeTypeRaw: executionType.rawValue,
                 trainingTypeRaw: nil,
                 createDate: .now,
-                modifyDate: .now,
+                modifyDate: modifyDate,
                 user: user
             )
             for training in trainings {
@@ -421,6 +422,79 @@ extension StatusManagerTests {
 
             let pullups = trainings.first { $0.typeId == ExerciseType.pullups.rawValue }
             #expect(pullups?.count == defaultPullups)
+        }
+
+        @Test("getWorkoutData выбирает предыдущую тренировку по максимальному day")
+        func handleGetWorkoutDataCommand_NewWorkout_UsesMaxDayNotModifyDate() throws {
+            let mockSession = MockWCSession(isReachable: true)
+            let container = try createContainer()
+            let context = container.mainContext
+            let statusManager = try createStatusManager(modelContainer: container, mockSession: mockSession)
+
+            let user = User(id: 1, userName: "testuser", fullName: "Test User", email: "test@example.com")
+            context.insert(user)
+
+            createPassedWorkout(
+                day: 4,
+                count: 9,
+                plannedCount: 7,
+                modifyDate: .now,
+                user: user,
+                context: context
+            )
+            createPassedWorkout(
+                day: 6,
+                count: 5,
+                plannedCount: 4,
+                modifyDate: Date.now.addingTimeInterval(-86_400),
+                user: user,
+                context: context
+            )
+            try context.save()
+
+            let message: [String: Any] = [
+                "command": Constants.WatchCommand.getWorkoutData.rawValue,
+                "day": 10
+            ]
+
+            var replyReceived: [String: Any]?
+            statusManager.handleWatchCommand(message) { reply in
+                replyReceived = reply
+            }
+
+            let reply = try #require(replyReceived)
+            let plannedCount = try #require(reply["plannedCount"] as? Int)
+            #expect(plannedCount == 5)
+        }
+
+        @Test("getWorkoutData игнорирует тренировки из дней >= текущего")
+        func handleGetWorkoutDataCommand_NewWorkout_IgnoresDaysAfterOrEqualCurrentDay() throws {
+            let mockSession = MockWCSession(isReachable: true)
+            let container = try createContainer()
+            let context = container.mainContext
+            let statusManager = try createStatusManager(modelContainer: container, mockSession: mockSession)
+
+            let user = User(id: 1, userName: "testuser", fullName: "Test User", email: "test@example.com")
+            context.insert(user)
+
+            createPassedWorkout(day: 8, count: 6, plannedCount: 5, user: user, context: context)
+            createPassedWorkout(day: 11, count: 12, plannedCount: 11, user: user, context: context)
+            createPassedWorkout(day: 12, count: 14, plannedCount: 13, user: user, context: context)
+            try context.save()
+
+            let message: [String: Any] = [
+                "command": Constants.WatchCommand.getWorkoutData.rawValue,
+                "day": 10
+            ]
+
+            var replyReceived: [String: Any]?
+            statusManager.handleWatchCommand(message) { reply in
+                replyReceived = reply
+            }
+
+            let reply = try #require(replyReceived)
+            let plannedCount = try #require(reply["plannedCount"] as? Int)
+            #expect(plannedCount == 6)
         }
     }
 }
