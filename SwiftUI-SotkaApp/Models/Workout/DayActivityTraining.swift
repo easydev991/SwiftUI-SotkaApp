@@ -102,4 +102,9 @@ extension [DayActivityTraining] {
     var sorted: [DayActivityTraining] {
         sorted(by: { ($0.sortOrder ?? 0) < ($1.sortOrder ?? 0) })
     }
+
+    /// Value snapshot тренировок для безопасного использования в UI
+    var workoutPreviewTrainingsSorted: [WorkoutPreviewTraining] {
+        sorted.map(\.workoutPreviewTraining)
+    }
 }
