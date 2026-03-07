@@ -19,7 +19,12 @@ extension WorkoutPreviewViewModelTests {
             )
             let context = modelContainer.mainContext
 
-            viewModel.updateData(modelContext: context, day: 1, restTime: 60)
+            viewModel.updateData(
+                modelContext: context,
+                day: 1,
+                restTime: 60,
+                activitiesService: DailyActivitiesService(client: MockDaysClient())
+            )
 
             let result = WorkoutResult(count: 4, duration: 180)
             viewModel.handleWorkoutResult(result)
@@ -45,7 +50,12 @@ extension WorkoutPreviewViewModelTests {
             )
             let context = modelContainer.mainContext
 
-            viewModel.updateData(modelContext: context, day: 1, restTime: 60)
+            viewModel.updateData(
+                modelContext: context,
+                day: 1,
+                restTime: 60,
+                activitiesService: DailyActivitiesService(client: MockDaysClient())
+            )
 
             let result = WorkoutResult(count: 3, duration: nil)
             viewModel.handleWorkoutResult(result)
@@ -69,7 +79,12 @@ extension WorkoutPreviewViewModelTests {
             )
             let context = modelContainer.mainContext
 
-            viewModel.updateData(modelContext: context, day: 1, restTime: 60)
+            viewModel.updateData(
+                modelContext: context,
+                day: 1,
+                restTime: 60,
+                activitiesService: DailyActivitiesService(client: MockDaysClient())
+            )
 
             let initialCount = viewModel.count
             let initialWorkoutDuration = viewModel.workoutDuration
@@ -95,7 +110,12 @@ extension WorkoutPreviewViewModelTests {
             )
             let context = modelContainer.mainContext
 
-            viewModel.updateData(modelContext: context, day: 1, restTime: 60)
+            viewModel.updateData(
+                modelContext: context,
+                day: 1,
+                restTime: 60,
+                activitiesService: DailyActivitiesService(client: MockDaysClient())
+            )
 
             let result = WorkoutResult(count: 5, duration: 200)
             viewModel.handleWorkoutResult(result)
@@ -121,7 +141,12 @@ extension WorkoutPreviewViewModelTests {
             )
             let context = modelContainer.mainContext
 
-            viewModel.updateData(modelContext: context, day: 1, restTime: 60)
+            viewModel.updateData(
+                modelContext: context,
+                day: 1,
+                restTime: 60,
+                activitiesService: DailyActivitiesService(client: MockDaysClient())
+            )
             viewModel.plannedCount = 6
 
             // Результат прерванной тренировки с подходами содержит plannedCount
@@ -148,7 +173,12 @@ extension WorkoutPreviewViewModelTests {
             )
             let context = modelContainer.mainContext
 
-            viewModel.updateData(modelContext: context, day: 1, restTime: 60)
+            viewModel.updateData(
+                modelContext: context,
+                day: 1,
+                restTime: 60,
+                activitiesService: DailyActivitiesService(client: MockDaysClient())
+            )
             viewModel.plannedCount = 6
 
             // Результат завершенной тренировки с подходами содержит фактическое количество (12 подходов = 6 подходов * 2 упражнения)
@@ -175,7 +205,12 @@ extension WorkoutPreviewViewModelTests {
             )
             let context = modelContainer.mainContext
 
-            viewModel.updateData(modelContext: context, day: 1, restTime: 60)
+            viewModel.updateData(
+                modelContext: context,
+                day: 1,
+                restTime: 60,
+                activitiesService: DailyActivitiesService(client: MockDaysClient())
+            )
             viewModel.plannedCount = 4
 
             // Результат прерванной тренировки с кругами содержит количество завершенных кругов (прежняя логика)

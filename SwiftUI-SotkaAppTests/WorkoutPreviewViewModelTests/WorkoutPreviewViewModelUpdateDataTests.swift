@@ -51,7 +51,12 @@ extension WorkoutPreviewViewModelTests {
             context.insert(training2)
             try context.save()
 
-            viewModel.updateData(modelContext: context, day: 5, restTime: 60)
+            viewModel.updateData(
+                modelContext: context,
+                day: 5,
+                restTime: 60,
+                activitiesService: DailyActivitiesService(client: MockDaysClient())
+            )
 
             #expect(viewModel.dayNumber == 5)
             let count = try #require(viewModel.count)
@@ -79,7 +84,12 @@ extension WorkoutPreviewViewModelTests {
 
             let viewModel = WorkoutPreviewViewModel()
 
-            viewModel.updateData(modelContext: context, day: 1, restTime: 60)
+            viewModel.updateData(
+                modelContext: context,
+                day: 1,
+                restTime: 60,
+                activitiesService: DailyActivitiesService(client: MockDaysClient())
+            )
 
             #expect(viewModel.dayNumber == 1)
             #expect(viewModel.count == nil)
@@ -113,7 +123,12 @@ extension WorkoutPreviewViewModelTests {
 
             let viewModel = WorkoutPreviewViewModel()
 
-            viewModel.updateData(modelContext: context, day: 1, restTime: 60)
+            viewModel.updateData(
+                modelContext: context,
+                day: 1,
+                restTime: 60,
+                activitiesService: DailyActivitiesService(client: MockDaysClient())
+            )
 
             #expect(viewModel.dayNumber == 1)
             #expect(viewModel.count == nil)
@@ -136,7 +151,12 @@ extension WorkoutPreviewViewModelTests {
 
             let viewModel = WorkoutPreviewViewModel()
 
-            viewModel.updateData(modelContext: context, day: 50, restTime: 60)
+            viewModel.updateData(
+                modelContext: context,
+                day: 50,
+                restTime: 60,
+                activitiesService: DailyActivitiesService(client: MockDaysClient())
+            )
 
             #expect(viewModel.availableExecutionTypes.count == 2)
             #expect(viewModel.availableExecutionTypes.contains(.cycles))
@@ -159,7 +179,12 @@ extension WorkoutPreviewViewModelTests {
 
             let viewModel = WorkoutPreviewViewModel()
 
-            viewModel.updateData(modelContext: context, day: 92, restTime: 60)
+            viewModel.updateData(
+                modelContext: context,
+                day: 92,
+                restTime: 60,
+                activitiesService: DailyActivitiesService(client: MockDaysClient())
+            )
 
             #expect(viewModel.availableExecutionTypes.count == 3)
             #expect(viewModel.availableExecutionTypes.contains(.cycles))
@@ -183,7 +208,12 @@ extension WorkoutPreviewViewModelTests {
 
             let viewModel = WorkoutPreviewViewModel()
 
-            viewModel.updateData(modelContext: context, day: 50, restTime: 60)
+            viewModel.updateData(
+                modelContext: context,
+                day: 50,
+                restTime: 60,
+                activitiesService: DailyActivitiesService(client: MockDaysClient())
+            )
 
             let executionType = try #require(viewModel.selectedExecutionType)
             #expect(executionType == .cycles)
@@ -205,7 +235,12 @@ extension WorkoutPreviewViewModelTests {
 
             let viewModel = WorkoutPreviewViewModel()
 
-            viewModel.updateData(modelContext: context, day: 92, restTime: 60)
+            viewModel.updateData(
+                modelContext: context,
+                day: 92,
+                restTime: 60,
+                activitiesService: DailyActivitiesService(client: MockDaysClient())
+            )
 
             let executionType = try #require(viewModel.selectedExecutionType)
             #expect(executionType == .turbo)
@@ -240,7 +275,12 @@ extension WorkoutPreviewViewModelTests {
             context.insert(dayActivity)
             try context.save()
 
-            viewModel.updateData(modelContext: context, day: 5, restTime: 60)
+            viewModel.updateData(
+                modelContext: context,
+                day: 5,
+                restTime: 60,
+                activitiesService: DailyActivitiesService(client: MockDaysClient())
+            )
 
             #expect(viewModel.wasOriginallyPassed)
         }
@@ -261,7 +301,12 @@ extension WorkoutPreviewViewModelTests {
 
             let viewModel = WorkoutPreviewViewModel()
 
-            viewModel.updateData(modelContext: context, day: 1, restTime: 60)
+            viewModel.updateData(
+                modelContext: context,
+                day: 1,
+                restTime: 60,
+                activitiesService: DailyActivitiesService(client: MockDaysClient())
+            )
 
             #expect(!viewModel.wasOriginallyPassed)
         }
@@ -282,7 +327,12 @@ extension WorkoutPreviewViewModelTests {
 
             let viewModel = WorkoutPreviewViewModel()
 
-            viewModel.updateData(modelContext: context, day: 1, restTime: 60)
+            viewModel.updateData(
+                modelContext: context,
+                day: 1,
+                restTime: 60,
+                activitiesService: DailyActivitiesService(client: MockDaysClient())
+            )
             #expect(viewModel.count == nil)
 
             viewModel.updateExecutionType(.sets)
@@ -319,7 +369,12 @@ extension WorkoutPreviewViewModelTests {
             context.insert(dayActivity)
             try context.save()
 
-            viewModel.updateData(modelContext: context, day: 5, restTime: 60)
+            viewModel.updateData(
+                modelContext: context,
+                day: 5,
+                restTime: 60,
+                activitiesService: DailyActivitiesService(client: MockDaysClient())
+            )
             let initialCount = try #require(viewModel.count)
             #expect(initialCount == 5)
 
@@ -365,7 +420,12 @@ extension WorkoutPreviewViewModelTests {
             context.insert(training)
             try context.save()
 
-            viewModel.updateData(modelContext: context, day: 1, restTime: 60)
+            viewModel.updateData(
+                modelContext: context,
+                day: 1,
+                restTime: 60,
+                activitiesService: DailyActivitiesService(client: MockDaysClient())
+            )
 
             #expect(viewModel.trainings.count == 1)
             let previewTraining = try #require(viewModel.trainings.first)
@@ -399,7 +459,12 @@ extension WorkoutPreviewViewModelTests {
                 WorkoutPreviewTraining(count: 1, typeId: ExerciseType.pullups.rawValue, sortOrder: 0)
             ]
 
-            viewModel.updateData(modelContext: context, day: 10, restTime: 60)
+            viewModel.updateData(
+                modelContext: context,
+                day: 10,
+                restTime: 60,
+                activitiesService: DailyActivitiesService(client: MockDaysClient())
+            )
 
             #expect(viewModel.dayNumber == 10)
         }
@@ -422,7 +487,12 @@ extension WorkoutPreviewViewModelTests {
             viewModel.dayNumber = 5
             viewModel.trainings = []
 
-            viewModel.updateData(modelContext: context, day: 5, restTime: 60)
+            viewModel.updateData(
+                modelContext: context,
+                day: 5,
+                restTime: 60,
+                activitiesService: DailyActivitiesService(client: MockDaysClient())
+            )
 
             #expect(!viewModel.trainings.isEmpty)
         }
@@ -442,13 +512,23 @@ extension WorkoutPreviewViewModelTests {
             try context.save()
 
             let viewModel = WorkoutPreviewViewModel()
-            viewModel.updateData(modelContext: context, day: 5, restTime: 60)
+            viewModel.updateData(
+                modelContext: context,
+                day: 5,
+                restTime: 60,
+                activitiesService: DailyActivitiesService(client: MockDaysClient())
+            )
             let initialTrainings = viewModel.trainings
             let initialDayNumber = viewModel.dayNumber
             let initialCount = viewModel.count
             let initialComment = viewModel.comment
 
-            viewModel.updateData(modelContext: context, day: 5, restTime: 60)
+            viewModel.updateData(
+                modelContext: context,
+                day: 5,
+                restTime: 60,
+                activitiesService: DailyActivitiesService(client: MockDaysClient())
+            )
 
             #expect(viewModel.dayNumber == initialDayNumber)
             #expect(viewModel.trainings == initialTrainings)

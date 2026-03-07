@@ -25,7 +25,12 @@ extension WorkoutPreviewViewModelTests {
             try context.save()
 
             let viewModel = WorkoutPreviewViewModel()
-            viewModel.updateData(modelContext: context, day: 1, restTime: appSettings.restTime)
+            viewModel.updateData(
+                modelContext: context,
+                day: 1,
+                restTime: appSettings.restTime,
+                activitiesService: DailyActivitiesService(client: MockDaysClient())
+            )
 
             #expect(viewModel.restTime == 75)
         }
@@ -62,7 +67,12 @@ extension WorkoutPreviewViewModelTests {
             try context.save()
 
             let viewModel = WorkoutPreviewViewModel()
-            viewModel.updateData(modelContext: context, day: 5, restTime: appSettings.restTime)
+            viewModel.updateData(
+                modelContext: context,
+                day: 5,
+                restTime: appSettings.restTime,
+                activitiesService: DailyActivitiesService(client: MockDaysClient())
+            )
 
             #expect(viewModel.restTime == 75)
         }
@@ -85,7 +95,12 @@ extension WorkoutPreviewViewModelTests {
             try context.save()
 
             let viewModel = WorkoutPreviewViewModel()
-            viewModel.updateData(modelContext: context, day: 1, restTime: appSettings.restTime)
+            viewModel.updateData(
+                modelContext: context,
+                day: 1,
+                restTime: appSettings.restTime,
+                activitiesService: DailyActivitiesService(client: MockDaysClient())
+            )
             viewModel.restTime = 45
 
             #expect(viewModel.restTime == 45)
@@ -110,7 +125,12 @@ extension WorkoutPreviewViewModelTests {
             try context.save()
 
             let viewModel = WorkoutPreviewViewModel()
-            viewModel.updateData(modelContext: context, day: 1, restTime: appSettings.restTime)
+            viewModel.updateData(
+                modelContext: context,
+                day: 1,
+                restTime: appSettings.restTime,
+                activitiesService: DailyActivitiesService(client: MockDaysClient())
+            )
             viewModel.restTime = 60
 
             #expect(viewModel.hasChanges)
@@ -134,7 +154,12 @@ extension WorkoutPreviewViewModelTests {
             try context.save()
 
             let viewModel = WorkoutPreviewViewModel()
-            viewModel.updateData(modelContext: context, day: 1, restTime: appSettings.restTime)
+            viewModel.updateData(
+                modelContext: context,
+                day: 1,
+                restTime: appSettings.restTime,
+                activitiesService: DailyActivitiesService(client: MockDaysClient())
+            )
             viewModel.updateRestTime(60)
 
             #expect(viewModel.restTime == 60)

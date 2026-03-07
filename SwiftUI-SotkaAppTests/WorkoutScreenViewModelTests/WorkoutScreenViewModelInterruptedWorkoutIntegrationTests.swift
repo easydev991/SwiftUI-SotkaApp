@@ -67,7 +67,12 @@ extension WorkoutScreenViewModelTests {
             )
             let context = modelContainer.mainContext
 
-            previewViewModel.updateData(modelContext: context, day: 1, restTime: 60)
+            previewViewModel.updateData(
+                modelContext: context,
+                day: 1,
+                restTime: 60,
+                activitiesService: DailyActivitiesService(client: MockDaysClient())
+            )
             previewViewModel.plannedCount = 6
 
             // handleWorkoutResult устанавливает count = plannedCount (из результата)
@@ -133,7 +138,12 @@ extension WorkoutScreenViewModelTests {
             )
             let context = modelContainer.mainContext
 
-            previewViewModel.updateData(modelContext: context, day: 1, restTime: 60)
+            previewViewModel.updateData(
+                modelContext: context,
+                day: 1,
+                restTime: 60,
+                activitiesService: DailyActivitiesService(client: MockDaysClient())
+            )
             previewViewModel.plannedCount = 6
 
             // handleWorkoutResult устанавливает count равным фактическому количеству
@@ -197,7 +207,12 @@ extension WorkoutScreenViewModelTests {
             )
             let context = modelContainer.mainContext
 
-            previewViewModel.updateData(modelContext: context, day: 1, restTime: 60)
+            previewViewModel.updateData(
+                modelContext: context,
+                day: 1,
+                restTime: 60,
+                activitiesService: DailyActivitiesService(client: MockDaysClient())
+            )
             previewViewModel.plannedCount = 4
 
             // handleWorkoutResult устанавливает count равным количеству завершенных кругов

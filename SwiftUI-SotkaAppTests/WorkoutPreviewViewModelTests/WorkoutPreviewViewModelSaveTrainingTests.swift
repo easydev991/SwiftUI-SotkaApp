@@ -197,7 +197,12 @@ extension WorkoutPreviewViewModelTests {
 
             let reloadedViewModel = WorkoutPreviewViewModel()
             let appSettings = AppSettings()
-            reloadedViewModel.updateData(modelContext: context, day: 5, restTime: appSettings.restTime)
+            reloadedViewModel.updateData(
+                modelContext: context,
+                day: 5,
+                restTime: appSettings.restTime,
+                activitiesService: DailyActivitiesService(client: MockDaysClient())
+            )
 
             #expect(reloadedViewModel.wasOriginallyPassed)
         }

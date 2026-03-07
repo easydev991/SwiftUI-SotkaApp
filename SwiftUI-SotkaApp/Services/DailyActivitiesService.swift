@@ -40,16 +40,20 @@ final class DailyActivitiesService {
             return
         }
 
+        logger.info("[createDailyActivity] Начинаем сохранение для дня \(activity.day), count=\(activity.count ?? -1), plannedCount=\(activity.plannedCount ?? -1)")
+
         // Проверяем, существует ли уже активность для этого дня
         let existingActivities = (try? context.fetch(FetchDescriptor<DayActivity>())) ?? []
         if let existingActivity = existingActivities.first(where: {
             $0.day == activity.day && $0.user?.id == user.id && !$0.shouldDelete
         }) {
+            logger.info("[createDailyActivity] Найдена существующая активность: день=\(existingActivity.day), старый count=\(existingActivity.count ?? -1), modifyDate=\(existingActivity.modifyDate)")
             // Обновляем существующую активность новыми данными
             updateExistingActivity(existingActivity, with: activity, user: user)
-            logger.info("Обновлена существующая активность для дня \(activity.day)")
+            logger.info("[createDailyActivity] → Обновлена существующая активность для дня \(activity.day)")
             // Новая активность не создается - обновляем существующую
         } else {
+            logger.info("[createDailyActivity] Существующая активность не найдена, создаем новую")
             // Создаем новую активность
             // Установка флагов синхронизации
             activity.isSynced = false
@@ -71,14 +75,14 @@ final class DailyActivitiesService {
 
             // Вставка активности в контекст
             context.insert(activity)
-            logger.info("Активность для дня \(activity.day) создана локально")
+            logger.info("[createDailyActivity] → Активность для дня \(activity.day) создана локально, modifyDate=\(activity.modifyDate)")
         }
 
         do {
             try context.save()
-            logger.info("Синхронизация будет выполнена отдельно через syncDailyActivities")
+            logger.info("[createDailyActivity] ✓ Context сохранен, синхронизация будет выполнена отдельно")
         } catch {
-            logger.error("Ошибка сохранения активности: \(error.localizedDescription)")
+            logger.error("[createDailyActivity] ✗ Ошибка сохранения: \(error.localizedDescription)")
         }
     }
 
@@ -93,8 +97,7 @@ final class DailyActivitiesService {
         activity.modifyDate = .now
         activity.isSynced = false
         try context.save()
-        logger.info("Активность для дня \(activity.day) отмечена как измененная")
-        logger.info("Синхронизация будет выполнена отдельно через syncDailyActivities")
+        logger.info("[markModified] Активность дня \(activity.day) отмечена как измененная, modifyDate=\(activity.modifyDate)")
     }
 
     /// Удаляет ежедневную активность (офлайн-приоритет, мягкое удаление)
@@ -108,10 +111,9 @@ final class DailyActivitiesService {
         activity.modifyDate = .now
         do {
             try context.save()
-            logger.info("Активность для дня \(activity.day) помечена для удаления локально")
-            logger.info("Синхронизация удаления будет выполнена через syncDailyActivities")
+            logger.info("[delete] Активность дня \(activity.day) помечена для удаления, modifyDate=\(activity.modifyDate)")
         } catch {
-            logger.error("Ошибка удаления активности: \(error.localizedDescription)")
+            logger.error("[delete] Ошибка удаления активности дня \(activity.day): \(error.localizedDescription)")
         }
     }
 
@@ -124,7 +126,7 @@ final class DailyActivitiesService {
     ///   - context: Контекст SwiftData
     func set(_ activityType: DayActivityType, for day: Int, context: ModelContext) {
         if activityType == .workout {
-            logger.info("Пропускаем настройку тренировки")
+            logger.info("[set] Пропускаем настройку тренировки для дня \(day)")
             return
         }
         guard let user = try? context.fetch(FetchDescriptor<User>()).first else {
@@ -141,14 +143,14 @@ final class DailyActivitiesService {
 
             // Если активность существует с тем же типом и не помечена на удаление - ничего не делать
             if !needsUpdate {
-                logger.debug("Активность дня \(day) уже имеет тип \(activityType.rawValue), пропускаем обновление")
+                logger.debug("[set] Активность дня \(day) уже имеет тип \(activityType.rawValue), пропускаем")
                 return
             }
 
             // Если активность существует с другим типом - обновляем тип активности
             existingActivity.setNonWorkoutType(activityType, user: user)
 
-            logger.info("Обновлена активность дня \(day) на тип \(activityType.rawValue)")
+            logger.info("[set] Обновлена активность дня \(day) на тип \(activityType.rawValue), modifyDate=\(existingActivity.modifyDate)")
         } else {
             // Если активности для дня нет - создаем новую с указанным типом
             let newActivity = DayActivity.createNonWorkoutActivity(
@@ -159,15 +161,15 @@ final class DailyActivitiesService {
 
             // Вставка активности в контекст
             context.insert(newActivity)
-            logger.info("Создана новая активность дня \(day) с типом \(activityType.rawValue)")
+            logger.info("[set] Создана новая активность дня \(day) с типом \(activityType.rawValue)")
         }
 
         // Сохранение контекста
         do {
             try context.save()
-            logger.info("Активность дня \(day) сохранена локально, синхронизация будет выполнена через syncDailyActivities")
+            logger.info("[set] Активность дня \(day) сохранена")
         } catch {
-            logger.error("Ошибка сохранения активности дня \(day): \(error.localizedDescription)")
+            logger.error("[set] Ошибка сохранения активности дня \(day): \(error.localizedDescription)")
         }
     }
 
@@ -202,6 +204,51 @@ final class DailyActivitiesService {
         getActivity(dayNumber: day, context: context)?.activityType
     }
 
+    /// Получает последнюю пройденную тренировку (исключая turbo) для текущего пользователя
+    /// Сортирует по дате изменения (modifyDate), чтобы найти самую недавнюю по времени
+    /// - Parameter context: Контекст SwiftData
+    /// - Returns: Последняя пройденная тренировка или nil, если не найдена
+    func getLastPassedNonTurboWorkoutActivity(context: ModelContext) -> DayActivity? {
+        let userDescriptor = FetchDescriptor<User>(sortBy: [SortDescriptor(\.id)])
+        guard let user = try? context.fetch(userDescriptor).first else {
+            logger.error("Пользователь не найден для получения последней пройденной тренировки")
+            return nil
+        }
+
+        let workoutTypeRaw = DayActivityType.workout.rawValue
+        let turboTypeRaw = ExerciseExecutionType.turbo.rawValue
+        let predicate = #Predicate<DayActivity> { activity in
+            activity.activityTypeRaw == workoutTypeRaw &&
+                activity.count != nil &&
+                !activity.shouldDelete &&
+                (activity.executeTypeRaw == nil || activity.executeTypeRaw != turboTypeRaw)
+        }
+
+        let descriptor = FetchDescriptor<DayActivity>(
+            predicate: predicate,
+            sortBy: [SortDescriptor(\.modifyDate, order: .reverse)]
+        )
+
+        let activities = (try? context.fetch(descriptor)) ?? []
+
+        // Логируем все найденные активности для диагностики
+        logger.info("[getLastPassed] Найдено \(activities.count) пройденных тренировок (не turbo):")
+        for (index, activity) in activities.enumerated() {
+            let isCurrentUser = activity.user?.id == user.id
+            logger.info("[getLastPassed]   [\(index)] день=\(activity.day), count=\(activity.count ?? 0), modifyDate=\(activity.modifyDate), createDate=\(activity.createDate), currentUser=\(isCurrentUser)")
+        }
+
+        let lastActivity = activities.first { $0.user?.id == user.id }
+
+        if let activity = lastActivity {
+            logger.info("[getLastPassed] → Возвращаем: день \(activity.day), count=\(activity.count ?? 0), modifyDate=\(activity.modifyDate)")
+        } else {
+            logger.info("[getLastPassed] → Пройденные тренировки для текущего пользователя не найдены")
+        }
+
+        return lastActivity
+    }
+
     /// Обновляет комментарий для активности дня (офлайн-приоритет)
     /// - Parameters:
     ///   - day: Номер дня (1-100)
@@ -229,7 +276,7 @@ final class DailyActivitiesService {
             existingActivity.modifyDate = .now
             existingActivity.isSynced = false
 
-            logger.info("Обновлен комментарий для активности дня \(day)")
+            logger.info("[updateComment] Обновлен комментарий для дня \(day), modifyDate=\(existingActivity.modifyDate)")
         } else {
             // Если активности для дня нет - создаем новую с комментарием
             let newActivity = DayActivity(
@@ -268,6 +315,7 @@ final class DailyActivitiesService {
     /// - Parameter context: Контекст SwiftData
     /// - Returns: Результат синхронизации с детальной информацией
     func syncDailyActivities(context: ModelContext) async throws -> SyncResult {
+        logger.info("[sync] Начинаем синхронизацию активностей")
         guard !isLoading else {
             throw AlreadySyncingError()
         }
@@ -335,6 +383,9 @@ private extension DailyActivitiesService {
     ///   - new: Новая активность с данными для обновления
     ///   - user: Пользователь
     func updateExistingActivity(_ existing: DayActivity, with new: DayActivity, user: User) {
+        logger.info("[updateExisting] Обновляем день=\(existing.day): старый count=\(existing.count ?? -1), новый count=\(new.count ?? -1)")
+        logger.info("[updateExisting]   старый modifyDate=\(existing.modifyDate), createDate=\(existing.createDate)")
+
         // Сохраняем оригинальную дату создания существующей активности
         // Обновляем все остальные поля данными из новой активности
         existing.activityTypeRaw = new.activityTypeRaw
@@ -359,6 +410,8 @@ private extension DailyActivitiesService {
             training.dayActivity = existing
             existing.trainings.append(training)
         }
+
+        logger.info("[updateExisting] → Новый modifyDate=\(existing.modifyDate)")
     }
 
     // MARK: - Внутренние методы синхронизации
@@ -573,6 +626,13 @@ private extension DailyActivitiesService {
     ///   - local: Локальная активность
     ///   - server: Данные с сервера
     func updateLocalFromServer(_ local: DayActivity, _ server: DayResponse) {
+        logger.info("[updateLocalFromServer] Обновляем день=\(local.day) с сервера: server.modifyDate=\(server.modifyDate ?? .distantPast), server.count=\(server.count ?? -1)")
+        logger.info("[updateLocalFromServer]   локальный modifyDate ДО=\(local.modifyDate)")
+
+        // Сохраняем текущий modifyDate чтобы не перезаписывать его серверным
+        // (сервер может вернуть время в другом часовом поясе или время обработки запроса)
+        let localModifyDate = local.modifyDate
+
         local.day = server.id
         local.activityTypeRaw = server.activityType
         local.count = server.count
@@ -582,7 +642,8 @@ private extension DailyActivitiesService {
         local.duration = server.duration
         local.comment = server.comment
         local.createDate = server.createDate ?? .now
-        local.modifyDate = server.modifyDate ?? .now
+        // Восстанавливаем локальный modifyDate - он отражает реальное время изменения пользователем
+        local.modifyDate = localModifyDate
 
         // Обновление trainings: удаление старых (каскадное удаление через relationship)
         local.trainings.removeAll()
@@ -596,6 +657,8 @@ private extension DailyActivitiesService {
 
         local.isSynced = true
         local.shouldDelete = false
+
+        logger.info("[updateLocalFromServer]   локальный modifyDate ПОСЛЕ=\(local.modifyDate)")
     }
 
     /// Загружает активности с сервера и обрабатывает конфликты
@@ -603,12 +666,14 @@ private extension DailyActivitiesService {
     ///   - context: Контекст SwiftData
     ///   - excludeDeletedDays: Set дней, которые были удалены в текущем цикле синхронизации
     func downloadServerActivities(context: ModelContext, excludeDeletedDays: Set<Int> = []) async throws {
+        logger.info("[downloadServer] Начинаем загрузку активностей с сервера")
         do {
             guard let user = try context.fetch(FetchDescriptor<User>()).first else {
                 logger.error("Не удалось получить текущего пользователя для синхронизации активностей")
                 return
             }
             let activities = try await client.getDays()
+            logger.info("[downloadServer] Получено \(activities.count) активностей с сервера")
             let existingActivities = try context.fetch(FetchDescriptor<DayActivity>())
                 .filter { $0.user?.id == user.id }
             let existingDict = Dictionary(existingActivities.map { ($0.day, $0) }, uniquingKeysWith: { $1 })
@@ -688,7 +753,7 @@ private extension DailyActivitiesService {
                         // Создаем новую активность с сервера
                         let newActivity = DayActivity(from: activityResponse, user: user)
                         context.insert(newActivity)
-                        logger.info("Создана новая активность с сервера: день \(newActivity.day)")
+                        logger.info("[downloadServer] Создана новая активность с сервера: день \(newActivity.day), count=\(newActivity.count ?? -1), modifyDate=\(newActivity.modifyDate)")
                     }
                 }
             }
