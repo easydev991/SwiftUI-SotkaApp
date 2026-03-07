@@ -11,7 +11,7 @@ RESET=\033[0m
 RUBY_VERSION=3.3.6
 
 # Версия Swift в проекте
-SWIFT_VERSION=6.2.0
+SWIFT_VERSION=6.2.4
 
 # Глобальные настройки шелла
 SHELL := /bin/bash
