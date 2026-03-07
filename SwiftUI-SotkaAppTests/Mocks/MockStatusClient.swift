@@ -2,6 +2,43 @@ import Foundation
 @testable import SwiftUI_SotkaApp
 import SWUtils
 
+actor AsyncTestGate {
+    private var didArrive = false
+    private var isReleased = false
+    private var arrivalContinuations: [CheckedContinuation<Void, Never>] = []
+    private var releaseContinuations: [CheckedContinuation<Void, Never>] = []
+
+    func arriveAndWait() async {
+        didArrive = true
+
+        let continuations = arrivalContinuations
+        arrivalContinuations.removeAll()
+        continuations.forEach { $0.resume() }
+
+        guard !isReleased else { return }
+
+        await withCheckedContinuation { continuation in
+            releaseContinuations.append(continuation)
+        }
+    }
+
+    func waitUntilArrived() async {
+        guard !didArrive else { return }
+
+        await withCheckedContinuation { continuation in
+            arrivalContinuations.append(continuation)
+        }
+    }
+
+    func release() {
+        isReleased = true
+
+        let continuations = releaseContinuations
+        releaseContinuations.removeAll()
+        continuations.forEach { $0.resume() }
+    }
+}
+
 /// Мок для StatusClient для тестирования
 final class MockStatusClient: StatusClient, @unchecked Sendable {
     /// Результат для метода start
@@ -13,6 +50,12 @@ final class MockStatusClient: StatusClient, @unchecked Sendable {
     var currentResult: Result<CurrentRunResponse, Error> = .success(
         CurrentRunResponse(date: Date.now, maxForAllRunsDay: nil)
     )
+
+    /// Управляемая точка остановки для метода start
+    var startGate: AsyncTestGate?
+
+    /// Управляемая точка остановки для метода current
+    var currentGate: AsyncTestGate?
 
     /// Инициализатор для создания мока с кастомными результатами
     init(
@@ -42,6 +85,10 @@ final class MockStatusClient: StatusClient, @unchecked Sendable {
         lastStartDate = date
         startCalls.append(date)
 
+        if let startGate {
+            await startGate.arriveAndWait()
+        }
+
         switch startResult {
         case let .success(response):
             return response
@@ -52,6 +99,10 @@ final class MockStatusClient: StatusClient, @unchecked Sendable {
 
     func current() async throws -> CurrentRunResponse {
         currentCallCount += 1
+
+        if let currentGate {
+            await currentGate.arriveAndWait()
+        }
 
         switch currentResult {
         case let .success(response):
@@ -69,6 +120,8 @@ final class MockStatusClient: StatusClient, @unchecked Sendable {
         startCalls.removeAll()
         startResult = .success(CurrentRunResponse(date: Date.now, maxForAllRunsDay: nil))
         currentResult = .success(CurrentRunResponse(date: Date.now, maxForAllRunsDay: nil))
+        startGate = nil
+        currentGate = nil
     }
 }
 

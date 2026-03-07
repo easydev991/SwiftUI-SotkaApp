@@ -60,6 +60,39 @@ extension AllProgressTests {
             #expect(syncedProgress.weight == 70.0)
         }
 
+        @Test("В запросе прогресса modifyDate сериализуется в UTC-формат")
+        func syncProgressRequestUsesUTCModifyDate() async throws {
+            let utc = try #require(TimeZone(secondsFromGMT: 0))
+            let mockClient = MockProgressClient()
+            let service = ProgressSyncService.makeMock(client: mockClient)
+            let container = try ModelContainer(
+                for: UserProgress.self,
+                User.self,
+                configurations: ModelConfiguration(isStoredInMemoryOnly: true)
+            )
+            let context = container.mainContext
+
+            let user = User(id: 1, userName: "testuser", fullName: "Test User", email: "test@example.com")
+            context.insert(user)
+            try context.save()
+
+            let progress = UserProgress(id: 1, pullUps: 10, pushUps: 20, squats: 30, weight: 70.0)
+            progress.user = user
+            progress.isSynced = false
+            progress.lastModified = DateFormatterService.dateFromString(
+                "2024-05-12T10:20:30.456",
+                format: .isoDateTimeSec,
+                timeZone: utc
+            )
+            context.insert(progress)
+            try context.save()
+
+            _ = try await service.syncProgress(context: context)
+
+            let call = try #require(mockClient.updateProgressCalls.first)
+            #expect(call.progress.modifyDate == "2024-05-12T10:20:30.456Z")
+        }
+
         @Test("Синхронизация обновления существующего прогресса")
         func syncExistingProgressUpdate() async throws {
             // Arrange
@@ -215,6 +248,57 @@ extension AllProgressTests {
             #expect(updatedProgress.pushUps == 25)
             #expect(updatedProgress.squats == 35)
             #expect(updatedProgress.weight == 72.0)
+        }
+
+        @Test("Не перетирает локальный прогресс серверной версией при timezone skew")
+        func keepsLocalProgressWhenServerTimezoneLessDateMatchesSameInstant() async throws {
+            let utc = try #require(TimeZone(secondsFromGMT: 0))
+            let mockClient = MockProgressClient()
+            let service = ProgressSyncService.makeMock(client: mockClient)
+            let container = try ModelContainer(
+                for: UserProgress.self,
+                User.self,
+                configurations: ModelConfiguration(isStoredInMemoryOnly: true)
+            )
+            let context = container.mainContext
+
+            let user = User(id: 1, userName: "testuser", fullName: "Test User", email: "test@example.com")
+            context.insert(user)
+            try context.save()
+
+            let localModifyDate = DateFormatterService.dateFromString(
+                "2024-05-12T07:20:30.000",
+                format: .isoDateTimeSec,
+                timeZone: utc
+            )
+            let progress = UserProgress(id: 1, pullUps: 10, pushUps: 20, squats: 30, weight: 70.0)
+            progress.user = user
+            progress.isSynced = true
+            progress.lastModified = localModifyDate
+            context.insert(progress)
+            try context.save()
+
+            mockClient.mockedProgressResponses = try [
+                makeProgressResponse(
+                    id: 1,
+                    pullups: 99,
+                    pushups: 99,
+                    squats: 99,
+                    weight: 99.0,
+                    createDate: "2024-05-12T10:20:30",
+                    modifyDate: "2024-05-12T10:20:30"
+                )
+            ]
+
+            _ = try await service.syncProgress(context: context)
+
+            let updatedProgress = try #require(context.fetch(FetchDescriptor<UserProgress>()).first)
+            #expect(updatedProgress.pullUps == 10)
+            #expect(updatedProgress.pushUps == 20)
+            #expect(updatedProgress.squats == 30)
+            #expect(updatedProgress.weight == 70.0)
+            #expect(updatedProgress.lastModified == localModifyDate)
+            #expect(updatedProgress.isSynced)
         }
 
         @Test("Удаление прогресса помеченного для удаления")
@@ -1082,4 +1166,32 @@ extension AllProgressTests {
             #expect(stats.totalOperations > 0)
         }
     }
+}
+
+private func makeProgressResponse(
+    id: Int,
+    pullups: Int,
+    pushups: Int,
+    squats: Int,
+    weight: Float,
+    createDate: String,
+    modifyDate: String
+) throws -> ProgressResponse {
+    let data = Data(
+        """
+        {
+          "id": \(id),
+          "pullups": \(pullups),
+          "pushups": \(pushups),
+          "squats": \(squats),
+          "weight": \(weight),
+          "createDate": "\(createDate)",
+          "modifyDate": "\(modifyDate)"
+        }
+        """.utf8
+    )
+
+    let decoder = JSONDecoder()
+    decoder.dateDecodingStrategy = .flexibleDateDecoding
+    return try decoder.decode(ProgressResponse.self, from: data)
 }

@@ -1,6 +1,7 @@
 import Foundation
 import SwiftData
 @testable import SwiftUI_SotkaApp
+import SWUtils
 import Testing
 
 extension StatusManagerTests {
@@ -41,7 +42,9 @@ extension StatusManagerTests {
 
         @Test("Не выполняет синхронизацию, если state.isLoading == true")
         func getStatusSkipsSyncWhenLoading() async throws {
+            let gate = AsyncTestGate()
             let mockStatusClient = MockStatusClient()
+            mockStatusClient.currentGate = gate
             let statusManager = try MockStatusManager.create(statusClient: mockStatusClient)
 
             let modelConfiguration = ModelConfiguration(isStoredInMemoryOnly: true)
@@ -63,20 +66,16 @@ extension StatusManagerTests {
                 await statusManager.getStatus()
             }
 
-            try await Task.sleep(nanoseconds: 10_000_000)
+            await gate.waitUntilArrived()
 
             let callCountDuringLoading = mockStatusClient.currentCallCount
 
-            let task2 = Task {
-                await statusManager.getStatus()
-            }
-
-            try await Task.sleep(nanoseconds: 10_000_000)
+            await statusManager.getStatus()
 
             #expect(mockStatusClient.currentCallCount == callCountDuringLoading)
 
+            await gate.release()
             await task1.value
-            await task2.value
         }
 
         @Test("Устанавливает maxReadInfoPostDay из ответа сервера")
@@ -278,6 +277,58 @@ extension StatusManagerTests {
             #expect(!statusManager.state.isLoading)
         }
 
+        @Test("Не создает conflict screen при одинаковом календарном дне и разном timestamp")
+        func getStatusDoesNotCreateConflictForSameCalendarDayWithDifferentTimestamps() async throws {
+            let utc = try #require(TimeZone(secondsFromGMT: 0))
+            let moscow = TimeZone(identifier: "Europe/Moscow") ?? .autoupdatingCurrent
+            let appDate = DateFormatterService.dateFromString(
+                "2024-05-12T08:20:30.000",
+                format: .isoDateTimeSec,
+                timeZone: utc
+            )
+            let siteDate = DateFormatterService.dateFromString(
+                "2024-05-12T12:45:00",
+                format: .serverDateTimeSec,
+                timeZone: moscow
+            )
+            let mockStatusClient = MockStatusClient(
+                startResult: .success(CurrentRunResponse(date: nil, maxForAllRunsDay: nil)),
+                currentResult: .success(CurrentRunResponse(date: siteDate, maxForAllRunsDay: nil))
+            )
+            let mockProgressClient = MockProgressClient()
+            let mockExerciseClient = MockExerciseClient()
+            let mockDaysClient = MockDaysClient()
+
+            let modelConfiguration = ModelConfiguration(isStoredInMemoryOnly: true)
+            let modelContainer = try ModelContainer(
+                for: User.self,
+                DayActivity.self,
+                DayActivityTraining.self,
+                UserProgress.self,
+                CustomExercise.self,
+                configurations: modelConfiguration
+            )
+            let context = modelContainer.mainContext
+
+            let user = User(id: 1, userName: "testuser", fullName: "Test User", email: "test@example.com")
+            context.insert(user)
+            try context.save()
+
+            let statusManager = try MockStatusManager.create(
+                statusClient: mockStatusClient,
+                exerciseClient: mockExerciseClient,
+                progressClient: mockProgressClient,
+                daysClient: mockDaysClient,
+                modelContainer: modelContainer
+            )
+
+            await statusManager.startNewRun(appDate: appDate)
+            await statusManager.getStatus()
+
+            #expect(statusManager.conflictingSyncModel == nil)
+            #expect(!statusManager.state.isLoading)
+        }
+
         @Test("Устанавливает conflictingSyncModel, если даты не совпадают")
         func getStatusSetsConflictingSyncModelWhenDatesDiffer() async throws {
             let now = Date.now
@@ -384,10 +435,12 @@ extension StatusManagerTests {
 
         @Test("Устанавливает state = .isLoadingInitialData, если didLoadInitialData == false")
         func getStatusSetsLoadingInitialDataState() async throws {
+            let gate = AsyncTestGate()
             let mockStatusClient = MockStatusClient(
                 startResult: .success(CurrentRunResponse(date: Date.now, maxForAllRunsDay: nil)),
                 currentResult: .success(CurrentRunResponse(date: nil, maxForAllRunsDay: nil))
             )
+            mockStatusClient.currentGate = gate
             let statusManager = try MockStatusManager.create(statusClient: mockStatusClient)
 
             let modelConfiguration = ModelConfiguration(isStoredInMemoryOnly: true)
@@ -409,10 +462,11 @@ extension StatusManagerTests {
                 await statusManager.getStatus()
             }
 
-            try await Task.sleep(nanoseconds: 10_000_000)
+            await gate.waitUntilArrived()
 
             #expect(statusManager.state.isLoadingInitialData)
 
+            await gate.release()
             await task.value
         }
 
@@ -444,15 +498,18 @@ extension StatusManagerTests {
             await statusManager.startNewRun(appDate: startDate)
             await statusManager.getStatus()
 
+            let gate = AsyncTestGate()
+            mockStatusClient.currentGate = gate
+
             let task = Task {
                 await statusManager.getStatus()
             }
 
-            // Состояние устанавливается синхронно в начале метода getStatus
-            try await Task.sleep(nanoseconds: 10_000_000)
+            await gate.waitUntilArrived()
 
             #expect(statusManager.state.isSyncing)
 
+            await gate.release()
             await task.value
         }
 

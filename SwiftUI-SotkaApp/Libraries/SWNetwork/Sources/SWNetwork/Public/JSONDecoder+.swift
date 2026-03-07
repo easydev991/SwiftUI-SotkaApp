@@ -1,5 +1,17 @@
 import Foundation
 
+private enum FlexibleDateDecodingPolicy {
+    static let serverTimeZone: TimeZone = {
+        if let europeMoscow = TimeZone(identifier: "Europe/Moscow") {
+            return europeMoscow
+        }
+
+        return TimeZone(secondsFromGMT: 10_800)
+            ?? TimeZone(secondsFromGMT: 0)
+            ?? .autoupdatingCurrent
+    }()
+}
+
 public extension JSONDecoder.DateDecodingStrategy {
     /// Гибкая стратегия декодирования дат
     ///
@@ -34,6 +46,7 @@ public extension JSONDecoder.DateDecodingStrategy {
         let serverFormatter = DateFormatter()
         serverFormatter.dateFormat = "yyyy-MM-dd'T'HH:mm:ss"
         serverFormatter.locale = Locale(identifier: "en_US_POSIX")
+        serverFormatter.timeZone = FlexibleDateDecodingPolicy.serverTimeZone
         if let date = serverFormatter.date(from: string) {
             return date
         }

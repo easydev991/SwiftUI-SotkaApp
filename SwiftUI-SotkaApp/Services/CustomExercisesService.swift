@@ -297,22 +297,19 @@ private extension CustomExercisesService {
                                     "Сравнение дат для упражнения '\(existingExercise.name)': локальная \(localTimestamp), серверная \(serverTimestamp), разница \(difference) секунд, dataChanged=\(dataChanged), isSynced=\(existingExercise.isSynced)"
                                 )
 
-                            if existingExercise.modifyDate > serverModifyDate {
-                                // Локальная версия новее серверной - сохраняем локальные изменения
+                            switch SyncDateComparisonPolicy.compare(local: existingExercise.modifyDate, server: serverModifyDate) {
+                            case .localNewer:
                                 logger
                                     .info(
                                         "Локальная версия новее серверной для упражнения '\(existingExercise.name)' - сохраняем локальные изменения"
                                     )
-                                // Не обновляем локальные данные, они уже новее
-                            } else if serverModifyDate > existingExercise.modifyDate {
-                                // Серверная версия новее - обновляем локальную
+                            case .serverNewer:
                                 updateLocalFromServer(existingExercise, exerciseResponse)
                                 logger
                                     .info(
                                         "Конфликт разрешен для упражнения \(existingExercise.id): локальная \(localTimestamp) vs серверная \(serverTimestamp) -> Серверная версия новее"
                                     )
-                            } else {
-                                // Даты равны - сохраняем локальные данные
+                            case .equal:
                                 logger
                                     .debug("Даты модификации равны для упражнения '\(existingExercise.name)', сохраняем локальные данные")
                             }
@@ -495,22 +492,20 @@ private extension CustomExercisesService {
                             // Проверяем, не новее ли локальная версия серверной для синхронизированных упражнений
                             let serverModifyDate = server.modifyDate ?? server.createDate
                             // Сравниваем даты
-                            if local.modifyDate > serverModifyDate {
-                                // Локальная версия новее серверной - сохраняем локальные изменения
+                            switch SyncDateComparisonPolicy.compare(local: local.modifyDate, server: serverModifyDate) {
+                            case .localNewer:
                                 logger
                                     .info(
                                         "Локальная версия новее серверной для упражнения '\(local.name)' в applySyncEvents - сохраняем локальные изменения. Локальная: \(local.modifyDate.timeIntervalSince1970), Серверная: \(serverModifyDate.timeIntervalSince1970)"
                                     )
-                            } else if serverModifyDate > local.modifyDate {
-                                // Серверная версия новее - обновляем локальную
+                            case .serverNewer:
                                 updateLocalFromServer(local, server)
                                 updated += 1
                                 logger
                                     .info(
                                         "Обновлено локально упражнение '\(local.name)' по данным сервера. Локальная: \(local.modifyDate.timeIntervalSince1970), Серверная: \(serverModifyDate.timeIntervalSince1970)"
                                     )
-                            } else {
-                                // Даты равны - сохраняем локальные данные
+                            case .equal:
                                 logger
                                     .debug(
                                         "Даты модификации равны для упражнения '\(local.name)' в applySyncEvents, сохраняем локальные данные"

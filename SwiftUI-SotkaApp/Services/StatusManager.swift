@@ -728,7 +728,7 @@ final class StatusManager: NSObject {
             let baseCreator = WorkoutProgramCreator(day: day)
 
             // Получаем последнюю пройденную тренировку и подставляем данные
-            let lastWorkout = dailyActivitiesService.getLastPassedNonTurboWorkoutActivity(context: context)
+            let lastWorkout = dailyActivitiesService.getLastPassedNonTurboWorkoutActivity(context: context, currentDay: day)
             let creator: WorkoutProgramCreator
 
             if let lastWorkout {

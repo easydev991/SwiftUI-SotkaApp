@@ -32,7 +32,7 @@ public enum DateFormatterService {
         let dateFormatter = DateFormatter()
         dateFormatter.locale = Locale(identifier: "en_US_POSIX")
         dateFormatter.dateFormat = format.rawValue
-        dateFormatter.timeZone = timeZone
+        dateFormatter.timeZone = iso ? TimeZone(secondsFromGMT: 0) : timeZone
         var string = dateFormatter.string(from: date)
         if iso { string.append("Z") }
         return string

@@ -40,14 +40,20 @@ final class DailyActivitiesService {
             return
         }
 
-        logger.info("[createDailyActivity] Начинаем сохранение для дня \(activity.day), count=\(activity.count ?? -1), plannedCount=\(activity.plannedCount ?? -1)")
+        logger
+            .info(
+                "[createDailyActivity] Начинаем сохранение для дня \(activity.day), count=\(activity.count ?? -1), plannedCount=\(activity.plannedCount ?? -1)"
+            )
 
         // Проверяем, существует ли уже активность для этого дня
         let existingActivities = (try? context.fetch(FetchDescriptor<DayActivity>())) ?? []
         if let existingActivity = existingActivities.first(where: {
             $0.day == activity.day && $0.user?.id == user.id && !$0.shouldDelete
         }) {
-            logger.info("[createDailyActivity] Найдена существующая активность: день=\(existingActivity.day), старый count=\(existingActivity.count ?? -1), modifyDate=\(existingActivity.modifyDate)")
+            logger
+                .info(
+                    "[createDailyActivity] Найдена существующая активность: день=\(existingActivity.day), старый count=\(existingActivity.count ?? -1), modifyDate=\(existingActivity.modifyDate)"
+                )
             // Обновляем существующую активность новыми данными
             updateExistingActivity(existingActivity, with: activity, user: user)
             logger.info("[createDailyActivity] → Обновлена существующая активность для дня \(activity.day)")
@@ -204,11 +210,15 @@ final class DailyActivitiesService {
         getActivity(dayNumber: day, context: context)?.activityType
     }
 
-    /// Получает последнюю пройденную тренировку (исключая turbo) для текущего пользователя
-    /// Сортирует по дате изменения (modifyDate), чтобы найти самую недавнюю по времени
-    /// - Parameter context: Контекст SwiftData
-    /// - Returns: Последняя пройденная тренировка или nil, если не найдена
-    func getLastPassedNonTurboWorkoutActivity(context: ModelContext) -> DayActivity? {
+    /// Получает предыдущую пройденную тренировку (исключая turbo) для текущего пользователя.
+    ///
+    /// Логика выбора day-based: берется запись с максимальным `day` среди подходящих.
+    /// Если указан `currentDay`, учитываются только записи с `day < currentDay`.
+    /// - Parameters:
+    ///   - context: Контекст SwiftData
+    ///   - currentDay: Текущий день программы. Если задан, поиск ограничивается днями меньше текущего.
+    /// - Returns: Предыдущая пройденная тренировка или nil, если не найдена
+    func getLastPassedNonTurboWorkoutActivity(context: ModelContext, currentDay: Int? = nil) -> DayActivity? {
         let userDescriptor = FetchDescriptor<User>(sortBy: [SortDescriptor(\.id)])
         guard let user = try? context.fetch(userDescriptor).first else {
             logger.error("Пользователь не найден для получения последней пройденной тренировки")
@@ -224,24 +234,38 @@ final class DailyActivitiesService {
                 (activity.executeTypeRaw == nil || activity.executeTypeRaw != turboTypeRaw)
         }
 
-        let descriptor = FetchDescriptor<DayActivity>(
-            predicate: predicate,
-            sortBy: [SortDescriptor(\.modifyDate, order: .reverse)]
-        )
+        let descriptor = FetchDescriptor<DayActivity>(predicate: predicate)
 
-        let activities = (try? context.fetch(descriptor)) ?? []
+        let activities = ((try? context.fetch(descriptor)) ?? [])
+            .filter { activity in
+                guard activity.user?.id == user.id else { return false }
+                if let currentDay {
+                    return activity.day < currentDay
+                }
+                return true
+            }
+            .sorted {
+                if $0.day != $1.day {
+                    return $0.day > $1.day
+                }
+                return $0.modifyDate > $1.modifyDate
+            }
 
         // Логируем все найденные активности для диагностики
         logger.info("[getLastPassed] Найдено \(activities.count) пройденных тренировок (не turbo):")
         for (index, activity) in activities.enumerated() {
             let isCurrentUser = activity.user?.id == user.id
-            logger.info("[getLastPassed]   [\(index)] день=\(activity.day), count=\(activity.count ?? 0), modifyDate=\(activity.modifyDate), createDate=\(activity.createDate), currentUser=\(isCurrentUser)")
+            logger
+                .info(
+                    "[getLastPassed]   [\(index)] день=\(activity.day), count=\(activity.count ?? 0), modifyDate=\(activity.modifyDate), createDate=\(activity.createDate), currentUser=\(isCurrentUser)"
+                )
         }
 
-        let lastActivity = activities.first { $0.user?.id == user.id }
+        let lastActivity = activities.first
 
         if let activity = lastActivity {
-            logger.info("[getLastPassed] → Возвращаем: день \(activity.day), count=\(activity.count ?? 0), modifyDate=\(activity.modifyDate)")
+            logger
+                .info("[getLastPassed] → Возвращаем: день \(activity.day), count=\(activity.count ?? 0), modifyDate=\(activity.modifyDate)")
         } else {
             logger.info("[getLastPassed] → Пройденные тренировки для текущего пользователя не найдены")
         }
@@ -558,19 +582,23 @@ private extension DailyActivitiesService {
                         } else if local.isSynced, let serverModifyDate = server.modifyDate {
                             // Проверяем, не новее ли локальная версия серверной для синхронизированных активностей
                             // Сравниваем даты (как в эталоне CustomExercisesService)
-                            if local.modifyDate > serverModifyDate {
-                                // Локальная версия новее серверной - сохраняем локальные изменения
+                            switch SyncDateComparisonPolicy.compare(local: local.modifyDate, server: serverModifyDate) {
+                            case .localNewer:
                                 logger
                                     .info(
                                         "Локальная версия новее серверной для активности дня \(day) в applySyncEvents - сохраняем локальные изменения. Локальная: \(local.modifyDate.timeIntervalSince1970), Серверная: \(serverModifyDate.timeIntervalSince1970)"
                                     )
-                            } else {
-                                // Серверная версия новее или равна - обновляем локальную
+                            case .serverNewer:
                                 updateLocalFromServer(local, server)
                                 updated += 1
                                 logger
                                     .info(
                                         "Обновлено локально активность дня \(day) по данным сервера. Локальная: \(local.modifyDate.timeIntervalSince1970), Серверная: \(serverModifyDate.timeIntervalSince1970)"
+                                    )
+                            case .equal:
+                                logger
+                                    .debug(
+                                        "Даты модификации равны для активности дня \(day) в applySyncEvents, сохраняем локальные данные"
                                     )
                             }
                         } else {
@@ -626,7 +654,10 @@ private extension DailyActivitiesService {
     ///   - local: Локальная активность
     ///   - server: Данные с сервера
     func updateLocalFromServer(_ local: DayActivity, _ server: DayResponse) {
-        logger.info("[updateLocalFromServer] Обновляем день=\(local.day) с сервера: server.modifyDate=\(server.modifyDate ?? .distantPast), server.count=\(server.count ?? -1)")
+        logger
+            .info(
+                "[updateLocalFromServer] Обновляем день=\(local.day) с сервера: server.modifyDate=\(server.modifyDate ?? .distantPast), server.count=\(server.count ?? -1)"
+            )
         logger.info("[updateLocalFromServer]   локальный modifyDate ДО=\(local.modifyDate)")
 
         // Сохраняем текущий modifyDate чтобы не перезаписывать его серверным
@@ -724,22 +755,19 @@ private extension DailyActivitiesService {
                                     "Сравнение дат для активности дня \(existingActivity.day): локальная \(localTimestamp), серверная \(serverTimestamp), разница \(difference) секунд, dataChanged=\(dataChanged), isSynced=\(existingActivity.isSynced)"
                                 )
 
-                            if existingActivity.modifyDate > serverModifyDate {
-                                // Локальная версия новее серверной - сохраняем локальные изменения
+                            switch SyncDateComparisonPolicy.compare(local: existingActivity.modifyDate, server: serverModifyDate) {
+                            case .localNewer:
                                 logger
                                     .info(
                                         "Локальная версия новее серверной для активности дня \(existingActivity.day) - сохраняем локальные изменения"
                                     )
-                                // Не обновляем локальные данные, они уже новее
-                            } else if serverModifyDate > existingActivity.modifyDate {
-                                // Серверная версия новее - обновляем локальную
+                            case .serverNewer:
                                 updateLocalFromServer(existingActivity, activityResponse)
                                 logger
                                     .info(
                                         "Конфликт разрешен для активности дня \(existingActivity.day): локальная \(localTimestamp) vs серверная \(serverTimestamp) -> Серверная версия новее"
                                     )
-                            } else {
-                                // Даты равны - сохраняем локальные данные
+                            case .equal:
                                 logger
                                     .debug("Даты модификации равны для активности дня \(existingActivity.day), сохраняем локальные данные")
                             }
@@ -753,7 +781,10 @@ private extension DailyActivitiesService {
                         // Создаем новую активность с сервера
                         let newActivity = DayActivity(from: activityResponse, user: user)
                         context.insert(newActivity)
-                        logger.info("[downloadServer] Создана новая активность с сервера: день \(newActivity.day), count=\(newActivity.count ?? -1), modifyDate=\(newActivity.modifyDate)")
+                        logger
+                            .info(
+                                "[downloadServer] Создана новая активность с сервера: день \(newActivity.day), count=\(newActivity.count ?? -1), modifyDate=\(newActivity.modifyDate)"
+                            )
                     }
                 }
             }

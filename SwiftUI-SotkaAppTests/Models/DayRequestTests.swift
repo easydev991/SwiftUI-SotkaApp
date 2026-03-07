@@ -1,5 +1,6 @@
 import Foundation
 @testable import SwiftUI_SotkaApp
+import SWUtils
 import Testing
 
 @Suite("Тесты параметров запроса DayRequest")
@@ -203,6 +204,44 @@ struct DayRequestTests {
         let training = try #require(dayRequest.trainings?.first)
         let sortOrder = try #require(training.sortOrder)
         #expect(sortOrder == 2)
+    }
+
+    @Test("ActivitySnapshot.dayRequest должен сериализовать createDate/modifyDate в UTC")
+    func activitySnapshotDayRequestShouldSerializeDatesAsUTC() throws {
+        let utc = try #require(TimeZone(secondsFromGMT: 0))
+        let createDate = DateFormatterService.dateFromString(
+            "2024-05-12T10:20:30.456",
+            format: .isoDateTimeSec,
+            timeZone: utc
+        )
+        let modifyDate = DateFormatterService.dateFromString(
+            "2024-05-12T12:00:30.456",
+            format: .isoDateTimeSec,
+            timeZone: utc
+        )
+
+        let snapshot = ActivitySnapshot(
+            day: 9,
+            activityTypeRaw: DayActivityType.workout.rawValue,
+            count: 5,
+            plannedCount: 5,
+            executeTypeRaw: ExerciseExecutionType.cycles.rawValue,
+            trainingTypeRaw: nil,
+            duration: nil,
+            comment: nil,
+            createDate: createDate,
+            modifyDate: modifyDate,
+            isSynced: false,
+            shouldDelete: false,
+            userId: 1,
+            trainings: nil
+        )
+
+        let request = snapshot.dayRequest
+        let requestModifyDate = try #require(request.modifyDate)
+
+        #expect(request.createDate == "2024-05-12T10:20:30.456Z")
+        #expect(requestModifyDate == "2024-05-12T12:00:30.456Z")
     }
 
     @Test("DayRequest.formParameters должен включать training[index][sort_order] для каждой тренировки")

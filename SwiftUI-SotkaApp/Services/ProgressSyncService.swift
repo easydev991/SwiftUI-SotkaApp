@@ -827,51 +827,42 @@ private extension ProgressSyncService {
             logger.info("⚖️ [TRACE] applyLWWLogic() - данные идентичны для дня \(internalDay)")
         }
 
-        if localDate > serverDate {
-            // Локальная версия новее серверной - сохраняем локальные изменения
+        switch SyncDateComparisonPolicy.compare(local: localDate, server: serverDate) {
+        case .localNewer:
             logger
                 .info("⚖️ [TRACE] applyLWWLogic() - локальная версия новее серверной для дня \(internalDay) - сохраняем локальные изменения")
             logger.info("⚖️ [TRACE] applyLWWLogic() - до изменения: isSynced=\(local.isSynced), shouldDelete=\(local.shouldDelete)")
 
-            // Убеждаемся, что прогресс остается синхронизированным
             local.isSynced = true
             local.shouldDelete = false
 
             logger.info("⚖️ [TRACE] applyLWWLogic() - после изменения: isSynced=\(local.isSynced), shouldDelete=\(local.shouldDelete)")
             logger.info("⚖️ [TRACE] applyLWWLogic() - локальные данные сохранены")
-            return false // Серверные данные не применялись
-        } else if serverDate > localDate {
-            // Серверная версия новее - обновляем локальную
+            return false
+        case .serverNewer:
             logger.info("⚖️ [TRACE] applyLWWLogic() - серверная версия новее локальной для дня \(internalDay) - обновляем локальные данные")
 
             updateLocalFromServer(local, server, internalDay: internalDay)
-            // Обновляем фотографии из ответа сервера
             await updateProgressFromServerResponse(local, server)
 
             logger.info("⚖️ [TRACE] applyLWWLogic() - локальные данные обновлены с сервера")
-            return true // Серверные данные были применены
-        } else {
-            // Даты одинаковые или очень близкие - сравниваем данные
+            return true
+        case .equal:
             if hasDataDifference {
                 logger
                     .warning(
-                        "⚠️ [TRACE] applyLWWLogic() - одинаковые даты модификации, но разные данные для дня \(internalDay). Серверная версия имеет приоритет."
+                        "⚠️ [TRACE] applyLWWLogic() - даты модификации равны для дня \(internalDay), но данные различаются. Сохраняем локальную версию, чтобы избежать ложного конфликта из-за timezone skew."
                     )
-                updateLocalFromServer(local, server, internalDay: internalDay)
-                // Обновляем фотографии из ответа сервера
-                await updateProgressFromServerResponse(local, server)
-                logger.info("⚖️ [TRACE] applyLWWLogic() - данные обновлены с сервера (приоритет сервера)")
-                return true // Серверные данные были применены
             } else {
                 logger.info("⚖️ [TRACE] applyLWWLogic() - данные идентичны для дня \(internalDay) - помечаем как синхронизированные")
-                logger.info("⚖️ [TRACE] applyLWWLogic() - до изменения: isSynced=\(local.isSynced), shouldDelete=\(local.shouldDelete)")
-
-                local.isSynced = true
-                local.shouldDelete = false
-
-                logger.info("⚖️ [TRACE] applyLWWLogic() - после изменения: isSynced=\(local.isSynced), shouldDelete=\(local.shouldDelete)")
-                return false // Серверные данные не применялись
             }
+
+            logger.info("⚖️ [TRACE] applyLWWLogic() - до изменения: isSynced=\(local.isSynced), shouldDelete=\(local.shouldDelete)")
+            local.isSynced = true
+            local.shouldDelete = false
+            logger.info("⚖️ [TRACE] applyLWWLogic() - после изменения: isSynced=\(local.isSynced), shouldDelete=\(local.shouldDelete)")
+            logger.info("⚖️ [TRACE] applyLWWLogic() - локальные данные сохранены при равных датах")
+            return false
         }
     }
 
