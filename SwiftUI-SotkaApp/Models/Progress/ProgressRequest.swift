@@ -1,7 +1,7 @@
 import Foundation
 
 /// Модель запроса для создания/обновления прогресса пользователя
-struct ProgressRequest: Codable, Sendable {
+struct ProgressRequest: Codable {
     /// День (1, 50, 100)
     let id: Int
     /// Подтягивания

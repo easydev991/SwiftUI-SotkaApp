@@ -392,7 +392,7 @@ extension ProgressSyncService {
 
 private extension ProgressSyncService {
     /// Результат конкурентной операции синхронизации одного прогресса
-    enum SyncEvent: Sendable, Hashable {
+    enum SyncEvent: Hashable {
         case createdOrUpdated(id: Int, server: ProgressResponse)
         /// Локальная запись уже существует на сервере
         case alreadyExists(id: Int)

@@ -1,7 +1,7 @@
 import Foundation
 
 /// Снимок локального прогресса для безопасной передачи в конкурентные задачи без доступа к ModelContext
-struct ProgressSnapshot: Sendable, Hashable {
+struct ProgressSnapshot: Hashable {
     let id: Int
     let pullups: Int?
     let pushups: Int?

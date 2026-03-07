@@ -2,7 +2,7 @@ import Foundation
 import SWUtils
 
 /// Снимок упражнения для безопасной конкурентной синхронизации без доступа к ModelContext
-struct ExerciseSnapshot: Sendable, Hashable {
+struct ExerciseSnapshot: Hashable {
     let id: String
     let name: String
     let imageId: Int

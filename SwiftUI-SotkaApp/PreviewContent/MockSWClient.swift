@@ -1,6 +1,6 @@
 #if DEBUG
 /// Единый мок-клиент для UI-тестов, реализующий все протоколы
-struct MockSWClient: Sendable {
+struct MockSWClient {
     private let loginClient: MockLoginClient
     private let exerciseClient: MockExerciseClient
     private let progressClient: MockProgressClient

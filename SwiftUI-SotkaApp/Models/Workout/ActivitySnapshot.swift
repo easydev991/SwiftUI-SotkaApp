@@ -2,7 +2,7 @@ import Foundation
 import SWUtils
 
 /// Снимок активности для безопасной конкурентной синхронизации без доступа к ModelContext
-struct ActivitySnapshot: Sendable, Hashable {
+struct ActivitySnapshot: Hashable {
     let day: Int
     let activityTypeRaw: Int?
     let count: Int?
@@ -21,7 +21,7 @@ struct ActivitySnapshot: Sendable, Hashable {
 
 extension ActivitySnapshot {
     /// Снимок тренировки для конкурентной синхронизации
-    struct TrainingSnapshot: Sendable, Hashable {
+    struct TrainingSnapshot: Hashable {
         let count: Int?
         let typeId: Int?
         let customTypeId: String?

@@ -1,4 +1,4 @@
-struct CityResponse: Codable, Identifiable, Hashable, Sendable {
+struct CityResponse: Codable, Identifiable, Hashable {
     let id, name: String
     let lat, lon: String?
 

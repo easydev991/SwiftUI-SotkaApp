@@ -2,7 +2,7 @@ import Foundation
 import SWUtils
 
 /// Форма для отправки при регистрации или изменении данных профиля
-struct MainUserForm: Codable, Equatable, Sendable {
+struct MainUserForm: Codable, Equatable {
     var userName, fullName, email, password: String
     var birthDate: Date
     var genderCode: Int

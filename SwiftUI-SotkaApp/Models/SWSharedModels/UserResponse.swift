@@ -1,7 +1,7 @@
 import Foundation
 import SWUtils
 
-struct UserResponse: Codable, Identifiable, Hashable, Sendable {
+struct UserResponse: Codable, Identifiable, Hashable {
     let id: Int
     let name, fullname, email, image: String?
     let cityId, countryId, gender: Int?

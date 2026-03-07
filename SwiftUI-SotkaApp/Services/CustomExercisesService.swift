@@ -168,7 +168,7 @@ extension CustomExercisesService {
 
 private extension CustomExercisesService {
     /// Результат конкурентной операции синхронизации одного упражнения
-    enum SyncEvent: Sendable, Hashable {
+    enum SyncEvent: Hashable {
         case createdOrUpdated(id: String, server: CustomExerciseResponse)
         case deleted(id: String)
         case failed(id: String, errorDescription: String)

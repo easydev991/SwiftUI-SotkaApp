@@ -2,7 +2,7 @@ import Foundation
 import SWUtils
 
 /// Модель ответа сервера для прогресса пользователя
-struct ProgressResponse: Codable, Sendable, Hashable, Equatable {
+struct ProgressResponse: Codable, Hashable, Equatable {
     /// День (соответствует полю "id" в ответе сервера)
     let id: Int
     /// Подтягивания

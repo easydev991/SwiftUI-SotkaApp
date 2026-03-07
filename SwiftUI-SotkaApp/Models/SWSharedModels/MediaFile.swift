@@ -1,7 +1,7 @@
 import Foundation
 
 /// Модель фотографии для отправки на сервер
-struct MediaFile: Codable, Equatable, Sendable {
+struct MediaFile: Codable, Equatable {
     let key: String
     let filename: String
     let data: Data

@@ -2,7 +2,7 @@ import Foundation
 import SWUtils
 
 /// Модель пользовательского упражнения
-struct CustomExerciseResponse: Codable, Identifiable, Hashable, Sendable {
+struct CustomExerciseResponse: Codable, Identifiable, Hashable {
     /// Уникальный идентификатор упражнения
     let id: String
     /// Название упражнения

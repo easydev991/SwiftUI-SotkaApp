@@ -2,7 +2,7 @@ import Foundation
 import SWUtils
 
 /// Модель ответа сервера для дня тренировки
-struct DayResponse: Codable, Sendable, Hashable, Equatable {
+struct DayResponse: Codable, Hashable, Equatable {
     /// День (1..100)
     let id: Int
     /// Тип активности
@@ -71,7 +71,7 @@ struct DayResponse: Codable, Sendable, Hashable, Equatable {
 
 extension DayResponse {
     /// Тренировка внутри дня в ответе сервера
-    struct Training: Codable, Sendable, Hashable, Equatable {
+    struct Training: Codable, Hashable, Equatable {
         /// Идентификатор стандартного типа упражнения (если задан)
         let typeId: Int?
         /// Идентификатор пользовательского типа упражнения (если задан)

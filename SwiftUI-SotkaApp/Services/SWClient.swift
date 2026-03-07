@@ -2,7 +2,7 @@ import Foundation
 import SWNetwork
 
 /// Сервис для обращений к серверу
-struct SWClient: Sendable {
+struct SWClient {
     /// Сервис, предоставляющий токен и выполняющий логаут
     let authHelper: AuthHelper
     /// Сервис для отправки запросов/получения ответов от сервера

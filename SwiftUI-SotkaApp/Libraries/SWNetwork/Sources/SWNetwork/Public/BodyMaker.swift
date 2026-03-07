@@ -74,7 +74,7 @@ public extension BodyMaker {
     }
 
     /// Медиа-файл для отправки на сервер
-    struct MediaFile: Codable, Equatable, Sendable {
+    struct MediaFile: Codable, Equatable {
         public let key: String
         public let filename: String
         public let data: Data

@@ -321,7 +321,7 @@ private extension DailyActivitiesService {
     // MARK: - Snapshot & Sync Events (для конкурентной синхронизации без ModelContext)
 
     /// Результат конкурентной операции синхронизации одной активности
-    enum SyncEvent: Sendable, Hashable {
+    enum SyncEvent: Hashable {
         case createdOrUpdated(day: Int, server: DayResponse)
         case deleted(day: Int)
         case failed(day: Int, errorDescription: String)

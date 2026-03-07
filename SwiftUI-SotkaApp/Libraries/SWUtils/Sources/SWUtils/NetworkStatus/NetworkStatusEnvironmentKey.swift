@@ -1,7 +1,7 @@
 import SwiftUI
 
 public extension EnvironmentValues {
-    // `true` - есть подключение, `false` - нет подключения
+    /// `true` - есть подключение, `false` - нет подключения
     @Entry var isNetworkConnected = false
 }
 

@@ -1,7 +1,7 @@
 import Foundation
 
 /// Модель запроса для создания/обновления дня тренировки
-struct DayRequest: Codable, Sendable {
+struct DayRequest: Codable {
     /// День (1..100)
     let id: Int
     /// Тип активности
@@ -28,7 +28,7 @@ struct DayRequest: Codable, Sendable {
 
 extension DayRequest {
     /// Тренировка внутри дня для запроса
-    struct Training: Codable, Sendable, Hashable {
+    struct Training: Codable, Hashable {
         /// Количество повторений/подходов по элементу
         let count: Int?
         /// Идентификатор стандартного типа упражнения (если задан)

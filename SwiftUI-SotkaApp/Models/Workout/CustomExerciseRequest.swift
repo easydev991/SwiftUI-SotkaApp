@@ -1,7 +1,7 @@
 import Foundation
 
 /// Модель запроса для создания/обновления пользовательского упражнения
-struct CustomExerciseRequest: Codable, Sendable {
+struct CustomExerciseRequest: Codable {
     /// Уникальный идентификатор упражнения
     let id: String
     /// Название упражнения
