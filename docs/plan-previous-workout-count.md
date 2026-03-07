@@ -286,6 +286,7 @@ Fatal error: This model instance was invalidated because its backing data could 
 При создании новой тренировки для дня 27 система находит день 19 как "последнюю пройденную тренировку", хотя была сохранена тренировка для дня 24 (с count=8).
 
 **Логи:**
+
 ```
 // После сохранения тренировки дня 24:
 Тренировка для дня 24 сохранена
@@ -302,6 +303,7 @@ Fatal error: This model instance was invalidated because its backing data could 
 
 **Решение:**
 Изменена сортировка с `createDate` на `modifyDate` в методе `getLastPassedNonTurboWorkoutActivity`:
+
 ```swift
 // Было:
 sortBy: [SortDescriptor(\.createDate, order: .reverse)]
@@ -311,6 +313,7 @@ sortBy: [SortDescriptor(\.modifyDate, order: .reverse)]
 ```
 
 **Файлы:**
+
 - `SwiftUI-SotkaApp/Services/DailyActivitiesService.swift` — изменена сортировка
 - `SwiftUI-SotkaAppTests/DailyActivitiesTests/DailyActivitiesGetLastPassedWorkoutTests.swift` — обновлены тесты
 
@@ -326,6 +329,7 @@ sortBy: [SortDescriptor(\.modifyDate, order: .reverse)]
 На экране `WorkoutPreviewScreen` при переключении между режимами "Круги" и "Подходы" происходит сброс количества повторений для стандартного упражнения (приседания) на значение 6.
 
 **Шаги воспроизведения:**
+
 1. Открыть экран `WorkoutPreviewScreen`
 2. Установить количество приседаний = 8
 3. Переключиться с "Подходы" на "Круги"
@@ -335,11 +339,13 @@ sortBy: [SortDescriptor(\.modifyDate, order: .reverse)]
 Значения повторений должны сохраняться при переключении между режимами выполнения.
 
 **Возможные причины:**
+
 1. При переключении `executionType` происходит пересоздание `trainings` с дефолтными значениями
 2. Не сохраняются текущие значения перед переключением режима
 3. Проблема в привязке данных (`Binding`) к UI-элементам
 
 **Файлы:**
+
 - `SwiftUI-SotkaApp/Screens/WorkoutPreview/WorkoutPreviewScreen.swift`
 - `SwiftUI-SotkaApp/Screens/WorkoutPreview/WorkoutPreviewViewModel.swift`
 

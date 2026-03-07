@@ -107,10 +107,12 @@
 ### Текстовые метки
 
 **Русский:**
+
 - Label: "Набор упражнений отличается от рекомендуемых"
 - Button: "Восстановить"
 
 **Английский (базовый):**
+
 - Label: "Exercise set is different than planned"
 - Button: "Restore"
 
