@@ -71,7 +71,12 @@ extension WorkoutPreviewViewModelTests {
             context.insert(dayActivity)
             try context.save()
 
-            viewModel.updateData(modelContext: context, day: 5, restTime: 60)
+            viewModel.updateData(
+                modelContext: context,
+                day: 5,
+                restTime: 60,
+                activitiesService: DailyActivitiesService(client: MockDaysClient())
+            )
 
             #expect(!viewModel.hasChanges)
         }
@@ -113,7 +118,12 @@ extension WorkoutPreviewViewModelTests {
             context.insert(training1)
             try context.save()
 
-            viewModel.updateData(modelContext: context, day: 5, restTime: 60)
+            viewModel.updateData(
+                modelContext: context,
+                day: 5,
+                restTime: 60,
+                activitiesService: DailyActivitiesService(client: MockDaysClient())
+            )
             let training = try #require(viewModel.trainings.first)
             viewModel.updatePlannedCount(id: training.id, action: .increment)
 
@@ -149,7 +159,12 @@ extension WorkoutPreviewViewModelTests {
             context.insert(dayActivity)
             try context.save()
 
-            viewModel.updateData(modelContext: context, day: 5, restTime: 60)
+            viewModel.updateData(
+                modelContext: context,
+                day: 5,
+                restTime: 60,
+                activitiesService: DailyActivitiesService(client: MockDaysClient())
+            )
             viewModel.updatePlannedCount(id: "plannedCount", action: .increment)
 
             #expect(viewModel.hasChanges)
@@ -184,7 +199,12 @@ extension WorkoutPreviewViewModelTests {
             context.insert(dayActivity)
             try context.save()
 
-            viewModel.updateData(modelContext: context, day: 50, restTime: 60)
+            viewModel.updateData(
+                modelContext: context,
+                day: 50,
+                restTime: 60,
+                activitiesService: DailyActivitiesService(client: MockDaysClient())
+            )
             viewModel.updateExecutionType(.sets)
 
             #expect(viewModel.hasChanges)
@@ -220,7 +240,12 @@ extension WorkoutPreviewViewModelTests {
             context.insert(dayActivity)
             try context.save()
 
-            viewModel.updateData(modelContext: context, day: 5, restTime: 60)
+            viewModel.updateData(
+                modelContext: context,
+                day: 5,
+                restTime: 60,
+                activitiesService: DailyActivitiesService(client: MockDaysClient())
+            )
             viewModel.updateComment("New comment")
 
             #expect(viewModel.hasChanges)
@@ -256,7 +281,12 @@ extension WorkoutPreviewViewModelTests {
             context.insert(dayActivity)
             try context.save()
 
-            viewModel.updateData(modelContext: context, day: 5, restTime: 60)
+            viewModel.updateData(
+                modelContext: context,
+                day: 5,
+                restTime: 60,
+                activitiesService: DailyActivitiesService(client: MockDaysClient())
+            )
             viewModel.updatePlannedCount(id: "plannedCount", action: .increment)
             #expect(viewModel.hasChanges)
 
@@ -280,7 +310,12 @@ extension WorkoutPreviewViewModelTests {
 
             let viewModel = WorkoutPreviewViewModel()
 
-            viewModel.updateData(modelContext: context, day: 1, restTime: 60)
+            viewModel.updateData(
+                modelContext: context,
+                day: 1,
+                restTime: 60,
+                activitiesService: DailyActivitiesService(client: MockDaysClient())
+            )
 
             #expect(!viewModel.hasChanges)
         }

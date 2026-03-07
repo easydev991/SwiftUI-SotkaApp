@@ -54,7 +54,12 @@ struct WorkoutPreviewScreen: View {
             }
             .navigationBarTitleDisplayMode(.inline)
             .onAppear {
-                viewModel.updateData(modelContext: modelContext, day: day, restTime: restTime)
+                viewModel.updateData(
+                    modelContext: modelContext,
+                    day: day,
+                    restTime: restTime,
+                    activitiesService: activitiesService
+                )
             }
             .alert(
                 isPresented: $viewModel.error.mappedToBool(),

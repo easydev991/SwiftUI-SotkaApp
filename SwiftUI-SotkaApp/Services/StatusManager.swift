@@ -725,7 +725,22 @@ final class StatusManager: NSObject {
             comment = existingActivity.comment
         } else {
             // Если активность не найдена или не является тренировкой, создаем данные через WorkoutProgramCreator
-            let creator = WorkoutProgramCreator(day: day)
+            let baseCreator = WorkoutProgramCreator(day: day)
+
+            // Получаем последнюю пройденную тренировку и подставляем данные
+            let lastWorkout = dailyActivitiesService.getLastPassedNonTurboWorkoutActivity(context: context)
+            let creator: WorkoutProgramCreator
+
+            if let lastWorkout {
+                // Подставляем plannedCount, executionType и повторы из предыдущей тренировки
+                logger.info("Используем данные из предыдущей тренировки (день \(lastWorkout.day))")
+                creator = baseCreator.withData(from: lastWorkout)
+            } else {
+                // Fallback на дефолт
+                logger.info("Предыдущая пройденная тренировка не найдена, используем дефолтные значения")
+                creator = baseCreator
+            }
+
             let newActivity = creator.dayActivity
 
             guard let newWorkoutData = newActivity.workoutData else {

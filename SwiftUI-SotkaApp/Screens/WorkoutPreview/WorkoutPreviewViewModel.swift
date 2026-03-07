@@ -73,7 +73,13 @@ final class WorkoutPreviewViewModel {
     ///   - modelContext: Контекст SwiftData
     ///   - day: Номер дня для загрузки
     ///   - restTime: Время отдыха между подходами/кругами (в секундах)
-    func updateData(modelContext: ModelContext, day: Int, restTime: Int) {
+    ///   - activitiesService: Сервис для работы с активностями
+    func updateData(
+        modelContext: ModelContext,
+        day: Int,
+        restTime: Int,
+        activitiesService: DailyActivitiesService
+    ) {
         guard dayNumber != day || trainings.isEmpty else {
             logger.info("Нет необходимости обновлять вьюмодель")
             return
@@ -90,12 +96,26 @@ final class WorkoutPreviewViewModel {
             !$0.shouldDelete && $0.activityType == .workout
         })
 
-        let creator = if let dayActivity {
+        let creator: WorkoutProgramCreator
+        if let dayActivity {
             // Создать WorkoutProgramCreator из DayActivity
-            WorkoutProgramCreator(from: dayActivity)
+            creator = WorkoutProgramCreator(from: dayActivity)
         } else {
             // Создать WorkoutProgramCreator для нового дня
-            WorkoutProgramCreator(day: dayNumber)
+            // Получаем последнюю пройденную тренировку для подстановки данных
+            let baseCreator = WorkoutProgramCreator(day: dayNumber)
+            let lastWorkout = activitiesService.getLastPassedNonTurboWorkoutActivity(context: modelContext)
+
+            if let lastWorkout {
+                // Подставляем plannedCount, executionType и повторы из предыдущей тренировки
+                logger.info(
+                    "Используем данные из предыдущей тренировки (день \(lastWorkout.day))"
+                )
+                creator = baseCreator.withData(from: lastWorkout)
+            } else {
+                logger.info("Предыдущая пройденная тренировка не найдена, используем дефолтные значения")
+                creator = baseCreator
+            }
         }
 
         // Загрузить данные из WorkoutProgramCreator в ViewModel

@@ -22,7 +22,12 @@ extension WorkoutPreviewViewModelTests {
 
             let viewModel = WorkoutPreviewViewModel()
 
-            viewModel.updateData(modelContext: context, day: 50, restTime: 60)
+            viewModel.updateData(
+                modelContext: context,
+                day: 50,
+                restTime: 60,
+                activitiesService: DailyActivitiesService(client: MockDaysClient())
+            )
 
             viewModel.updateExecutionType(.cycles)
 
@@ -47,7 +52,12 @@ extension WorkoutPreviewViewModelTests {
             let viewModel = WorkoutPreviewViewModel()
 
             // Используем день 1, где для cycles = 4, для sets = 6
-            viewModel.updateData(modelContext: context, day: 1, restTime: 60)
+            viewModel.updateData(
+                modelContext: context,
+                day: 1,
+                restTime: 60,
+                activitiesService: DailyActivitiesService(client: MockDaysClient())
+            )
             let initialPlannedCount = try #require(viewModel.plannedCount)
             // Для дня 1 дефолтный тип - cycles (4 круга)
             #expect(initialPlannedCount == 4)
@@ -76,7 +86,12 @@ extension WorkoutPreviewViewModelTests {
 
             let viewModel = WorkoutPreviewViewModel()
 
-            viewModel.updateData(modelContext: context, day: 92, restTime: 60)
+            viewModel.updateData(
+                modelContext: context,
+                day: 92,
+                restTime: 60,
+                activitiesService: DailyActivitiesService(client: MockDaysClient())
+            )
             let initialTrainings = viewModel.trainings
 
             viewModel.updateExecutionType(.cycles)
@@ -104,7 +119,12 @@ extension WorkoutPreviewViewModelTests {
             let viewModel = WorkoutPreviewViewModel()
 
             // Используем день 1, где для cycles = 4, для sets = 6
-            viewModel.updateData(modelContext: context, day: 1, restTime: 60)
+            viewModel.updateData(
+                modelContext: context,
+                day: 1,
+                restTime: 60,
+                activitiesService: DailyActivitiesService(client: MockDaysClient())
+            )
             let initialPlannedCount = try #require(viewModel.plannedCount)
             // Для дня 1 дефолтный тип - cycles (4 круга)
             #expect(initialPlannedCount == 4)
@@ -132,7 +152,12 @@ extension WorkoutPreviewViewModelTests {
             try context.save()
 
             let viewModel = WorkoutPreviewViewModel()
-            viewModel.updateData(modelContext: context, day: 50, restTime: 60)
+            viewModel.updateData(
+                modelContext: context,
+                day: 50,
+                restTime: 60,
+                activitiesService: DailyActivitiesService(client: MockDaysClient())
+            )
             viewModel.plannedCount = 10
 
             viewModel.updateExecutionType(.cycles)
@@ -156,7 +181,12 @@ extension WorkoutPreviewViewModelTests {
             try context.save()
 
             let viewModel = WorkoutPreviewViewModel()
-            viewModel.updateData(modelContext: context, day: 50, restTime: 60)
+            viewModel.updateData(
+                modelContext: context,
+                day: 50,
+                restTime: 60,
+                activitiesService: DailyActivitiesService(client: MockDaysClient())
+            )
             let initialPullupsTraining = viewModel.trainings.first { training in
                 training.typeId == ExerciseType.pullups.rawValue
             }
@@ -195,7 +225,12 @@ extension WorkoutPreviewViewModelTests {
             try context.save()
 
             let viewModel = WorkoutPreviewViewModel()
-            viewModel.updateData(modelContext: context, day: 50, restTime: 60)
+            viewModel.updateData(
+                modelContext: context,
+                day: 50,
+                restTime: 60,
+                activitiesService: DailyActivitiesService(client: MockDaysClient())
+            )
             viewModel.plannedCount = 10
 
             let initialPullupsTraining = viewModel.trainings.first { training in

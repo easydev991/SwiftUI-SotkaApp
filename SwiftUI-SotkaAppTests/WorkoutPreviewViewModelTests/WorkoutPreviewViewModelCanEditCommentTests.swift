@@ -44,7 +44,12 @@ extension WorkoutPreviewViewModelTests {
             context.insert(dayActivity)
             try context.save()
 
-            viewModel.updateData(modelContext: context, day: 5, restTime: 60)
+            viewModel.updateData(
+                modelContext: context,
+                day: 5,
+                restTime: 60,
+                activitiesService: DailyActivitiesService(client: MockDaysClient())
+            )
 
             #expect(viewModel.canEditComment)
         }

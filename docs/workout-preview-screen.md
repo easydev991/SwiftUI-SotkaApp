@@ -115,6 +115,7 @@ ViewModel помечен `@MainActor` и `@Observable`. Все логи — на
 **Загрузка данных**: `updateData(modelContext:day:restTime:)`
 
 - Загружает существующую активность дня из SwiftData или создает новую через `WorkoutProgramCreator`.
+- При создании новой тренировки `plannedCount` берется из последней пройденной тренировки (приоритет: `count` → `plannedCount`), иначе используется дефолт по дню.
 - Инициализирует все свойства ViewModel из `WorkoutProgramCreator`.
 - Создает snapshot исходных данных для отслеживания изменений.
 - Логи: загрузка данных с указанием дня и статуса (новая/существующая).
@@ -213,6 +214,7 @@ ViewModel помечен `@MainActor` и `@Observable`. Все логи — на
 - Расчет дефолтных значений `plannedCount` и `count` для каждого типа выполнения.
 - Определение доступных типов выполнения для дня.
 - Сохранение пользовательских изменений при смене типа выполнения через `withExecutionType(_:)`.
+- Установка `plannedCount` из предыдущей тренировки через `withPlannedCount(_:)`.
 - Создание пользовательских упражнений через `withCustomExercises(_:)`.
 - Маппинг между `DayActivity` и `WorkoutPreviewTraining`.
 - Computed property `dayActivity: DayActivity` — создание модели `DayActivity` из данных `WorkoutProgramCreator`.
