@@ -4,7 +4,22 @@ import SWUtils
 
 struct DayActivityTrainingView: View {
     @Environment(\.modelContext) private var modelContext
+    @Query private var trainings: [DayActivityTraining]
     let activity: DayActivity
+
+    init(activity: DayActivity) {
+        self.activity = activity
+
+        let activityDay = activity.day
+        _trainings = Query(
+            FetchDescriptor<DayActivityTraining>(
+                predicate: #Predicate { training in
+                    training.dayActivity?.day == activityDay
+                },
+                sortBy: [SortDescriptor(\.sortOrder)]
+            )
+        )
+    }
 
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {
@@ -16,7 +31,7 @@ struct DayActivityTrainingView: View {
                     count: count
                 )
             }
-            ForEach(activity.trainings.sorted, id: \.persistentModelID) { training in
+            ForEach(Array(trainingSnapshots.enumerated()), id: \.offset) { _, training in
                 if let count = training.count {
                     ActivityRowView(
                         image: exerciseImage(for: training),
@@ -28,22 +43,28 @@ struct DayActivityTrainingView: View {
         }
     }
 
-    private func exerciseImage(for training: DayActivityTraining) -> Image {
+    private var trainingSnapshots: [WorkoutPreviewTraining] {
+        trainings.workoutPreviewTrainingsSorted
+    }
+
+    private func exerciseImage(for training: WorkoutPreviewTraining) -> Image {
         if let customTypeId = training.customTypeId,
            let customExercise = CustomExercise.fetch(by: customTypeId, in: modelContext) {
             customExercise.image
-        } else if let exerciseType = training.exerciseType {
+        } else if let typeId = training.typeId,
+                  let exerciseType = ExerciseType(rawValue: typeId) {
             exerciseType.image
         } else {
             .init(systemName: "questionmark.circle")
         }
     }
 
-    private func exerciseTitle(for training: DayActivityTraining) -> String {
+    private func exerciseTitle(for training: WorkoutPreviewTraining) -> String {
         if let customTypeId = training.customTypeId,
            let customExercise = CustomExercise.fetch(by: customTypeId, in: modelContext) {
             return customExercise.name
-        } else if let exerciseType = training.exerciseType {
+        } else if let typeId = training.typeId,
+                  let exerciseType = ExerciseType(rawValue: typeId) {
             return exerciseType.localizedTitle
         }
         return String(localized: .exerciseTypeUnknown)

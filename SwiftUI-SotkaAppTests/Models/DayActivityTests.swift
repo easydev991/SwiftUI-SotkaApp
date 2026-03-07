@@ -560,6 +560,32 @@ struct DayActivityTests {
         #expect(sortedFirstSortOrder == 0)
     }
 
+    @Test("workoutPreviewTrainingsSorted возвращает value snapshot для UI в правильном порядке")
+    @MainActor
+    func workoutPreviewTrainingsSortedReturnsSortedSnapshots() throws {
+        let container = try ModelContainer(
+            for: DayActivityTraining.self,
+            configurations: ModelConfiguration(isStoredInMemoryOnly: true)
+        )
+        let context = container.mainContext
+
+        let training1 = DayActivityTraining(count: 10, typeId: ExerciseType.pullups.rawValue, sortOrder: 2)
+        let training2 = DayActivityTraining(count: 20, typeId: ExerciseType.pushups.rawValue, sortOrder: 0)
+        let training3 = DayActivityTraining(count: 30, customTypeId: "custom-1", sortOrder: 1)
+        context.insert(training1)
+        context.insert(training2)
+        context.insert(training3)
+        try context.save()
+
+        let snapshots = [training1, training2, training3].workoutPreviewTrainingsSorted
+
+        #expect(snapshots.count == 3)
+        #expect(snapshots.map(\.sortOrder) == [0, 1, 2])
+        #expect(snapshots.map(\.count) == [20, 30, 10])
+        #expect(snapshots.map(\.typeId) == [ExerciseType.pushups.rawValue, nil, ExerciseType.pullups.rawValue])
+        #expect(snapshots.map(\.customTypeId) == [nil, "custom-1", nil])
+    }
+
     // MARK: - setNonWorkoutType Tests
 
     @Test("setNonWorkoutType устанавливает тип активности stretch")
