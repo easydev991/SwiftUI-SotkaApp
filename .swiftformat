@@ -22,6 +22,9 @@
 --wrapcollections before-first
 --wrapternary before-operators
 
+--test-case-name-format preserve
+--suite-name-format preserve
+
 --enable anyObjectProtocol, \
 assertionFailures, \
 blankLinesAroundMark, \
