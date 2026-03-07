@@ -22,3 +22,4 @@ build/
 fastlane/report.xml
 # HTML отчеты по скриншотам (iPhone и Watch)
 fastlane/screenshots/**/screenshots.html
+SwiftUI-SotkaApp.xcodeproj/project.xcworkspace/xcshareddata/WorkspaceSettings.xcsettings
