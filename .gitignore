@@ -5,9 +5,8 @@
 *.xcworkspace/xcuserdata/
 .DS_Store
 /SwiftUI-SotkaApp.xcodeproj/xcuserdata
-
-# Старое приложение на Objective-C
-OldApp/
+SwiftUI-SotkaApp.xcodeproj/project.xcworkspace/xcshareddata/WorkspaceSettings.xcsettings
+firebase-debug.log
 
 # Backend
 Backend/
@@ -18,8 +17,10 @@ build/
 .build/
 /.continue
 
+# Qwen
+.qwen/.env
+
 # Fastlane
 fastlane/report.xml
 # HTML отчеты по скриншотам (iPhone и Watch)
 fastlane/screenshots/**/screenshots.html
-SwiftUI-SotkaApp.xcodeproj/project.xcworkspace/xcshareddata/WorkspaceSettings.xcsettings
