@@ -44,31 +44,9 @@ extension WorkoutProgramCreator {
         // Подставить executionType из предыдущей тренировки (если есть)
         let newExecutionType = previousActivity.executeType ?? executionType
 
-        // Подставить повторы для каждого упражнения
-        let newTrainings = trainings.map { training in
-            // Ищем соответствующее упражнение в предыдущей тренировке
-            let previousTraining = previousActivity.trainings.first { previous in
-                // Сопоставление по typeId для стандартных упражнений
-                if let typeId = training.typeId,
-                   let previousTypeId = previous.typeId,
-                   training.customTypeId == nil,
-                   previous.customTypeId == nil {
-                    return typeId == previousTypeId
-                }
-                // Сопоставление по customTypeId для пользовательских упражнений
-                if let customTypeId = training.customTypeId,
-                   let previousCustomTypeId = previous.customTypeId {
-                    return customTypeId == previousCustomTypeId
-                }
-                return false
-            }
-
-            // Если нашли и есть count, используем его; иначе оставляем дефолт
-            if let previousTraining, let previousCount = previousTraining.count {
-                return training.withCount(previousCount)
-            }
-            return training
-        }
+        // Подставить повторы для каждого упражнения (сопоставление по типу и порядку появления)
+        let previousTrainings = previousActivity.trainings.workoutPreviewTrainingsSorted
+        let newTrainings = Self.applyCountsFrom(previousTrainings: previousTrainings, to: trainings)
 
         return Self(
             day: day,

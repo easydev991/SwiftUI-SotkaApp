@@ -210,6 +210,59 @@ extension WorkoutPreviewViewModelTests {
             #expect(preservedCount == 7)
         }
 
+        @Test("Должен сохранять разные значения для двух приседаний при переключении между кругами и подходами")
+        @MainActor
+        func preservesDifferentSquatsCountsWhenChangingExecutionType() throws {
+            let container = try ModelContainer(
+                for: DayActivity.self,
+                DayActivityTraining.self,
+                User.self,
+                configurations: ModelConfiguration(isStoredInMemoryOnly: true)
+            )
+            let context = container.mainContext
+            let user = User(id: 1)
+            context.insert(user)
+            try context.save()
+
+            let viewModel = WorkoutPreviewViewModel()
+            viewModel.updateData(
+                modelContext: context,
+                day: 5,
+                restTime: 60,
+                activitiesService: DailyActivitiesService(client: MockDaysClient())
+            )
+
+            let squats = viewModel.trainings
+                .sorted
+                .filter { $0.typeId == ExerciseType.squats.rawValue }
+            #expect(squats.count == 2)
+
+            let firstSquats = try #require(squats.first)
+            let lastSquats = try #require(squats.last)
+
+            viewModel.trainings = viewModel.trainings.map { training in
+                if training.id == firstSquats.id {
+                    return training.withCount(8)
+                }
+                if training.id == lastSquats.id {
+                    return training.withCount(5)
+                }
+                return training
+            }
+
+            viewModel.updateExecutionType(.sets)
+
+            let updatedSquats = viewModel.trainings
+                .sorted
+                .filter { $0.typeId == ExerciseType.squats.rawValue }
+            #expect(updatedSquats.count == 2)
+
+            let firstUpdatedSquatsCount = try #require(updatedSquats.first?.count)
+            let lastUpdatedSquatsCount = try #require(updatedSquats.last?.count)
+            #expect(firstUpdatedSquatsCount == 8)
+            #expect(lastUpdatedSquatsCount == 5)
+        }
+
         @Test("Должен сохранять plannedCount и count упражнений при смене типа выполнения")
         @MainActor
         func preservesPlannedCountAndTrainingCountWhenChangingExecutionType() throws {
