@@ -39,6 +39,19 @@ struct WorkoutPreviewTraining: Equatable, Identifiable, Codable {
             sortOrder: sortOrder
         )
     }
+
+    /// Создает новую модель с обновленным значением sortOrder
+    /// - Parameter newSortOrder: Новый порядок следования
+    /// - Returns: Новая модель с обновленным sortOrder
+    func withSortOrder(_ newSortOrder: Int?) -> WorkoutPreviewTraining {
+        Self(
+            id: id,
+            count: count,
+            typeId: typeId,
+            customTypeId: customTypeId,
+            sortOrder: newSortOrder
+        )
+    }
 }
 
 extension WorkoutPreviewTraining {
