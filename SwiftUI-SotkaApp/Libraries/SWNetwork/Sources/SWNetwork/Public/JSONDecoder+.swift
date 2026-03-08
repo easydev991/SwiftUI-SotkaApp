@@ -1,5 +1,7 @@
 import Foundation
 
+/// Сервер отдаёт даты в формате `yyyy-MM-dd'T'HH:mm:ss` без указания часового пояса;
+/// для их однозначной интерпретации при декодировании используется Europe/Moscow.
 private enum FlexibleDateDecodingPolicy {
     static let serverTimeZone: TimeZone = {
         if let europeMoscow = TimeZone(identifier: "Europe/Moscow") {
@@ -18,9 +20,11 @@ public extension JSONDecoder.DateDecodingStrategy {
     /// Поддерживает форматы:
     /// - `2024-01-15T10:30:00Z` (стандартный ISO8601)
     /// - `2024-01-15T10:30:00.123Z` (с дробными секундами)
-    /// - `2024-01-15T10:30:00` (server date time без часового пояса)
+    /// - `2024-01-15T10:30:00` (server date time без часового пояса — интерпретируется как Europe/Moscow)
     /// - `2024-01-15` (ISO short date)
     ///
+    /// - Note: Строки дат без суффикса времени (Z или offset) трактуются в часовом поясе Europe/Moscow, так как пакет ориентирован на API
+    /// StreetWorkoutSU.
     /// - Note: Для опциональных полей `Date?` при использовании `decodeIfPresent` null значения обрабатываются автоматически.
     ///   При невалидной строке будет выброшена ошибка декодирования.
     static let flexibleDateDecoding = custom { decoder in
