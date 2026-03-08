@@ -97,7 +97,7 @@ func withData(from previousActivity: DayActivity) -> WorkoutProgramCreator
 
 - ✅ Подставляет `plannedCount` (приоритет `count` над `plannedCount`)
 - ✅ Подставляет `executionType` из предыдущей тренировки
-- ✅ Подставляет повторы для каждого упражнения по `typeId` или `customTypeId`
+- ✅ Подставляет повторы для каждого упражнения по `typeId`/`customTypeId` и **порядку появления** (для дублей одного типа — разные count сохраняются)
 
 ### 2.2. Обновить StatusManager.handleGetWorkoutDataCommand ✅
 
@@ -348,8 +348,40 @@ sortBy: [SortDescriptor(\.modifyDate, order: .reverse)]
 
 - `SwiftUI-SotkaApp/Screens/WorkoutPreview/WorkoutPreviewScreen.swift`
 - `SwiftUI-SotkaApp/Screens/WorkoutPreview/WorkoutPreviewViewModel.swift`
+- `SwiftUI-SotkaApp/Services/WorkoutProgramCreator.swift`
+- `SwiftUI-SotkaAppTests/WorkoutProgramCreatorTests/WorkoutProgramCreatorWithExecutionTypeTests.swift`
+- `SwiftUI-SotkaAppTests/WorkoutPreviewViewModelTests/WorkoutPreviewViewModelUpdateExecutionTypeTests.swift`
 
-**Статус:** 🔴 Не начато
+**Исправление:**
+
+1. Причина была в логике `WorkoutProgramCreator.withExecutionType(_:)`: упражнения сопоставлялись только по `typeId`, поэтому обе строки с приседаниями считались одним и тем же упражнением.
+2. Сопоставление изменено на сохранение по ключу упражнения и порядку появления в списке, поэтому у двух одинаковых стандартных упражнений теперь могут быть разные пользовательские значения.
+3. Добавлены регрессионные тесты на уровне `WorkoutProgramCreator` и `WorkoutPreviewViewModel` для сценария с двумя приседаниями.
+
+**Статус:** ✅ Исправлено (2026-03-08)
+
+---
+
+### Баг 3: Одинаковый count для дублей при подстановке из предыдущей тренировки
+
+**Приоритет:** Средний
+
+**Описание:**
+При создании новой тренировки с подстановкой данных из предыдущей для двух упражнений одного типа (например, приседания) задавалось одинаковое количество повторений, хотя в предыдущей тренировке у них были разные значения.
+
+**Исправление:**
+
+1. Причина была в `WorkoutProgramCreator.withData(from:)`: сопоставление шло только по `typeId` через `first`, поэтому оба дубля получали count первого найденного.
+2. Добавлен helper `applyCountsFrom(previousTrainings:to:)` с сопоставлением по типу и порядку появления (аналогично `preserveTrainingCounts`).
+3. Добавлен тест `withData_PreservesDifferentCountsForDuplicateExerciseTypes`.
+
+**Файлы:**
+
+- `SwiftUI-SotkaApp/Services/WorkoutProgramCreator.swift`
+- `SwiftUI-SotkaApp/Services/WorkoutProgramCreator+DayActivity.swift`
+- `SwiftUI-SotkaAppTests/WorkoutProgramCreatorTests/WorkoutProgramCreatorWithPreviousDataTests.swift`
+
+**Статус:** ✅ Исправлено (2026-03-08)
 
 ---
 

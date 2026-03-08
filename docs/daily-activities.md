@@ -37,6 +37,7 @@
 - **DayActivityMenuView** — меню действий для активности (редактирование, комментарий, удаление).
 - **DayActivityHeaderMenuView** — заголовок с меню действий для активности в списке.
 - **DayActivityContentView** — отображение содержимого активности (тип активности).
+- **DayActivityTrainingView** — отображение упражнений тренировочного дня; для защиты от SwiftData-crash не читает `activity.trainings` напрямую из parent relationship, а загружает тренировки отдельным `@Query` и сразу преобразует их в value-snapshot для рендера.
 - **DayActivityCommentView** — отображение комментария с возможностью развертывания.
 - **EditCommentSheet** — модальное окно для редактирования комментария.
 - **ActivityRowView** — компонент для отображения простых типов активности (stretch, rest, sick).

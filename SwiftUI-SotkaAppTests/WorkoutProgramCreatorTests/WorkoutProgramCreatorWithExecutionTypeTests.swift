@@ -129,6 +129,53 @@ extension AllWorkoutProgramCreatorTests {
         #expect(lungesCount == 2)
     }
 
+    @Test(
+        "Должен сохранять разные значения для двух одинаковых стандартных упражнений при смене типа выполнения",
+        arguments: ExerciseType.standardExercises
+    )
+    func preservesDifferentCountsForDuplicateExerciseTypesWhenChangingType(
+        duplicateExerciseType: ExerciseType
+    ) throws {
+        let fillerExercises = ExerciseType.standardExercises.filter { $0 != duplicateExerciseType }
+        let firstFillerExercise = try #require(fillerExercises.first)
+        let secondFillerExercise = try #require(fillerExercises.dropFirst().first)
+
+        let currentTrainings = [
+            WorkoutPreviewTraining(count: 4, typeId: firstFillerExercise.rawValue, sortOrder: 0),
+            WorkoutPreviewTraining(count: 8, typeId: duplicateExerciseType.rawValue, sortOrder: 1),
+            WorkoutPreviewTraining(count: 6, typeId: secondFillerExercise.rawValue, sortOrder: 2),
+            WorkoutPreviewTraining(count: 5, typeId: duplicateExerciseType.rawValue, sortOrder: 3)
+        ]
+        let defaultTrainingsForCurrentType = [
+            WorkoutPreviewTraining(count: 4, typeId: firstFillerExercise.rawValue, sortOrder: 0),
+            WorkoutPreviewTraining(count: 2, typeId: duplicateExerciseType.rawValue, sortOrder: 1),
+            WorkoutPreviewTraining(count: 6, typeId: secondFillerExercise.rawValue, sortOrder: 2),
+            WorkoutPreviewTraining(count: 2, typeId: duplicateExerciseType.rawValue, sortOrder: 3)
+        ]
+        let newTrainings = [
+            WorkoutPreviewTraining(count: 4, typeId: firstFillerExercise.rawValue, sortOrder: 0),
+            WorkoutPreviewTraining(count: 2, typeId: duplicateExerciseType.rawValue, sortOrder: 1),
+            WorkoutPreviewTraining(count: 6, typeId: secondFillerExercise.rawValue, sortOrder: 2),
+            WorkoutPreviewTraining(count: 2, typeId: duplicateExerciseType.rawValue, sortOrder: 3)
+        ]
+
+        let preservedTrainings = WorkoutProgramCreator.preserveTrainingCounts(
+            currentTrainings: currentTrainings,
+            defaultTrainingsForCurrentType: defaultTrainingsForCurrentType,
+            newTrainings: newTrainings
+        )
+
+        let duplicateExercises = preservedTrainings
+            .sorted
+            .filter { $0.typeId == duplicateExerciseType.rawValue }
+
+        #expect(duplicateExercises.count == 2)
+        let firstDuplicateExerciseCount = try #require(duplicateExercises.first?.count)
+        let lastDuplicateExerciseCount = try #require(duplicateExercises.last?.count)
+        #expect(firstDuplicateExerciseCount == 8)
+        #expect(lastDuplicateExerciseCount == 5)
+    }
+
     @Test("Должен использовать дефолтный count для новых упражнений при смене типа")
     func usesDefaultCountForNewExercisesWhenChangingType() throws {
         let creator = WorkoutProgramCreator(day: 1, executionType: .cycles)

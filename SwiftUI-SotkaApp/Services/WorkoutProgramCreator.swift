@@ -94,57 +94,11 @@ struct WorkoutProgramCreator {
 
         let defaultTrainingsForCurrentType = Self.generateExercises(for: day, executionType: executionType)
         let newTrainings = Self.generateExercises(for: day, executionType: newType)
-        let preservedTrainings = newTrainings.map { newTraining in
-            let matchingTraining = trainings.first { existingTraining in
-                if let existingTypeId = existingTraining.typeId,
-                   let newTypeId = newTraining.typeId,
-                   existingTypeId == newTypeId,
-                   existingTraining.customTypeId == nil,
-                   newTraining.customTypeId == nil {
-                    return true
-                }
-
-                if let existingCustomTypeId = existingTraining.customTypeId,
-                   let newCustomTypeId = newTraining.customTypeId,
-                   existingCustomTypeId == newCustomTypeId {
-                    return true
-                }
-
-                return false
-            }
-
-            if let matchingTraining, let preservedCount = matchingTraining.count {
-                // Проверяем, совпадает ли сохраненное значение с дефолтным для ТЕКУЩЕГО режима
-                let defaultTrainingForCurrentType = defaultTrainingsForCurrentType.first { training in
-                    if let existingTypeId = matchingTraining.typeId,
-                       let trainingTypeId = training.typeId,
-                       existingTypeId == trainingTypeId,
-                       matchingTraining.customTypeId == nil,
-                       training.customTypeId == nil {
-                        return true
-                    }
-                    if let existingCustomTypeId = matchingTraining.customTypeId,
-                       let trainingCustomTypeId = training.customTypeId,
-                       existingCustomTypeId == trainingCustomTypeId {
-                        return true
-                    }
-                    return false
-                }
-
-                // Если сохраненное значение совпадает с дефолтным для текущего режима,
-                // значит это дефолтное значение, и при переключении используем дефолтное для нового режима
-                if let defaultCountForCurrentType = defaultTrainingForCurrentType?.count,
-                   preservedCount == defaultCountForCurrentType {
-                    return newTraining
-                }
-
-                // Если сохраненное значение отличается от дефолтного для текущего режима,
-                // значит пользователь изменил его вручную, сохраняем пользовательское значение
-                return newTraining.withCount(preservedCount)
-            }
-
-            return newTraining
-        }
+        let preservedTrainings = Self.preserveTrainingCounts(
+            currentTrainings: trainings,
+            defaultTrainingsForCurrentType: defaultTrainingsForCurrentType,
+            newTrainings: newTrainings
+        )
 
         return Self(
             day: day,
@@ -301,9 +255,73 @@ struct WorkoutProgramCreator {
             ? .turbo
             : .cycles
     }
+
+    static func preserveTrainingCounts(
+        currentTrainings: [WorkoutPreviewTraining],
+        defaultTrainingsForCurrentType: [WorkoutPreviewTraining],
+        newTrainings: [WorkoutPreviewTraining]
+    ) -> [WorkoutPreviewTraining] {
+        let existingTrainingsByKey = makeTrainingsByMatchKey(currentTrainings)
+        let defaultTrainingsByKey = makeTrainingsByMatchKey(defaultTrainingsForCurrentType)
+        var occurrenceByKey: [TrainingMatchKey: Int] = [:]
+
+        return newTrainings.map { newTraining in
+            let matchKey = makeTrainingMatchKey(for: newTraining)
+            let occurrence = occurrenceByKey[matchKey, default: 0]
+            occurrenceByKey[matchKey] = occurrence + 1
+            let matchingTraining = training(
+                at: occurrence,
+                for: matchKey,
+                in: existingTrainingsByKey
+            )
+
+            if let matchingTraining, let preservedCount = matchingTraining.count {
+                let defaultTrainingForCurrentType = training(
+                    at: occurrence,
+                    for: matchKey,
+                    in: defaultTrainingsByKey
+                )
+
+                // Если сохраненное значение совпадает с дефолтным для текущего режима,
+                // значит это дефолтное значение, и при переключении используем дефолтное для нового режима
+                if let defaultCountForCurrentType = defaultTrainingForCurrentType?.count,
+                   preservedCount == defaultCountForCurrentType {
+                    return newTraining
+                }
+
+                // Если сохраненное значение отличается от дефолтного для текущего режима,
+                // значит пользователь изменил его вручную, сохраняем пользовательское значение
+                return newTraining.withCount(preservedCount)
+            }
+
+            return newTraining
+        }
+    }
+
+    /// Применяет count из предыдущих тренировок к новым, сопоставляя по типу и порядку появления
+    static func applyCountsFrom(
+        previousTrainings: [WorkoutPreviewTraining],
+        to newTrainings: [WorkoutPreviewTraining]
+    ) -> [WorkoutPreviewTraining] {
+        let previousByKey = makeTrainingsByMatchKey(previousTrainings)
+        var occurrenceByKey: [TrainingMatchKey: Int] = [:]
+
+        return newTrainings.map { newTraining in
+            let matchKey = makeTrainingMatchKey(for: newTraining)
+            let occurrence = occurrenceByKey[matchKey, default: 0]
+            occurrenceByKey[matchKey] = occurrence + 1
+            let previousTraining = training(at: occurrence, for: matchKey, in: previousByKey)
+            if let previousTraining, let previousCount = previousTraining.count {
+                return newTraining.withCount(previousCount)
+            }
+            return newTraining
+        }
+    }
 }
 
 private extension WorkoutProgramCreator {
+    typealias TrainingMatchKey = String
+
     static func calculateTurboCircles(for day: Int) -> Int {
         switch day {
         case 92: 40
@@ -316,5 +334,35 @@ private extension WorkoutProgramCreator {
         (92 ... 98).contains(day)
             ? [.cycles, .sets, .turbo]
             : [.cycles, .sets]
+    }
+
+    static func makeTrainingsByMatchKey(
+        _ trainings: [WorkoutPreviewTraining]
+    ) -> [TrainingMatchKey: [WorkoutPreviewTraining]] {
+        Dictionary(grouping: trainings.sorted, by: makeTrainingMatchKey(for:))
+    }
+
+    static func training(
+        at occurrence: Int,
+        for key: TrainingMatchKey,
+        in trainingsByKey: [TrainingMatchKey: [WorkoutPreviewTraining]]
+    ) -> WorkoutPreviewTraining? {
+        guard let trainings = trainingsByKey[key], trainings.indices.contains(occurrence) else {
+            return nil
+        }
+
+        return trainings[occurrence]
+    }
+
+    nonisolated static func makeTrainingMatchKey(for training: WorkoutPreviewTraining) -> TrainingMatchKey {
+        if let customTypeId = training.customTypeId {
+            return "custom:\(customTypeId)"
+        }
+
+        if let typeId = training.typeId {
+            return "type:\(typeId)"
+        }
+
+        return "id:\(training.id)"
     }
 }

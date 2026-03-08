@@ -187,6 +187,47 @@ extension AllWorkoutProgramCreatorTests {
             #expect(updatedCreator.executionType == .cycles)
         }
 
+        @Test("Подставляет разные count для двух упражнений одного типа из предыдущей тренировки")
+        func withData_PreservesDifferentCountsForDuplicateExerciseTypes() throws {
+            let container = try createContainer()
+            let context = container.mainContext
+            let user = createUser(id: 1, context: context)
+
+            let creator = WorkoutProgramCreator(day: 10)
+
+            let previousTrainings = [
+                DayActivityTraining(count: 4, typeId: ExerciseType.pullups.rawValue, sortOrder: 0),
+                DayActivityTraining(count: 8, typeId: ExerciseType.squats.rawValue, sortOrder: 1),
+                DayActivityTraining(count: 6, typeId: ExerciseType.pushups.rawValue, sortOrder: 2),
+                DayActivityTraining(count: 5, typeId: ExerciseType.squats.rawValue, sortOrder: 3)
+            ]
+            createPreviousActivity(
+                day: 5,
+                count: 8,
+                plannedCount: 6,
+                executionType: .cycles,
+                trainings: previousTrainings,
+                user: user,
+                context: context
+            )
+            try context.save()
+
+            let previousActivity = try #require(
+                try context.fetch(FetchDescriptor<DayActivity>(predicate: #Predicate { $0.day == 5 }))
+                    .first
+            )
+            let updatedCreator = creator.withData(from: previousActivity)
+
+            let squats = updatedCreator.trainings
+                .sorted
+                .filter { $0.typeId == ExerciseType.squats.rawValue }
+            #expect(squats.count == 2)
+            let firstSquatsCount = try #require(squats.first?.count)
+            let lastSquatsCount = try #require(squats.last?.count)
+            #expect(firstSquatsCount == 8)
+            #expect(lastSquatsCount == 5)
+        }
+
         @Test("Подставляет повторы для каждого упражнения")
         func withData_UsesCountsForExercises() throws {
             let container = try createContainer()
