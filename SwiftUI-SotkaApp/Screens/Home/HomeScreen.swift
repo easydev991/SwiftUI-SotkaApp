@@ -34,7 +34,7 @@ struct HomeScreen: View {
             ZStack {
                 Color.swBackground.ignoresSafeArea()
                 if let model {
-                    ScrollView {
+                    ScrollView(.vertical) {
                         ViewThatFits {
                             makeHorizontalView(with: model)
                             makeVerticalView(with: model)
@@ -98,8 +98,10 @@ private extension HomeScreen {
     func makeHorizontalView(with model: Model) -> some View {
         VStack(spacing: 12) {
             HStack(spacing: 16) {
+                // настраиваем minWidth,чтобы горизонтальный layout не помещался в портрете
+                // и ViewThatFits выбирал вертикальный
                 HomeDayCountView(calculator: model.calculator)
-                    .frame(maxHeight: .infinity)
+                    .frame(minWidth: 300, maxHeight: .infinity)
                     .insideCardBackground()
                 HomeInfopostSectionView(infopost: model.todayInfopost)
             }
