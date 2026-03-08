@@ -981,6 +981,23 @@
         }
       }
     },
+    "Days counter" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Days counter"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Счётчик дней"
+          }
+        }
+      }
+    },
     "Days left" : {
       "extractionState" : "manual",
       "localizations" : {
