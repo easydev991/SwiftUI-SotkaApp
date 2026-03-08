@@ -1,5 +1,9 @@
 # План рефакторинга проверок >= и <= в тестах
 
+## Текущий статус
+
+Этап 1 выполнен; этапы 2–4 не выполнены (проверки с диапазонами остаются в указанных ниже файлах).
+
 ## Цель
 
 Конкретизировать проверки с диапазонами (`>=`, `<=`) до однозначных сравнений (`==`) там, где это возможно и имеет смысл, для повышения точности тестов.
@@ -24,8 +28,7 @@
 
 ### 1. Номера этапов тренировки ✅ Выполнено
 
-- **WorkoutViewModelStepManagementTests.swift:** Заменены диапазоны на конкретные значения для `getCycleSteps()` и `getExerciseSteps()`
-- **WorkoutScreenViewModelHelperMethodsTests.swift:** Заменены диапазоны на конкретные значения для циклов, turbo дня и подходов
+Рефакторинг выполнен: в WorkoutViewModelStepManagementTests (Watch) и WorkoutScreenViewModelHelperMethodsTests проверки заменены на точные сравнения (`==`) для номеров этапов и размеров списков.
 
 ### 2. Счетчики вызовов (нужно проанализировать каждый случай)
 
@@ -33,97 +36,31 @@
 
 **Файл:** `SwiftUI-SotkaAppTests/StatusManagerTests/StatusManagerWatchConnectivityTests.swift`
 
-**Строки 182, 201, 327, 344, 383, 535:**
+**Паттерны в файле (номера строк могут смещаться):**
 
-```swift
-#expect(mockSession.sentMessages.count >= 1)
-```
+- `#expect(mockSession.sentMessages.count >= 1)` — в нескольких тестах (порядка строк 188, 207, 333, 350, 389, 541). Контекст: проверка отправки сообщений. Действие: если гарантируется ровно одно сообщение — заменить на `== 1`.
+- `#expect(mockSession.applicationContexts.count >= 1)` — в нескольких тестах (порядка строк 647, 668, 698, 825, 842, 861, 903). Контекст: отправка applicationContext. Действие: при гарантии ровно одного контекста — заменить на `== 1`.
+- `#expect(mockSession.applicationContexts.count > initialContextCount)` (около строки 767). Действие: определить точное ожидаемое увеличение и заменить на `== initialContextCount + N`.
+- `#expect(mockSession.applicationContexts.count <= initialContextCount + 1)` (около строки 808). Действие: заменить на точное равенство после анализа логики (например `== initialContextCount` или `== initialContextCount + 1`).
 
-**Контекст:** Проверка отправки сообщений
-**Действие:** Проанализировать логику - если гарантируется отправка ровно одного сообщения, заменить на `== 1`
-**Требуется анализ:** Изучить контекст каждого теста, определить точное ожидаемое количество
-
-**Строки 641, 662, 692, 819, 836, 855, 897:**
-
-```swift
-#expect(mockSession.applicationContexts.count >= 1)
-```
-
-**Контекст:** Проверка отправки applicationContext
-**Действие:** Проанализировать логику - если гарантируется отправка ровно одного контекста, заменить на `== 1`
-**Требуется анализ:** Изучить контекст каждого теста, определить точное ожидаемое количество
-
-**Строка 761:**
-
-```swift
-#expect(mockSession.applicationContexts.count > initialContextCount)
-```
-
-**Контекст:** Проверка увеличения количества контекстов
-**Действие:** Определить точное ожидаемое увеличение
-**Требуется анализ:** Изучить логику, определить на сколько именно должно увеличиться
-
-**Строка 802:**
-
-```swift
-#expect(mockSession.applicationContexts.count <= initialContextCount + 1)
-```
-
-**Контекст:** Проверка, что контекст не был отправлен при удалении активности не текущего дня
-**Действие:** Заменить на точное равенство
-**Новая проверка:** `#expect(mockSession.applicationContexts.count == initialContextCount + 1)` или `== initialContextCount` в зависимости от логики
-**Требуется анализ:** Изучить логику, определить точное ожидаемое значение
-
-**Строка 904:**
-
-```swift
-#expect(currentDay > 0)
-```
-
-**Контекст:** Проверка, что currentDay установлен
-**Действие:** Если в тесте устанавливается конкретное значение (например, 42), заменить на `== 42`
-**Требуется анализ:** Изучить контекст теста
+**Требуется анализ:** по каждому тесту определить точное ожидаемое количество сообщений/контекстов.
 
 #### 2.2. StatusManagerWatchConnectivityIntegrationTests+FullStartupScenarios.swift
 
 **Файл:** `SwiftUI-SotkaAppTests/StatusManagerTests/StatusManagerWatchConnectivityIntegrationTests+FullStartupScenarios.swift`
 
-**Строки 357, 396:**
-
-```swift
-#expect(mockSession.applicationContexts.count >= initialApplicationContextCount + 2)
-#expect(mockSession.applicationContexts.count >= initialApplicationContextCount + 5)
-```
-
-**Контекст:** Проверка отправки applicationContext в интеграционных тестах
-**Действие:** Определить точное ожидаемое количество
-**Требуется анализ:** Изучить логику, определить точное ожидаемое значение
+**Паттерны:** `#expect(mockSession.applicationContexts.count >= initialApplicationContextCount + 2)` и `>= initialApplicationContextCount + 5` (порядка строк 357, 396). Контекст: интеграционные сценарии запуска. Действие: определить точное ожидаемое количество контекстов и заменить на `==`.
 
 #### 2.3. StatusManagerSyncJournalTests.swift
 
 **Файл:** `SwiftUI-SotkaAppTests/StatusManagerTests/StatusManagerSyncJournalTests.swift`
 
-**Строки 53-55:**
+**Паттерны (строки 53–55, 98, 141, 184):**
 
-```swift
-#expect(mockProgressClient.getProgressCallCount >= initialProgressCalls)
-#expect(mockExerciseClient.getCustomExercisesCallCount >= initialExerciseCalls)
-#expect(mockDaysClient.getDaysCallCount >= initialDaysCalls)
-```
+- `#expect(mockProgressClient.getProgressCallCount >= initialProgressCalls)` и аналоги для `getCustomExercisesCallCount`, `getDaysCallCount` — при синхронизации. Действие: выяснить точное число вызовов и заменить на `==`.
+- `#expect(mockProgressClient.getProgressCallCount > initialCalls)` (и аналоги для exercise/days). Действие: определить точное приращение и заменить на `== initialCalls + N`.
 
-**Контекст:** Проверка вызовов клиентов при синхронизации
-**Действие:** Определить точное ожидаемое количество вызовов
-**Требуется анализ:** Изучить логику синхронизации, определить точное количество вызовов
-
-**Строки 98, 141, 184:**
-
-```swift
-#expect(mockProgressClient.getProgressCallCount > initialCalls)
-```
-
-**Контекст:** Проверка увеличения счетчиков вызовов
-**Действие:** Определить точное ожидаемое увеличение
-**Требуется анализ:** Изучить логику, определить на сколько именно должно увеличиться
+**Требуется анализ:** логика синхронизации и количество вызовов клиентов в каждом сценарии.
 
 ### 3. Время выполнения (оставить диапазоны)
 
@@ -158,60 +95,49 @@
 
 - **UserProgressTests.swift:** строки 1127-1128, 1160-1161 - проверки `year >= 2020, <= 2030`
 
-### 7. Счетчики операций (нужно проанализировать)
+### 7. Счетчики операций синхронизации (нужно проанализировать)
 
-**Контекст:** Проверка счетчиков операций синхронизации (`created`, `updated`, `deleted >= 0`)  
-**Действие:** Определить точное ожидаемое количество операций  
-**Требуется анализ:** Изучить логику синхронизации для каждого теста
+**Контекст:** Проверки вида `details.created >= 0`, `details.updated >= 0`, `details.deleted >= 0` в тестах синхронизации.  
+**Действие:** В каждом тесте определить ожидаемое точное количество операций (created/updated/deleted) и заменить на `== N` где это однозначно.  
+**Требуется анализ:** Логика сценария и контракт сервиса для каждого теста.
 
-- **DailyActivitiesServiceTests.swift:** строки 60-62, 158, 212
-- **CustomExercisesServiceTests.swift:** строки 434-436, 515, 552
-- **ProgressSyncServiceTests.swift:** строки 907-909, 999-1001
+- **DailyActivitiesServiceTests.swift** (SwiftUI-SotkaAppTests/DailyActivitiesTests/): строки 60–62, 158, 212
+- **CustomExercisesServiceTests.swift** (SwiftUI-SotkaAppTests/Services/): строки 486–488, 567, 604
+- **ProgressSyncServiceTests.swift** (SwiftUI-SotkaAppTests/ProgressTests/): строки 1001–1003, 1093–1095 (и при необходимости 1166: `totalOperations > 0`)
 
 ### 8. Специальные случаи
 
 #### 8.1. InfopostFilenameManagerTests.swift
 
-**Файл:** `SwiftUI-SotkaAppTests/InfopostsTests/InfopostFilenameManagerTests.swift`
+**Файл:** `SwiftUI-SotkaAppTests/InfopostsTests/InfopostFilenameManagerTests.swift` (строка ~60)
 
-**Строка 60:**
-
-```swift
-#expect(russianFilenames.count >= englishFilenames.count)
-```
-
-**Контекст:** Проверка, что русских файлов больше или равно английских
-**Действие:** Если в тесте проверяется конкретное количество (103 vs 102), заменить на `== 103` и `== 102`
-**Требуется анализ:** Изучить контекст теста, определить точные значения
+**Паттерн:** `#expect(russianFilenames.count >= englishFilenames.count)`. Контекст: сравнение количества русских и английских имён файлов. Действие: если в тесте подразумеваются конкретные числа (например 103 и 102), заменить на проверки `== 103` и `== 102`. Требуется анализ контекста теста.
 
 ## Порядок выполнения рефакторинга
 
 ### Этап 1: Номера этапов тренировки ✅ Выполнено
 
-- WorkoutViewModelStepManagementTests.swift
-- WorkoutScreenViewModelHelperMethodsTests.swift
+См. п. 1 выше.
 
-### Этап 2: Счетчики вызовов (приоритет: средний)
+### Этап 2: Счетчики вызовов (приоритет: средний) — не выполнен
 
-1. StatusManagerWatchConnectivityTests.swift
-2. StatusManagerWatchConnectivityIntegrationTests+FullStartupScenarios.swift
-3. StatusManagerSyncJournalTests.swift
+1. StatusManagerWatchConnectivityTests.swift  
+2. StatusManagerWatchConnectivityIntegrationTests+FullStartupScenarios.swift  
+3. StatusManagerSyncJournalTests.swift  
 
-**Обоснование:** Требуется анализ логики для определения точных значений.
+Требуется анализ логики для определения точных значений в каждом тесте.
 
-### Этап 3: Счетчики операций синхронизации (приоритет: средний)
+### Этап 3: Счетчики операций синхронизации (приоритет: средний) — не выполнен
 
-1. DailyActivitiesServiceTests.swift
-2. CustomExercisesServiceTests.swift
-3. ProgressSyncServiceTests.swift
+1. DailyActivitiesServiceTests.swift (папка DailyActivitiesTests/)  
+2. CustomExercisesServiceTests.swift  
+3. ProgressSyncServiceTests.swift  
 
-**Обоснование:** Требуется анализ логики синхронизации для определения точных значений.
+Требуется анализ логики синхронизации и контракта сервисов.
 
-### Этап 4: Специальные случаи (приоритет: низкий)
+### Этап 4: Специальные случаи (приоритет: низкий) — не выполнен
 
-1. InfopostFilenameManagerTests.swift
-
-**Обоснование:** Требуется анализ контекста теста.
+1. InfopostFilenameManagerTests.swift — проверка `russianFilenames.count >= englishFilenames.count`.
 
 ## Правила выполнения рефакторинга
 
