@@ -99,13 +99,19 @@ struct WorkoutProgramCreator {
             defaultTrainingsForCurrentType: defaultTrainingsForCurrentType,
             newTrainings: newTrainings
         )
+        let extraTrainings = Self.trainingsNotInProgram(
+            currentTrainings: trainings,
+            programTemplate: defaultTrainingsForCurrentType
+        )
+        // Сохраняем исходный sortOrder у доп. упражнений — порядок не должен зависеть от типа (стандартное/кастомное)
+        let allTrainings = (preservedTrainings + extraTrainings).sorted
 
         return Self(
             day: day,
             executionType: newType,
             count: count,
             plannedCount: preservedPlannedCount,
-            trainings: preservedTrainings,
+            trainings: allTrainings,
             comment: comment
         )
     }
@@ -275,6 +281,7 @@ struct WorkoutProgramCreator {
                 in: existingTrainingsByKey
             )
 
+            let resultWithCount: WorkoutPreviewTraining
             if let matchingTraining, let preservedCount = matchingTraining.count {
                 let defaultTrainingForCurrentType = training(
                     at: occurrence,
@@ -286,15 +293,21 @@ struct WorkoutProgramCreator {
                 // значит это дефолтное значение, и при переключении используем дефолтное для нового режима
                 if let defaultCountForCurrentType = defaultTrainingForCurrentType?.count,
                    preservedCount == defaultCountForCurrentType {
-                    return newTraining
+                    resultWithCount = newTraining
+                } else {
+                    // Если сохраненное значение отличается от дефолтного для текущего режима,
+                    // значит пользователь изменил его вручную, сохраняем пользовательское значение
+                    resultWithCount = newTraining.withCount(preservedCount)
                 }
-
-                // Если сохраненное значение отличается от дефолтного для текущего режима,
-                // значит пользователь изменил его вручную, сохраняем пользовательское значение
-                return newTraining.withCount(preservedCount)
+            } else {
+                resultWithCount = newTraining
             }
 
-            return newTraining
+            // Сохраняем sortOrder из текущего списка, чтобы порядок упражнений не сбрасывался
+            if let matchingTraining, let preservedSortOrder = matchingTraining.sortOrder {
+                return resultWithCount.withSortOrder(preservedSortOrder)
+            }
+            return resultWithCount
         }
     }
 
@@ -364,5 +377,24 @@ private extension WorkoutProgramCreator {
         }
 
         return "id:\(training.id)"
+    }
+
+    /// Тренировки из currentTrainings, которые не входят в шаблон программы (добавленные в редакторе)
+    static func trainingsNotInProgram(
+        currentTrainings: [WorkoutPreviewTraining],
+        programTemplate: [WorkoutPreviewTraining]
+    ) -> [WorkoutPreviewTraining] {
+        let currentByKey = makeTrainingsByMatchKey(currentTrainings)
+        var occurrenceByKey: [TrainingMatchKey: Int] = [:]
+        var usedIds: Set<String> = []
+        for templateTraining in programTemplate.sorted {
+            let key = makeTrainingMatchKey(for: templateTraining)
+            let occurrence = occurrenceByKey[key, default: 0]
+            occurrenceByKey[key] = occurrence + 1
+            if let t = training(at: occurrence, for: key, in: currentByKey) {
+                usedIds.insert(t.id)
+            }
+        }
+        return currentTrainings.filter { !usedIds.contains($0.id) }
     }
 }

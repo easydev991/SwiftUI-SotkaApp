@@ -331,5 +331,43 @@ extension WorkoutPreviewViewModelTests {
             let preservedPushupsCount = try #require(preservedPushupsTraining?.count)
             #expect(preservedPushupsCount == 5)
         }
+
+        @Test("Должен сохранять добавленные в редакторе упражнения при переключении способа выполнения")
+        @MainActor
+        func preservesEditorAddedExercisesWhenChangingExecutionType() throws {
+            let container = try ModelContainer(
+                for: DayActivity.self,
+                DayActivityTraining.self,
+                User.self,
+                configurations: ModelConfiguration(isStoredInMemoryOnly: true)
+            )
+            let context = container.mainContext
+            let user = User(id: 1)
+            context.insert(user)
+            try context.save()
+
+            let viewModel = WorkoutPreviewViewModel()
+            viewModel.updateData(
+                modelContext: context,
+                day: 5,
+                restTime: 60,
+                activitiesService: DailyActivitiesService(client: MockDaysClient())
+            )
+            let programCount = viewModel.trainings.count
+            let addedCustom = WorkoutPreviewTraining(
+                count: 7,
+                typeId: nil,
+                customTypeId: "custom-from-editor",
+                sortOrder: programCount
+            )
+            viewModel.updateTrainings(viewModel.trainings + [addedCustom])
+
+            viewModel.updateExecutionType(.sets)
+
+            #expect(viewModel.trainings.count == programCount + 1)
+            let customTraining = viewModel.trainings.first { $0.customTypeId == "custom-from-editor" }
+            let customCount = try #require(customTraining?.count)
+            #expect(customCount == 7)
+        }
     }
 }

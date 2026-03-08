@@ -270,4 +270,65 @@ extension AllWorkoutProgramCreatorTests {
         let pushUpsCount = try #require(pushUpsTraining?.count)
         #expect(pushUpsCount == 2)
     }
+
+    @Test("Должен сохранять добавленное в редакторе упражнение при переключении способа выполнения")
+    func preservesEditorAddedExerciseWhenChangingExecutionType() throws {
+        // День 5: программа cycles = 4 упражнения (pullups, squats, pushups, squats)
+        let programTrainings = [
+            WorkoutPreviewTraining(count: 1, typeId: ExerciseType.pullups.rawValue, sortOrder: 0),
+            WorkoutPreviewTraining(count: 2, typeId: ExerciseType.squats.rawValue, sortOrder: 1),
+            WorkoutPreviewTraining(count: 2, typeId: ExerciseType.pushups.rawValue, sortOrder: 2),
+            WorkoutPreviewTraining(count: 2, typeId: ExerciseType.squats.rawValue, sortOrder: 3)
+        ]
+        let addedCustom = WorkoutPreviewTraining(
+            count: 7,
+            typeId: nil,
+            customTypeId: "custom-added",
+            sortOrder: 4
+        )
+        let creator = WorkoutProgramCreator(
+            day: 5,
+            executionType: .cycles,
+            count: nil,
+            plannedCount: nil,
+            trainings: programTrainings + [addedCustom],
+            comment: nil
+        )
+
+        let updatedCreator = creator.withExecutionType(.sets)
+
+        #expect(updatedCreator.trainings.count == 5)
+        let customTraining = updatedCreator.trainings.first { $0.customTypeId == "custom-added" }
+        let customCount = try #require(customTraining?.count)
+        #expect(customCount == 7)
+    }
+
+    @Test("Должен сохранять sortOrder упражнений при переключении способа выполнения")
+    func preservesSortOrderWhenChangingExecutionType() throws {
+        // День 5: cycles и sets — по 4 программных упражнения (pullups, squats, pushups, squats)
+        let customSortOrders = [10, 11, 12, 13]
+        let programTrainings = [
+            WorkoutPreviewTraining(count: 1, typeId: ExerciseType.pullups.rawValue, sortOrder: customSortOrders[0]),
+            WorkoutPreviewTraining(count: 2, typeId: ExerciseType.squats.rawValue, sortOrder: customSortOrders[1]),
+            WorkoutPreviewTraining(count: 2, typeId: ExerciseType.pushups.rawValue, sortOrder: customSortOrders[2]),
+            WorkoutPreviewTraining(count: 2, typeId: ExerciseType.squats.rawValue, sortOrder: customSortOrders[3])
+        ]
+        let creator = WorkoutProgramCreator(
+            day: 5,
+            executionType: .cycles,
+            count: nil,
+            plannedCount: nil,
+            trainings: programTrainings,
+            comment: nil
+        )
+
+        let updatedCreator = creator.withExecutionType(.sets)
+
+        let sortedByOrder = updatedCreator.trainings.sorted
+        #expect(sortedByOrder.count == 4)
+        for (index, training) in sortedByOrder.enumerated() {
+            let preservedOrder = try #require(training.sortOrder)
+            #expect(preservedOrder == customSortOrders[index])
+        }
+    }
 }
