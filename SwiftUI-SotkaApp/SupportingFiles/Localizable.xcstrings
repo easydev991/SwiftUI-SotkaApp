@@ -1727,19 +1727,19 @@
         }
       }
     },
-    "GitHub page" : {
+    "GitHub" : {
       "extractionState" : "manual",
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "GitHub page"
+            "value" : "GitHub"
           }
         },
         "ru" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Страница GitHub"
+            "value" : "GitHub"
           }
         }
       }

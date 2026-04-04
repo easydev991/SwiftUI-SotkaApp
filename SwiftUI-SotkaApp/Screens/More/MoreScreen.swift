@@ -44,7 +44,6 @@ struct MoreScreen: View {
                     daysCounterButton
                 }
                 Section(.supportTheProject) {
-                    workoutShopButton
                     githubButton
                 }
             }
@@ -253,17 +252,9 @@ struct MoreScreen: View {
     }
 
     @ViewBuilder
-    private var workoutShopButton: some View {
-        if let shopLink = Constants.workoutShopURL {
-            Link(.workoutShop, destination: shopLink)
-                .accessibilityIdentifier("workoutShopButton")
-        }
-    }
-
-    @ViewBuilder
     private var githubButton: some View {
         if let githubLink = Constants.githubPageURL {
-            Link(.gitHubPage, destination: githubLink)
+            Link(.gitHub, destination: githubLink)
                 .accessibilityIdentifier("githubButton")
         }
     }

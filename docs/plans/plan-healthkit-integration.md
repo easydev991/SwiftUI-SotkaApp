@@ -126,10 +126,10 @@ HealthKit не используется (см. [apple-watch-development-plan.md]
 
 ## Правила проекта
 
-- Следовать [sotka-development.mdc](../.cursor/rules/sotka-development.mdc): MVVM, @Observable, сервисы по протоколам, OSLog, без force unwrap.
+- Следовать [sotka-development.mdc](../.agents/rules/sotka-development.mdc): MVVM, @Observable, сервисы по протоколам, OSLog, без force unwrap.
 - Офлайн-first: отказ или недоступность HealthKit не должны мешать сохранению в SwiftData и основной работе приложения.
-- Логи — на русском (см. [logs-language SKILL](../.cursor/skills/logs-language/SKILL.md)).
-- Локализация — по [localization SKILL](../.cursor/skills/localization/SKILL.md).
+- Логи — на русском (см. [logs-language SKILL](../.agents/skills/logs-language/SKILL.md)).
+- Локализация — по [localization SKILL](../.agents/skills/localization/SKILL.md).
 
 ## Риски и ограничения
 
