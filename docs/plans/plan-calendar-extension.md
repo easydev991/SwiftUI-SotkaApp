@@ -2,202 +2,282 @@
 
 ## Концепция
 
-Функционал позволяет пользователям **продолжить программу 100-дневки** после её завершения, получая дополнительные 100-дневные блоки. В отличие от старого приложения (SOTKA-OBJc), где это была платная функция (IAP), в нашем SwiftUI-приложении все функции бесплатные — пользователь просто нажимает кнопку и получает +100 дней.
+Функционал позволяет пользователю продолжать программу после 100-го дня, добавляя блоки по 100 дней.
+В SwiftUI-приложении это бесплатное действие: пользователь нажимает кнопку и получает +100 дней.
 
 ---
 
-## Сводка функционала (из старого приложения)
+## Цели и ограничения
 
-| Аспект | Детали (SOTKA-OBJc) | Адаптация для SwiftUI |
-|--------|---------------------|----------------------|
-| **Тип** | Покупка в приложении (IAP) | Бесплатная кнопка |
-| **Название продукта** | `com.FGU.WorkOut100Days.100DaysSubscription` | Не требуется |
-| **Что даёт** | +100 дней к программе | +100 дней к программе |
-| **Когда показывается** | На 100-й день (и каждые последующие 100 дней) | Аналогично |
-| **Условие показа кнопки** | `currentDay % 100 == 0` | Аналогично |
-| **Где хранятся данные** | UserDefaults + синхронизация с сервером | UserDefaults + SwiftData |
-| **UI** | `HomeProlongationCell` на главном экране | Новая секция/кнопка на HomeScreen |
+- Продление доступно только на граничных днях: 100, 200, 300...
+- Продление не должно сдвигать `currentDay` вперёд в момент нажатия кнопки.
+- Логика офлайн-first: источник истины локально (UserDefaults/SwiftData), sync не блокирует UI.
+- После logout/reset данные продлений очищаются.
+- Поддержка watchOS обязательна: часы продолжают отображать только текущий номер дня (`День X`).
 
----
+### Продуктовые решения (зафиксировано)
 
-## Этап 1: Модель данных (Domain Layer)
-
-### 1.1 Расширение DayCalculator
-
-**Цель**: Модифицировать `DayCalculator` для поддержки расширений календаря.
-
-- [ ] Написать тесты для `DayCalculator` с расширениями
-  - Тест: день 50 без расширений → currentDay=50, daysLeft=50
-  - Тест: день 100 без расширений → currentDay=100, isOver=true
-  - Тест: день 150 с 1 расширением → currentDay=150, daysLeft=50
-  - Тест: день 200 с 1 расширением → currentDay=200, isOver=true
-  - Тест: день 250 с 2 расширениями → currentDay=250, daysLeft=50
-
-- [ ] Добавить свойство `extensionCount: Int` в `DayCalculator`
-  - Количество купленных/доступных расширений (по 100 дней каждое)
-  - По умолчанию 0
-
-- [ ] Изменить логику расчёта `currentDay`:
-  ```
-  currentDay = min(daysBetween + 1 + extensionCount * 100, 100 + extensionCount * 100)
-  daysLeft = (100 + extensionCount * 100) - currentDay
-  isOver = false (теперь программа может быть бесконечной)
-  ```
-
-- [ ] Добавить computed property `totalAvailableDays: Int`
-  - `totalAvailableDays = 100 + extensionCount * 100`
-
-- [ ] Добавить computed property `shouldShowExtensionButton: Bool`
-  - `true` когда `currentDay % 100 == 0` и `currentDay > 0`
-  - Условие: показывать кнопку на 100, 200, 300... дні
-
-### 1.2 Хранение extension dates
-
-**Цель**: Сохранять даты расширений локально.
-
-- [ ] Добавить ключ в `UserDefaults` через `Constants`:
-  - `calendarExtensionDatesKey = "CalendarExtensionDates"`
-
-- [ ] Добавить свойства в `StatusManager`:
-  - `extensionDates: [Date]` — массив дат расширений
-  - `extensionDatesCount: Int` — вычисляемое свойство (count extensionDates)
-
-- [ ] Реализовать методы в `StatusManager`:
-  - `addExtensionDate(_ date: Date)` — добавить дату расширения
-  - `clearExtensionDates()` — очистить все расширения (при reset/ logout)
-
-- [ ] Написать тесты для `StatusManager`:
-  - Тест добавления extension date
-  - Тест очистки при logout
-  - Тест очистки при resetProgram
+- Семантика продления в этом приложении отличается от старого ObjC: мы не «перезапускаем» отсчёт от даты покупки продления.
+- Если пользователь нажал продление не в день 100, а позже (например, на «застывшем» 100-м экране через 30 дней), после продления `currentDay` станет равен фактически прошедшему времени, ограниченному `totalDays`.
+- V1: продления device-local only (без серверной синхронизации между устройствами). Это осознанное ограничение релиза.
 
 ---
 
-## Этап 2: Бизнес-логика (Domain Layer)
+## Базовая математика (единый контракт)
 
-### 2.1 Логика добавления расширения
+```swift
+let maxExtensionCount = 100
+let normalizedExtensionCount = min(extensionCount, maxExtensionCount)
 
-- [ ] Написать тесты для `CalendarExtensionService` (создать новый сервис)
-  - Тест: успешное добавление расширения
-  - Тест: расширение добавляет +100 дней
-  - Тест: multiple extensions (200, 300 дней и т.д.)
-  - Тест: валидация — нельзя добавить если currentDay < 100
+let totalDays = 100 + normalizedExtensionCount * 100
+let currentDay = min(daysBetween + 1, totalDays)
+let daysLeft = totalDays - currentDay
 
-- [ ] Создать `CalendarExtensionService`:
-  - Метод `extendCalendar()` → добавляет текущую дату как extension date
-  - Метод `canExtendCalendar(currentDay: Int) → Bool`:
-    - Возвращает `true` если `currentDay % 100 == 0` и `currentDay > 0`
+let shouldShowExtensionButton =
+    currentDay > 0 &&
+    currentDay % 100 == 0 &&
+    normalizedExtensionCount < currentDay / 100 &&
+    normalizedExtensionCount < maxExtensionCount
 
-- [ ] Обновить `StatusManager`:
-  - Интегрировать `CalendarExtensionService`
-  - После добавления расширения — пересоздать `currentDayCalculator`
-
-### 2.2 Синхронизация с Apple Watch
-
-- [ ] Обновить `WatchStatusMessage` для отправки `extensionCount` на часы
-- [ ] Обновить логику отправки статуса в `StatusManager`
-
----
-
-## Этап 3: UI Layer (HomeScreen)
-
-### 3.1 Кнопка "Продлить календарь"
-
-**Цель**: Добавить UI для продления на главном экране.
-
-- [ ] Создать `HomeCalendarExtensionView`:
-  - Текст: "Если хочешь продолжить использовать приложение в качестве дневника тренировок, нажми кнопку ниже"
-  - Кнопка: "Продлить календарь на 100 дней"
-  - Отображается только когда `shouldShowExtensionButton == true`
-
-- [ ] Интегрировать `HomeCalendarExtensionView` в `HomeScreen`:
-  - Добавить после `HomeDayCountView` в `makeVerticalView`
-  - Добавить после `HomeDayCountView` в `makeHorizontalView`
-
-- [ ] Добавить `@Environment` для `CalendarExtensionService` в `HomeScreen`
-
-- [ ] Добавить `@State` для управления видимостью кнопки:
-  - `showExtensionButton: Bool`
-
-### 3.2 Обновление HomeDayCountView
-
-- [ ] Модифицировать `HomeDayCountView`:
-  - При `currentDay > 100` показывать "День X из Y" вместо "День 100 из 100"
-  - Обновить `finishedView`: теперь это не конец программы, а просто 100 дней
-  - Убрать кнопку оценки приложения (rate app) с экрана поздравления
-
-### 3.3 Локализация
-
-- [ ] Добавить строки в `.strings` файлы (ru, en):
-  - `"calendarExtensionTitle"` = "Продление календаря"
-  - `"calendarExtensionDescription"` = "Если хочешь продолжить использовать приложение в качестве дневника тренировок, нажми кнопку ниже"
-  - `"calendarExtensionButton"` = "Продлить календарь на 100 дней"
-  - `"calendarExtensionSuccess"` = "Календарь продлён на 100 дней!"
-
----
-
-## Этап 4: UI Layer (MoreScreen)
-
-### 4.1 Отображение количества расширений
-
-- [ ] Добавить в `MoreScreen` секцию с информацией о расширениях:
-  - Текст: "Продлений календаря: X"
-  - Показывать только если `extensionCount > 0`
-
----
-
-## Этап 5: Обработка событий сброса/выхода
-
-### 5.1 Очистка данных при logout
-
-- [ ] Обновить `StatusManager.didLogout()`:
-  - Добавить вызов `clearExtensionDates()`
-
-### 5.2 Очистка данных при resetProgram
-
-- [ ] Обновить `StatusManager.resetProgram()`:
-  - Добавить вызов `clearExtensionDates()`
-
----
-
-## Этап 6: Тестирование
-
-### 6.1 Unit-тесты
-
-- [ ] Тесты `DayCalculator` с расширениями
-- [ ] Тесты `CalendarExtensionService`
-- [ ] Тесты `StatusManager` (extension dates)
-- [ ] Тесты `HomeScreen` (show/hide button logic)
-
-### 6.2 UI-тесты
-
-- [ ] Тест: кнопка появляется на 100-й день
-- [ ] Тест: нажатие кнопки продлевает календарь
-- [ ] Тест: после продления показывается день 101 из 200
-
----
-
-## Зависимости между этапами
-
+let isOver = shouldShowExtensionButton
+let shouldShowInfopost = currentDay <= 100 && !isOver
 ```
-Этап 1 (Модели) → Этап 2 (Бизнес-логика) → Этап 3 (HomeScreen UI)
-                                                        ↓
-Этап 5 (Сброс данных) ←─────────────────────────────── Этап 4 (MoreScreen UI)
-                                                        ↓
-                                              Этап 6 (Тестирование)
+
+Пояснение UX на 100-м дне после продления:
+
+- до нажатия: `currentDay=100`, `totalDays=100`, `isOver=true`
+- после нажатия: `currentDay=100`, `totalDays=200`, `isOver=false`, `daysLeft=100`
+
+---
+
+## Этап 1: DayCalculator
+
+- [ ] Добавить `extensionCount: Int = 0` и `maxExtensionCount = 100`
+- [ ] Добавить `normalizedExtensionCount`, `totalDays`, `shouldShowExtensionButton`, `isOver`, `shouldShowInfopost`
+- [ ] Явно обновить ветку старта в будущем: `daysLeft = totalDays - 1`
+- [ ] Обновить `id` (включить зависимость от `currentDay`, `daysLeft`, `totalDays`)
+
+### Тесты DayCalculator
+
+- [ ] День 1, `extensionCount=0` → `currentDay=1`, `daysLeft=99`, `isOver=false`
+- [ ] День 100, `extensionCount=0` → `isOver=true`, `shouldShowExtensionButton=true`
+- [ ] День 100, `extensionCount=1` → `isOver=false`, `totalDays=200`, `daysLeft=100`
+- [ ] День 150, `extensionCount=1` → `currentDay=150`, `daysLeft=50`
+- [ ] День 200, `extensionCount=1` → `isOver=true`
+- [ ] Старт в будущем + `extensionCount=1` → `daysLeft=199`
+- [ ] Лимит: `extensionCount=100`, `currentDay=10100` → `shouldShowExtensionButton=false`
+- [ ] Лимит: `extensionCount=101` обрезается до 100, кнопка не показывается
+
+Примечание: модель дня начинается с 1, сценарий `currentDay=0` не используется.
+
+---
+
+## Этап 2: Хранение и бизнес-логика в StatusManager
+
+### 2.1 Хранение продлений
+
+- [ ] Добавить хранение `extensionDates` в UserDefaults
+- [ ] Ввести type-safe контейнер:
+
+```swift
+struct CalendarExtensionData: Codable {
+    var dates: [Date] = []
+    var count: Int { dates.count }
+}
+```
+
+- [ ] При повреждении данных fallback на пустую модель
+- [ ] `extensionCount` вычислять только как `extensionDates.count`
+- [ ] Зафиксировать, что `dates` в V1 используются как audit trail + источник `count`
+
+### 2.2 API StatusManager
+
+- [ ] Реализовать API:
+  - `func addExtensionDate(_ date: Date = .now)`
+  - `func removeLastExtensionDate()`
+  - `func clearExtensionDates()`
+  - `func extendCalendar()`
+- [ ] Добавить сигнатуру:
+  - `private func rebuildCurrentDayCalculator(now: Date = .now)`
+- [ ] В `rebuildCurrentDayCalculator` брать `extensionCount` из `extensionDates.count`
+
+```swift
+func extendCalendar() {
+    guard let calculator = currentDayCalculator else { return }
+    guard calculator.shouldShowExtensionButton else { return }
+    addExtensionDate(.now)
+    rebuildCurrentDayCalculator()
+    sendCurrentStatusWithCurrentDay()
+}
+```
+
+### 2.3 Тесты StatusManager
+
+- [ ] Сохранение/чтение `extensionDates`
+- [ ] `extendCalendar()` срабатывает только при `shouldShowExtensionButton == true`
+- [ ] `extendCalendar()` увеличивает `totalDays` на 100
+- [ ] `removeLastExtensionDate()` откатывает одно продление
+- [ ] `didLogout()` и `resetProgram()` очищают продления
+
+---
+
+## Этап 3: HomeScreen
+
+### 3.1 Кнопка продления
+
+- [ ] Создать `HomeCalendarExtensionView`
+- [ ] Показывать только при `calculator.shouldShowExtensionButton`
+- [ ] Разместить сразу после `HomeDayCountView`
+
+### 3.2 Активности на Home
+
+- [ ] Исправить `HomeScreen.Model.showActivitySection` (сейчас `currentDay <= 100`)
+- [ ] Новое правило: секция активностей видна для всех валидных дней программы, а не только до 100
+
+### 3.3 DayCount / finished state
+
+- [ ] Обновить `HomeDayCountView`: `finishedView` должен показываться только на границе `isOver=true`
+- [ ] В `finishedView` убрать захардкоженное `100`; показывать текущую граничную сотню (`currentDay`)
+- [ ] Обновить `makeNumberView`: корректная отрисовка 3+ цифр (101, 1000 и т.д.)
+- [ ] Если текущие image-цифры недостаточны для 3-значного макета, добавить отдельный layout как аналог старого infinite-cell
+
+### 3.4 Инфопост на Home
+
+- [ ] Использовать `calculator.shouldShowInfopost`
+- [ ] Для `currentDay > 100` инфопост скрыт
+
+### 3.5 Тесты UI/Home
+
+- [ ] На 100-м дне без продления кнопка видна
+- [ ] После продления кнопка скрывается, `totalDays=200`, `currentDay=100`
+- [ ] На 101+ секция активностей остаётся доступной
+- [ ] На 101+ day counter корректно отображает 3-значное число
+
+---
+
+## Этап 4: Journal (iOS)
+
+### 4.0 Архитектурная правка
+
+Текущий Journal рендерит только 1...100 через `InfopostSection.days`.
+Для `totalDays > 100` нужно отвязать источник дней Journal от `InfopostSection` как единственного источника.
+
+### 4.1 List mode
+
+- [ ] В list режиме формировать дни `1...totalDays`
+- [ ] Секции:
+  - для 1...100 сохранить `base/advanced/turbo/conclusion`
+  - для 101+ добавить секции `101...200`, `201...300`, ...
+- [ ] Сортировка работает для всех диапазонов
+
+### 4.2 Grid mode (пагинация)
+
+- [ ] `pageCount = max(1, ceil(Double(totalDays) / 100.0))`
+- [ ] Page 0: 4 секции (49/42/7/2)
+- [ ] Page 1+: одна секция по 100 дней
+- [ ] Формула дня:
+  - page 0: `day = cumulativeRows + rowIndex + 1`
+  - page > 0: `day = page * 100 + rowIndex + 1`
+- [ ] Реализовать page UI через `TabView` + `.tabViewStyle(.page)`
+
+### 4.3 Тесты Journal
+
+- [ ] list: при `totalDays=200` доступны дни 1...200
+- [ ] grid: pageCount корректен для 100/200/250
+- [ ] grid: day mapping корректен для page 0 и page > 0
+- [ ] дни > `currentDay` disabled
+
+---
+
+## Этап 5: ProgressCalculator
+
+- [ ] KPI прогресса зафиксированы как 100-дневные: `ProgressCalculator` не меняем
+- [ ] После 100-го дня прогресс не должен изменяться
+- [ ] Прогресс должен изменяться только после полного сброса программы (через MoreScreen), как уже реализовано
+
+### Тесты ProgressCalculator
+
+- [ ] Регрессионный тест: при днях > 100 проценты и day statuses остаются на уровне 100-дневной программы
+- [ ] Регрессионный тест: после полного сброса прогресс начинается заново
+
+---
+
+## Этап 6: Уведомления (границы 100/200/...)
+
+Ежедневные уведомления не зависят от продления календаря.
+
+- [ ] Логику уведомлений не менять: они зависят только от:
+  - флага включения уведомлений
+  - выбранного времени уведомления
+- [ ] Продление календаря не должно влиять на планирование/удаление ежедневных уведомлений
+
+### Тесты уведомлений
+
+- [ ] Регрессионный тест: после продления состояние ежедневных уведомлений не меняется
+- [ ] Регрессионный тест: уведомления работают только по флагу и времени
+
+---
+
+## Этап 7: Watch (iOS + watchOS)
+
+- [ ] Контракт с часами не расширять: передаём и отображаем только `currentDay`
+- [ ] `totalDays` в watch payload не добавлять
+- [ ] UI часов оставляем в формате `День X`
+
+### Тесты watch
+
+- [ ] Регрессионный тест: после продления часы продолжают получать только `currentDay`
+- [ ] Регрессионный тест: UI часов отображает `День X` без `totalDays`
+
+---
+
+## Этап 8: Reset / Logout
+
+- [ ] `StatusManager.didLogout()` вызывает `clearExtensionDates()`
+- [ ] `StatusManager.resetProgram()` вызывает `clearExtensionDates()`
+- [ ] Добавить регрессионные тесты
+
+---
+
+## Этап 9: Debug / Preview / совместимость
+
+- [ ] `StatusManager.setCurrentDayForDebug` расширить диапазон (не `1...100`)
+- [ ] Обновить `DayCalculator+.swift` preview для дней > 100
+- [ ] Добавить/обновить тесты `StatusManagerSetCurrentDayForDebugTests` для диапазона > 100
+- [ ] Проверить `WorkoutProgramCreator` для дней > 100 и зафиксировать поведение (reuse паттерна или отдельная логика)
+
+---
+
+## Этап 10: Финальное тестирование
+
+- [ ] Целевые unit-тесты по этапам 1-9
+- [ ] UI-тесты ключевых сценариев продления
+- [ ] Регрессия watch connectivity
+- [ ] `make format`
+
+---
+
+## Зависимости этапов
+
+```text
+Этап 1 -> Этап 2 -> Этапы 3,4,5,6,7,8,9 -> Этап 10
 ```
 
 ---
 
 ## Критерии завершения
 
-1. ✅ Пользователь видит кнопку "Продлить календарь" на 100-й, 200-й, 300-й... день
-2. ✅ Нажатие кнопки добавляет +100 дней к программе
-3. ✅ После продления счётчик показывает "День 101 из 200" (пример)
-4. ✅ Количество расширений сохраняется между сессиями
-5. ✅ При logout/reset программы расширения очищаются
-6. ✅ Все тесты проходят
-7. ✅ Code formatting и linting проходят (`make format`)
+1. Кнопка продления появляется только на 100/200/300... при неактивированном продлении.
+2. Лимит продлений работает корректно, кнопка скрыта при достижении лимита.
+3. После продления `totalDays += 100`, `currentDay` не прыгает на границе.
+4. Секция активностей на Home работает и после 100-го дня.
+5. Счётчик дней корректно отображает 3+ цифр.
+6. Journal поддерживает `totalDays > 100` в list и grid.
+7. KPI прогресса остаются 100-дневными; после 100-го дня прогресс не меняется до полного сброса.
+8. Уведомления зависят только от флага включения и времени, продление на них не влияет.
+9. Watch показывает только `День X`; `totalDays` не передаётся и не отображается.
+10. Продления очищаются при logout/reset.
+11. Все тесты проходят.
 
 ---
 
@@ -205,20 +285,33 @@
 
 | Файл | Изменения |
 |------|-----------|
-| `Models/DayCalculator.swift` | Добавить extensionCount, пересчитать currentDay |
-| `Services/StatusManager.swift` | Добавить extensionDates, методы add/clear |
-| `Services/CalendarExtensionService.swift` | **НОВЫЙ** — логика добавления расширений |
-| `Screens/Home/HomeScreen.swift` | Интеграция кнопки продления |
-| `Screens/Home/Views/HomeDayCountView.swift` | Поддержка дней > 100 |
-| `Screens/Home/Views/HomeCalendarExtensionView.swift` | **НОВЫЙ** — UI кнопки |
-| `Screens/More/MoreScreen.swift` | Показать количество расширений |
-| `Services/WatchStatusMessage.swift` | Отправка extensionCount на часы |
+| `SwiftUI-SotkaApp/Models/DayCalculator.swift` | `maxExtensionCount`, `normalizedExtensionCount`, `totalDays`, `shouldShowExtensionButton`, future-start branch |
+| `SwiftUI-SotkaApp/Services/StatusManager.swift` | хранение/очистка продлений, `extendCalendar()`, `rebuildCurrentDayCalculator(now:)`, debug range, watch дедупликация |
+| `SwiftUI-SotkaApp/Screens/Home/HomeScreen.swift` | `showActivitySection` для дней > 100, интеграция `HomeCalendarExtensionView`, infopost |
+| `SwiftUI-SotkaApp/Screens/Home/Views/HomeDayCountView.swift` | `finishedView` без захардкоженного 100, 3-значный формат |
+| `SwiftUI-SotkaApp/Screens/Home/Views/HomeCalendarExtensionView.swift` | новый компонент кнопки продления |
+| `SwiftUI-SotkaApp/Screens/Profile/Journal/JournalScreen.swift` | прокидывание `totalDays` в list/grid |
+| `SwiftUI-SotkaApp/Screens/Profile/Journal/JournalListView.swift` | дни до `totalDays`, секции 101+ |
+| `SwiftUI-SotkaApp/Screens/Profile/Journal/JournalGridView.swift` | пагинация 100-дневными страницами |
+| `SwiftUI-SotkaApp/Models/Infoposts/InfopostSection.swift` | разделение инфопост-секций и journal-секций |
+| `SwiftUI-SotkaApp/Models/ProgressCalculator.swift` | зафиксировать и покрыть тестами 100-дневные KPI без изменений поведения |
+| `SwiftUI-SotkaApp/PreviewContent/DayCalculator+.swift` | корректные preview для дней > 100 |
+| `SwiftUI-SotkaApp/Services/WorkoutProgramCreator.swift` | проверка/адаптация поведения для дней > 100 |
+| `SwiftUI-SotkaAppTests/StatusManagerTests/StatusManagerSetCurrentDayForDebugTests.swift` | расширение диапазона и новые кейсы |
+| `SwiftUI-SotkaApp/Services/AppSettings.swift` | только регрессионная валидация: уведомления независимы от продления |
+| `SwiftUI-SotkaApp/Services/WatchStatusMessage.swift` | только регрессионная валидация: payload без `totalDays` |
+| `SotkaWatch Watch App/Services/WatchConnectivityService.swift` | только регрессионная валидация: принимается `currentDay` без `totalDays` |
+| `SotkaWatch Watch App/ViewModels/HomeViewModel.swift` | только регрессионная валидация: UI использует только `currentDay` |
+| `SotkaWatch Watch App/Views/DayActivityView.swift` | подтверждение формата `День X` без изменений |
 
 ---
 
-## Файлы для создания
+## Что сознательно не делаем в этом плане
 
-| Файл | Описание |
-|------|---------|
-| `Services/CalendarExtensionService.swift` | Сервис для работы с расширениями |
-| `Screens/Home/Views/HomeCalendarExtensionView.swift` | UI компонент кнопки |
+- Не возвращаем IAP-логику старого приложения.
+- Не добавляем отдельный `CalendarExtensionService` (логика остаётся в `StatusManager`).
+- Не добавляем UI «отменить продление» в V1 (только внутренний rollback-метод).
+- Не добавляем серверную синхронизацию продлений между устройствами в V1 (device-local only).
+- Не меняем 100-дневную модель KPI прогресса.
+- Не меняем контракт watch на `totalDays` (часы показывают только текущий день).
+- Не связываем ежедневные уведомления с продлением календаря.
