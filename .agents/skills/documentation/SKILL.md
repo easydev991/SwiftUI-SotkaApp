@@ -1,5 +1,5 @@
 ---
-name: sotka-documentation
+name: documentation
 description: Правила работы с документацией проекта SotkaApp
 ---
 # Работа с документацией проекта
