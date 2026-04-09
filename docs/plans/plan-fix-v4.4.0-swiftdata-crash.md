@@ -114,8 +114,8 @@
 ## Этап 4. Автоматизированная и ручная валидация UI
 
 - [ ] Базовая обязательная проверка: ручной прогон сценария сохранения/повторного сохранения в `WorkoutPreview` + проверка чтения на экране журнала (`DayActivityTrainingView`).
-- [ ] UI-тест в `SwiftUI-SotkaAppUITests/SwiftUI_SotkaAppUITests.swift` добавлять только если на этапе 0 найден детерминированный сценарий воспроизведения.
-- [ ] Если детерминированный UI-сценарий не найден, не блокировать фикс UI-тестом; зафиксировать отдельную задачу в техдолге на стабилизацию crash UI-regression.
+- [x] UI-тест в `SwiftUI-SotkaAppUITests/SwiftUI_SotkaAppUITests.swift` добавлять только если на этапе 0 найден детерминированный сценарий воспроизведения. — Детерминированный сценарий не найден, UI-тест не добавляется.
+- [x] Если детерминированный UI-сценарий не найден, не блокировать фикс UI-тестом; зафиксировать отдельную задачу в техдолге на стабилизацию crash UI-regression. — Не блокируется.
 
 Критерий завершения этапа:
 
@@ -124,11 +124,11 @@
 
 ## Этап 5. Проверка watchOS-совместимости и регресс
 
-- [ ] Запустить `make test_watch` как smoke-проверку, что изменения iOS слоя не ломают watch-контракты.
-- [ ] Проверить связанные watch тесты, где используется `WorkoutPreviewTraining`/`WorkoutData`, в первую очередь:
+- [x] Запустить `make test_watch` как smoke-проверку, что изменения iOS слоя не ломают watch-контракты. — 189 тестов пройдено.
+- [x] Проверить связанные watch тесты, где используется `WorkoutPreviewTraining`/`WorkoutData`, в первую очередь:
   - `SotkaWatch Watch AppTests/Services/WatchConnectivityServiceTests.swift`
   - `SotkaWatch Watch AppTests/Services/WatchWorkoutServiceTests.swift`
-- [ ] Убедиться, что обмен данными iPhone <-> Watch сохраняет структуру `trainings` после фикса.
+- [x] Убедиться, что обмен данными iPhone <-> Watch сохраняет структуру `trainings` после фикса.
 
 Критерий завершения этапа:
 
@@ -138,9 +138,9 @@
 
 - [x] Запустить `make format`.
 - [x] Запустить целевые iOS тесты (DailyActivities + WorkoutPreviewViewModel).
-- [ ] Перед merge запустить `make test`.
-- [ ] Обновить [crash-swiftdata-invalid-future-backing-data.md](/Users/Oleg991/Documents/GitHub/SwiftUI-SotkaApp/docs/crash-swiftdata-invalid-future-backing-data.md) разделом про `v4.4.0`: причина, фикс, тесты, верификация.
-- [ ] Отдельно отметить, что в рамках фикса не добавляются новые пользовательские строки; если появятся новые UI-сообщения, локализовать через `.strings`.
+- [x] Перед merge запустить `make test`. — 1460 тестов, 5 pre-existing падений (WorkoutScreenViewModelStepCompletionTests, не связаны с фиксом).
+- [x] Обновить [crash-swiftdata-invalid-future-backing-data.md](/Users/Oleg991/Documents/GitHub/SwiftUI-SotkaApp/docs/crash-swiftdata-invalid-future-backing-data.md) разделом про `v4.4.0`: причина, фикс, тесты, верификация.
+- [x] Отдельно отметить, что в рамках фикса не добавляются новые пользовательские строки; если появятся новые UI-сообщения, локализовать через `.strings`. — Новых строк не добавлено.
 
 Критерий завершения этапа:
 
