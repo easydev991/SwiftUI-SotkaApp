@@ -269,4 +269,148 @@ extension DailyActivitiesServiceTests {
         let orphaned = allTrainingsAfter.filter { $0.dayActivity == nil }
         #expect(orphaned.isEmpty, "Не должно быть orphaned trainings (dayActivity == nil). Найдено: \(orphaned.count)")
     }
+
+    @Test("Идемпотентность: 3+ последовательных сохранения одного дня без краша и дублирования")
+    func threeSequentialSavesAreIdempotent() throws {
+        let mockClient = MockDaysClient()
+        let service = DailyActivitiesService(client: mockClient)
+        let container = try ModelContainer(
+            for: DayActivity.self,
+            DayActivityTraining.self,
+            User.self,
+            configurations: ModelConfiguration(isStoredInMemoryOnly: true)
+        )
+        let context = container.mainContext
+
+        let user = User(id: 1, userName: "testuser", fullName: "Test User", email: "test@example.com")
+        context.insert(user)
+        try context.save()
+
+        let saves: [(count: Int, trainings: [(count: Int, typeId: Int?, sortOrder: Int?)])] = [
+            (count: 5, trainings: [
+                (count: 3, typeId: ExerciseType.pullups.rawValue, sortOrder: 0)
+            ]),
+            (count: 8, trainings: [
+                (count: 6, typeId: ExerciseType.pullups.rawValue, sortOrder: 0),
+                (count: 10, typeId: ExerciseType.pushups.rawValue, sortOrder: 1)
+            ]),
+            (count: 12, trainings: [
+                (count: 7, typeId: ExerciseType.pullups.rawValue, sortOrder: 0),
+                (count: 11, typeId: ExerciseType.pushups.rawValue, sortOrder: 1),
+                (count: 15, typeId: ExerciseType.squats.rawValue, sortOrder: 2)
+            ])
+        ]
+
+        for save in saves {
+            let new = DayActivity(
+                day: 5,
+                activityTypeRaw: DayActivityType.workout.rawValue,
+                count: save.count,
+                plannedCount: 8,
+                executeTypeRaw: ExerciseExecutionType.cycles.rawValue,
+                trainingTypeRaw: nil,
+                duration: nil,
+                comment: nil,
+                createDate: .now,
+                modifyDate: .now
+            )
+            new.trainings = save.trainings.map { t in
+                DayActivityTraining(count: t.count, typeId: t.typeId, sortOrder: t.sortOrder, dayActivity: new)
+            }
+            service.createDailyActivity(new, context: context)
+        }
+
+        let allActivities = try context.fetch(FetchDescriptor<DayActivity>())
+        #expect(allActivities.count == 1, "Должна быть ровно 1 DayActivity, фактически: \(allActivities.count)")
+
+        let saved = try #require(allActivities.first)
+        let count = try #require(saved.count)
+        #expect(count == 12)
+        #expect(saved.trainings.count == 3, "Должно быть 3 training, фактически: \(saved.trainings.count)")
+
+        let allTrainings = try context.fetch(FetchDescriptor<DayActivityTraining>())
+        #expect(allTrainings.count == 3, "В контексте должно быть ровно 3 DayActivityTraining, фактически: \(allTrainings.count)")
+
+        let orphaned = allTrainings.filter { $0.dayActivity == nil }
+        #expect(orphaned.isEmpty, "Не должно быть orphaned trainings. Найдено: \(orphaned.count)")
+    }
+
+    @Test("Стабильная повторная выборка: после context.save() повторный fetch безопасен")
+    func stableReFetchAfterContextSave() throws {
+        let mockClient = MockDaysClient()
+        let service = DailyActivitiesService(client: mockClient)
+        let container = try ModelContainer(
+            for: DayActivity.self,
+            DayActivityTraining.self,
+            User.self,
+            configurations: ModelConfiguration(isStoredInMemoryOnly: true)
+        )
+        let context = container.mainContext
+
+        let user = User(id: 1, userName: "testuser", fullName: "Test User", email: "test@example.com")
+        context.insert(user)
+        try context.save()
+
+        let existing = DayActivity(
+            day: 3,
+            activityTypeRaw: DayActivityType.workout.rawValue,
+            count: 5,
+            plannedCount: 8,
+            executeTypeRaw: ExerciseExecutionType.cycles.rawValue,
+            trainingTypeRaw: nil,
+            duration: nil,
+            comment: nil,
+            createDate: .now,
+            modifyDate: .now,
+            user: user
+        )
+        let oldTraining = DayActivityTraining(count: 3, typeId: ExerciseType.pullups.rawValue, sortOrder: 0, dayActivity: existing)
+        existing.trainings = [oldTraining]
+        context.insert(existing)
+        try context.save()
+
+        let new = DayActivity(
+            day: 3,
+            activityTypeRaw: DayActivityType.workout.rawValue,
+            count: 10,
+            plannedCount: 8,
+            executeTypeRaw: ExerciseExecutionType.cycles.rawValue,
+            trainingTypeRaw: nil,
+            duration: nil,
+            comment: "refreshed",
+            createDate: .now,
+            modifyDate: .now
+        )
+        let newTraining = DayActivityTraining(count: 10, typeId: ExerciseType.squats.rawValue, sortOrder: 0, dayActivity: new)
+        new.trainings = [newTraining]
+
+        service.createDailyActivity(new, context: context)
+
+        try context.save()
+
+        let firstFetch = try context.fetch(FetchDescriptor<DayActivity>())
+        let first = try #require(firstFetch.first)
+        #expect(first.trainings.count == 1)
+        let comment1 = try #require(first.comment)
+        #expect(comment1 == "refreshed")
+
+        let secondFetch = try context.fetch(FetchDescriptor<DayActivity>())
+        let second = try #require(secondFetch.first)
+        #expect(second.trainings.count == 1)
+        let comment2 = try #require(second.comment)
+        #expect(comment2 == "refreshed")
+
+        let sorted1 = first.trainings.sorted
+        let sorted2 = second.trainings.sorted
+        #expect(sorted1.count == sorted2.count)
+        let sortOrder1 = try #require(sorted1.first?.sortOrder)
+        let sortOrder2 = try #require(sorted2.first?.sortOrder)
+        #expect(sortOrder1 == sortOrder2)
+        let typeId1 = try #require(sorted1.first?.typeId)
+        let typeId2 = try #require(sorted2.first?.typeId)
+        #expect(typeId1 == typeId2)
+
+        let allTrainings = try context.fetch(FetchDescriptor<DayActivityTraining>())
+        #expect(allTrainings.count == 1, "После save в контексте должна быть ровно 1 training. Фактически: \(allTrainings.count)")
+    }
 }
