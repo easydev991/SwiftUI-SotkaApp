@@ -70,13 +70,13 @@
 
 ## Этап 1. Red: воспроизведение в тестах (с конкретными файлами)
 
-- [ ] Добавить crash-regression тесты в `SwiftUI-SotkaAppTests/DailyActivitiesTests/`:
+- [x] Добавить crash-regression тесты в `SwiftUI-SotkaAppTests/DailyActivitiesTests/`:
   - новый файл `DailyActivitiesUpdateExistingCrashTests.swift` или расширение существующего `DailyActivitiesBasicOperationsTests.swift`.
-- [ ] Тест 1 (интеграционный): в `ModelContext` уже существует `DayActivity` с `trainings`; повторный вызов `createDailyActivity` для того же дня не должен падать.
-- [ ] Тест 2 (боевой путь, unit-level integration): через `WorkoutPreviewViewModel.saveTrainingAsPassed` выполнить два последовательных сохранения для одного дня с разными `trainings`, используя реальный `DailyActivitiesService` + in-memory `ModelContext` (без моков сервиса).
-- [ ] Для Теста 2 задать валидные входные данные для `WorkoutProgramCreator` (непустой `trainings`, корректные `typeId`/`sortOrder`, выбранный `executionType`), чтобы `buildDayActivity()` создавал ожидаемые training-объекты.
-- [ ] Тест 3 (relationship/cascade): после обновления старые `DayActivityTraining` удалены, новые сохранены, порядок `sortOrder` корректен.
-- [ ] Все тесты выполнять на in-memory SwiftData контейнере, но с реальной вставкой в `ModelContext` (не только in-memory объекты без контекста).
+- [x] Тест 1 (интеграционный): в `ModelContext` уже существует `DayActivity` с `trainings`; повторный вызов `createDailyActivity` для того же дня не должен падать.
+- [x] Тест 2 (боевой путь, unit-level integration): через `WorkoutPreviewViewModel.saveTrainingAsPassed` выполнить два последовательных сохранения для одного дня с разными `trainings`, используя реальный `DailyActivitiesService` + in-memory `ModelContext` (без моков сервиса).
+- [x] Для Теста 2 задать валидные входные данные для `WorkoutProgramCreator` (непустой `trainings`, корректные `typeId`/`sortOrder`, выбранный `executionType`), чтобы `buildDayActivity()` создавал ожидаемые training-объекты.
+- [x] Тест 3 (relationship/cascade): после обновления старые `DayActivityTraining` удалены, новые сохранены, порядок `sortOrder` корректен.
+- [x] Все тесты выполнять на in-memory SwiftData контейнере, но с реальной вставкой в `ModelContext` (не только in-memory объекты без контекста).
 
 Критерий завершения этапа:
 
@@ -85,16 +85,16 @@
 
 ## Этап 2. Green: конкретный безопасный фикс
 
-- [ ] В `createDailyActivity` перед вызовом `updateExistingActivity` извлечь snapshot входных тренировок в локальный `Array` (массив ссылок на `DayActivityTraining`), не передавая relationship-коллекцию как источник истины во время мутации.
-- [ ] Изменить контракт обновления так, чтобы `updateExistingActivity` работал со snapshot-массивом `Array(new.trainings)`, подготовленным до мутации.
-- [ ] Явно зафиксировать инвариант: после начала мутации `existing` не читать `new.trainings` getter (все данные берутся только из заранее подготовленного snapshot).
-- [ ] Внутри replace логики:
-  - использовать snapshot существующих `DayActivityTraining` без создания третьей копии объектов,
-  - при необходимости явно зарегистрировать элементы snapshot в `ModelContext` перед финальной привязкой,
-  - единым присваиванием выполнить `existing.trainings = snapshot` (без промежуточного `existing.trainings = []`), чтобы избежать лишнего переходного состояния.
-- [ ] Явно зафиксировать ожидаемое поведение для старых `trainings` в рамках этого фикса: гарантируем корректный replace в `existing.trainings`; отдельная физическая очистка orphan-объектов из `ModelContext` выносится в техдолг.
-- [ ] Оставить неизменными правила offline-first и sync-флаги (`isSynced`, `shouldDelete`, `modifyDate`, `createDate`).
-- [ ] Проверить, что фикс исполняется только в `@MainActor` контексте сервиса.
+- [x] В `createDailyActivity` перед вызовом `updateExistingActivity` извлечь snapshot входных тренировок в локальный `Array` и не передавать relationship-коллекцию как источник истины во время мутации.
+- [x] Изменить контракт обновления так, чтобы `updateExistingActivity` работал с подготовленным snapshot (`TrainingReplacementSnapshot`) вместо чтения `new.trainings` при replace.
+- [x] Явно зафиксировать инвариант: после начала мутации `existing` не читать `new.trainings` getter (все данные берутся только из заранее подготовленного snapshot).
+- [x] Внутри replace логики:
+  - создать новые `DayActivityTraining` из value snapshot,
+  - при необходимости явно зарегистрировать новые элементы в `ModelContext`,
+  - единым присваиванием выполнить `existing.trainings = replacedTrainings` (без промежуточного `existing.trainings = []`), чтобы избежать лишнего переходного состояния.
+- [x] Добавить явную очистку старых `trainings` из `ModelContext` после replace, чтобы не оставлять orphan-объекты.
+- [x] Оставить неизменными правила offline-first и sync-флаги (`isSynced`, `shouldDelete`, `modifyDate`, `createDate`).
+- [x] Проверить, что фикс исполняется только в `@MainActor` контексте сервиса.
 
 Критерий завершения этапа:
 
@@ -103,7 +103,8 @@
 ## Этап 3. Refactor safety net
 
 - [ ] Добавить тест на идемпотентность: 3+ последовательных сохранения одного дня не приводят к падению и дублированию.
-- [ ] Добавить тест на корректный replace relationship: после `context.save()` старые `DayActivityTraining` отсутствуют в `existing.trainings`, новые присутствуют в ожидаемом порядке.
+- [x] Добавить тест на корректный replace relationship: после `context.save()` старые `DayActivityTraining` отсутствуют в `existing.trainings`, новые присутствуют в ожидаемом порядке.
+- [x] Добавить assertion-тест на отсутствие orphan/старых `DayActivityTraining` в контексте после update (`oldTrainingsRemovedFromContextAfterUpdate`).
 - [ ] Добавить тест на стабильную повторную выборку: после `context.save()` повторный fetch `DayActivity` и чтение `trainings` безопасны.
 
 Критерий завершения этапа:
@@ -135,8 +136,8 @@
 
 ## Этап 6. Качество, документация, локализация
 
-- [ ] Запустить `make format`.
-- [ ] Запустить целевые iOS тесты (DailyActivities + WorkoutPreviewViewModel).
+- [x] Запустить `make format`.
+- [x] Запустить целевые iOS тесты (DailyActivities + WorkoutPreviewViewModel).
 - [ ] Перед merge запустить `make test`.
 - [ ] Обновить [crash-swiftdata-invalid-future-backing-data.md](/Users/Oleg991/Documents/GitHub/SwiftUI-SotkaApp/docs/crash-swiftdata-invalid-future-backing-data.md) разделом про `v4.4.0`: причина, фикс, тесты, верификация.
 - [ ] Отдельно отметить, что в рамках фикса не добавляются новые пользовательские строки; если появятся новые UI-сообщения, локализовать через `.strings`.
@@ -148,7 +149,6 @@
 ## Техдолг вне scope фикса
 
 - Оптимизировать поиск существующей активности в `createDailyActivity`: заменить fetch всех `DayActivity` на целевой `FetchDescriptor` с predicate по `day` и `user`.
-- Отдельно проработать политику очистки orphan `DayActivityTraining` при replace (`existing.trainings = snapshot`): при необходимости добавить явное удаление через `existing.modelContext`.
 
 ## Зависимости этапов
 

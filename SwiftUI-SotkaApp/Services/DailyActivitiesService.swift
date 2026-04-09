@@ -50,12 +50,18 @@ final class DailyActivitiesService {
         if let existingActivity = existingActivities.first(where: {
             $0.day == activity.day && $0.user?.id == user.id && !$0.shouldDelete
         }) {
+            let trainingsSnapshot = activity.trainings.map(\.trainingReplacementSnapshot)
             logger
                 .info(
                     "[createDailyActivity] Найдена существующая активность: день=\(existingActivity.day), старый count=\(existingActivity.count ?? -1), modifyDate=\(existingActivity.modifyDate)"
                 )
             // Обновляем существующую активность новыми данными
-            updateExistingActivity(existingActivity, with: activity, user: user)
+            updateExistingActivity(
+                existingActivity,
+                with: activity,
+                trainingsSnapshot: trainingsSnapshot,
+                user: user
+            )
             logger.info("[createDailyActivity] → Обновлена существующая активность для дня \(activity.day)")
             // Новая активность не создается - обновляем существующую
         } else {
@@ -405,8 +411,14 @@ private extension DailyActivitiesService {
     /// - Parameters:
     ///   - existing: Существующая активность, которую нужно обновить
     ///   - new: Новая активность с данными для обновления
+    ///   - trainingsSnapshot: Локальный snapshot для безопасной замены relationship `trainings`
     ///   - user: Пользователь
-    func updateExistingActivity(_ existing: DayActivity, with new: DayActivity, user: User) {
+    func updateExistingActivity(
+        _ existing: DayActivity,
+        with new: DayActivity,
+        trainingsSnapshot: [TrainingReplacementSnapshot],
+        user: User
+    ) {
         logger.info("[updateExisting] Обновляем день=\(existing.day): старый count=\(existing.count ?? -1), новый count=\(new.count ?? -1)")
         logger.info("[updateExisting]   старый modifyDate=\(existing.modifyDate), createDate=\(existing.createDate)")
 
@@ -428,11 +440,22 @@ private extension DailyActivitiesService {
         // Убеждаемся, что активность привязана к пользователю
         existing.user = user
 
-        // Обновление trainings: удаляем старые и добавляем новые
-        existing.trainings.removeAll()
-        for training in new.trainings {
-            training.dayActivity = existing
-            existing.trainings.append(training)
+        // Безопасный replace relationship без итерации по `new.trainings` в момент мутации.
+        let oldTrainings = existing.trainings
+        let replacedTrainings = trainingsSnapshot.map(\.dayActivityTraining)
+
+        if let context = existing.modelContext {
+            for training in replacedTrainings where training.modelContext == nil {
+                context.insert(training)
+            }
+        }
+        existing.trainings = replacedTrainings
+
+        if let context = existing.modelContext {
+            let replacedIDs = Set(replacedTrainings.map(ObjectIdentifier.init))
+            for oldTraining in oldTrainings where !replacedIDs.contains(ObjectIdentifier(oldTraining)) {
+                context.delete(oldTraining)
+            }
         }
 
         logger.info("[updateExisting] → Новый modifyDate=\(existing.modifyDate)")
@@ -819,5 +842,34 @@ private extension DailyActivitiesService {
         } catch {
             logger.error("Ошибка загрузки серверных активностей: \(error.localizedDescription)")
         }
+    }
+}
+
+private extension DailyActivitiesService {
+    struct TrainingReplacementSnapshot {
+        let count: Int?
+        let typeId: Int?
+        let customTypeId: String?
+        let sortOrder: Int?
+
+        var dayActivityTraining: DayActivityTraining {
+            DayActivityTraining(
+                count: count,
+                typeId: typeId,
+                customTypeId: customTypeId,
+                sortOrder: sortOrder
+            )
+        }
+    }
+}
+
+private extension DayActivityTraining {
+    var trainingReplacementSnapshot: DailyActivitiesService.TrainingReplacementSnapshot {
+        .init(
+            count: count,
+            typeId: typeId,
+            customTypeId: customTypeId,
+            sortOrder: sortOrder
+        )
     }
 }
