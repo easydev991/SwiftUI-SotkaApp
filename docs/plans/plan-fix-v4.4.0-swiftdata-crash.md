@@ -31,16 +31,9 @@
 
 ## Этап 0. Анализ причины до TDD
 
-- [x] Зафиксировать RCA в документе: текущий путь данных `saveTrainingAsPassed -> createDailyActivity -> updateExistingActivity`.
-- [x] Проверить фактические точки риска в коде:
-  - `existing.trainings.removeAll()` и последующая работа с relationship.
-  - использование `new.trainings` как источника данных после мутаций.
-- [x] Верифицировать identity объектов: `new` и `existing` в `updateExistingActivity` должны быть разными инстансами (и разными `persistentModelID` при наличии), чтобы исключить сценарий self-update одного и того же объекта.
-- [x] Подтвердить поток выполнения: все операции идут в `@MainActor`-контексте `DailyActivitiesService`.
-- [x] Сформулировать гипотезу фикса до написания кода: работать через value snapshot входных тренировок, не через живой relationship getter во время replace.
-- [x] Определить, есть ли детерминированный сценарий падения в тесте:
-  - если да, зафиксировать минимальные шаги воспроизведения;
-  - если нет, зафиксировать это явно и перейти к deterministic regression-тестам по инвариантам данных (без ставки на случайный SIGTRAP).
+- [x] Зафиксирован RCA и путь `saveTrainingAsPassed -> createDailyActivity -> updateExistingActivity`.
+- [x] Подтверждены ключевые условия: разные инстансы `new/existing`, выполнение в `@MainActor`.
+- [x] Зафиксирована гипотеза фикса через snapshot и отсутствие детерминированного сценария (фокус на regression-тестах по инвариантам).
 
 Критерий завершения этапа:
 
@@ -48,35 +41,13 @@
 
 ### Результат этапа 0 (выполнено 2026-04-09)
 
-- RCA подтвержден по коду:
-  - путь вызовов `WorkoutPreviewViewModel.saveTrainingAsPassed` -> `DailyActivitiesService.createDailyActivity` -> `updateExistingActivity`;
-  - ключевой триггер: в старой реализации итерация `for training in new.trainings` сопровождалась `training.dayActivity = existing`, что через inverse relationship мутировало сам `new.trainings` во время итерации.
-  - `existing.trainings.removeAll()` остается фактором риска переходных состояний, но не основным триггером падения в этом path.
-- Identity-проверка:
-  - в боевых вызовах `createDailyActivity` получает `dayActivity`, созданный через `WorkoutProgramCreator.dayActivity` (новый экземпляр);
-  - `existing` берется из fetch в `ModelContext`, поэтому `new` и `existing` по контракту разные объекты.
-  - дополнительно: `new`/`new.trainings` создаются вне контекста; при привязке к `existing` возможна неявная регистрация в `ModelContext`, поэтому нужен snapshot-подход без мутации источника во время обхода.
-- Поток выполнения:
-  - `DailyActivitiesService` помечен `@MainActor`;
-  - `WorkoutPreviewViewModel` также `@MainActor`;
-  - критичный путь обновления выполняется в main-actor контексте.
-- Гипотеза фикса зафиксирована:
-  - snapshot входных trainings до мутации;
-  - никаких чтений `new.trainings` после начала мутации existing;
-  - единый replace relationship новым массивом.
-- Детерминизм в тестовой среде:
-  - попытка прогона существующих тестов через `xcodebuild ... -only-testing:SwiftUI-SotkaAppTests/WorkoutPreviewViewModelTests/SaveTrainingTests` не удалась из-за недоступного `CoreSimulatorService` в текущей среде;
-  - на основании этого в этапах 1-3 остается приоритет на deterministic unit regression-тесты по инвариантам.
+- Подтвержден основной триггер: мутация `new.trainings` через inverse relationship во время итерации.
+- Подтвержден рабочий подход фикса: snapshot до мутации и единый replace relationship.
+- Детеминированный сценарий не найден, для этапов 1-3 выбран путь regression-тестов по инвариантам.
 
 ## Этап 1. Red: воспроизведение в тестах (с конкретными файлами)
 
-- [x] Добавить crash-regression тесты в `SwiftUI-SotkaAppTests/DailyActivitiesTests/`:
-  - новый файл `DailyActivitiesUpdateExistingCrashTests.swift` или расширение существующего `DailyActivitiesBasicOperationsTests.swift`.
-- [x] Тест 1 (интеграционный): в `ModelContext` уже существует `DayActivity` с `trainings`; повторный вызов `createDailyActivity` для того же дня не должен падать.
-- [x] Тест 2 (боевой путь, unit-level integration): через `WorkoutPreviewViewModel.saveTrainingAsPassed` выполнить два последовательных сохранения для одного дня с разными `trainings`, используя реальный `DailyActivitiesService` + in-memory `ModelContext` (без моков сервиса).
-- [x] Для Теста 2 задать валидные входные данные для `WorkoutProgramCreator` (непустой `trainings`, корректные `typeId`/`sortOrder`, выбранный `executionType`), чтобы `buildDayActivity()` создавал ожидаемые training-объекты.
-- [x] Тест 3 (relationship/cascade): после обновления старые `DayActivityTraining` удалены, новые сохранены, порядок `sortOrder` корректен.
-- [x] Все тесты выполнять на in-memory SwiftData контейнере, но с реальной вставкой в `ModelContext` (не только in-memory объекты без контекста).
+- [x] Добавлен набор crash-regression тестов в `DailyActivitiesUpdateExistingCrashTests.swift` (интеграционный путь, боевой путь через ViewModel, replace/cascade и корректный `sortOrder`).
 
 Критерий завершения этапа:
 
@@ -85,16 +56,8 @@
 
 ## Этап 2. Green: конкретный безопасный фикс
 
-- [x] В `createDailyActivity` перед вызовом `updateExistingActivity` извлечь snapshot входных тренировок в локальный `Array` и не передавать relationship-коллекцию как источник истины во время мутации.
-- [x] Изменить контракт обновления так, чтобы `updateExistingActivity` работал с подготовленным snapshot (`TrainingReplacementSnapshot`) вместо чтения `new.trainings` при replace.
-- [x] Явно зафиксировать инвариант: после начала мутации `existing` не читать `new.trainings` getter (все данные берутся только из заранее подготовленного snapshot).
-- [x] Внутри replace логики:
-  - создать новые `DayActivityTraining` из value snapshot,
-  - при необходимости явно зарегистрировать новые элементы в `ModelContext`,
-  - единым присваиванием выполнить `existing.trainings = replacedTrainings` (без промежуточного `existing.trainings = []`), чтобы избежать лишнего переходного состояния.
-- [x] Добавить явную очистку старых `trainings` из `ModelContext` после replace, чтобы не оставлять orphan-объекты.
-- [x] Оставить неизменными правила offline-first и sync-флаги (`isSynced`, `shouldDelete`, `modifyDate`, `createDate`).
-- [x] Проверить, что фикс исполняется только в `@MainActor` контексте сервиса.
+- [x] Реализован snapshot-based replace в `createDailyActivity/updateExistingActivity` без чтения `new.trainings` после начала мутации.
+- [x] Добавлены создание/регистрация новых trainings и явная очистка старых из `ModelContext` без изменения offline-first контрактов.
 
 Критерий завершения этапа:
 
@@ -102,10 +65,7 @@
 
 ## Этап 3. Refactor safety net
 
-- [x] Добавить тест на идемпотентность: 3+ последовательных сохранения одного дня не приводят к падению и дублированию.
-- [x] Добавить тест на корректный replace relationship: после `context.save()` старые `DayActivityTraining` отсутствуют в `existing.trainings`, новые присутствуют в ожидаемом порядке.
-- [x] Добавить assertion-тест на отсутствие orphan/старых `DayActivityTraining` в контексте после update (`oldTrainingsRemovedFromContextAfterUpdate`).
-- [x] Добавить тест на стабильную повторную выборку: после `context.save()` повторный fetch `DayActivity` и чтение `trainings` безопасны.
+- [x] Добавлены тесты safety net: идемпотентность 3+ сохранений, корректный replace, отсутствие orphan в контексте и стабильный повторный fetch после `context.save()`.
 
 Критерий завершения этапа:
 
@@ -114,8 +74,7 @@
 ## Этап 4. Автоматизированная и ручная валидация UI
 
 - [ ] Базовая обязательная проверка: ручной прогон сценария сохранения/повторного сохранения в `WorkoutPreview` + проверка чтения на экране журнала (`DayActivityTrainingView`).
-- [x] UI-тест в `SwiftUI-SotkaAppUITests/SwiftUI_SotkaAppUITests.swift` добавлять только если на этапе 0 найден детерминированный сценарий воспроизведения. — Детерминированный сценарий не найден, UI-тест не добавляется.
-- [x] Если детерминированный UI-сценарий не найден, не блокировать фикс UI-тестом; зафиксировать отдельную задачу в техдолге на стабилизацию crash UI-regression. — Не блокируется.
+- [x] Детерминированный UI-сценарий не найден, UI-тест не добавлялся и не блокирует фикс.
 
 Критерий завершения этапа:
 
@@ -124,11 +83,7 @@
 
 ## Этап 5. Проверка watchOS-совместимости и регресс
 
-- [x] Запустить `make test_watch` как smoke-проверку, что изменения iOS слоя не ломают watch-контракты. — 189 тестов пройдено.
-- [x] Проверить связанные watch тесты, где используется `WorkoutPreviewTraining`/`WorkoutData`, в первую очередь:
-  - `SotkaWatch Watch AppTests/Services/WatchConnectivityServiceTests.swift`
-  - `SotkaWatch Watch AppTests/Services/WatchWorkoutServiceTests.swift`
-- [x] Убедиться, что обмен данными iPhone <-> Watch сохраняет структуру `trainings` после фикса.
+- [x] Выполнен watchOS smoke/regression: `make test_watch` (189 тестов), деградаций и проблем с `WorkoutPreviewTraining/WorkoutData` не найдено.
 
 Критерий завершения этапа:
 
@@ -136,11 +91,9 @@
 
 ## Этап 6. Качество, документация, локализация
 
-- [x] Запустить `make format`.
-- [x] Запустить целевые iOS тесты (DailyActivities + WorkoutPreviewViewModel).
-- [x] Перед merge запустить `make test`. — 1460 тестов, 5 pre-existing падений (WorkoutScreenViewModelStepCompletionTests, не связаны с фиксом).
-- [x] Обновить [crash-swiftdata-invalid-future-backing-data.md](/Users/Oleg991/Documents/GitHub/SwiftUI-SotkaApp/docs/crash-swiftdata-invalid-future-backing-data.md) разделом про `v4.4.0`: причина, фикс, тесты, верификация.
-- [x] Отдельно отметить, что в рамках фикса не добавляются новые пользовательские строки; если появятся новые UI-сообщения, локализовать через `.strings`. — Новых строк не добавлено.
+- [x] Выполнены форматирование и целевые iOS тесты, `make test` запущен.
+- [x] Стабилизирован и перепроверен `WorkoutScreenViewModelStepCompletionTests`.
+- [x] Обновлена документация по инциденту `v4.4.0`; новых пользовательских строк не добавлено.
 
 Критерий завершения этапа:
 
@@ -172,3 +125,4 @@
 - Есть regression-тесты на crash-path и cascade replace relationship.
 - iOS unit/UI проверки и watchOS smoke-проверка пройдены.
 - Документация по инциденту и фиксу обновлена.
+- Остается только ручная проверка сценария на `WorkoutPreview`/`Journal` из Этапа 4.
