@@ -36,10 +36,7 @@ extension WorkoutScreenViewModelTests {
             #expect(viewModel.stepStates[2].state == .inactive)
             #expect(viewModel.showTimer)
 
-            let pendingNotifications = await UNUserNotificationCenter.current().pendingNotificationRequests()
-            let restTimerNotification = pendingNotifications.first { $0.identifier == "restTimerNotification" }
-            let notification = try #require(restTimerNotification)
-            #expect(notification.identifier == "restTimerNotification")
+            try await expectRestTimerNotificationPresence()
         }
 
         @Test("Должен завершать последний этап (coolDown), не показывать таймер и не планировать уведомление")
@@ -111,10 +108,7 @@ extension WorkoutScreenViewModelTests {
             #expect(viewModel.stepStates[2].state == .inactive)
             #expect(viewModel.showTimer)
 
-            var pendingNotifications = await UNUserNotificationCenter.current().pendingNotificationRequests()
-            var restTimerNotification = pendingNotifications.first { $0.identifier == "restTimerNotification" }
-            let notification = try #require(restTimerNotification)
-            #expect(notification.identifier == "restTimerNotification")
+            try await expectRestTimerNotificationPresence()
 
             viewModel.currentRestStartTime = Date().addingTimeInterval(-30)
 
@@ -122,8 +116,8 @@ extension WorkoutScreenViewModelTests {
 
             viewModel.handleTimerFinish(force: false, appSettings: appSettings)
 
-            pendingNotifications = await UNUserNotificationCenter.current().pendingNotificationRequests()
-            restTimerNotification = pendingNotifications.first { $0.identifier == "restTimerNotification" }
+            let pendingNotifications = await UNUserNotificationCenter.current().pendingNotificationRequests()
+            let restTimerNotification = pendingNotifications.first { $0.identifier == "restTimerNotification" }
             #expect(restTimerNotification == nil)
 
             #expect(!viewModel.showTimer)
@@ -238,10 +232,7 @@ extension WorkoutScreenViewModelTests {
             #expect(viewModel.currentStepIndex == 2)
             #expect(viewModel.showTimer)
 
-            let pendingNotifications = await UNUserNotificationCenter.current().pendingNotificationRequests()
-            let restTimerNotification = pendingNotifications.first { $0.identifier == "restTimerNotification" }
-            let notification = try #require(restTimerNotification)
-            #expect(notification.identifier == "restTimerNotification")
+            try await expectRestTimerNotificationPresence()
         }
 
         @Test(
@@ -278,10 +269,7 @@ extension WorkoutScreenViewModelTests {
             #expect(viewModel.stepStates[2].state == .inactive)
             #expect(viewModel.showTimer)
 
-            var pendingNotifications = await UNUserNotificationCenter.current().pendingNotificationRequests()
-            var restTimerNotification = pendingNotifications.first { $0.identifier == "restTimerNotification" }
-            let notification = try #require(restTimerNotification)
-            #expect(notification.identifier == "restTimerNotification")
+            try await expectRestTimerNotificationPresence()
 
             viewModel.currentRestStartTime = Date().addingTimeInterval(-30)
 
@@ -289,8 +277,8 @@ extension WorkoutScreenViewModelTests {
 
             viewModel.handleTimerFinish(force: false, appSettings: appSettings)
 
-            pendingNotifications = await UNUserNotificationCenter.current().pendingNotificationRequests()
-            restTimerNotification = pendingNotifications.first { $0.identifier == "restTimerNotification" }
+            let pendingNotifications = await UNUserNotificationCenter.current().pendingNotificationRequests()
+            let restTimerNotification = pendingNotifications.first { $0.identifier == "restTimerNotification" }
             #expect(restTimerNotification == nil)
 
             #expect(!viewModel.showTimer)
@@ -340,10 +328,7 @@ extension WorkoutScreenViewModelTests {
             #expect(viewModel.stepStates[2].state == .inactive)
             #expect(viewModel.showTimer)
 
-            var pendingNotifications = await UNUserNotificationCenter.current().pendingNotificationRequests()
-            var restTimerNotification = pendingNotifications.first { $0.identifier == "restTimerNotification" }
-            let notification = try #require(restTimerNotification)
-            #expect(notification.identifier == "restTimerNotification")
+            try await expectRestTimerNotificationPresence()
 
             viewModel.currentRestStartTime = Date().addingTimeInterval(-30)
 
@@ -351,8 +336,8 @@ extension WorkoutScreenViewModelTests {
 
             viewModel.handleTimerFinish(force: true, appSettings: appSettings)
 
-            pendingNotifications = await UNUserNotificationCenter.current().pendingNotificationRequests()
-            restTimerNotification = pendingNotifications.first { $0.identifier == "restTimerNotification" }
+            let pendingNotifications = await UNUserNotificationCenter.current().pendingNotificationRequests()
+            let restTimerNotification = pendingNotifications.first { $0.identifier == "restTimerNotification" }
             #expect(restTimerNotification == nil)
 
             #expect(!viewModel.showTimer)
@@ -367,5 +352,39 @@ extension WorkoutScreenViewModelTests {
             let stepState = try #require(currentStepState)
             #expect(stepState.state == .active)
         }
+    }
+}
+
+private extension WorkoutScreenViewModelTests.StepCompletionTests {
+    func expectRestTimerNotificationPresence() async throws {
+        let restTimerNotification = await waitForRestTimerNotification()
+
+        if await isNotificationSchedulingAvailable() {
+            let notification = try #require(restTimerNotification)
+            #expect(notification.identifier == "restTimerNotification")
+        } else {
+            #expect(restTimerNotification == nil)
+        }
+    }
+
+    func isNotificationSchedulingAvailable() async -> Bool {
+        let settings = await UNUserNotificationCenter.current().notificationSettings()
+        return switch settings.authorizationStatus {
+        case .authorized, .provisional, .ephemeral:
+            true
+        default:
+            false
+        }
+    }
+
+    func waitForRestTimerNotification() async -> UNNotificationRequest? {
+        for _ in 0 ..< 5 {
+            let pendingNotifications = await UNUserNotificationCenter.current().pendingNotificationRequests()
+            if let restTimerNotification = pendingNotifications.first(where: { $0.identifier == "restTimerNotification" }) {
+                return restTimerNotification
+            }
+            try? await Task.sleep(nanoseconds: 50_000_000)
+        }
+        return nil
     }
 }
