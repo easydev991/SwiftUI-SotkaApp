@@ -4,6 +4,7 @@ import SwiftUI
 
 /// Экран списка инфопостов с группировкой по секциям
 struct InfopostsListScreen: View {
+    @Environment(\.analyticsService) private var analytics
     @Environment(InfopostsService.self) private var infopostsService
     @Environment(\.modelContext) private var modelContext
 
@@ -22,8 +23,18 @@ struct InfopostsListScreen: View {
         }
         .listStyle(.plain)
         .navigationTitle(.infoposts)
+        .trackScreen(.infopostsList)
         .onAppear {
             try? infopostsService.loadFavoriteIds(modelContext: modelContext)
+        }
+        .onChange(of: infopostsService.displayMode) { _, _ in
+            analytics.log(
+                .userAction(
+                    action: .selectInfopostDisplayMode(
+                        newDisplayMode: infopostsService.displayMode.rawValue
+                    )
+                )
+            )
         }
     }
 }
@@ -90,6 +101,7 @@ private extension InfopostsListScreen {
         if let isRead = try? infopostsService.isPostRead(infopost, modelContext: modelContext),
            !isRead {
             Button {
+                analytics.log(.userAction(action: .markInfopostRead))
                 Task {
                     try? await infopostsService.markPostAsRead(day: infopost.dayNumber, modelContext: modelContext)
                 }
@@ -105,6 +117,14 @@ private extension InfopostsListScreen {
         if infopost.isFavoriteAvailable {
             let isFavorite = infopostsService.isFavorite(infopost, modelContext: modelContext)
             Button {
+                analytics.log(
+                    .userAction(
+                        action: .infopostFavoriteChanged(
+                            isFavorite: !isFavorite,
+                            infopostId: infopost.id
+                        )
+                    )
+                )
                 withAnimation {
                     try? infopostsService.changeFavorite(id: infopost.id, modelContext: modelContext)
                 }

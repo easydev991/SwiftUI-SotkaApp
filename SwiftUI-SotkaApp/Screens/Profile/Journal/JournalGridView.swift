@@ -4,6 +4,7 @@ import SwiftUI
 import SWUtils
 
 struct JournalGridView: View {
+    @Environment(\.analyticsService) private var analytics
     @Environment(DailyActivitiesService.self) private var activitiesService
     @Environment(StatusManager.self) private var statusManager
     @Environment(\.currentDay) private var currentDay
@@ -114,14 +115,24 @@ private extension JournalGridView {
                 day: day,
                 activity: activity,
                 onComment: { day in
+                    analytics.log(.userAction(action: .editJournalEntry(dayNumber: "\(day)")))
                     if let activity = activitiesByDay[day] {
                         sheetItem = .comment(activity)
                     }
                 },
                 onDelete: { day in
+                    analytics.log(.userAction(action: .deleteJournalEntry(dayNumber: "\(day)")))
                     dayForConfirmationDialog = day
                 },
                 onSelectType: { day, activityType in
+                    analytics.log(
+                        .userAction(
+                            action: .selectActivityType(
+                                type: String(activityType.rawValue),
+                                dayNumber: "\(day)"
+                            )
+                        )
+                    )
                     if activityType == .workout {
                         sheetItem = .workoutPreview(day)
                     }

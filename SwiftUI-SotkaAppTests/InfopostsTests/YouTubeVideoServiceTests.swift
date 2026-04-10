@@ -4,7 +4,9 @@ import Testing
 extension AllInfopostsTests {
     /// Тесты для YouTubeVideoService
     struct YouTubeVideoServiceTests {
-        private let youtubeService = YouTubeVideoService()
+        private let youtubeService = YouTubeVideoService(
+            analytics: AnalyticsService(providers: [NoopAnalyticsProvider()])
+        )
 
         @Test
         func loadVideos() throws {

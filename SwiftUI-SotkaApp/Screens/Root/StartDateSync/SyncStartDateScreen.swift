@@ -1,7 +1,9 @@
+import Foundation
 import SWDesignSystem
 import SwiftUI
 
 struct SyncStartDateView: View {
+    @Environment(\.analyticsService) private var analytics
     @Environment(StatusManager.self) private var statusManager
     @State private var selectedOption = Selection.none
     @State private var syncTask: Task<Void, Never>?
@@ -24,6 +26,7 @@ struct SyncStartDateView: View {
                         .opacity(makeOpacity(model.appDayCalculator))
                         Button(.dateSyncSelectAppDate) {
                             selectedOption = .app(model.appDayCalculator)
+                            analytics.log(.userAction(action: .selectSyncSource(source: "app")))
                         }
                         .buttonStyle(
                             SWButtonStyle(
@@ -42,6 +45,7 @@ struct SyncStartDateView: View {
                         .opacity(makeOpacity(model.siteDayCalculator))
                         Button(.dateSyncSelectSiteDate) {
                             selectedOption = .site(model.siteDayCalculator)
+                            analytics.log(.userAction(action: .selectSyncSource(source: "site")))
                         }
                         .buttonStyle(
                             SWButtonStyle(
@@ -74,6 +78,22 @@ struct SyncStartDateView: View {
         }
         .interactiveDismissDisabled()
         .loadingOverlay(if: isLoading)
+        .trackScreen(.syncStartDate)
+        .onChange(of: statusErrorMessage) { _, newMessage in
+            guard syncTask != nil else { return }
+            guard let newMessage else { return }
+            analytics.log(
+                .appError(
+                    kind: .syncStartDateFailed,
+                    error: NSError(
+                        domain: "SyncStartDateView",
+                        code: 1,
+                        userInfo: [NSLocalizedDescriptionKey: newMessage]
+                    )
+                )
+            )
+            syncTask = nil
+        }
     }
 
     private func makeOpacity(_ model: DayCalculator) -> CGFloat {
@@ -83,17 +103,32 @@ struct SyncStartDateView: View {
         return model.startDate == selectedStartDate ? 1 : 0.5
     }
 
+    private var statusErrorMessage: String? {
+        if case let .error(message) = statusManager.state {
+            message
+        } else {
+            nil
+        }
+    }
+
     private func applySelection() {
+        analytics.log(.userAction(action: .confirmSyncStartDate))
         switch selectedOption {
         case .none:
             assertionFailure("Дата должна быть выбрана до попытки сохранения")
         case let .app(model):
             syncTask = Task {
                 await statusManager.start(appDate: model.startDate)
+                await MainActor.run {
+                    syncTask = nil
+                }
             }
         case let .site(model):
             syncTask = Task {
                 await statusManager.syncWithSiteDate(siteDate: model.startDate)
+                await MainActor.run {
+                    syncTask = nil
+                }
             }
         }
     }

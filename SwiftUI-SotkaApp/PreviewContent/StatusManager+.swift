@@ -24,7 +24,8 @@ extension StatusManager {
             ),
             infopostsService: .init(
                 language: "ru",
-                infopostsClient: MockInfopostsClient(result: .success)
+                infopostsClient: MockInfopostsClient(result: .success),
+                analytics: AnalyticsService(providers: [NoopAnalyticsProvider()])
             ),
             progressSyncService: ProgressSyncService(client: MockProgressClient(result: .success)),
             dailyActivitiesService: DailyActivitiesService(client: MockDaysClient(result: .success)),

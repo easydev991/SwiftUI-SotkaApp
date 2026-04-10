@@ -6,17 +6,18 @@ import TipKit
 
 @main
 struct SwiftUI_SotkaAppApp: App {
+    @UIApplicationDelegateAdaptor(AppDelegate.self) var delegate
     @Environment(\.scenePhase) private var scenePhase
-    private let youtubeVideoService = YouTubeVideoService()
+    private let youtubeVideoService: YouTubeVideoService
     private let statusManager: StatusManager
     private let countriesService: CountriesUpdateService
     @State private var appSettings = AppSettings()
     @State private var authHelper: AuthHelperImp
     @State private var networkStatus = NetworkStatus()
     private let client: SWClient
+    private let analyticsService: AnalyticsService
 
     init() {
-        // Создаем ModelContainer в init()
         let schema = Schema(
             [
                 User.self,
@@ -35,10 +36,11 @@ struct SwiftUI_SotkaAppApp: App {
         } catch {
             fatalError("Не смогли создать ModelContainer: \(error)")
         }
-
+        let analytics: AnalyticsService
         #if DEBUG
         if ProcessInfo.processInfo.arguments.contains("UITest") {
             UserDefaults.standard.removePersistentDomain(forName: Bundle.main.bundleIdentifier!)
+            analytics = AnalyticsService(providers: [NoopAnalyticsProvider()])
             let mockServices = Self.createMockServices(modelContainer: modelContainer)
             self.statusManager = mockServices.statusManager
             self.countriesService = mockServices.countriesService
@@ -46,13 +48,15 @@ struct SwiftUI_SotkaAppApp: App {
             self.client = mockServices.client
             UIView.setAnimationsEnabled(false)
         } else {
+            analytics = AnalyticsService(providers: [FirebaseAnalyticsProvider()])
             let authHelper = AuthHelperImp()
             let client = SWClient(with: authHelper)
             self.statusManager = StatusManager(
                 customExercisesService: .init(client: client),
                 infopostsService: .init(
                     language: Self.localeIdentifier,
-                    infopostsClient: client
+                    infopostsClient: client,
+                    analytics: analytics
                 ),
                 progressSyncService: .init(client: client),
                 dailyActivitiesService: .init(client: client),
@@ -70,13 +74,15 @@ struct SwiftUI_SotkaAppApp: App {
             }
         }
         #else
+        analytics = AnalyticsService(providers: [FirebaseAnalyticsProvider()])
         let authHelper = AuthHelperImp()
         let client = SWClient(with: authHelper)
         self.statusManager = StatusManager(
             customExercisesService: .init(client: client),
             infopostsService: .init(
                 language: Self.localeIdentifier,
-                infopostsClient: client
+                infopostsClient: client,
+                analytics: analytics
             ),
             progressSyncService: .init(client: client),
             dailyActivitiesService: .init(client: client),
@@ -92,6 +98,8 @@ struct SwiftUI_SotkaAppApp: App {
             print("Ошибка TipKit: \(error.localizedDescription)")
         }
         #endif
+        self.analyticsService = analytics
+        self.youtubeVideoService = .init(analytics: analytics)
     }
 
     var body: some Scene {
@@ -122,6 +130,7 @@ struct SwiftUI_SotkaAppApp: App {
             .restTimeBetweenSets(appSettings.restTime)
             .networkStatus(networkStatus.isOnline)
             .environment(youtubeVideoService)
+            .environment(\.analyticsService, analyticsService)
             .preferredColorScheme(appSettings.appTheme.colorScheme)
             .onChange(of: statusManager.currentDayCalculator) { _, newCalculator in
                 guard authHelper.isAuthorized else { return }
@@ -182,7 +191,8 @@ private extension SwiftUI_SotkaAppApp {
             customExercisesService: .init(client: mockClient),
             infopostsService: .init(
                 language: Self.localeIdentifier,
-                infopostsClient: mockClient
+                infopostsClient: mockClient,
+                analytics: AnalyticsService(providers: [NoopAnalyticsProvider()])
             ),
             progressSyncService: .init(client: mockClient),
             dailyActivitiesService: .init(client: mockClient),

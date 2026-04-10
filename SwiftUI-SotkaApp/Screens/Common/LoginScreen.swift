@@ -6,6 +6,7 @@ import SWUtils
 
 struct LoginScreen: View {
     @Environment(AuthHelperImp.self) private var authHelper
+    @Environment(\.analyticsService) private var analytics
     @Environment(\.modelContext) private var modelContext
     @Environment(\.isNetworkConnected) private var isNetworkConnected
     @State private var showLoginScreen = false
@@ -41,6 +42,7 @@ struct LoginScreen: View {
                 [loginTask, restorePasswordTask].forEach { $0?.cancel() }
             }
         }
+        .trackScreen(.login)
     }
 }
 
@@ -142,6 +144,7 @@ private extension LoginScreen {
     }
 
     func performLogin() {
+        analytics.log(.userAction(action: .login))
         guard !isLoading else { return }
         isLoading = true
         loginTask = Task {
@@ -161,12 +164,14 @@ private extension LoginScreen {
                 SWAlert.shared.presentNoConnection(true)
             } catch {
                 authErrorMessage = error.localizedDescription
+                analytics.log(.appError(kind: .loginFailed, error: error))
             }
             isLoading = false
         }
     }
 
     func performRestorePassword() {
+        analytics.log(.userAction(action: .resetPassword))
         guard credentials.canRestorePassword else {
             SWAlert.shared.presentDefaultUIKit(
                 message: String(localized: .alertRestorePassword),
@@ -188,6 +193,7 @@ private extension LoginScreen {
                 SWAlert.shared.presentNoConnection(true)
             } catch {
                 resetErrorMessage = error.localizedDescription
+                analytics.log(.appError(kind: .passwordResetFailed, error: error))
             }
             isLoading = false
         }

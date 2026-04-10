@@ -25,6 +25,7 @@ struct SyncStartDateHelpScreen: View {
         }
         .navigationTitle(.dateSyncHelpTitle)
         .navigationBarTitleDisplayMode(.inline)
+        .trackScreen(.syncStartDateHelp)
     }
 }
 

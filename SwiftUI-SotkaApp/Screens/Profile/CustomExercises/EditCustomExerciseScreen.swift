@@ -12,6 +12,7 @@ struct EditCustomExerciseScreen: View {
         category: String(describing: EditCustomExerciseScreen.self)
     )
     @Environment(\.modelContext) private var modelContext
+    @Environment(\.analyticsService) private var analytics
     @Environment(CustomExercisesService.self) private var customExercisesService
     @Query private var allExercises: [CustomExercise]
     @State private var exerciseName = ""
@@ -39,6 +40,7 @@ struct EditCustomExerciseScreen: View {
         .navigationTitle(.exercise)
         .navigationBarBackButtonHidden(oldItem != nil)
         .navigationBarTitleDisplayMode(.inline)
+        .trackScreen(.editCustomExercise)
         .onAppear {
             if let oldItem {
                 exerciseName = oldItem.name
@@ -141,8 +143,10 @@ struct EditCustomExerciseScreen: View {
     private func save() {
         isSaving = true
         if let oldItem {
+            analytics.log(.userAction(action: .editExercise(exerciseId: oldItem.id)))
             updateExercise(oldItem)
         } else {
+            analytics.log(.userAction(action: .createExercise))
             customExercisesService.createCustomExercise(
                 name: exerciseName,
                 imageId: selectedImageId,
@@ -162,6 +166,7 @@ struct EditCustomExerciseScreen: View {
                 context: modelContext
             )
         } catch {
+            analytics.log(.appError(kind: .customExerciseSaveFailed, error: error))
             logger.error("Ошибка синхронизации обновления упражнения: \(error)")
         }
     }
@@ -185,6 +190,14 @@ private extension EditCustomExerciseScreen {
             withAnimation {
                 selectedImageId = customType.rawValue
             }
+            analytics.log(
+                .userAction(
+                    action: .selectExerciseIcon(
+                        iconName: String(customType.rawValue),
+                        exerciseId: oldItem?.id ?? "new_exercise"
+                    )
+                )
+            )
         } label: {
             customType.image
                 .resizable()

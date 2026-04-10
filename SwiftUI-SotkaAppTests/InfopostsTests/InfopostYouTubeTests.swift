@@ -4,7 +4,9 @@ import Testing
 extension AllInfopostsTests {
     /// Тесты для интеграции YouTube видео с инфопостами
     struct InfopostYouTubeTests {
-        private let youtubeService = YouTubeVideoService()
+        private let youtubeService = YouTubeVideoService(
+            analytics: AnalyticsService(providers: [NoopAnalyticsProvider()])
+        )
 
         @Test
         func infopostWithDayNumberHasYouTubeVideo() throws {

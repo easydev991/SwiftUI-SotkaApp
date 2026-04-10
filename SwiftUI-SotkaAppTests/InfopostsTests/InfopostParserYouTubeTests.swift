@@ -4,7 +4,7 @@ import Testing
 extension AllInfopostsTests {
     /// Тесты для InfopostParser с YouTube видео
     struct InfopostParserYouTubeTests {
-        private let youtubeService = YouTubeVideoService()
+        private let youtubeService = YouTubeVideoService(analytics: AnalyticsService(providers: [NoopAnalyticsProvider()]))
 
         @Test
         func prepareHTMLForDisplayWithYouTubeVideo() {

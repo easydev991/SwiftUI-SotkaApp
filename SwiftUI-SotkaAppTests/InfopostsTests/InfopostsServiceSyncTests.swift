@@ -17,7 +17,11 @@ extension AllInfopostsTests {
             language: String = "ru",
             mockClient: MockInfopostsClient
         ) -> InfopostsService {
-            InfopostsService(language: language, infopostsClient: mockClient)
+            InfopostsService(
+                language: language,
+                infopostsClient: mockClient,
+                analytics: AnalyticsService(providers: [NoopAnalyticsProvider()])
+            )
         }
 
         /// Создает тестового пользователя с заданными прочитанными днями

@@ -4,6 +4,7 @@ import SwiftUI
 import SWUtils
 
 struct ProfileScreen: View {
+    @Environment(\.analyticsService) private var analytics
     @Environment(\.modelContext) private var modelContext
     @Environment(AuthHelperImp.self) private var authHelper
     @Environment(\.isNetworkConnected) private var isNetworkConnected
@@ -59,6 +60,7 @@ struct ProfileScreen: View {
             .navigationTitle(.profile)
             .navigationBarTitleDisplayMode(.inline)
         }
+        .trackScreen(.profile)
     }
 }
 
@@ -156,6 +158,7 @@ private extension ProfileScreen {
             titleVisibility: .visible
         ) {
             Button(.logOut, role: .destructive) {
+                analytics.log(.userAction(action: .logout))
                 authHelper.triggerLogout()
             }
         }

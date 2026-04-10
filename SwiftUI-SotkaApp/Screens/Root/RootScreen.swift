@@ -25,6 +25,7 @@ struct RootScreen: View {
                 URLOpener.open(settingsUrl)
             }
         }
+        .trackScreen(.root)
     }
 }
 

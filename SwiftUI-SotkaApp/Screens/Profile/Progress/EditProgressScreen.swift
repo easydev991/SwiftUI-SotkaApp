@@ -1,8 +1,14 @@
+import OSLog
 import SWDesignSystem
 import SwiftData
 import SwiftUI
 
 struct EditProgressScreen: View {
+    private let logger = Logger(
+        subsystem: Bundle.main.bundleIdentifier!,
+        category: String(describing: EditProgressScreen.self)
+    )
+    private let analytics: AnalyticsService
     @Environment(\.dismiss) private var dismiss
     @Environment(\.modelContext) private var modelContext
     @State private var progressService: ProgressService
@@ -11,9 +17,18 @@ struct EditProgressScreen: View {
     @State private var selectedPhotoType: ProgressPhotoType?
     @FocusState private var focus: FocusableField?
 
-    init(progress: UserProgress, mode: ProgressDisplayMode) {
+    init(
+        progress: UserProgress,
+        mode: ProgressDisplayMode,
+        analytics: AnalyticsService
+    ) {
+        self.analytics = analytics
         self._progressService = .init(
-            initialValue: .init(progress: progress, mode: mode)
+            initialValue: .init(
+                progress: progress,
+                mode: mode,
+                analytics: analytics
+            )
         )
     }
 
@@ -25,6 +40,10 @@ struct EditProgressScreen: View {
         .animation(.default, value: progressService.displayMode)
         .navigationTitle(.progressEditTitle)
         .navigationBarTitleDisplayMode(.inline)
+        .trackScreen(.editProgress)
+        .onChange(of: progressService.displayMode) { _, _ in
+            analytics.log(.userAction(action: .selectProgressDisplayMode(dayNumber: "\(progressService.progress.id)")))
+        }
         .toolbar {
             ToolbarItem(placement: .topBarTrailing) {
                 saveButton
@@ -46,10 +65,15 @@ struct EditProgressScreen: View {
             titleVisibility: .visible
         ) {
             Button(.progressEditDelete, role: .destructive) {
+                analytics.log(.userAction(action: .deleteProgress(
+                    dayNumber: "\(progressService.progress.id)"
+                ))
+                )
                 do {
                     try progressService.deleteProgress(context: modelContext)
                     dismiss()
                 } catch {
+                    analytics.log(.appError(kind: .progressDeleteFailed, error: error))
                     print("Ошибка удаления прогресса: \(error.localizedDescription)")
                 }
             }
@@ -233,11 +257,14 @@ private extension EditProgressScreen {
                     case .camera:
                         selectedPhotoType = tempModel.type
                         pickerSourceType = .camera
+                        analytics.log(.userAction(action: .addProgressPhoto(source: "camera")))
                     case .library:
                         selectedPhotoType = tempModel.type
                         pickerSourceType = .photoLibrary
+                        analytics.log(.userAction(action: .addProgressPhoto(source: "library")))
                     case let .delete(photoType):
                         progressService.deleteTempPhoto(type: photoType)
+                        analytics.log(.userAction(action: .deleteProgressPhoto(photoType: photoType.rawValue)))
                     }
                 }
             )
@@ -262,11 +289,13 @@ private extension EditProgressScreen {
     }
 
     func performSave() {
+        analytics.log(.userAction(action: .saveProgress))
         do {
             try progressService.saveProgress(context: modelContext)
             dismiss()
         } catch {
-            print("Ошибка сохранения прогресса: \(error.localizedDescription)")
+            analytics.log(.appError(kind: .progressSaveFailed, error: error))
+            logger.error("Ошибка сохранения прогресса: \(error)")
         }
     }
 }
@@ -306,7 +335,11 @@ private struct ProgressInputRow: View {
 #if DEBUG
 #Preview("Пустой прогресс") {
     NavigationStack {
-        EditProgressScreen(progress: .init(id: 1), mode: .metrics)
+        EditProgressScreen(
+            progress: .init(id: 1),
+            mode: .metrics,
+            analytics: AnalyticsService(providers: [NoopAnalyticsProvider()])
+        )
     }
 }
 
@@ -314,18 +347,23 @@ private struct ProgressInputRow: View {
     NavigationStack {
         EditProgressScreen(
             progress: .init(id: 1, pullUps: 10, pushUps: 20, squats: 30, weight: 70.5),
-            mode: .metrics
+            mode: .metrics,
+            analytics: AnalyticsService(providers: [NoopAnalyticsProvider()])
         )
     }
 }
 
 #Preview("Синхронизированный") {
     NavigationStack {
-        EditProgressScreen(progress: {
-            let progress = UserProgress(id: 1, pullUps: 10, pushUps: 20, squats: 30, weight: 70.5)
-            progress.isSynced = true
-            return progress
-        }(), mode: .metrics)
+        EditProgressScreen(
+            progress: {
+                let progress = UserProgress(id: 1, pullUps: 10, pushUps: 20, squats: 30, weight: 70.5)
+                progress.isSynced = true
+                return progress
+            }(),
+            mode: .metrics,
+            analytics: AnalyticsService(providers: [NoopAnalyticsProvider()])
+        )
     }
 }
 #endif

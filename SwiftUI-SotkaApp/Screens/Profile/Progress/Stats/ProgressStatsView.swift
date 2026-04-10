@@ -43,6 +43,7 @@ struct ProgressStatsView: View {
             ProgressBarView(days: viewModel.dayStatuses)
         }
         .popoverTip(tip)
+        .trackScreen(.progressStats)
         .onAppear {
             viewModel.updateStats(
                 modelContext: modelContext,

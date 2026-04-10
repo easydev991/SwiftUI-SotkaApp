@@ -10,6 +10,7 @@ final class WorkoutPreviewViewModel {
         subsystem: Bundle.main.bundleIdentifier ?? "SotkaApp",
         category: String(describing: WorkoutPreviewViewModel.self)
     )
+    @ObservationIgnored private var analytics: AnalyticsService?
 
     // MARK: - State
 
@@ -195,12 +196,24 @@ final class WorkoutPreviewViewModel {
         // Проверить валидность данных
         guard selectedExecutionType != nil else {
             error = .executionTypeNotSelected
+            analytics?.log(
+                .appError(
+                    kind: .workoutExecutionTypeNotSelected,
+                    error: TrainingError.executionTypeNotSelected
+                )
+            )
             logger.error("Ошибка сохранения: тип выполнения не выбран")
             return
         }
 
         guard !trainings.isEmpty else {
             error = .trainingsListEmpty
+            analytics?.log(
+                .appError(
+                    kind: .workoutEmptyExercisesList,
+                    error: TrainingError.trainingsListEmpty
+                )
+            )
             logger.error("Ошибка сохранения: список упражнений пуст")
             return
         }
@@ -344,6 +357,10 @@ final class WorkoutPreviewViewModel {
         }
         trainings = trainingsWithSortOrder
         logger.info("Обновлен список упражнений: \(trainingsWithSortOrder.count) упражнений")
+    }
+
+    func setAnalytics(_ analytics: AnalyticsService) {
+        self.analytics = analytics
     }
 }
 

@@ -2,6 +2,7 @@ import SWDesignSystem
 import SwiftUI
 
 struct WorkoutTimerScreen: View {
+    @Environment(\.analyticsService) private var analytics
     @Environment(\.scenePhase) private var scenePhase
     @State private var startTime: Date?
     @State private var pausedTime: Date?
@@ -49,6 +50,7 @@ struct WorkoutTimerScreen: View {
         .onDisappear {
             timer.upstream.connect().cancel()
         }
+        .trackScreen(.workoutTimer)
     }
 
     private func handleScenePhaseChange(from oldPhase: ScenePhase, to newPhase: ScenePhase) {
@@ -108,6 +110,7 @@ struct WorkoutTimerScreen: View {
     private func finishTimer(force: Bool) {
         timer.upstream.connect().cancel()
         if force {
+            analytics.log(.userAction(action: .skipTimer))
             onFinish(true)
         } else {
             DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) {

@@ -51,7 +51,8 @@ enum MockStatusManager {
             customExercisesService: CustomExercisesService(client: exerciseClient),
             infopostsService: InfopostsService(
                 language: language,
-                infopostsClient: infopostsClient
+                infopostsClient: infopostsClient,
+                analytics: AnalyticsService(providers: [NoopAnalyticsProvider()])
             ),
             progressSyncService: ProgressSyncService(client: progressClient),
             dailyActivitiesService: DailyActivitiesService(client: daysClient),

@@ -7,6 +7,7 @@ import WebKit
 struct InfopostDetailScreen: View {
     private let logger = Logger(subsystem: "SotkaApp", category: "InfopostDetailScreen")
     @AppStorage(FontSize.appStorageKey) private var fontSize = FontSize.medium
+    @Environment(\.analyticsService) private var analytics
     @Environment(\.dismiss) private var dismiss
     @Environment(AppSettings.self) private var appSettings
     @Environment(InfopostsService.self) private var infopostsService
@@ -33,6 +34,7 @@ struct InfopostDetailScreen: View {
             }
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
+        .trackScreen(.infopostDetail)
         .navigationBarTitleDisplayMode(.inline)
         .toolbar {
             ToolbarItem(placement: .principal) {
@@ -46,6 +48,16 @@ struct InfopostDetailScreen: View {
         }
         .onAppear {
             isFavorite = infopostsService.isFavorite(infopost, modelContext: modelContext)
+        }
+        .onChange(of: fontSize) { _, newValue in
+            analytics.log(
+                .userAction(
+                    action: .selectInfopostFontSize(
+                        size: newValue.rawValue,
+                        infopostId: infopost.id
+                    )
+                )
+            )
         }
     }
 }
@@ -66,11 +78,21 @@ private extension InfopostDetailScreen {
 
     var favoriteButton: some View {
         Button {
+            let nextFavoriteState = !isFavorite
+            analytics.log(
+                .userAction(
+                    action: .infopostFavoriteChanged(
+                        isFavorite: nextFavoriteState,
+                        infopostId: infopost.id
+                    )
+                )
+            )
             do {
                 try infopostsService.changeFavorite(id: infopost.id, modelContext: modelContext)
                 isFavorite.toggle()
                 logger.info("Статус избранного изменен для инфопоста: \(infopost.id)")
             } catch {
+                analytics.log(.appError(kind: .infopostFavoriteFailed, error: error))
                 logger.error("Ошибка изменения статуса избранного: \(error.localizedDescription)")
             }
         } label: {
@@ -79,6 +101,7 @@ private extension InfopostDetailScreen {
     }
 
     func didReadPost() {
+        analytics.log(.userAction(action: .markInfopostRead))
         Task {
             try? await infopostsService.markPostAsRead(day: infopost.dayNumber, modelContext: modelContext)
         }

@@ -2,6 +2,7 @@ import SwiftData
 import SwiftUI
 
 struct ProgressScreen: View {
+    @Environment(\.analyticsService) private var analytics
     @Environment(StatusManager.self) private var statusManager
     @State private var navigationDestination: ProgressDestination?
     let user: User
@@ -16,12 +17,21 @@ struct ProgressScreen: View {
             .padding()
         }
         .navigationTitle(.progress)
+        .trackScreen(.progress)
         .navigationDestination(item: $navigationDestination) { destination in
             switch destination {
             case let .editProgress(progress):
-                EditProgressScreen(progress: progress, mode: .metrics)
+                EditProgressScreen(
+                    progress: progress,
+                    mode: .metrics,
+                    analytics: analytics
+                )
             case let .editPhotos(progress):
-                EditProgressScreen(progress: progress, mode: .photos)
+                EditProgressScreen(
+                    progress: progress,
+                    mode: .photos,
+                    analytics: analytics
+                )
             }
         }
     }
@@ -32,9 +42,11 @@ private extension ProgressScreen {
         ProgressGridView(
             user: user,
             onProgressTap: { progress in
+                analytics.log(.userAction(action: .editProgress(dayNumber: "\(progress.id)")))
                 navigationDestination = .editProgress(progress)
             },
             onPhotoTap: { progress in
+                analytics.log(.userAction(action: .editProgress(dayNumber: "\(progress.id)")))
                 navigationDestination = .editPhotos(progress)
             }
         )

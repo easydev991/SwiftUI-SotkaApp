@@ -10,6 +10,7 @@ final class InfopostsService {
     @ObservationIgnored private let logger = Logger(subsystem: "SotkaApp", category: "InfopostsService")
     private let currentLanguage: String
     private let infopostsClient: InfopostsClient
+    private let analytics: AnalyticsService
     @ObservationIgnored private var userGender: Gender?
     @ObservationIgnored private var cachedInfoposts: [Infopost]?
     /// Доступные инфопосты для текущего дня
@@ -63,9 +64,10 @@ final class InfopostsService {
         }
     }
 
-    init(language: String, infopostsClient: InfopostsClient) {
+    init(language: String, infopostsClient: InfopostsClient, analytics: AnalyticsService) {
         self.currentLanguage = language
         self.infopostsClient = infopostsClient
+        self.analytics = analytics
         logger.info("Инициализирован InfopostsService для языка: \(language)")
     }
 
@@ -80,6 +82,12 @@ final class InfopostsService {
             return infopost
         } else {
             logger.error("Не удалось загрузить инфопост 'about' напрямую")
+            analytics.log(
+                .appError(
+                    kind: .infopostAboutLoadFailed,
+                    error: ServiceError.parsingError
+                )
+            )
             return nil
         }
     }
@@ -102,6 +110,12 @@ final class InfopostsService {
             return isFavorite
         } catch {
             logger.error("Пользователь не найден для проверки избранного")
+            analytics.log(
+                .appError(
+                    kind: .infopostFavoriteCheckFailed,
+                    error: error
+                )
+            )
             return false
         }
     }
@@ -184,6 +198,12 @@ final class InfopostsService {
             logger.info("Обновлены избранные инфопосты: \(count) штук")
         } catch {
             logger.error("Пользователь не найден для получения избранных")
+            analytics.log(
+                .appError(
+                    kind: .infopostFavoriteListLoadFailed,
+                    error: error
+                )
+            )
             favoriteIds = []
         }
     }
@@ -242,6 +262,12 @@ private extension InfopostsService {
                 logger.debug("Успешно распарсен файл: \(filename)")
             } else {
                 logger.error("Не удалось распарсить файл: \(filename)")
+                analytics.log(
+                    .appError(
+                        kind: .infopostParsingFailed,
+                        error: ServiceError.parsingError
+                    )
+                )
                 throw ServiceError.parsingError
             }
         }
@@ -316,6 +342,12 @@ extension InfopostsService {
 
         } catch {
             logger.error("Ошибка синхронизации: \(error.localizedDescription)")
+            analytics.log(
+                .appError(
+                    kind: .infopostDaySyncFailed,
+                    error: error
+                )
+            )
             throw error
         }
     }
@@ -328,6 +360,12 @@ extension InfopostsService {
     func markPostAsRead(day: Int?, modelContext: ModelContext) async throws {
         guard let day else {
             logger.warning("Попытка отметить nil день как прочитанный")
+            analytics.log(
+                .appError(
+                    kind: .infopostSyncWithoutDayFailed,
+                    error: ServiceError.infopostCannotBeMarkedAsRead
+                )
+            )
             return
         }
 
@@ -350,6 +388,12 @@ extension InfopostsService {
             logger.info("Инфопост дня \(day) успешно синхронизирован с сервером")
         } catch {
             logger.error("Не удалось синхронизировать день \(day) с сервером: \(error.localizedDescription)")
+            analytics.log(
+                .appError(
+                    kind: .infopostDaySyncFailed,
+                    error: error
+                )
+            )
         }
     }
 
@@ -371,6 +415,12 @@ extension InfopostsService {
             return isRead
         } catch {
             logger.error("Пользователь не найден для проверки статуса прочитанного")
+            analytics.log(
+                .appError(
+                    kind: .infopostReadStatusCheckFailed,
+                    error: error
+                )
+            )
             return false
         }
     }

@@ -21,11 +21,13 @@ Follow these repo-specific conventions and commands.
 
 ## Build/Lint/Format Commands
 
+- Primary path (preferred): use `xcodebuild-mcp` / `Build iOS Apps` tools for build/test/run in Codex.
+- Fallback path: use Makefile commands only when MCP/plugin tools are unavailable.
 - `make setup` - Install all tools (Homebrew, rbenv, Ruby, bundler, fastlane, swiftformat).
 - `make format` - Format Swift code with swiftformat + markdown files with markdownlint.
-- `make build` - Build iOS project for iPhone 13 Pro Simulator.
-- `make test` - Run all iOS unit tests.
-- `make test_watch` - Run all watchOS unit tests.
+- `make build` - Build iOS project for iPhone 17 Simulator (fallback).
+- `make test` - Run all iOS unit tests (fallback).
+- `make test_watch` - Run all watchOS unit tests (fallback).
 
 ### Single Test Execution
 
@@ -35,7 +37,7 @@ Run a single test class:
 xcodebuild -project SwiftUI-SotkaApp.xcodeproj \
   -scheme SwiftUI-SotkaAppTests \
   -sdk iphonesimulator \
-  -destination 'platform=iOS Simulator,name=iPhone 13 Pro,OS=18.6' \
+  -destination 'platform=iOS Simulator,name=iPhone 17' \
   test -testPlan SwiftUI-SotkaAppTests \
   -only-testing:SwiftUI-SotkaAppTests/WorkoutViewModelTests
 ```
@@ -46,7 +48,7 @@ Run a single test method:
 xcodebuild -project SwiftUI-SotkaApp.xcodeproj \
   -scheme SwiftUI-SotkaAppTests \
   -sdk iphonesimulator \
-  -destination 'platform=iOS Simulator,name=iPhone 13 Pro,OS=18.6' \
+  -destination 'platform=iOS Simulator,name=iPhone 17' \
   test -testPlan SwiftUI-SotkaAppTests \
   -only-testing:SwiftUI-SotkaAppTests/WorkoutViewModelTests/testLoadData
 ```
@@ -143,9 +145,10 @@ Key `.swiftformat` settings applied by `make format`:
 
 1. Read relevant docs in `docs/` before major edits.
 2. Make smallest safe change set; avoid unrelated refactors.
-3. Run `make format` then targeted tests after any code changes.
-4. For broad changes, run full test plans.
-5. If touching UI test flows, validate launch argument `UITest` assumptions.
+3. Run `xcodebuild-mcp` / `Build iOS Apps` build+tests first; if unavailable, use Makefile commands.
+4. Run `make format` after code changes.
+5. For broad changes, run full test plans.
+6. If touching UI test flows, validate launch argument `UITest` assumptions.
 
 ## Practical File Pointers
 

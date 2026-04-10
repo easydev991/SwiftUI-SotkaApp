@@ -2,6 +2,7 @@ import SwiftData
 import SwiftUI
 
 struct SyncJournalScreen: View {
+    @Environment(\.analyticsService) private var analytics
     @Environment(\.modelContext) private var modelContext
     @Query(sort: \SyncJournalEntry.startDate, order: .reverse)
     private var entries: [SyncJournalEntry]
@@ -33,6 +34,7 @@ struct SyncJournalScreen: View {
         .animation(.default, value: entries.isEmpty)
         .navigationTitle(.syncJournal)
         .navigationBarTitleDisplayMode(.inline)
+        .trackScreen(.syncJournal)
         .toolbar {
             if !entries.isEmpty {
                 ToolbarItem(placement: .topBarTrailing) {
@@ -62,10 +64,15 @@ struct SyncJournalScreen: View {
     }
 
     private func deleteAllEntries() {
+        analytics.log(.userAction(action: .clearSyncJournal))
         for entry in entries {
             modelContext.delete(entry)
         }
-        try? modelContext.save()
+        do {
+            try modelContext.save()
+        } catch {
+            analytics.log(.appError(kind: .syncJournalDeleteFailed, error: error))
+        }
     }
 }
 

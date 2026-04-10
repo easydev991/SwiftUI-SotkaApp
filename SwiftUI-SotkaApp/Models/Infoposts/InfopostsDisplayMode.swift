@@ -2,7 +2,7 @@ import Foundation
 import SwiftUI
 
 /// Режимы отображения инфопостов
-enum InfopostsDisplayMode: CaseIterable, Identifiable {
+enum InfopostsDisplayMode: String, CaseIterable, Identifiable {
     var id: Self {
         self
     }

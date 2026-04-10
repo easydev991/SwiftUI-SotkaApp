@@ -5,7 +5,7 @@ import Testing
 extension AllInfopostsTests {
     struct InfopostParserTests {
         private let testInfopost = Infopost(id: "test", title: "Test", content: "Test", section: .base, dayNumber: nil, language: "ru")
-        private let youtubeService = YouTubeVideoService()
+        private let youtubeService = YouTubeVideoService(analytics: AnalyticsService(providers: [NoopAnalyticsProvider()]))
 
         // MARK: - Тесты для prepareHTMLForDisplay
 

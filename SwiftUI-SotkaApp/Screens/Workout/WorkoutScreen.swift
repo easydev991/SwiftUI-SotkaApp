@@ -4,6 +4,7 @@ import SwiftUI
 import SWUtils
 
 struct WorkoutScreen: View {
+    @Environment(\.analyticsService) private var analytics
     @State private var viewModel = WorkoutScreenViewModel()
     @State private var showStopWorkoutConfirmation = false
     @Environment(\.modelContext) private var modelContext
@@ -50,6 +51,7 @@ struct WorkoutScreen: View {
                 }
             }
         }
+        .trackScreen(.workout)
     }
 }
 
@@ -115,6 +117,7 @@ private extension WorkoutScreen {
             title: WorkoutStep.coolDown.localizedTitle,
             state: viewModel.getStepState(for: .coolDown),
             action: {
+                analytics.log(.userAction(action: .completeWorkout))
                 viewModel.completeCurrentStep(appSettings: appSettings)
                 if let result = viewModel.getWorkoutResult() {
                     onWorkoutCompleted(result)
@@ -135,6 +138,7 @@ private extension WorkoutScreen {
                 titleVisibility: .visible
             ) {
                 Button(.workoutScreenStopWorkoutConfirmButton, role: .destructive) {
+                    analytics.log(.userAction(action: .interruptWorkout))
                     if let result = viewModel.getWorkoutResult(interrupt: true) {
                         onWorkoutCompleted(result)
                     }

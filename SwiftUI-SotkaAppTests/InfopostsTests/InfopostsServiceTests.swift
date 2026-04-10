@@ -13,7 +13,11 @@ extension AllInfopostsTests {
         @MainActor
         private func createService(language: String) -> InfopostsService {
             let mockClient = MockInfopostsClient()
-            return InfopostsService(language: language, infopostsClient: mockClient)
+            return InfopostsService(
+                language: language,
+                infopostsClient: mockClient,
+                analytics: AnalyticsService(providers: [NoopAnalyticsProvider()])
+            )
         }
 
         // MARK: - Тесты загрузки инфопостов

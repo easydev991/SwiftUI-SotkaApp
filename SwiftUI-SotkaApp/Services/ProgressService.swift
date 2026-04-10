@@ -14,6 +14,7 @@ final class ProgressService {
     )
     private let progressModel: UserProgress
     private let initialPhotoModels: [TempPhotoModel]
+    private let analytics: AnalyticsService
     var displayMode: ProgressDisplayMode
     var metricsModel = TempMetricsModel()
     var photoModels = [TempPhotoModel]()
@@ -22,10 +23,12 @@ final class ProgressService {
     /// - Parameters:
     ///   - progress: Модель прогресса для изменения
     ///   - mode: Режим отображения
-    init(progress: UserProgress, mode: ProgressDisplayMode) {
+    ///   - analytics: Сервис аналитики
+    init(progress: UserProgress, mode: ProgressDisplayMode, analytics: AnalyticsService) {
         self.progressModel = progress
         self.initialPhotoModels = progress.tempPhotoItems
         self.displayMode = mode
+        self.analytics = analytics
         loadProgress()
     }
 
@@ -48,6 +51,7 @@ final class ProgressService {
         logger.info("Сохраняем прогресс для дня \(logId)")
         guard canSave else {
             logger.error("Невозможно сохранить прогресс: данные не прошли валидацию")
+            analytics.log(.appError(kind: .progressValidationFailed, error: ServiceError.invalidData))
             throw ServiceError.invalidData
         }
         let isNewProgress = progressModel.isEmpty
@@ -60,7 +64,12 @@ final class ProgressService {
             progressModel.user = user
             logger.info("Установлена связь прогресса с пользователем: \(user.id)")
         }
-        try context.save()
+        do {
+            try context.save()
+        } catch {
+            analytics.log(.appError(kind: .progressSaveOperationFailed, error: error))
+            throw error
+        }
         let updatedProgress = progressModel
         logger.info("Прогресс сохранен в SwiftData: \(updatedProgress)")
         if isNewProgress {
@@ -80,7 +89,12 @@ final class ProgressService {
         progressModel.shouldDelete = true
         progressModel.isSynced = false
         progressModel.lastModified = .now
-        try context.save()
+        do {
+            try context.save()
+        } catch {
+            analytics.log(.appError(kind: .progressDeleteOperationFailed, error: error))
+            throw error
+        }
         let logNewShouldDelete = progressModel.shouldDelete
         logger
             .info(
@@ -153,6 +167,7 @@ private extension ProgressService {
     func getCurrentUser(context: ModelContext) throws -> User {
         guard let user = try context.fetch(FetchDescriptor<User>()).first else {
             logger.error("Пользователь не найден в базе данных")
+            analytics.log(.appError(kind: .progressUserNotFound, error: ServiceError.userNotFound))
             throw ServiceError.userNotFound
         }
         logger.info("Найден пользователь с ID: \(user.id)")
