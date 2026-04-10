@@ -263,7 +263,7 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
-			shellScript = "\"${BUILD_DIR%/Build/*}/SourcePackages/checkouts/firebase-ios-sdk/Crashlytics/run\"\n";
+			shellScript = "if [ \"$CONFIGURATION\" != \"Release\" ]; then\n  echo \"Skipping Crashlytics run script for $CONFIGURATION\"\n  exit 0\nfi\n\n\"${BUILD_DIR%/Build/*}/SourcePackages/checkouts/firebase-ios-sdk/Crashlytics/run\"\n";
 		};
 /* End PBXShellScriptBuildPhase section */
 		674A8A6D2DC758BC003F6E50 /* Frameworks */ = {
@@ -396,7 +396,6 @@
 				674A8A5D2DC758BB003F6E50 /* Sources */,
 				674A8A5E2DC758BB003F6E50 /* Frameworks */,
 				674A8A5F2DC758BB003F6E50 /* Resources */,
-				67FF40902F87F8C700DCA2F2 /* Firebase Crashlytics */,
 				67156B602EDD853700334DEF /* Embed Watch Content */,
 				67FF40902F87F8C700DCA2F2 /* Firebase Crashlytics */,
 			);
