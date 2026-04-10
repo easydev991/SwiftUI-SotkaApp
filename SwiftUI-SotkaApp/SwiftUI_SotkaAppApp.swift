@@ -6,6 +6,7 @@ import TipKit
 
 @main
 struct SwiftUI_SotkaAppApp: App {
+    @UIApplicationDelegateAdaptor(AppDelegate.self) var delegate
     @Environment(\.scenePhase) private var scenePhase
     private let youtubeVideoService = YouTubeVideoService()
     private let statusManager: StatusManager
