@@ -25,7 +25,7 @@ Follow these repo-specific conventions and commands.
 - Fallback path: use Makefile commands only when MCP/plugin tools are unavailable.
 - `make setup` - Install all tools (Homebrew, rbenv, Ruby, bundler, fastlane, swiftformat).
 - `make format` - Format Swift code with swiftformat + markdown files with markdownlint.
-- `make build` - Build iOS project for iPhone 13 Pro Simulator (fallback).
+- `make build` - Build iOS project for iPhone 17 Simulator (fallback).
 - `make test` - Run all iOS unit tests (fallback).
 - `make test_watch` - Run all watchOS unit tests (fallback).
 
@@ -37,7 +37,7 @@ Run a single test class:
 xcodebuild -project SwiftUI-SotkaApp.xcodeproj \
   -scheme SwiftUI-SotkaAppTests \
   -sdk iphonesimulator \
-  -destination 'platform=iOS Simulator,name=iPhone 13 Pro,OS=18.6' \
+  -destination 'platform=iOS Simulator,name=iPhone 17' \
   test -testPlan SwiftUI-SotkaAppTests \
   -only-testing:SwiftUI-SotkaAppTests/WorkoutViewModelTests
 ```
@@ -48,7 +48,7 @@ Run a single test method:
 xcodebuild -project SwiftUI-SotkaApp.xcodeproj \
   -scheme SwiftUI-SotkaAppTests \
   -sdk iphonesimulator \
-  -destination 'platform=iOS Simulator,name=iPhone 13 Pro,OS=18.6' \
+  -destination 'platform=iOS Simulator,name=iPhone 17' \
   test -testPlan SwiftUI-SotkaAppTests \
   -only-testing:SwiftUI-SotkaAppTests/WorkoutViewModelTests/testLoadData
 ```

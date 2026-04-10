@@ -17,6 +17,7 @@ SWIFT_VERSION=6.3.0
 SHELL := /bin/bash
 .ONESHELL:
 BUNDLE_EXEC := RBENV_VERSION=$(RUBY_VERSION) bundle exec
+IOS_SIM_DEST ?= platform=iOS Simulator,name=iPhone 13 Pro,OS=18.6
 
 ## help: Показать это справочное сообщение
 help:
@@ -309,7 +310,7 @@ watch_screenshots:
 
 ## build: Сборка проекта в терминале
 build:
-	xcodebuild -project SwiftUI-SotkaApp.xcodeproj -scheme SwiftUI-SotkaApp -sdk iphonesimulator -destination 'platform=iOS Simulator,name=iPhone 13 Pro,OS=18.6' build
+	xcodebuild -project SwiftUI-SotkaApp.xcodeproj -scheme SwiftUI-SotkaApp -sdk iphonesimulator -destination '$(IOS_SIM_DEST)' build
 
 ## test: Запускает unit-тесты в терминале
 test:
@@ -319,7 +320,7 @@ test:
 	xcodebuild -project SwiftUI-SotkaApp.xcodeproj \
 		-scheme SwiftUI-SotkaAppTests \
 		-sdk iphonesimulator \
-		-destination 'platform=iOS Simulator,name=iPhone 13 Pro,OS=18.6' \
+		-destination '$(IOS_SIM_DEST)' \
 		test -testPlan SwiftUI-SotkaAppTests
 
 ## test_watch: Запускает unit-тесты для Apple Watch в терминале
