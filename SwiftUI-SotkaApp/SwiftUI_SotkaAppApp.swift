@@ -15,6 +15,7 @@ struct SwiftUI_SotkaAppApp: App {
     @State private var authHelper: AuthHelperImp
     @State private var networkStatus = NetworkStatus()
     private let client: SWClient
+    private let analyticsService = AnalyticsService(providers: [FirebaseAnalyticsProvider()])
 
     init() {
         // Создаем ModelContainer в init()
@@ -93,6 +94,9 @@ struct SwiftUI_SotkaAppApp: App {
             print("Ошибка TipKit: \(error.localizedDescription)")
         }
         #endif
+
+        statusManager.infopostsService.setAnalytics(analyticsService)
+        youtubeVideoService.setAnalytics(analyticsService)
     }
 
     var body: some Scene {
@@ -123,6 +127,7 @@ struct SwiftUI_SotkaAppApp: App {
             .restTimeBetweenSets(appSettings.restTime)
             .networkStatus(networkStatus.isOnline)
             .environment(youtubeVideoService)
+            .environment(\.analyticsService, analyticsService)
             .preferredColorScheme(appSettings.appTheme.colorScheme)
             .onChange(of: statusManager.currentDayCalculator) { _, newCalculator in
                 guard authHelper.isAuthorized else { return }

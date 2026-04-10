@@ -1,0 +1,67 @@
+---
+description: Архитектурные правила для Firebase Analytics в SwiftUI-SotkaApp
+alwaysApply: true
+---
+
+# Analytics Architecture Rules
+
+## Провайдерная архитектура
+
+- **Event** — `AnalyticsEvent` (enum с `screenView`, `userAction`, `appError`)
+- **Provider** — `AnalyticsProvider` (протокол), `FirebaseAnalyticsProvider` (реализация), `NoopAnalyticsProvider` (тесты)
+- **Service** — `AnalyticsService` (fan-out по провайдерам)
+
+## DI для View
+
+View получает `AnalyticsService` через `@Environment(\.analyticsService)`:
+
+```swift
+struct SomeScreen: View {
+    @Environment(\.analyticsService) private var analytics
+
+    var body: some View {
+        // Используем .trackScreen() из View+Analytics
+        // или analytics.log(.userAction(...))
+    }
+}
+```
+
+## DI для ViewModel
+
+ViewModel **НЕ читает Environment напрямую**. Зависимость передаётся через конструктор:
+
+```swift
+extension SomeScreen {
+    @Observable
+    @MainActor
+    final class ViewModel {
+        private let analytics: AnalyticsService
+
+        init(analytics: AnalyticsService) {
+            self.analytics = analytics
+        }
+    }
+}
+```
+
+Parent screen получает analytics из Environment и передаёт в child:
+
+```swift
+@Environment(\.analyticsService) private var analytics
+...
+ChildScreen(analytics: analytics)
+```
+
+## Правила использования
+
+1. **View**: использует `@Environment(\.analyticsService)` для доступа к аналитике
+2. **ViewModel**: получает `AnalyticsService` через `init(analytics:)`
+3. **Screen tracking**: применяй `.trackScreen(.screenName)` модификатор
+4. **User action**: вызыва `analytics.log(.userAction(action: .actionName))` в ViewModel
+5. **Error tracking**: вызыва `analytics.log(.appError(kind: .errorKind, error: error))` в catch-блоках
+6. **Firebase API**: **НЕ вызывай напрямую** из экранов — только через `AnalyticsService`
+
+## Референсная реализация
+
+- `ThemeIconScreen.swift` — пример DI для View + screen tracking
+- `ThemeIconScreen+ViewModel.swift` — пример constructor injection для ViewModel

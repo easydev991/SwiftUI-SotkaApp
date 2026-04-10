@@ -63,6 +63,7 @@ struct HomeScreen: View {
             }
             .navigationDestination(for: NavigationDestination.self, destination: makeView)
         }
+        .trackScreen(.home)
     }
 }
 

@@ -4,6 +4,7 @@ import SwiftUI
 import SWUtils
 
 struct EditProfileScreen: View {
+    @Environment(\.analyticsService) private var analytics
     @Environment(\.dismiss) private var dismiss
     @Environment(AuthHelperImp.self) private var authHelper
     @Environment(\.isNetworkConnected) private var isNetworkConnected
@@ -57,6 +58,7 @@ struct EditProfileScreen: View {
         .onDisappear { editUserTask?.cancel() }
         .navigationTitle(.editProfile)
         .navigationBarTitleDisplayMode(.inline)
+        .trackScreen(.editProfile)
     }
 }
 
@@ -335,6 +337,7 @@ private extension EditProfileScreen {
     }
 
     func saveChangesAction() {
+        analytics.log(.userAction(action: .tapSave))
         guard !SWAlert.shared.presentNoConnection(isNetworkConnected) else { return }
         isLoading = true
         editUserTask = Task {
@@ -355,6 +358,7 @@ private extension EditProfileScreen {
                 dismiss()
             } catch {
                 isLoading = false
+                analytics.log(.appError(kind: .profileSaveFailed, error: error))
                 SWAlert.shared.presentDefaultUIKit(error)
             }
         }

@@ -4,6 +4,7 @@ import SwiftUI
 import SWUtils
 
 struct WorkoutPreviewScreen: View {
+    @Environment(\.analyticsService) private var analytics
     @Environment(\.restTime) private var restTime
     @Environment(\.modelContext) private var modelContext
     @Environment(\.dismiss) private var dismiss
@@ -54,6 +55,7 @@ struct WorkoutPreviewScreen: View {
             }
             .navigationBarTitleDisplayMode(.inline)
             .onAppear {
+                viewModel.setAnalytics(analytics)
                 viewModel.updateData(
                     modelContext: modelContext,
                     day: day,
@@ -70,12 +72,14 @@ struct WorkoutPreviewScreen: View {
                 }
             }
         }
+        .trackScreen(.workoutPreview)
     }
 }
 
 private extension WorkoutPreviewScreen {
     var openEditorButton: some View {
         Button {
+            analytics.log(.userAction(action: .tapEdit(entityId: "workout_preview_day_\(day)")))
             showEditorScreen.toggle()
         } label: {
             Image(systemName: "pencil")
@@ -217,6 +221,7 @@ private extension WorkoutPreviewScreen {
             hasChanges: viewModel.hasChanges,
             isWorkoutCompleted: viewModel.isWorkoutCompleted,
             onSave: {
+                analytics.log(.userAction(action: .saveWorkout))
                 viewModel.saveTrainingAsPassed(
                     activitiesService: activitiesService,
                     modelContext: modelContext
@@ -235,6 +240,7 @@ private extension WorkoutPreviewScreen {
                 dismiss()
             },
             onStartTraining: {
+                analytics.log(.userAction(action: .startWorkout))
                 showWorkoutScreen = true
             }
         )

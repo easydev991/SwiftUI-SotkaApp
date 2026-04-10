@@ -3,6 +3,7 @@ import SwiftData
 import SwiftUI
 
 struct WorkoutExerciseEditorScreen: View {
+    @Environment(\.analyticsService) private var analytics
     @Environment(\.modelContext) private var modelContext
     @Environment(\.dismiss) private var dismiss
     @Query(FetchDescriptor<CustomExercise>(predicate: #Predicate { !$0.shouldDelete }))
@@ -41,6 +42,7 @@ struct WorkoutExerciseEditorScreen: View {
                 initializeEditableExercises()
             }
         }
+        .trackScreen(.workoutExerciseEditor)
     }
 }
 
@@ -143,6 +145,7 @@ private extension WorkoutExerciseEditorScreen {
         withAnimation {
             editableExercises.removeAll { $0.id == exercise.id }
         }
+        analytics.log(.userAction(action: .deleteExerciseFromWorkout(exerciseName: exerciseTitle(for: exercise))))
     }
 
     func addStandardExercise(_ exerciseType: ExerciseType) {
@@ -155,6 +158,7 @@ private extension WorkoutExerciseEditorScreen {
         withAnimation {
             editableExercises.append(newExercise)
         }
+        analytics.log(.userAction(action: .addExerciseToWorkout(exerciseName: exerciseType.localizedTitle)))
     }
 
     func addCustomExercise(_ customExercise: CustomExercise) {
@@ -167,14 +171,24 @@ private extension WorkoutExerciseEditorScreen {
         withAnimation {
             editableExercises.append(newExercise)
         }
+        analytics.log(.userAction(action: .addExerciseToWorkout(exerciseName: customExercise.name)))
     }
 
     func moveExercise(from source: IndexSet, to destination: Int) {
+        let movedExerciseName = source.first
+            .flatMap { index in editableExercises.indices.contains(index)
+                ? exerciseTitle(
+                    for: editableExercises[index]
+                )
+                : nil
+            } ?? "unknown"
         editableExercises.move(fromOffsets: source, toOffset: destination)
+        analytics.log(.userAction(action: .moveExerciseInWorkout(exerciseName: movedExerciseName)))
     }
 
     func saveChanges() {
         viewModel.updateTrainings(editableExercises)
+        analytics.log(.userAction(action: .tapSave))
         dismiss()
     }
 }

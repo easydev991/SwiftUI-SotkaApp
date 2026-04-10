@@ -4,6 +4,7 @@ import SWUtils
 
 /// Экран для смены пароля
 struct ChangePasswordScreen: View {
+    @Environment(\.analyticsService) private var analytics
     @Environment(\.dismiss) private var dismiss
     @Environment(AuthHelperImp.self) private var authHelper
     @Environment(\.isNetworkConnected) private var isNetworkConnected
@@ -38,6 +39,7 @@ struct ChangePasswordScreen: View {
         .onDisappear { changePasswordTask?.cancel() }
         .navigationTitle(.changePassword)
         .navigationBarTitleDisplayMode(.inline)
+        .trackScreen(.changePassword)
     }
 }
 
@@ -144,6 +146,7 @@ private extension ChangePasswordScreen {
     }
 
     func changePasswordAction() {
+        analytics.log(.userAction(action: .tapSave))
         guard !isLoading else { return }
         guard !SWAlert.shared.presentNoConnection(isNetworkConnected) else { return }
         focus = nil
@@ -158,6 +161,7 @@ private extension ChangePasswordScreen {
                 authHelper.updateAuthData(login: userName, newPassword: model.new.text)
                 isChangeSuccessful = true
             } catch {
+                analytics.log(.appError(kind: .changePasswordFailed, error: error))
                 SWAlert.shared.presentDefaultUIKit(
                     title: String(localized: .error),
                     message: error.localizedDescription

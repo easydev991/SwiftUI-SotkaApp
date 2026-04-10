@@ -5,6 +5,7 @@ import SwiftUI
 
 /// Экран списка пользовательских упражнений
 struct CustomExercisesScreen: View {
+    @Environment(\.analyticsService) private var analytics
     @Query(FetchDescriptor<CustomExercise>(predicate: #Predicate { !$0.shouldDelete }))
     private var customExercises: [CustomExercise]
     @Environment(\.modelContext) private var modelContext
@@ -27,7 +28,10 @@ struct CustomExercisesScreen: View {
         .animation(.bouncy, value: customExercises.isEmpty)
         .toolbar {
             ToolbarItem(placement: .topBarTrailing) {
-                Button { showAddExerciseSheet.toggle() } label: {
+                Button {
+                    analytics.log(.userAction(action: .createExercise))
+                    showAddExerciseSheet.toggle()
+                } label: {
                     Image(systemName: "plus")
                 }
             }
@@ -35,6 +39,7 @@ struct CustomExercisesScreen: View {
         .background(Color.swBackground)
         .navigationTitle(.customExercises)
         .navigationBarTitleDisplayMode(.inline)
+        .trackScreen(.customExercises)
         .sheet(isPresented: $showAddExerciseSheet) {
             NavigationStack {
                 ScrollView {
@@ -120,6 +125,7 @@ private extension CustomExercisesScreen {
     }
 
     func deleteExercise(_ exercise: CustomExercise) {
+        analytics.log(.userAction(action: .deleteExercise(exerciseId: exercise.id)))
         customExercisesService.deleteCustomExercise(
             exercise,
             context: modelContext

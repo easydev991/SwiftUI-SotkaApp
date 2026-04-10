@@ -3,6 +3,7 @@ import SwiftUI
 import SWUtils
 
 struct JournalListView: View {
+    @Environment(\.analyticsService) private var analytics
     @Environment(DailyActivitiesService.self) private var activitiesService
     @Environment(StatusManager.self) private var statusManager
     @Environment(\.currentDay) private var currentDay
@@ -63,14 +64,30 @@ private extension JournalListView {
                     day: day,
                     activity: activity,
                     onComment: { day in
+                        analytics.log(.userAction(
+                            action: .editJournalEntry(dayNumber: "\(day)")
+                        )
+                        )
                         if let activity = activitiesByDay[day] {
                             sheetItem = .comment(activity)
                         }
                     },
                     onDelete: { day in
+                        analytics.log(.userAction(
+                            action: .deleteJournalEntry(dayNumber: "\(day)")
+                        )
+                        )
                         dayForConfirmationDialog = day
                     },
                     onSelectType: { day, activityType in
+                        analytics.log(
+                            .userAction(
+                                action: .selectActivityType(
+                                    type: String(activityType.rawValue),
+                                    dayNumber: "\(day)"
+                                )
+                            )
+                        )
                         if activityType == .workout {
                             sheetItem = .workoutPreview(day)
                         }
@@ -113,7 +130,11 @@ private extension JournalListView {
 
                 // Отправляем статус на часы, если это текущий день
                 if activity.day == currentDay {
-                    statusManager.sendCurrentStatus(isAuthorized: true, currentDay: currentDay, currentActivity: nil)
+                    statusManager.sendCurrentStatus(
+                        isAuthorized: true,
+                        currentDay: currentDay,
+                        currentActivity: nil
+                    )
                 }
 
                 self.dayForConfirmationDialog = nil

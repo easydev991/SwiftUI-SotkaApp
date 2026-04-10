@@ -2,6 +2,7 @@ import SwiftUI
 
 /// Экран просмотра пользовательского упражнения
 struct CustomExerciseScreen: View {
+    @Environment(\.analyticsService) private var analytics
     @State private var isEditing = false
     let exercise: CustomExercise
 
@@ -28,6 +29,7 @@ struct CustomExerciseScreen: View {
             .navigationBarTitleDisplayMode(.inline)
         }
         .scrollBounceBehavior(.basedOnSize)
+        .trackScreen(.customExercise)
     }
 
     private var regularView: some View {
@@ -41,8 +43,14 @@ struct CustomExerciseScreen: View {
         .navigationTitle(.exercise)
         .toolbar {
             ToolbarItem(placement: .topBarTrailing) {
-                Button(.edit) { isEditing.toggle() }
-                    .accessibilityIdentifier("editButton")
+                Button(.edit) {
+                    analytics.log(.userAction(action: .editExercise(
+                        exerciseId: exercise.id
+                    ))
+                    )
+                    isEditing.toggle()
+                }
+                .accessibilityIdentifier("editButton")
             }
         }
     }

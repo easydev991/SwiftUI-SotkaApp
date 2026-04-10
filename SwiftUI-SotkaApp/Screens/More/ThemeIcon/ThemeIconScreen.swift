@@ -3,7 +3,12 @@ import SwiftUI
 
 struct ThemeIconScreen: View {
     @Environment(AppSettings.self) private var appSettings
-    @State private var iconViewModel = ViewModel()
+    @Environment(\.analyticsService) private var analytics
+    @State private var iconViewModel: ViewModel
+
+    init(analytics: AnalyticsService) {
+        _iconViewModel = .init(initialValue: ViewModel(analytics: analytics))
+    }
 
     var body: some View {
         List {
@@ -18,6 +23,10 @@ struct ThemeIconScreen: View {
         .scrollBounceBehavior(.basedOnSize)
         .navigationTitle(.themeIconScreenTitle)
         .navigationBarTitleDisplayMode(.inline)
+        .trackScreen(.themeIcon)
+        .onChange(of: appSettings.appTheme) { _, newValue in
+            analytics.log(.userAction(action: .selectTheme(theme: String(newValue.rawValue))))
+        }
     }
 
     @ViewBuilder
@@ -77,7 +86,7 @@ struct ThemeIconScreen: View {
 
 #Preview {
     NavigationStack {
-        ThemeIconScreen()
+        ThemeIconScreen(analytics: AnalyticsService(providers: [NoopAnalyticsProvider()]))
             .environment(AppSettings())
     }
 }

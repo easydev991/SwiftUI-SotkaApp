@@ -9,7 +9,7 @@ extension AllProgressTests {
         @Test("canSave возвращает false для пустых данных")
         func canSaveReturnsFalseForEmptyData() {
             let progress = UserProgress(id: 1)
-            let service = ProgressService(progress: progress, mode: .metrics)
+            let service = makeService(progress: progress)
 
             #expect(!service.canSave)
         }
@@ -17,7 +17,7 @@ extension AllProgressTests {
         @Test("canSave возвращает false, если данные не изменились")
         func canSaveReturnsTrueForPullUpsOnly() {
             let progress = UserProgress(id: 1, pullUps: 10)
-            let service = ProgressService(progress: progress, mode: .metrics)
+            let service = makeService(progress: progress)
             service.metricsModel.pullUps = "10"
 
             #expect(!service.canSave)
@@ -26,7 +26,7 @@ extension AllProgressTests {
         @Test("canSave возвращает true для данных только с весом")
         func canSaveReturnsTrueForWeightOnly() {
             let progress = UserProgress(id: 1, weight: 70.5)
-            let service = ProgressService(progress: progress, mode: .metrics)
+            let service = makeService(progress: progress)
             service.metricsModel.weight = "70.5"
 
             #expect(service.canSave)
@@ -35,7 +35,7 @@ extension AllProgressTests {
         @Test("canSave возвращает true для полных данных")
         func canSaveReturnsTrueForCompleteData() {
             let progress = UserProgress(id: 1, pullUps: 10, pushUps: 20, squats: 30, weight: 70.5)
-            let service = ProgressService(progress: progress, mode: .metrics)
+            let service = makeService(progress: progress)
             service.metricsModel.pullUps = "10"
             service.metricsModel.pushUps = "20"
             service.metricsModel.squats = "30"
@@ -47,7 +47,7 @@ extension AllProgressTests {
         @Test("canSave возвращает false для отрицательных значений подтягиваний")
         func canSaveReturnsFalseForNegativePullUps() {
             let progress = UserProgress(id: 1)
-            let service = ProgressService(progress: progress, mode: .metrics)
+            let service = makeService(progress: progress)
             service.metricsModel.pullUps = "-5"
 
             #expect(!service.canSave)
@@ -56,7 +56,7 @@ extension AllProgressTests {
         @Test("canSave возвращает false для отрицательных значений отжиманий")
         func canSaveReturnsFalseForNegativePushUps() {
             let progress = UserProgress(id: 1)
-            let service = ProgressService(progress: progress, mode: .metrics)
+            let service = makeService(progress: progress)
             service.metricsModel.pushUps = "-10"
 
             #expect(!service.canSave)
@@ -65,7 +65,7 @@ extension AllProgressTests {
         @Test("canSave возвращает false для отрицательных значений приседаний")
         func canSaveReturnsFalseForNegativeSquats() {
             let progress = UserProgress(id: 1)
-            let service = ProgressService(progress: progress, mode: .metrics)
+            let service = makeService(progress: progress)
             service.metricsModel.squats = "-15"
 
             #expect(!service.canSave)
@@ -74,7 +74,7 @@ extension AllProgressTests {
         @Test("canSave возвращает false для отрицательного веса")
         func canSaveReturnsFalseForNegativeWeight() {
             let progress = UserProgress(id: 1)
-            let service = ProgressService(progress: progress, mode: .metrics)
+            let service = makeService(progress: progress)
             service.metricsModel.weight = "-70.5"
 
             #expect(!service.canSave)
@@ -83,7 +83,7 @@ extension AllProgressTests {
         @Test("canSave возвращает true для нулевых значений подтягиваний")
         func canSaveReturnsTrueForZeroPullUps() {
             let progress = UserProgress(id: 1)
-            let service = ProgressService(progress: progress, mode: .metrics)
+            let service = makeService(progress: progress)
             service.metricsModel.pullUps = "0"
 
             #expect(service.canSave)
@@ -92,7 +92,7 @@ extension AllProgressTests {
         @Test("canSave возвращает true для нулевых значений отжиманий")
         func canSaveReturnsTrueForZeroPushUps() {
             let progress = UserProgress(id: 1)
-            let service = ProgressService(progress: progress, mode: .metrics)
+            let service = makeService(progress: progress)
             service.metricsModel.pushUps = "0"
 
             #expect(service.canSave)
@@ -101,7 +101,7 @@ extension AllProgressTests {
         @Test("canSave возвращает true для нулевых значений приседаний")
         func canSaveReturnsTrueForZeroSquats() {
             let progress = UserProgress(id: 1)
-            let service = ProgressService(progress: progress, mode: .metrics)
+            let service = makeService(progress: progress)
             service.metricsModel.squats = "0"
 
             #expect(service.canSave)
@@ -110,7 +110,7 @@ extension AllProgressTests {
         @Test("canSave возвращает true для нулевого веса")
         func canSaveReturnsTrueForZeroWeight() {
             let progress = UserProgress(id: 1)
-            let service = ProgressService(progress: progress, mode: .metrics)
+            let service = makeService(progress: progress)
             service.metricsModel.weight = "0"
 
             #expect(service.canSave)
@@ -119,7 +119,7 @@ extension AllProgressTests {
         @Test("canSave возвращает true для дробного веса")
         func canSaveReturnsTrueForDecimalWeight() {
             let progress = UserProgress(id: 1)
-            let service = ProgressService(progress: progress, mode: .metrics)
+            let service = makeService(progress: progress)
             service.metricsModel.weight = "70.5"
 
             #expect(service.canSave)
@@ -128,7 +128,7 @@ extension AllProgressTests {
         @Test("canSave возвращает false для некорректных символов в подтягиваниях")
         func canSaveReturnsFalseForInvalidCharactersInPullUps() {
             let progress = UserProgress(id: 1)
-            let service = ProgressService(progress: progress, mode: .metrics)
+            let service = makeService(progress: progress)
             service.metricsModel.pullUps = "10a"
 
             #expect(!service.canSave)
@@ -137,7 +137,7 @@ extension AllProgressTests {
         @Test("canSave возвращает false для некорректных символов в весе")
         func canSaveReturnsFalseForInvalidCharactersInWeight() {
             let progress = UserProgress(id: 1)
-            let service = ProgressService(progress: progress, mode: .metrics)
+            let service = makeService(progress: progress)
             service.metricsModel.weight = "70.5.5"
 
             #expect(!service.canSave)
@@ -146,7 +146,7 @@ extension AllProgressTests {
         @Test("canSave возвращает false для нового прогресса без данных")
         func canSaveReturnsFalseForNewProgressWithoutData() {
             let progress = UserProgress(id: 1)
-            let service = ProgressService(progress: progress, mode: .metrics)
+            let service = makeService(progress: progress)
 
             #expect(!service.canSave)
         }
@@ -154,7 +154,7 @@ extension AllProgressTests {
         @Test("canSave возвращает true для нового прогресса с данными")
         func canSaveReturnsTrueForNewProgressWithData() {
             let progress = UserProgress(id: 1)
-            let service = ProgressService(progress: progress, mode: .metrics)
+            let service = makeService(progress: progress)
             service.metricsModel.pullUps = "10"
 
             #expect(service.canSave)
@@ -163,7 +163,7 @@ extension AllProgressTests {
         @Test("canSave возвращает false для существующего прогресса без изменений")
         func canSaveReturnsFalseForExistingProgressWithoutChanges() {
             let progress = UserProgress(id: 1, pullUps: 10, pushUps: 20, squats: 30, weight: 70.5)
-            let service = ProgressService(progress: progress, mode: .metrics)
+            let service = makeService(progress: progress)
             // Данные загружаются из прогресса, поэтому изменений нет
 
             #expect(!service.canSave)
@@ -172,7 +172,7 @@ extension AllProgressTests {
         @Test("canSave возвращает true при изменении подтягиваний")
         func canSaveReturnsTrueWhenPullUpsChanged() {
             let progress = UserProgress(id: 1, pullUps: 10, pushUps: 20, squats: 30, weight: 70.5)
-            let service = ProgressService(progress: progress, mode: .metrics)
+            let service = makeService(progress: progress)
             service.metricsModel.pullUps = "15" // Изменили значение
 
             #expect(service.canSave)
@@ -181,7 +181,7 @@ extension AllProgressTests {
         @Test("canSave возвращает true при изменении веса")
         func canSaveReturnsTrueWhenWeightChanged() {
             let progress = UserProgress(id: 1, pullUps: 10, pushUps: 20, squats: 30, weight: 70.5)
-            let service = ProgressService(progress: progress, mode: .metrics)
+            let service = makeService(progress: progress)
             service.metricsModel.weight = "75.0" // Изменили значение
 
             #expect(service.canSave)
@@ -190,7 +190,7 @@ extension AllProgressTests {
         @Test("canSave возвращает false при установке того же значения")
         func canSaveReturnsFalseWhenSettingSameValue() {
             let progress = UserProgress(id: 1, pullUps: 10, pushUps: 20, squats: 30, weight: 70.5)
-            let service = ProgressService(progress: progress, mode: .metrics)
+            let service = makeService(progress: progress)
             service.metricsModel.pullUps = "10" // Установили то же значение
 
             #expect(!service.canSave)
@@ -199,7 +199,7 @@ extension AllProgressTests {
         @Test("loadProgress корректно загружает данные из прогресса")
         func loadProgressLoadsDataFromProgress() {
             let progress = UserProgress(id: 1, pullUps: 10, pushUps: 20, squats: 30, weight: 70.5)
-            let service = ProgressService(progress: progress, mode: .metrics)
+            let service = makeService(progress: progress)
 
             #expect(service.metricsModel.pullUps == "10")
             #expect(service.metricsModel.pushUps == "20")
@@ -210,7 +210,7 @@ extension AllProgressTests {
         @Test("loadProgress корректно обрабатывает nil значения")
         func loadProgressHandlesNilValues() {
             let progress = UserProgress(id: 1, pullUps: nil, pushUps: 20, squats: nil, weight: nil)
-            let service = ProgressService(progress: progress, mode: .metrics)
+            let service = makeService(progress: progress)
 
             #expect(service.metricsModel.pullUps == "")
             #expect(service.metricsModel.pushUps == "20")
@@ -221,7 +221,7 @@ extension AllProgressTests {
         @Test("loadProgress корректно обрабатывает нулевые значения")
         func loadProgressHandlesZeroValues() {
             let progress = UserProgress(id: 1, pullUps: 0, pushUps: 0, squats: 0, weight: 0.0)
-            let service = ProgressService(progress: progress, mode: .metrics)
+            let service = makeService(progress: progress)
 
             #expect(service.metricsModel.pullUps == "")
             #expect(service.metricsModel.pushUps == "")
@@ -246,7 +246,7 @@ extension AllProgressTests {
             modelContext.insert(progress)
             try modelContext.save()
 
-            let service = ProgressService(progress: progress, mode: .metrics)
+            let service = makeService(progress: progress)
 
             // Устанавливаем данные
             service.metricsModel.pullUps = "15"
@@ -282,7 +282,7 @@ extension AllProgressTests {
             modelContext.insert(progress)
             try modelContext.save()
 
-            let service = ProgressService(progress: progress, mode: .metrics)
+            let service = makeService(progress: progress)
 
             // Устанавливаем данные
             service.metricsModel.pullUps = "10"
@@ -297,7 +297,7 @@ extension AllProgressTests {
         @Test("deleteProgress помечает прогресс для удаления")
         func deleteProgressMarksProgressForDeletion() throws {
             let progress = UserProgress(id: 1, pullUps: 10)
-            let service = ProgressService(progress: progress, mode: .metrics)
+            let service = makeService(progress: progress)
 
             // Создаем модельный контекст для теста
             let modelContext = try createTestModelContext()
@@ -322,6 +322,14 @@ extension AllProgressTests {
             try modelContainer.mainContext.save()
 
             return modelContainer.mainContext
+        }
+
+        private func makeService(progress: UserProgress) -> ProgressService {
+            ProgressService(
+                progress: progress,
+                mode: .metrics,
+                analytics: AnalyticsService(providers: [NoopAnalyticsProvider()])
+            )
         }
     }
 }

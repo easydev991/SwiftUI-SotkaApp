@@ -11,14 +11,17 @@ extension ThemeIconScreen {
             subsystem: Bundle.main.bundleIdentifier ?? "SotkaApp",
             category: String(describing: ViewModel.self)
         )
+        private let analytics: AnalyticsService
         private(set) var currentAppIcon: IconVariant
 
-        init() {
+        init(analytics: AnalyticsService) {
+            self.analytics = analytics
             let alternateIconName = UIApplication.shared.alternateIconName
             self.currentAppIcon = IconVariant(name: alternateIconName)
         }
 
         func setIcon(_ icon: IconVariant) async {
+            analytics.log(.userAction(action: .selectAppIcon(iconName: icon.rawValue)))
             do {
                 guard UIApplication.shared.supportsAlternateIcons else {
                     throw IconError.alternateIconsNotSupported
@@ -28,6 +31,7 @@ extension ThemeIconScreen {
                 currentAppIcon = icon
                 logger.info("Установили иконку: \(icon.rawValue)")
             } catch {
+                analytics.log(.appError(kind: .setIconFailed, error: error))
                 logger.error("\(error.localizedDescription)")
             }
         }

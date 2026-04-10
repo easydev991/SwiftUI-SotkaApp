@@ -41,6 +41,7 @@ struct SyncJournalEntryDetailsScreen: View {
         }
         .navigationTitle(formatDateForTitle(entry.startDate))
         .navigationBarTitleDisplayMode(.inline)
+        .trackScreen(.syncJournalEntry)
     }
 }
 

@@ -9,6 +9,7 @@ struct MoreScreen: View {
     @Environment(AppSettings.self) private var appSettings
     @Environment(StatusManager.self) private var statusManager
     @Environment(\.modelContext) private var modelContext
+    @Environment(\.analyticsService) private var analytics
     @AppStorage(Key.isWorkoutGroupExpanded.rawValue) private var isWorkoutGroupExpanded = true
     @AppStorage(Key.isWorkoutRestGroupExpanded.rawValue) private var isWorkoutRestGroupExpanded = true
     @State private var aboutInfopost: Infopost?
@@ -54,16 +55,23 @@ struct MoreScreen: View {
             .animation(.default, value: isWorkoutRestGroupExpanded)
             .navigationTitle(.more)
             .navigationBarTitleDisplayMode(.inline)
+            .trackScreen(.more)
             .onAppear {
                 if aboutInfopost == nil {
                     aboutInfopost = statusManager.infopostsService.loadAboutInfopost()
                 }
             }
+            .onChange(of: appSettings.workoutNotificationsEnabled) { _, _ in
+                analytics.log(.userAction(action: .toggleWorkoutNotifications))
+            }
+            .onChange(of: appSettings.restTime) { _, newValue in
+                analytics.log(.userAction(action: .selectRestTime(seconds: newValue)))
+            }
         }
     }
 
     private var appThemeAndIconButton: some View {
-        NavigationLink(destination: ThemeIconScreen()) {
+        NavigationLink(destination: ThemeIconScreen(analytics: analytics)) {
             Text(.themeIconScreenTitle)
         }
         .accessibilityIdentifier("appThemeIconButton")
@@ -192,6 +200,7 @@ struct MoreScreen: View {
             titleVisibility: .visible
         ) {
             Button(.moreScreenResetProgramDialogConfirm, role: .destructive) {
+                analytics.log(.userAction(action: .confirmResetProgram))
                 Task {
                     await statusManager.resetProgram()
                 }

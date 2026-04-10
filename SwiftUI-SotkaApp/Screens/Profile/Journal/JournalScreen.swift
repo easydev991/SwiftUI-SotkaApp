@@ -2,6 +2,7 @@ import SWDesignSystem
 import SwiftUI
 
 struct JournalScreen: View {
+    @Environment(\.analyticsService) private var analytics
     @AppStorage(SortOrder.appStorageKey) private var sortOrder = SortOrder.forward
     @AppStorage(DisplayMode.appStorageKey) private var displayMode = DisplayMode.grid
     let user: User
@@ -35,6 +36,15 @@ struct JournalScreen: View {
         .background(Color.swBackground)
         .navigationTitle(.journal)
         .navigationBarTitleDisplayMode(.inline)
+        .trackScreen(.journal)
+        .onChange(of: sortOrder) { _, _ in
+            analytics.log(
+                .userAction(action: .selectJournalSort(newSortOrder: "\(sortOrder.rawValue)"))
+            )
+        }
+        .onChange(of: displayMode) { _, _ in
+            analytics.log(.userAction(action: .selectJournalDisplayMode(newDisplayMode: "\(displayMode.id)")))
+        }
     }
 }
 

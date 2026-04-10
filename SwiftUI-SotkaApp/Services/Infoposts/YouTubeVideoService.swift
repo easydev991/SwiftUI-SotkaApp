@@ -8,6 +8,16 @@ final class YouTubeVideoService {
     @ObservationIgnored private let logger = Logger(subsystem: "SotkaApp", category: "YouTubeVideoService")
     @ObservationIgnored private var cachedVideos: [YouTubeVideo]?
 
+    private var analytics: AnalyticsService?
+
+    init(analytics: AnalyticsService? = nil) {
+        self.analytics = analytics
+    }
+
+    func setAnalytics(_ analytics: AnalyticsService) {
+        self.analytics = analytics
+    }
+
     /// Получает YouTube видео для конкретного дня
     /// - Parameter dayNumber: Номер дня программы
     /// - Returns: YouTube видео или nil, если не найдено
@@ -25,6 +35,7 @@ final class YouTubeVideoService {
             logger.debug("📺 Заголовок видео: \(video.title)")
         } else {
             logger.error("⚠️ Видео для дня \(dayNumber) не найдено в списке из \(videos.count) видео")
+            analytics?.log(.appError(kind: .youtubeVideoNotFound, error: ServiceError.videoNotFoundForDay(dayNumber)))
             logger.debug("📋 Доступные дни: \(videos.map(\.dayNumber).sorted())")
         }
 
@@ -52,6 +63,7 @@ final class YouTubeVideoService {
 
         guard let url = Bundle.main.url(forResource: "youtube_list", withExtension: "txt") else {
             logger.error("❌ Файл youtube_list.txt не найден в бандле")
+            analytics?.log(.appError(kind: .youtubeFileNotFound, error: ServiceError.fileNotFound))
             logger.debug("🔍 Проверяем доступные файлы в бандле:")
             do {
                 let bundleURL = Bundle.main.bundleURL
@@ -77,6 +89,7 @@ final class YouTubeVideoService {
             return videos
         } catch {
             logger.error("❌ Ошибка при чтении файла youtube_list.txt: \(error.localizedDescription)")
+            analytics?.log(.appError(kind: .youtubeFileReadError, error: error))
             throw ServiceError.fileReadError(error)
         }
     }
@@ -143,6 +156,7 @@ extension YouTubeVideoService {
         case fileNotFound
         case fileReadError(Error)
         case parsingError
+        case videoNotFoundForDay(Int)
 
         var errorDescription: String? {
             switch self {
@@ -152,6 +166,8 @@ extension YouTubeVideoService {
                 "Ошибка чтения файла: \(error.localizedDescription)"
             case .parsingError:
                 "Ошибка парсинга файла с видео"
+            case let .videoNotFoundForDay(day):
+                "Видео для дня \(day) не найдено"
             }
         }
     }
