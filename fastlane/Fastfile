@@ -20,6 +20,7 @@ require 'fileutils'
 
 # Проектные константы
 APP_SCHEME_FOR_BUILD                  = "SwiftUI-SotkaApp"
+APP_TARGET_FOR_VERSION_LOOKUP         = "SwiftUI-SotkaApp"
 ARTIFACT_OUTPUT_NAME                  = "SwiftUI-SotkaApp"
 XCODEPROJECT_FILE_FOR_VERSION_LOOKUP  = "SwiftUI-SotkaApp.xcodeproj"
 UITESTS_SCHEME_FOR_SCREENSHOTS        = "SwiftUI-SotkaAppUITests"
@@ -214,7 +215,8 @@ platform :ios do
   desc "Получить следующий номер сборки для отправки"
   lane :get_next_build_number do
     project_version = get_version_number(
-      xcodeproj: XCODEPROJECT_FILE_FOR_VERSION_LOOKUP
+      xcodeproj: XCODEPROJECT_FILE_FOR_VERSION_LOOKUP,
+      target: APP_TARGET_FOR_VERSION_LOOKUP
     )
     latest_build_any = latest_testflight_build_number(
       api_key: asc_key,
