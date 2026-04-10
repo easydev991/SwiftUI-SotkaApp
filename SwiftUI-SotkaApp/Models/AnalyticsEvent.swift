@@ -39,9 +39,16 @@ extension AnalyticsEvent {
         case login
         case logout
         case resetPassword
-        case tapEdit(entityId: String)
-        case tapSave
-        case tapDelete(entityId: String)
+        case editWorkout(dayNumber: String)
+        case editProgress(dayNumber: String)
+        case saveProfile
+        case savePassword
+        case saveWorkoutExercises(dayNumber: String)
+        case openLanguageSettings
+        case openFeedback
+        case openResetProgramDialog
+        case openProfilePhotoPicker
+        case selectProfilePhotoSource(source: String)
         case selectTheme(theme: String)
         case selectAppIcon(iconName: String)
         case toggleWorkoutNotifications
@@ -60,10 +67,10 @@ extension AnalyticsEvent {
         case addProgressPhoto(source: String)
         case deleteProgressPhoto(photoType: Int)
         case selectProgressDisplayMode(dayNumber: String)
-        case infopostFavoriteChanged(isFavorite: Bool, infopostNumber: Int)
+        case infopostFavoriteChanged(isFavorite: Bool, infopostId: String)
         case markInfopostRead
         case selectInfopostDisplayMode(newDisplayMode: String)
-        case selectInfopostFontSize(size: String, entityId: String)
+        case selectInfopostFontSize(size: String, infopostId: String)
         case clearSyncJournal
         case selectSyncSource(source: String)
         case confirmSyncStartDate
@@ -82,9 +89,16 @@ extension AnalyticsEvent {
             case .login: "login"
             case .logout: "logout"
             case .resetPassword: "reset_password"
-            case .tapEdit: "tap_edit"
-            case .tapSave: "tap_save"
-            case .tapDelete: "tap_delete"
+            case .editWorkout: "edit_workout"
+            case .editProgress: "edit_progress"
+            case .saveProfile: "save_profile"
+            case .savePassword: "save_password"
+            case .saveWorkoutExercises: "save_workout_exercises"
+            case .openLanguageSettings: "open_language_settings"
+            case .openFeedback: "open_feedback"
+            case .openResetProgramDialog: "open_reset_program_dialog"
+            case .openProfilePhotoPicker: "open_profile_photo_picker"
+            case .selectProfilePhotoSource: "select_profile_photo_source"
             case .selectTheme: "select_theme"
             case .selectAppIcon: "select_app_icon"
             case .toggleWorkoutNotifications: "toggle_workout_notifications"

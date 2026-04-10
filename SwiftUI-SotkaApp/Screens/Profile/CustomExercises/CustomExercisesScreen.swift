@@ -104,7 +104,10 @@ private extension CustomExercisesScreen {
             label: { Label(.noCustomExercisesYet, systemImage: "figure.mixed.cardio") },
             description: { Text(.createYourFirstCustomExercise) },
             actions: {
-                Button { showAddExerciseSheet.toggle() } label: {
+                Button {
+                    analytics.log(.userAction(action: .createExercise))
+                    showAddExerciseSheet.toggle()
+                } label: {
                     Label(.createExercise, systemImage: "plus")
                 }
                 .buttonStyle(.borderedProminent)

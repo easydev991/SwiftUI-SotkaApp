@@ -93,6 +93,7 @@ struct MoreScreen: View {
         .alert(.alertLanguage, isPresented: $settings.showLanguageAlert) {
             Button(.cancel, role: .cancel) {}
             Button(.goToSettings) {
+                analytics.log(.userAction(action: .openLanguageSettings))
                 let settingsUrl = URL(string: UIApplication.openSettingsURLString)
                 URLOpener.open(settingsUrl)
             }
@@ -185,6 +186,7 @@ struct MoreScreen: View {
 
     private var feedbackButton: some View {
         Button(.sendFeedback) {
+            analytics.log(.userAction(action: .openFeedback))
             appSettings.sendFeedback()
         }
         .accessibilityIdentifier("sendFeedbackButton")
@@ -192,6 +194,7 @@ struct MoreScreen: View {
 
     private var resetProgramButton: some View {
         Button(.moreScreenResetProgramButton) {
+            analytics.log(.userAction(action: .openResetProgramDialog))
             showResetDialog = true
         }
         .confirmationDialog(

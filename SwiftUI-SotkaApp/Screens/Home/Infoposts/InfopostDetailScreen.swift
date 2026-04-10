@@ -54,7 +54,7 @@ struct InfopostDetailScreen: View {
                 .userAction(
                     action: .selectInfopostFontSize(
                         size: newValue.rawValue,
-                        entityId: infopost.id
+                        infopostId: infopost.id
                     )
                 )
             )
@@ -83,7 +83,7 @@ private extension InfopostDetailScreen {
                 .userAction(
                     action: .infopostFavoriteChanged(
                         isFavorite: nextFavoriteState,
-                        infopostNumber: infopost.dayNumber ?? 0
+                        infopostId: infopost.id
                     )
                 )
             )

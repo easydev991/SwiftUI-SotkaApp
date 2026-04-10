@@ -146,7 +146,7 @@ private extension ChangePasswordScreen {
     }
 
     func changePasswordAction() {
-        analytics.log(.userAction(action: .tapSave))
+        analytics.log(.userAction(action: .savePassword))
         guard !isLoading else { return }
         guard !SWAlert.shared.presentNoConnection(isNetworkConnected) else { return }
         focus = nil

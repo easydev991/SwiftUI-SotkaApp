@@ -15,22 +15,26 @@ struct FirebaseAnalyticsProvider: AnalyticsProvider {
         case let .userAction(action):
             var params: [String: Any] = ["action": action.name]
             switch action {
-            case let .tapEdit(entityId):
-                params["entity_id"] = entityId
-            case let .tapDelete(entityId):
-                params["entity_id"] = entityId
+            case let .editWorkout(dayNumber):
+                params["day_number"] = dayNumber
+            case let .editProgress(dayNumber):
+                params["day_number"] = dayNumber
+            case let .saveWorkoutExercises(dayNumber):
+                params["day_number"] = dayNumber
             case let .selectAppIcon(iconName):
                 params["icon_name"] = iconName
-            case let .infopostFavoriteChanged(isFavorite, number):
+            case let .infopostFavoriteChanged(isFavorite, id):
                 params["is_favorite"] = isFavorite
-                params["infopost_number"] = number
-            case let .selectInfopostFontSize(size, number):
+                params["infopost_id"] = id
+            case let .selectInfopostFontSize(size, id):
                 params["font_size"] = size
-                params["infopost_number"] = number
+                params["infopost_id"] = id
             case let .selectSyncSource(source):
                 params["source"] = source
             case let .selectRestTime(seconds):
                 params["rest_time"] = seconds
+            case let .selectProfilePhotoSource(source):
+                params["source"] = source
             case let .selectActivityType(type, dayNumber):
                 params["activity_type"] = type
                 params["day_number"] = dayNumber

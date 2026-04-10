@@ -42,11 +42,11 @@ private extension ProgressScreen {
         ProgressGridView(
             user: user,
             onProgressTap: { progress in
-                analytics.log(.userAction(action: .tapEdit(entityId: "\(progress.id)")))
+                analytics.log(.userAction(action: .editProgress(dayNumber: "\(progress.id)")))
                 navigationDestination = .editProgress(progress)
             },
             onPhotoTap: { progress in
-                analytics.log(.userAction(action: .tapEdit(entityId: "\(progress.id)")))
+                analytics.log(.userAction(action: .editProgress(dayNumber: "\(progress.id)")))
                 navigationDestination = .editPhotos(progress)
             }
         )

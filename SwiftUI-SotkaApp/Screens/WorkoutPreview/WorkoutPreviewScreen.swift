@@ -79,7 +79,7 @@ struct WorkoutPreviewScreen: View {
 private extension WorkoutPreviewScreen {
     var openEditorButton: some View {
         Button {
-            analytics.log(.userAction(action: .tapEdit(entityId: "workout_preview_day_\(day)")))
+            analytics.log(.userAction(action: .editWorkout(dayNumber: "\(day)")))
             showEditorScreen.toggle()
         } label: {
             Image(systemName: "pencil")

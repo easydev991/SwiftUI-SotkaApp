@@ -188,7 +188,7 @@ private extension WorkoutExerciseEditorScreen {
 
     func saveChanges() {
         viewModel.updateTrainings(editableExercises)
-        analytics.log(.userAction(action: .tapSave))
+        analytics.log(.userAction(action: .saveWorkoutExercises(dayNumber: "\(viewModel.dayNumber)")))
         dismiss()
     }
 }

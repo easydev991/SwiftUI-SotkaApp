@@ -123,20 +123,25 @@ private extension EditProfileScreen {
                 CachedImage(url: user.avatarUrl, mode: .profileAvatar)
                     .transition(.scale.combined(with: .slide).combined(with: .opacity))
             }
-            Button(.changeProfilePhoto) { showImagePickerDialog.toggle() }
-                .buttonStyle(SWButtonStyle(mode: .tinted, size: .large))
-                .confirmationDialog(
-                    "",
-                    isPresented: $showImagePickerDialog,
-                    titleVisibility: .hidden
-                ) {
-                    Button(.takeAPhoto) {
-                        pickerSourceType = .camera
-                    }
-                    Button(.pickFromGallery) {
-                        pickerSourceType = .photoLibrary
-                    }
+            Button(.changeProfilePhoto) {
+                analytics.log(.userAction(action: .openProfilePhotoPicker))
+                showImagePickerDialog.toggle()
+            }
+            .buttonStyle(SWButtonStyle(mode: .tinted, size: .large))
+            .confirmationDialog(
+                "",
+                isPresented: $showImagePickerDialog,
+                titleVisibility: .hidden
+            ) {
+                Button(.takeAPhoto) {
+                    analytics.log(.userAction(action: .selectProfilePhotoSource(source: "camera")))
+                    pickerSourceType = .camera
                 }
+                Button(.pickFromGallery) {
+                    analytics.log(.userAction(action: .selectProfilePhotoSource(source: "library")))
+                    pickerSourceType = .photoLibrary
+                }
+            }
         }
         .animation(.default, value: newAvatarImageModel)
         .fullScreenCover(item: $pickerSourceType) { sourceType in
@@ -337,7 +342,7 @@ private extension EditProfileScreen {
     }
 
     func saveChangesAction() {
-        analytics.log(.userAction(action: .tapSave))
+        analytics.log(.userAction(action: .saveProfile))
         guard !SWAlert.shared.presentNoConnection(isNetworkConnected) else { return }
         isLoading = true
         editUserTask = Task {

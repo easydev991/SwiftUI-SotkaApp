@@ -121,7 +121,7 @@ private extension InfopostsListScreen {
                     .userAction(
                         action: .infopostFavoriteChanged(
                             isFavorite: !isFavorite,
-                            infopostNumber: infopost.dayNumber ?? 0
+                            infopostId: infopost.id
                         )
                     )
                 )
