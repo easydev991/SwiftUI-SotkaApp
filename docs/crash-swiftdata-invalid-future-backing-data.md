@@ -173,6 +173,60 @@
    - параллельно синком заменить `trainings` или удалить activity;
    - убедиться, что UI не падает.
 
+## Инцидент v4.4.0: `EXC_BREAKPOINT` в `DayActivity.trainings.getter`
+
+### Дата и обстоятельства
+
+- Версия приложения: `4.4.0 (1)`
+- Дата: `2 апреля 2026`
+- Тип: `EXC_BREAKPOINT (SIGTRAP)`, `Triggered by Thread: 0`
+- Стек: `DayActivity.trainings.getter` → `DailyActivitiesService.updateExistingActivity` → `createDailyActivity` → `WorkoutPreviewViewModel.saveTrainingAsPassed`
+
+### Причина
+
+В `updateExistingActivity` выполнялся цикл:
+
+```swift
+existing.trainings.removeAll()
+for training in new.trainings {
+    training.dayActivity = existing
+    existing.trainings.append(training)
+}
+```
+
+Присвоение `training.dayActivity = existing` через inverse relationship мутировало `new.trainings` во время итерации по нему, что приводило к `EXC_BREAKPOINT`.
+
+### Фикс
+
+Реализован через `TrainingReplacementSnapshot` (value-type snapshot):
+
+1. В `createDailyActivity` до вызова `updateExistingActivity` создаётся `trainingsSnapshot = activity.trainings.map(\.trainingReplacementSnapshot)`.
+2. `updateExistingActivity` принимает `trainingsSnapshot: [TrainingReplacementSnapshot]` вместо `new.trainings`.
+3. Создаются новые `DayActivityTraining` из snapshot через `context.insert()`.
+4. `existing.trainings` заменяется единым присвоением.
+5. Старые trainings удаляются через `context.delete()` с проверкой по `ObjectIdentifier`.
+
+### Тесты
+
+Добавлены regression-тесты в `DailyActivitiesUpdateExistingCrashTests.swift`:
+
+- Повторное сохранение trainings для одного дня не падает
+- Старые trainings удаляются из контекста (нет orphan-объектов)
+- Порядок `sortOrder` сохраняется после replace
+- Идемпотентность: 3+ последовательных сохранения не создают дубликатов
+- Стабильная повторная выборка после `context.save()`
+
+### Верификация
+
+- iOS: 1460 тестов пройдено (5 pre-existing падений в `WorkoutScreenViewModelStepCompletionTests`, не связанных с фиксом)
+- watchOS: 189 тестов пройдено без деградации
+- Новых пользовательских строк не добавлено, локализация не затронута
+
+### Файлы
+
+- `SwiftUI-SotkaApp/Services/DailyActivitiesService.swift` — `updateExistingActivity`, `createDailyActivity`, `TrainingReplacementSnapshot`
+- `SwiftUI-SotkaAppTests/DailyActivitiesTests/DailyActivitiesUpdateExistingCrashTests.swift`
+
 ## Вывод
 
-Краш реален, но редкий. По стеку он связан с тем, что SwiftUI рендерит `DayActivityTrainingView` в момент, когда SwiftData relationship уже инвалидирован после sync/update/delete. Минимальный app-level mitigation уже реализован: прямое чтение parent relationship убрано из рендера, а UI переведён на отдельный query + value snapshot. Если после релиза обновления такие краши сохранятся, следующим шагом нужно будет пересмотреть саму стратегию mutation для `trainings` в sync-слое.
+Краш реален, но редкий. По стеку он связан с тем, что SwiftUI рендерит `DayActivityTrainingView` в момент, когда SwiftData relationship уже инвалидирован после sync/update/delete. Минимальный app-level mitigation уже реализован: прямое чтение parent relationship убрано из рендера, а UI переведён на отдельный query + value snapshot. В v4.4.0 дополнительно устранён краш в mutation-слое: замена trainings теперь работает через value-type snapshot без мутации итерируемой коллекции.
