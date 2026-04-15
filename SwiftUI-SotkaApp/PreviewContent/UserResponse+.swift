@@ -14,5 +14,11 @@ extension UserResponse {
         gender: 0,
         birthDate: Calendar(identifier: .iso8601).date(from: DateComponents(year: 1990, month: 10, day: 10))
     )
+
+    static let offlinePreview = Self(
+        id: -1,
+        name: "offline-user",
+        gender: Gender.male.code
+    )
 }
 #endif

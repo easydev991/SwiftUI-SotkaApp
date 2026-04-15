@@ -14,6 +14,10 @@ struct MoreScreen: View {
     @AppStorage(Key.isWorkoutRestGroupExpanded.rawValue) private var isWorkoutRestGroupExpanded = true
     @State private var aboutInfopost: Infopost?
     @State private var showResetDialog = false
+    @Query private var users: [User]
+    private var isOfflineUser: Bool {
+        users.first?.isOfflineOnly ?? false
+    }
 
     var body: some View {
         NavigationStack {
@@ -25,7 +29,9 @@ struct MoreScreen: View {
                     debugCurrentDayPicker
                     #endif
                     workoutSettingsGroup
-                    syncJournalButton
+                    if !isOfflineUser {
+                        syncJournalButton
+                    }
                 }
                 if currentDay > 1 {
                     Section(.moreScreenResetProgramSection) {

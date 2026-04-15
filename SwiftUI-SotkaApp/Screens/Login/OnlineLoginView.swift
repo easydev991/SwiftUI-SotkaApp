@@ -1,82 +1,24 @@
 import SWDesignSystem
-import SwiftData
 import SwiftUI
 import SWKeychain
 import SWUtils
 
-struct LoginScreen: View {
+struct OnlineLoginView: View {
+    @Environment(\.modelContext) private var modelContext
     @Environment(AuthHelperImp.self) private var authHelper
     @Environment(\.analyticsService) private var analytics
-    @Environment(\.modelContext) private var modelContext
     @Environment(\.isNetworkConnected) private var isNetworkConnected
-    @State private var showLoginScreen = false
     @State private var credentials = LoginCredentials()
-    @FocusState private var focus: FocusableField?
     @State private var isLoading = false
-    /// Текст ошибки при восстановлении пароля
     @State private var resetErrorMessage = ""
-    /// Текст ошибки при авторизации
     @State private var authErrorMessage = ""
     @State private var loginTask: Task<Void, Never>?
     @State private var restorePasswordTask: Task<Void, Never>?
+    @FocusState private var focus: FocusableField?
     let client: LoginClient & StatusClient
+    let closeAction: () -> Void
 
     var body: some View {
-        NavigationStack {
-            ZStack {
-                if showLoginScreen {
-                    authView
-                } else {
-                    welcomeView
-                }
-            }
-            .animation(.spring, value: showLoginScreen)
-            .padding()
-            .loadingOverlay(if: isLoading)
-            .background(Color.swBackground)
-            .onChange(of: credentials) { _, _ in clearErrorMessages() }
-            .onChange(of: isLoading) { _, newValue in
-                if newValue { focus = nil }
-            }
-            .onDisappear {
-                [loginTask, restorePasswordTask].forEach { $0?.cancel() }
-            }
-        }
-        .trackScreen(.login)
-    }
-}
-
-private extension LoginScreen {
-    enum FocusableField: Hashable {
-        case username, password
-    }
-
-    var isError: Bool {
-        !authErrorMessage.isEmpty || !resetErrorMessage.isEmpty
-    }
-
-    var canLogIn: Bool {
-        credentials.canLogIn(isError: isError)
-    }
-
-    var welcomeView: some View {
-        VStack(spacing: 32) {
-            Image(.launcherLogo)
-            VStack(spacing: 16) {
-                Button(.loginScreenAuthorizeButtonTitle) {
-                    showLoginScreen.toggle()
-                }
-                .buttonStyle(SWButtonStyle(mode: .filled, size: .large))
-                Text(.loginScreenRegistrationInfoText)
-                    .font(.footnote.weight(.medium))
-                    .multilineTextAlignment(.center)
-                    .foregroundStyle(Color.swMainText)
-            }
-        }
-        .transition(.scale(2).combined(with: .opacity))
-    }
-
-    var authView: some View {
         VStack(spacing: 0) {
             VStack(spacing: 12) {
                 loginField
@@ -91,11 +33,32 @@ private extension LoginScreen {
         .navigationTitle(.authorization)
         .toolbar {
             ToolbarItem(placement: .topBarLeading) {
-                if showLoginScreen {
-                    CloseButton(mode: .xmark) { showLoginScreen.toggle() }
-                }
+                CloseButton(mode: .xmark, action: closeAction)
             }
         }
+        .loadingOverlay(if: isLoading)
+        .onChange(of: credentials) { _, _ in clearErrorMessages() }
+        .onChange(of: isLoading) { _, newValue in
+            if newValue { focus = nil }
+        }
+        .onDisappear {
+            [loginTask, restorePasswordTask].forEach { $0?.cancel() }
+        }
+        .trackScreen(.onlineLogin)
+    }
+}
+
+private extension OnlineLoginView {
+    enum FocusableField: Hashable {
+        case username, password
+    }
+
+    var isError: Bool {
+        !authErrorMessage.isEmpty || !resetErrorMessage.isEmpty
+    }
+
+    var canLogIn: Bool {
+        credentials.canLogIn(isError: isError)
     }
 
     var loginField: some View {
@@ -207,14 +170,26 @@ private extension LoginScreen {
 
 #if DEBUG
 #Preview("Успех") {
-    LoginScreen(client: MockLoginClient(result: .success))
+    NavigationStack {
+        OnlineLoginView(
+            client: MockLoginClient(result: .success),
+            closeAction: { print("нажали крестик") }
+        )
+        .padding()
         .environment(AuthHelperImp())
         .environment(\.isNetworkConnected, true)
+    }
 }
 
 #Preview("Ошибка") {
-    LoginScreen(client: MockLoginClient(result: .failure()))
+    NavigationStack {
+        OnlineLoginView(
+            client: MockLoginClient(result: .failure()),
+            closeAction: { print("нажали крестик") }
+        )
+        .padding()
         .environment(AuthHelperImp())
         .environment(\.isNetworkConnected, true)
+    }
 }
 #endif

@@ -351,4 +351,27 @@ struct CountriesUpdateServiceTests {
         #expect(lastUpdateDate >= beforeTime)
         #expect(lastUpdateDate <= afterTime)
     }
+
+    @Test("Не должен обновлять страны для офлайн-пользователя")
+    func noUpdateForOfflineUser() async throws {
+        let mockClient = MockCountriesClient()
+        let defaults = try MockUserDefaults.create()
+        let service = CountriesUpdateService(defaults: defaults, client: mockClient)
+
+        let container = try ModelContainer(
+            for: Country.self, User.self,
+            configurations: ModelConfiguration(isStoredInMemoryOnly: true)
+        )
+        let context = container.mainContext
+
+        let offlineUser = User(id: -1, userName: "offline-user", fullName: nil, email: nil)
+        context.insert(offlineUser)
+        try context.save()
+
+        service.update(context)
+        await Self.waitForTaskCompletion(service)
+
+        #expect(mockClient.getCountriesCallCount == 0)
+        #expect(!service.isLoading)
+    }
 }

@@ -68,9 +68,11 @@ private extension ProfileScreen {
     var horizontalView: some View {
         HStack(spacing: 16) {
             if let user {
-                VStack(spacing: 12) {
-                    makeProfileView(for: user)
-                    makeEditProfileButton(for: user)
+                if !user.isOfflineOnly {
+                    VStack(spacing: 12) {
+                        makeProfileView(for: user)
+                        makeEditProfileButton(for: user)
+                    }
                 }
                 VStack(spacing: 12) {
                     makeJournalButton(for: user)
@@ -84,10 +86,12 @@ private extension ProfileScreen {
     var verticalView: some View {
         VStack(spacing: 0) {
             if let user {
-                makeProfileView(for: user)
-                    .padding(24)
-                makeEditProfileButton(for: user)
-                    .padding(.bottom, 24)
+                if !user.isOfflineOnly {
+                    makeProfileView(for: user)
+                        .padding(24)
+                    makeEditProfileButton(for: user)
+                        .padding(.bottom, 24)
+                }
                 VStack(spacing: 12) {
                     makeJournalButton(for: user)
                     makeProgressButton(for: user)
@@ -165,7 +169,7 @@ private extension ProfileScreen {
     }
 
     func refreshProfile() async {
-        guard let user else { return }
+        guard let user, !user.isOfflineOnly else { return }
         guard !SWAlert.shared.presentNoConnection(isNetworkConnected) else { return }
         do {
             let response = try await client.getUserByID(user.id)
@@ -184,9 +188,15 @@ private extension ProfileScreen {
 }
 
 #if DEBUG
-#Preview {
+#Preview("Онлайн-пользователь") {
     ProfileScreen()
         .environment(AuthHelperImp())
         .modelContainer(PreviewModelContainer.make(with: .init(from: .preview)))
+}
+
+#Preview("Офлайн-пользователь") {
+    ProfileScreen()
+        .environment(AuthHelperImp())
+        .modelContainer(PreviewModelContainer.make(with: .init(from: .offlinePreview)))
 }
 #endif

@@ -9,8 +9,12 @@ protocol AuthHelper: AnyObject, Sendable {
     var authToken: String? { get }
     /// Статус авторизации
     var isAuthorized: Bool { get }
+    /// Флаг офлайн-пользователя
+    var isOfflineOnly: Bool { get }
     /// Логаут с удалением всех данных пользователя
     func triggerLogout()
+    /// Офлайн-авторизация без серверных кредов
+    func performOfflineLogin()
 }
 
 @MainActor
@@ -46,6 +50,18 @@ final class AuthHelperImp: AuthHelper {
         }
     }
 
+    private(set) var isOfflineOnly: Bool {
+        get {
+            access(keyPath: \.isOfflineOnly)
+            return defaults.bool(forKey: Constants.isOfflineOnlyKey)
+        }
+        set {
+            withMutation(keyPath: \.isOfflineOnly) {
+                defaults.set(newValue, forKey: Constants.isOfflineOnlyKey)
+            }
+        }
+    }
+
     var authToken: String? {
         authData?.token
     }
@@ -68,11 +84,19 @@ final class AuthHelperImp: AuthHelper {
 
     func didAuthorize() {
         isAuthorized = true
+        isOfflineOnly = false
+    }
+
+    func performOfflineLogin() {
+        authData = nil
+        isOfflineOnly = true
+        isAuthorized = true
     }
 
     func triggerLogout() {
         authData = nil
         isAuthorized = false
+        isOfflineOnly = false
     }
 }
 

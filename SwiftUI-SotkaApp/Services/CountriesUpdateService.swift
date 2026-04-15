@@ -60,6 +60,12 @@ final class CountriesUpdateService {
     /// - Parameters:
     ///   - context: Контекст `Swift Data`
     func update(_ context: ModelContext) {
+        let user = try? context.fetch(FetchDescriptor<User>()).first
+        if let user, user.isOfflineOnly {
+            logger.debug("Пропуск обновления стран для офлайн-пользователя")
+            return
+        }
+
         guard !isLoading else { return }
         let countries = try? context.fetch(FetchDescriptor<Country>())
         let hasCountries = countries?.isEmpty == false

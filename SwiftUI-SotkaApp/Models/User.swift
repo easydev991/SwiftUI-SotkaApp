@@ -60,6 +60,14 @@ final class User {
         self.birthDateIsoString = birthDateIsoString
     }
 
+    convenience init(offlineWithGenderCode genderCode: Int) {
+        self.init(
+            id: -1,
+            userName: "offline-user",
+            genderCode: genderCode
+        )
+    }
+
     convenience init(from response: UserResponse) {
         self.init(
             id: response.id,
@@ -83,6 +91,10 @@ extension User {
     var gender: Gender? {
         guard let genderCode else { return nil }
         return Gender(genderCode)
+    }
+
+    var isOfflineOnly: Bool {
+        userName == "offline-user"
     }
 
     var genderWithAge: String {

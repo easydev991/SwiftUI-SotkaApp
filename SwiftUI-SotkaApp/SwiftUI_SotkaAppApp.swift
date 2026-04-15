@@ -114,7 +114,7 @@ struct SwiftUI_SotkaAppApp: App {
                             await appSettings.syncNotificationSettings()
                         }
                 } else {
-                    LoginScreen(client: client)
+                    WelcomeScreen(client: client)
                 }
             }
             .loadingOverlay(if: showLoadingOverlay)
@@ -162,12 +162,9 @@ struct SwiftUI_SotkaAppApp: App {
 
 private extension SwiftUI_SotkaAppApp {
     var showLoadingOverlay: Bool {
-        let isLoadingInitialData = statusManager.state.isLoadingInitialData
-        let isAuthorized = authHelper.isAuthorized
-        let isDayCalculatorAvailable = statusManager.currentDayCalculator != nil
-        return isAuthorized
-            ? isLoadingInitialData || !isDayCalculatorAvailable
-            : false
+        guard authHelper.isAuthorized, !authHelper.isOfflineOnly else { return false }
+        return statusManager.state.isLoadingInitialData
+            || statusManager.currentDayCalculator == nil
     }
 
     static var localeIdentifier: String {
@@ -185,7 +182,7 @@ private extension SwiftUI_SotkaAppApp {
     ) {
         let authHelper = AuthHelperImp()
         let mockClient = MockSWClient(instantResponse: true)
-        // Настоящий клиент только для для LoginScreen, хотя он не показывается
+        // Настоящий клиент только для для WelcomeScreen, хотя он не показывается
         let clientForProperty = SWClient(with: authHelper)
         let statusManager = StatusManager(
             customExercisesService: .init(client: mockClient),
@@ -203,7 +200,7 @@ private extension SwiftUI_SotkaAppApp {
         let countriesService = CountriesUpdateService(client: mockClient)
         authHelper.didAuthorize()
         statusManager.setCurrentDayForDebug(12)
-        // Возвращаем настоящий клиент для LoginScreen (хотя он не показывается, так как авторизация пропущена)
+        // Возвращаем настоящий клиент для WelcomeScreen (хотя он не показывается, так как авторизация пропущена)
         return (statusManager, countriesService, authHelper, clientForProperty)
     }
 }

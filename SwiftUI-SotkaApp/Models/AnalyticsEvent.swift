@@ -33,6 +33,8 @@ extension AnalyticsEvent {
         case syncJournalEntry = "sync_journal_entry"
         case syncStartDate = "sync_start_date"
         case syncStartDateHelp = "sync_start_date_help"
+        case offlineLogin = "offline_login"
+        case onlineLogin = "online_login"
     }
 
     enum UserAction {
@@ -83,6 +85,7 @@ extension AnalyticsEvent {
         case moveExerciseInWorkout(exerciseName: String)
         case saveWorkout
         case confirmResetProgram
+        case beginOfflineLogin
 
         var name: String {
             switch self {
@@ -133,6 +136,7 @@ extension AnalyticsEvent {
             case .moveExerciseInWorkout: "move_exercise_in_workout"
             case .saveWorkout: "save_workout"
             case .confirmResetProgram: "confirm_reset_program"
+            case .beginOfflineLogin: "begin_offline_login"
             }
         }
     }

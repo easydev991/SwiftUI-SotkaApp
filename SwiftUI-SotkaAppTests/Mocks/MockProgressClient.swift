@@ -104,12 +104,12 @@ final class MockProgressClient: ProgressClient, @unchecked Sendable {
         if shouldThrowError {
             throw errorToThrow
         }
-        if responseIndex < mockedProgressResponses.count {
-            let response = mockedProgressResponses[responseIndex]
-            responseIndex += 1
-            return response
+
+        // Для update ожидаем детерминированный ответ по дню, чтобы исключить flaky-поведение.
+        if let matching = mockedProgressResponses.first(where: { $0.id == day }) {
+            return matching
         }
-        // Возвращаем ответ на основе переданного прогресса
+
         return ProgressResponse(
             id: progress.id,
             pullups: progress.pullups,
