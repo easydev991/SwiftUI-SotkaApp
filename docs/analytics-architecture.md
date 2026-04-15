@@ -58,7 +58,7 @@
 
 ## 6. Покрытие экранов
 
-- `screenView` внедрен для основных экранов приложения (auth, home, infoposts, workout, profile, journal, progress, custom exercises, settings, sync).
+- `screenView` внедрен для основных экранов приложения (welcome/online/offline auth, home, infoposts, workout, journal, progress, custom exercises, more/settings, sync).
 - Ключевые `userAction` и `appError` внедрены в критичных пользовательских сценариях тех же модулей.
 
 ## 7. Текущее состояние внедрения

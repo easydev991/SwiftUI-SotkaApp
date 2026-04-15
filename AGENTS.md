@@ -107,7 +107,7 @@ Key `.swiftformat` settings applied by `make format`:
 - Offline-first is mandatory for all app behavior.
 - Persist locally first (SwiftData), then sync asynchronously.
 - Sync must be optional and non-blocking for user flows.
-- Exception: authentication requires network.
+- Online authentication requires network; offline login is supported and must stay fully local-first.
 - SwiftData sync entities carry flags: `isSynced`, `shouldDelete`, `lastModified`/`modifyDate`.
 
 ## Single-User Data Model

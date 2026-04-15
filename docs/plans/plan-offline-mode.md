@@ -60,7 +60,7 @@
 
 ## Этап 10. Редизайн таб-бара ✅
 
-Выполнено в рамках плана `docs/plans/plan-redesign-tabs.md`. Таб `profile` заменён на `journal` + `progress`. Профиль (EditProfile, Logout) перемещён в `MoreScreen`. `ProfileScreen` удалён. `EditProfileScreen` перемещён в `Screens/More/EditProfile/`. `AnalyticsEvent.AppScreen.profile` удалён из аналитики. Скриншоты обновлены (15.04.2026).
+Выполнено в рамках плана `docs/plans/plan-redesign-tabs.md`. Таб `profile` заменён на `journal` + `progress`. Профиль (EditProfile, Logout) перемещён в `MoreScreen`. `ProfileScreen` удалён. `EditProfileScreen` продолжает использоваться из `Screens/Profile/Edit/`. `AnalyticsEvent.AppScreen.profile` удалён из аналитики. Скриншоты обновлены (15.04.2026).
 
 ---
 
