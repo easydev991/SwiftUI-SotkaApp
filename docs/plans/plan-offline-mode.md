@@ -42,6 +42,7 @@
 ## Этап 9. StatusManager — Watch Connectivity для офлайн ✅
 
 Реализовано 9 тестов в `StatusManagerWatchConnectivityTests+Offline.swift` (extension `OfflineTests`):
+
 - **9.1** — `getStatus` не отправляет sendMessage/applicationContext для офлайн-пользователя
 - **9.2** — `sendCurrentStatus` отправляет локальные данные на часы
 - **9.3** — `sendDayDataToWatch` работает после `didLoadInitialData = true`

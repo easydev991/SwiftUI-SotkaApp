@@ -17,6 +17,7 @@ struct ProgressScreen: View {
             .padding()
         }
         .navigationTitle(.progress)
+        .navigationBarTitleDisplayMode(.inline)
         .trackScreen(.progress)
         .navigationDestination(item: $navigationDestination) { destination in
             switch destination {

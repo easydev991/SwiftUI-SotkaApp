@@ -17,7 +17,6 @@ extension AnalyticsEvent {
         case workoutExerciseEditor = "workout_exercise_editor"
         case workout
         case workoutTimer = "workout_timer"
-        case profile
         case editProfile = "edit_profile"
         case changePassword = "change_password"
         case journal

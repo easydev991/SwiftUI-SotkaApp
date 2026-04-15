@@ -10,18 +10,36 @@ struct MoreScreen: View {
     @Environment(StatusManager.self) private var statusManager
     @Environment(\.modelContext) private var modelContext
     @Environment(\.analyticsService) private var analytics
+    @Environment(AuthHelperImp.self) private var authHelper
     @AppStorage(Key.isWorkoutGroupExpanded.rawValue) private var isWorkoutGroupExpanded = true
     @AppStorage(Key.isWorkoutRestGroupExpanded.rawValue) private var isWorkoutRestGroupExpanded = true
     @State private var aboutInfopost: Infopost?
     @State private var showResetDialog = false
+    @State private var showLogoutDialog = false
     @Query private var users: [User]
     private var isOfflineUser: Bool {
         users.first?.isOfflineOnly ?? false
     }
 
+    private var client: ProfileClient {
+        SWClient(with: authHelper)
+    }
+
     var body: some View {
         NavigationStack {
             List {
+                Section(.profile) {
+                    if !isOfflineUser {
+                        if let user = users.first {
+                            NavigationLink {
+                                EditProfileScreen(user: user, client: client)
+                            } label: {
+                                Text(.editProfile)
+                            }
+                        }
+                    }
+                    logoutButton
+                }
                 Section(.settings) {
                     appThemeAndIconButton
                     appLanguageButton
@@ -120,8 +138,12 @@ struct MoreScreen: View {
     #endif
 
     private var workoutSettingsGroup: some View {
-        DisclosureGroup(.moreScreenWorkoutGroup, isExpanded: $isWorkoutGroupExpanded) {
+        DisclosureGroup(isExpanded: $isWorkoutGroupExpanded) {
             @Bindable var settings = appSettings
+            NavigationLink(destination: CustomExercisesScreen()) {
+                Text(.customExercises)
+            }
+            .accessibilityIdentifier("customExercisesButton")
             notificationToggle
             if settings.workoutNotificationsEnabled {
                 makeNotificationTimePicker(
@@ -138,6 +160,9 @@ struct MoreScreen: View {
                     makeVibrateToggle($settings.vibrate)
                 }
             }
+        } label: {
+            Text(.moreScreenWorkoutGroup)
+                .accessibilityIdentifier("moreScreenWorkoutGroup")
         }
     }
 
@@ -292,6 +317,22 @@ struct MoreScreen: View {
             Text(.moreScreenSyncJournalButton)
         }
         .accessibilityIdentifier("syncJournalButton")
+    }
+
+    private var logoutButton: some View {
+        Button(.logOut) {
+            showLogoutDialog = true
+        }
+        .confirmationDialog(
+            .alertLogout,
+            isPresented: $showLogoutDialog,
+            titleVisibility: .visible
+        ) {
+            Button(.logOut, role: .destructive) {
+                analytics.log(.userAction(action: .logout))
+                authHelper.triggerLogout()
+            }
+        }
     }
 }
 
