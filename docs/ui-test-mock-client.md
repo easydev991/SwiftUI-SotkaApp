@@ -72,7 +72,8 @@
 
 Функция `ScreenshotDemoData.setup()` создает демо-данные в SwiftData:
 
-1. **User** — демо-пользователь (id: 1, userName: "DemoUser", fullName: "Демо Пользователь", email: "<demo@example.com>", cityID: 1, countryID: 1, genderCode: 0, birthDateIsoString: "1990-01-01")
+1. **User** — демо-пользователь из `UserResponse.preview` (детерминированные поля профиля, включая id)
+2. Перед вставкой пользователя удаляются существующие `User` записи (каскадно удаляются связанные сущности), чтобы UI-тесты не зависели от данных прошлых запусков
 
 **Примечание**: UserProgress, DayActivity и CustomExercise не создаются в `ScreenshotDemoData.setup()`. Они загружаются с "сервера" (мока) при синхронизации:
 
@@ -82,7 +83,7 @@
 
 **Константа**: `ScreenshotDemoData.readInfopostDays = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]` — используется мок-клиентом для возврата списка прочитанных инфопостов.
 
-Функция вызывается в `.task` модификаторе на `ZStack` внутри `WindowGroup` при аргументе "UITest".
+Функция вызывается в `init()` приложения при аргументе "UITest" до создания сервисов и запуска фоновых задач.
 
 ### Инициализация приложения для UI-тестов
 
@@ -90,16 +91,15 @@
 
 - Создает `MockSWClient` с `instantResponse: true`
 - Использует `MockSWClient` для всех сервисов, включая инфопосты
-- Создает настоящий `SWClient` только для свойства `client` (для `LoginScreen`, хотя он не показывается)
+- Создает настоящий `SWClient` только для свойства `client` (для `WelcomeScreen`/`OnlineLoginView`, хотя в UITest обычно не показываются)
 
 В `init()` используется `if-else` структура:
 
-- При аргументе "UITest": очищается UserDefaults, создаются мок-сервисы, отключаются анимации (`UIView.setAnimationsEnabled(false)`), устанавливается день № 12 через `setCurrentDayForDebug(12)`, вызывается `authHelper.didAuthorize()` для пропуска авторизации
+- При аргументе "UITest": очищается UserDefaults, выполняется `ScreenshotDemoData.setup(...)`, создаются мок-сервисы, отключаются анимации (`UIView.setAnimationsEnabled(false)`), устанавливается день № 12 через `setCurrentDayForDebug(12)`, вызывается `authHelper.didAuthorize()` для пропуска авторизации
 - Иначе: обычная инициализация для production
 
-В `.task` модификаторе при аргументе "UITest" дополнительно вызываются:
+В `.task` модификаторе при аргументе "UITest" дополнительно вызывается:
 
-- `ScreenshotDemoData.setup(context: statusManager.modelContainer.mainContext)` для подготовки демо-данных
 - `statusManager.loadInfopostsWithUserGender()` для загрузки инфопостов
 
 ### Полная независимость от сервера

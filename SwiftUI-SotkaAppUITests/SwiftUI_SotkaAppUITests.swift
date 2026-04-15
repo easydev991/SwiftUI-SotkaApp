@@ -34,17 +34,16 @@ final class SwiftUI_SotkaAppUITests: XCTestCase {
         snapshot("4-workoutEditor")
         waitAndTapOrFail(element: workoutEditorDoneButton)
         waitAndTapOrFail(element: closeButton)
-        waitAndTapOrFail(element: profileTabButton)
-        waitAndTapOrFail(element: profileProgressButton)
+        waitAndTapOrFail(element: progressTabButton)
         snapshot("5-userProgress")
-        waitAndTapOrFail(element: backButton)
-        waitAndTapOrFail(element: profileJournalButton)
+        waitAndTapOrFail(element: journalTabButton)
         snapshot("6-userJournalGrid")
         waitAndTapOrFail(element: journalDisplayModeButton)
         waitAndTapOrFail(element: journalDisplayModeOption)
         snapshot("7-userJournalList")
-        waitAndTapOrFail(element: backButton)
-        waitAndTapOrFail(element: profileExercisesButton)
+        waitAndTapOrFail(element: moreTabButton)
+        expandWorkoutSettingsGroup()
+        waitAndTapOrFail(element: customExercisesButton)
         snapshot("8-userExercises")
     }
 }
@@ -67,10 +66,26 @@ private extension SwiftUI_SotkaAppUITests {
         app.tabBars.firstMatch
     }
 
-    var profileTabButton: XCUIElement {
-        let regularProfileTabButton = tabbar.buttons.element(boundBy: 1)
-        let ipadProfileTabButton = app.buttons["profileTabButton"].firstMatch
-        return regularProfileTabButton.exists ? regularProfileTabButton : ipadProfileTabButton
+    var journalTabButton: XCUIElement {
+        let regularTabButton = tabbar.buttons.element(boundBy: 1)
+        let ipadTabButton = app.buttons["journalTabButton"].firstMatch
+        return regularTabButton.exists ? regularTabButton : ipadTabButton
+    }
+
+    var progressTabButton: XCUIElement {
+        let regularTabButton = tabbar.buttons.element(boundBy: 2)
+        let ipadTabButton = app.buttons["progressTabButton"].firstMatch
+        return regularTabButton.exists ? regularTabButton : ipadTabButton
+    }
+
+    var moreTabButton: XCUIElement {
+        let regularTabButton = tabbar.buttons.element(boundBy: 3)
+        let ipadTabButton = app.buttons["moreTabButton"].firstMatch
+        return regularTabButton.exists ? regularTabButton : ipadTabButton
+    }
+
+    var customExercisesButton: XCUIElement {
+        app.buttons["customExercisesButton"].firstMatch
     }
 
     var closeButton: XCUIElement {
@@ -99,14 +114,6 @@ private extension SwiftUI_SotkaAppUITests {
         app.buttons["WorkoutEditorDoneButton"].firstMatch
     }
 
-    var profileProgressButton: XCUIElement {
-        app.buttons["ProfileProgressButton"].firstMatch
-    }
-
-    var profileJournalButton: XCUIElement {
-        app.buttons["ProfileJournalButton"].firstMatch
-    }
-
     var journalDisplayModeButton: XCUIElement {
         app.buttons["JournalDisplayModeButton"].firstMatch
     }
@@ -115,8 +122,11 @@ private extension SwiftUI_SotkaAppUITests {
         app.buttons["JournalDisplayModeOption.0"].firstMatch
     }
 
-    var profileExercisesButton: XCUIElement {
-        app.buttons["ProfileExercisesButton"].firstMatch
+    func expandWorkoutSettingsGroup() {
+        let workoutGroup = app.buttons["moreScreenWorkoutGroup"].firstMatch
+        if !customExercisesButton.waitForExistence(timeout: 1), workoutGroup.exists {
+            workoutGroup.tap()
+        }
     }
 }
 

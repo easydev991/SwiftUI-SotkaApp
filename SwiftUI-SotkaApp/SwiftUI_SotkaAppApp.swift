@@ -40,6 +40,9 @@ struct SwiftUI_SotkaAppApp: App {
         #if DEBUG
         if ProcessInfo.processInfo.arguments.contains("UITest") {
             UserDefaults.standard.removePersistentDomain(forName: Bundle.main.bundleIdentifier!)
+            // Seed демо-данных выполняем до создания сервисов и запуска фоновых задач,
+            // чтобы исключить гонку с getStatus() и гарантировать корректного пользователя.
+            ScreenshotDemoData.setup(context: modelContainer.mainContext)
             analytics = AnalyticsService(providers: [NoopAnalyticsProvider()])
             let mockServices = Self.createMockServices(modelContainer: modelContainer)
             self.statusManager = mockServices.statusManager
@@ -144,7 +147,6 @@ struct SwiftUI_SotkaAppApp: App {
             .task {
                 #if DEBUG
                 if ProcessInfo.processInfo.arguments.contains("UITest") {
-                    ScreenshotDemoData.setup(context: statusManager.modelContainer.mainContext)
                     statusManager.loadInfopostsWithUserGender()
                 }
                 #endif

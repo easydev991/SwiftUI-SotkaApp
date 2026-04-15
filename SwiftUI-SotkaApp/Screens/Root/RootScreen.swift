@@ -4,13 +4,18 @@ import SWUtils
 
 struct RootScreen: View {
     @Environment(AppSettings.self) private var appSettings
+    @Query private var users: [User]
     @State private var tab = Tab.home
+
+    private var user: User? {
+        users.first
+    }
 
     var body: some View {
         @Bindable var settings = appSettings
         TabView(selection: $tab) {
             ForEach(Tab.allCases, id: \.self) { tab in
-                tab.screen
+                tab.tabContent(user: user)
                     .tabItem { tab.tabItemLabel }
                     .tag(tab)
             }
@@ -32,13 +37,15 @@ struct RootScreen: View {
 extension RootScreen {
     private enum Tab: CaseIterable {
         case home
-        case profile
+        case journal
+        case progress
         case more
 
         private var localizedTitle: String {
             switch self {
             case .home: String(localized: .home)
-            case .profile: String(localized: .profile)
+            case .journal: String(localized: .journal)
+            case .progress: String(localized: .progress)
             case .more: String(localized: .more)
             }
         }
@@ -46,7 +53,8 @@ extension RootScreen {
         private var systemImageName: String {
             switch self {
             case .home: "house"
-            case .profile: "person"
+            case .journal: "book.closed"
+            case .progress: "chart.line.uptrend.xyaxis"
             case .more: "gear"
             }
         }
@@ -54,7 +62,8 @@ extension RootScreen {
         private var accessibilityId: String {
             switch self {
             case .home: "demoTabButton"
-            case .profile: "profileTabButton"
+            case .journal: "journalTabButton"
+            case .progress: "progressTabButton"
             case .more: "moreTabButton"
             }
         }
@@ -68,11 +77,32 @@ extension RootScreen {
         }
 
         @MainActor @ViewBuilder
-        var screen: some View {
+        fileprivate func tabContent(user: User?) -> some View {
             switch self {
-            case .home: HomeScreen()
-            case .profile: ProfileScreen()
-            case .more: MoreScreen()
+            case .home:
+                HomeScreen()
+            case .journal:
+                if let user {
+                    NavigationStack {
+                        JournalScreen(user: user)
+                    }
+                } else {
+                    ProgressView()
+                }
+            case .progress:
+                if let user {
+                    NavigationStack {
+                        ProgressScreen(user: user)
+                    }
+                } else {
+                    ProgressView()
+                }
+            case .more:
+                if let user {
+                    MoreScreen(user: user)
+                } else {
+                    ProgressView()
+                }
             }
         }
     }
@@ -82,5 +112,9 @@ extension RootScreen {
 #Preview {
     RootScreen()
         .environment(AppSettings())
+        .environment(StatusManager.preview)
+        .environment(DailyActivitiesService(client: MockDaysClient(result: .success)))
+        .environment(AuthHelperImp())
+        .modelContainer(PreviewModelContainer.make(with: .preview))
 }
 #endif

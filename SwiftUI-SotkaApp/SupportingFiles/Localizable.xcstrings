@@ -224,6 +224,23 @@
         }
       }
     },
+    "Alert.Logout.message" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "All your progress will be deleted from this device"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Весь ваш прогресс будет удалён с этого устройства"
+          }
+        }
+      }
+    },
     "Alert.OfflineMode.NoSync" : {
       "extractionState" : "manual",
       "localizations" : {
