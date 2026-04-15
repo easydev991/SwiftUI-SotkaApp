@@ -4,16 +4,15 @@ import SwiftData
 
 enum ScreenshotDemoData {
     static func setup(context: ModelContext) {
-        let user = User(
-            id: 1,
-            userName: "DemoUser",
-            fullName: "Демо Пользователь",
-            email: "demo@example.com",
-            cityID: 1,
-            countryID: 1,
-            genderCode: 0,
-            birthDateIsoString: "1990-01-01"
-        )
+        // Делаем seed детерминированным: очищаем предыдущие данные пользователей
+        // (каскадно удаляются связанные активности/упражнения/прогресс), чтобы UITest
+        // не зависел от остатков прошлых запусков.
+        let users = (try? context.fetch(FetchDescriptor<User>())) ?? []
+        for user in users {
+            context.delete(user)
+        }
+
+        let user = User(from: .preview)
         context.insert(user)
         do {
             try context.save()

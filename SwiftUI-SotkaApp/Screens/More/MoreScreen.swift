@@ -17,7 +17,9 @@ struct MoreScreen: View {
     @State private var aboutInfopost: Infopost?
     @State private var showResetDialog = false
     @State private var showLogoutDialog = false
-    private var isOfflineUser: Bool { user.isOfflineOnly }
+    private var isOfflineUser: Bool {
+        user.isOfflineOnly
+    }
 
     var body: some View {
         NavigationStack {
@@ -90,7 +92,7 @@ private extension MoreScreen {
             Text(.editProfile)
         }
     }
-    
+
     var logoutButton: some View {
         Button(.logOut) {
             showLogoutDialog = true
