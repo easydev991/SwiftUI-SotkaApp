@@ -98,7 +98,11 @@ extension RootScreen {
                     ProgressView()
                 }
             case .more:
-                MoreScreen()
+                if let user {
+                    MoreScreen(user: user)
+                } else {
+                    ProgressView()
+                }
             }
         }
     }

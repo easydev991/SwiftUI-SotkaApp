@@ -13,12 +13,12 @@ struct MoreScreen: View {
     @Environment(AuthHelperImp.self) private var authHelper
     @AppStorage(Key.isWorkoutGroupExpanded.rawValue) private var isWorkoutGroupExpanded = true
     @AppStorage(Key.isWorkoutRestGroupExpanded.rawValue) private var isWorkoutRestGroupExpanded = true
+    let user: User
     @State private var aboutInfopost: Infopost?
     @State private var showResetDialog = false
     @State private var showLogoutDialog = false
-    @Query private var users: [User]
     private var isOfflineUser: Bool {
-        users.first?.isOfflineOnly ?? false
+        user.isOfflineOnly
     }
 
     private var client: ProfileClient {
@@ -30,12 +30,10 @@ struct MoreScreen: View {
             List {
                 Section(.profile) {
                     if !isOfflineUser {
-                        if let user = users.first {
-                            NavigationLink {
-                                EditProfileScreen(user: user, client: client)
-                            } label: {
-                                Text(.editProfile)
-                            }
+                        NavigationLink {
+                            EditProfileScreen(user: user, client: client)
+                        } label: {
+                            Text(.editProfile)
                         }
                     }
                     logoutButton
@@ -345,7 +343,7 @@ private extension MoreScreen {
 
 #if DEBUG
 #Preview("День 1") {
-    MoreScreen()
+    MoreScreen(user: .preview)
         .environment(AppSettings())
         .environment(StatusManager.preview)
         .environment(\.currentDay, 1)
@@ -353,7 +351,7 @@ private extension MoreScreen {
 }
 
 #Preview("День 2") {
-    MoreScreen()
+    MoreScreen(user: .preview)
         .environment(AppSettings())
         .environment(StatusManager.preview)
         .environment(\.currentDay, 2)
