@@ -159,11 +159,30 @@ TabView (4 таба):
 
 ---
 
+## Этап 4.5: Рефактор MoreScreen — User через RootScreen
+
+Файл: `SwiftUI-SotkaApp/Screens/More/MoreScreen.swift`, `SwiftUI-SotkaApp/Screens/Root/RootScreen.swift`
+
+### 4.5.1 Реализация
+
+- [x] Изменить сигнатуру `MoreScreen`: заменить `@Query private var users: [User]` + `private var isOfflineUser: Bool { users.first?.isOfflineOnly ?? false }` на `let user: User` (неопциональный)
+- [x] Обновить `isOfflineUser`: `user.isOfflineOnly` вместо `users.first?.isOfflineOnly ?? false`
+- [x] Убрать костыль `if !isOfflineUser { if let user = users.first { ... } }` в `Section(.profile)`: теперь `if !isOfflineUser { NavigationLink ... EditProfileScreen(user: user, client: client) }`
+- [x] В `RootScreen.tabContent(user:)` для `case .more` обернуть в `if let user { MoreScreen(user: user) } else { ProgressView() }` (аналогично `journal`/`progress`)
+- [x] Обновить `#Preview` в `MoreScreen`: передавать `user: .preview`
+
+### 4.5.2 Проверка
+
+- [x] Компиляция проходит
+- [x] Тесты проходят (1682/1683, 0 failed)
+
+---
+
 ## Этап 5: Финальная валидация
 
-- [ ] Запустить `make format`
+- [x] Запустить `make format`
 - [x] Выполнить сборку через `xcodebuild-mcp` / `Build iOS Apps` (проверено: `SwiftUI-SotkaApp`, `SwiftUI-SotkaAppUITests` build succeeded на iPhone 17)
-- [ ] Выполнить тесты через `xcodebuild-mcp` / `Build iOS Apps`
+- [x] Выполнить тесты через `xcodebuild-mcp` / `Build iOS Apps`
 - [ ] Проверить навигацию на iPhone и iPad симуляторах
 
 ## Технический долг и риски
@@ -177,7 +196,7 @@ TabView (4 таба):
 
 | Файл | Действие |
 |------|----------|
-| `SwiftUI-SotkaApp/Screens/Root/RootScreen.swift` | Обновить табы и подключение экранов Journal/Progress |
-| `SwiftUI-SotkaApp/Screens/More/MoreScreen.swift` | Добавить `Section(.profile)` и ссылку на CustomExercises в workoutSettingsGroup |
+| `SwiftUI-SotkaApp/Screens/Root/RootScreen.swift` | Обновить табы (journal/progress), передача User в JournalScreen/ProgressScreen/MoreScreen |
+| `SwiftUI-SotkaApp/Screens/More/MoreScreen.swift` | Добавить `Section(.profile)`, CustomExercises в workoutSettingsGroup, приём User (неопциональный) |
 | `SwiftUI-SotkaApp/Screens/Profile/ProfileScreen.swift` | Удалить |
 | `SwiftUI-SotkaAppUITests/SwiftUI_SotkaAppUITests.swift` | Обновить тестовый сценарий под новые табы |

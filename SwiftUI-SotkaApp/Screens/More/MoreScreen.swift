@@ -17,24 +17,14 @@ struct MoreScreen: View {
     @State private var aboutInfopost: Infopost?
     @State private var showResetDialog = false
     @State private var showLogoutDialog = false
-    private var isOfflineUser: Bool {
-        user.isOfflineOnly
-    }
-
-    private var client: ProfileClient {
-        SWClient(with: authHelper)
-    }
+    private var isOfflineUser: Bool { user.isOfflineOnly }
 
     var body: some View {
         NavigationStack {
             List {
                 Section(.profile) {
                     if !isOfflineUser {
-                        NavigationLink {
-                            EditProfileScreen(user: user, client: client)
-                        } label: {
-                            Text(.editProfile)
-                        }
+                        editProfileButton
                     }
                     logoutButton
                 }
@@ -90,8 +80,34 @@ struct MoreScreen: View {
             }
         }
     }
+}
 
-    private var appThemeAndIconButton: some View {
+private extension MoreScreen {
+    var editProfileButton: some View {
+        NavigationLink {
+            EditProfileScreen(user: user)
+        } label: {
+            Text(.editProfile)
+        }
+    }
+    
+    var logoutButton: some View {
+        Button(.logOut) {
+            showLogoutDialog = true
+        }
+        .confirmationDialog(
+            .alertLogout,
+            isPresented: $showLogoutDialog,
+            titleVisibility: .visible
+        ) {
+            Button(.logOut, role: .destructive) {
+                analytics.log(.userAction(action: .logout))
+                authHelper.triggerLogout()
+            }
+        }
+    }
+
+    var appThemeAndIconButton: some View {
         NavigationLink(destination: ThemeIconScreen(analytics: analytics)) {
             Text(.themeIconScreenTitle)
         }
@@ -99,7 +115,7 @@ struct MoreScreen: View {
     }
 
     @ViewBuilder
-    private var appLanguageButton: some View {
+    var appLanguageButton: some View {
         @Bindable var settings = appSettings
         Picker(.appLanguage, selection: .constant(AppLanguage.makeCurrentValue(locale.identifier))) {
             ForEach(AppLanguage.allCases) {
@@ -122,7 +138,7 @@ struct MoreScreen: View {
     }
 
     #if DEBUG
-    private var debugCurrentDayPicker: some View {
+    var debugCurrentDayPicker: some View {
         Picker(.currentDay, selection: .init(
             get: { statusManager.currentDayCalculator?.currentDay ?? 1 },
             set: { statusManager.setCurrentDayForDebug($0) }
@@ -135,7 +151,7 @@ struct MoreScreen: View {
     }
     #endif
 
-    private var workoutSettingsGroup: some View {
+    var workoutSettingsGroup: some View {
         DisclosureGroup(isExpanded: $isWorkoutGroupExpanded) {
             @Bindable var settings = appSettings
             NavigationLink(destination: CustomExercisesScreen()) {
@@ -165,7 +181,7 @@ struct MoreScreen: View {
     }
 
     @ViewBuilder
-    private var notificationToggle: some View {
+    var notificationToggle: some View {
         @Bindable var settings = appSettings
         Toggle(
             .workoutNotifications,
@@ -178,7 +194,7 @@ struct MoreScreen: View {
         )
     }
 
-    private func makeNotificationTimePicker(_ value: Binding<Date>) -> some View {
+    func makeNotificationTimePicker(_ value: Binding<Date>) -> some View {
         DatePicker(
             .notificationTime,
             selection: value,
@@ -186,15 +202,15 @@ struct MoreScreen: View {
         )
     }
 
-    private func makeTimerSoundToggle(_ value: Binding<Bool>) -> some View {
+    func makeTimerSoundToggle(_ value: Binding<Bool>) -> some View {
         Toggle(.timerSoundToggle, isOn: value)
     }
 
-    private func makeVibrateToggle(_ value: Binding<Bool>) -> some View {
+    func makeVibrateToggle(_ value: Binding<Bool>) -> some View {
         Toggle(.timerVibrateToggle, isOn: value)
     }
 
-    private func makeTimerSoundPicker(_ value: Binding<TimerSound>) -> some View {
+    func makeTimerSoundPicker(_ value: Binding<TimerSound>) -> some View {
         Picker(.moreScreenTimerSound, selection: value) {
             ForEach(TimerSound.allCases, id: \.self) { sound in
                 Text(sound.displayName).tag(sound)
@@ -203,7 +219,7 @@ struct MoreScreen: View {
         .pickerStyle(.navigationLink)
     }
 
-    private func makeRestTimePicker(_ value: Binding<Int>) -> some View {
+    func makeRestTimePicker(_ value: Binding<Int>) -> some View {
         Picker(.restTimePicker, selection: value) {
             ForEach(Constants.restPickerOptions, id: \.self) { seconds in
                 Text(RestTimeComponents(totalSeconds: seconds).localizedString).tag(seconds)
@@ -212,7 +228,7 @@ struct MoreScreen: View {
         .pickerStyle(.navigationLink)
     }
 
-    private var feedbackButton: some View {
+    var feedbackButton: some View {
         Button(.sendFeedback) {
             analytics.log(.userAction(action: .openFeedback))
             appSettings.sendFeedback()
@@ -220,7 +236,7 @@ struct MoreScreen: View {
         .accessibilityIdentifier("sendFeedbackButton")
     }
 
-    private var resetProgramButton: some View {
+    var resetProgramButton: some View {
         Button(.moreScreenResetProgramButton) {
             analytics.log(.userAction(action: .openResetProgramDialog))
             showResetDialog = true
@@ -242,7 +258,7 @@ struct MoreScreen: View {
     }
 
     @ViewBuilder
-    private var rateAppButton: some View {
+    var rateAppButton: some View {
         if let appReviewLink = Constants.appReviewURL {
             Link(.rateTheApp, destination: appReviewLink)
                 .accessibilityIdentifier("rateAppButton")
@@ -250,7 +266,7 @@ struct MoreScreen: View {
     }
 
     @ViewBuilder
-    private var officialSiteButton: some View {
+    var officialSiteButton: some View {
         if let officialSiteLink = Constants.workoutSuURL {
             Link(.officialWebsite, destination: officialSiteLink)
                 .accessibilityIdentifier("officialSiteButton")
@@ -258,7 +274,7 @@ struct MoreScreen: View {
     }
 
     @ViewBuilder
-    private var shareAppButton: some View {
+    var shareAppButton: some View {
         if let model = ShareAppURL(localeIdentifier: locale.identifier, appId: Constants.appId) {
             ShareLink(item: model.url) {
                 Text(.shareTheApp)
@@ -267,7 +283,7 @@ struct MoreScreen: View {
         }
     }
 
-    private var appVersionText: some View {
+    var appVersionText: some View {
         HStack {
             Text(.appVersion)
                 .frame(maxWidth: .infinity, alignment: .leading)
@@ -277,7 +293,7 @@ struct MoreScreen: View {
     }
 
     @ViewBuilder
-    private var swParksButton: some View {
+    var swParksButton: some View {
         if let githubLink = Constants.swParksAppURL {
             Link(.streetWorkoutParks, destination: githubLink)
                 .accessibilityIdentifier("swParksButton")
@@ -285,7 +301,7 @@ struct MoreScreen: View {
     }
 
     @ViewBuilder
-    private var daysCounterButton: some View {
+    var daysCounterButton: some View {
         if let daysCounterLink = Constants.daysCounterAppURL {
             Link(.daysCounter, destination: daysCounterLink)
                 .accessibilityIdentifier("daysCounterButton")
@@ -293,7 +309,7 @@ struct MoreScreen: View {
     }
 
     @ViewBuilder
-    private var githubButton: some View {
+    var githubButton: some View {
         if let githubLink = Constants.githubPageURL {
             Link(.gitHub, destination: githubLink)
                 .accessibilityIdentifier("githubButton")
@@ -301,7 +317,7 @@ struct MoreScreen: View {
     }
 
     @ViewBuilder
-    private var aboutProgramButton: some View {
+    var aboutProgramButton: some View {
         if let aboutInfopost {
             NavigationLink(destination: InfopostDetailScreen(infopost: aboutInfopost)) {
                 Text(.infopostAbout)
@@ -310,27 +326,11 @@ struct MoreScreen: View {
         }
     }
 
-    private var syncJournalButton: some View {
+    var syncJournalButton: some View {
         NavigationLink(destination: SyncJournalScreen()) {
             Text(.moreScreenSyncJournalButton)
         }
         .accessibilityIdentifier("syncJournalButton")
-    }
-
-    private var logoutButton: some View {
-        Button(.logOut) {
-            showLogoutDialog = true
-        }
-        .confirmationDialog(
-            .alertLogout,
-            isPresented: $showLogoutDialog,
-            titleVisibility: .visible
-        ) {
-            Button(.logOut, role: .destructive) {
-                analytics.log(.userAction(action: .logout))
-                authHelper.triggerLogout()
-            }
-        }
     }
 }
 

@@ -25,13 +25,14 @@ struct EditProfileScreen: View {
     @State private var editUserTask: Task<Void, Never>?
     @FocusState private var focus: FocusableField?
     private let user: User
-    private let client: ProfileClient
+    private var client: ProfileClient {
+        SWClient(with: authHelper)
+    }
 
-    init(user: User, client: ProfileClient) {
+    init(user: User) {
         self.user = user
         self._oldUserForm = .init(initialValue: .init(user))
         self._userForm = .init(initialValue: .init(user))
-        self.client = client
     }
 
     var body: some View {
@@ -373,12 +374,9 @@ private extension EditProfileScreen {
 #if DEBUG
 #Preview {
     NavigationStack {
-        EditProfileScreen(
-            user: .init(from: .preview),
-            client: MockProfileClient(result: .success)
-        )
-        .environment(AuthHelperImp())
-        .environment(\.isNetworkConnected, true)
+        EditProfileScreen(user: .init(from: .preview))
+            .environment(AuthHelperImp())
+            .environment(\.isNetworkConnected, true)
     }
 }
 #endif
