@@ -94,4 +94,106 @@ struct AuthHelperTests {
         #expect(valueFromUserDefaults)
         #expect(authHelper.isAuthorized)
     }
+
+    // MARK: - performOfflineLogin Tests
+
+    @Test("performOfflineLogin устанавливает isAuthorized = true")
+    func performOfflineLoginSetsIsAuthorized() throws {
+        let userDefaults = try MockUserDefaults.create()
+        let authHelper = AuthHelperImp(userDefaults: userDefaults)
+
+        #expect(!authHelper.isAuthorized)
+
+        authHelper.performOfflineLogin()
+
+        #expect(authHelper.isAuthorized)
+    }
+
+    @Test("performOfflineLogin не сохраняет authToken")
+    func performOfflineLoginDoesNotSetAuthToken() throws {
+        let userDefaults = try MockUserDefaults.create()
+        let authHelper = AuthHelperImp(userDefaults: userDefaults)
+
+        authHelper.triggerLogout()
+
+        authHelper.performOfflineLogin()
+
+        #expect(authHelper.isAuthorized)
+        #expect(authHelper.authToken == nil)
+    }
+
+    @Test("performOfflineLogin очищает ранее сохраненные креды")
+    func performOfflineLoginClearsExistingAuthData() throws {
+        let userDefaults = try MockUserDefaults.create()
+        let authHelper = AuthHelperImp(userDefaults: userDefaults)
+        let existingAuthData = AuthData(login: "user@example.com", password: "password")
+
+        authHelper.saveAuthData(existingAuthData)
+        #expect(authHelper.authToken != nil)
+
+        authHelper.performOfflineLogin()
+
+        #expect(authHelper.isAuthorized)
+        #expect(authHelper.authToken == nil)
+    }
+
+    // MARK: - isOfflineOnly Tests
+
+    @Test("performOfflineLogin устанавливает isOfflineOnly = true")
+    func performOfflineLoginSetsIsOfflineOnly() throws {
+        let userDefaults = try MockUserDefaults.create()
+        let authHelper = AuthHelperImp(userDefaults: userDefaults)
+
+        #expect(!authHelper.isOfflineOnly)
+
+        authHelper.performOfflineLogin()
+
+        #expect(authHelper.isOfflineOnly)
+    }
+
+    @Test("triggerLogout сбрасывает isOfflineOnly = false")
+    func triggerLogoutResetsIsOfflineOnly() throws {
+        let userDefaults = try MockUserDefaults.create()
+        let authHelper = AuthHelperImp(userDefaults: userDefaults)
+
+        authHelper.performOfflineLogin()
+        #expect(authHelper.isOfflineOnly)
+
+        authHelper.triggerLogout()
+
+        #expect(!authHelper.isOfflineOnly)
+    }
+
+    @Test("didAuthorize сбрасывает isOfflineOnly = false")
+    func didAuthorizeResetsIsOfflineOnly() throws {
+        let userDefaults = try MockUserDefaults.create()
+        let authHelper = AuthHelperImp(userDefaults: userDefaults)
+
+        authHelper.performOfflineLogin()
+        #expect(authHelper.isOfflineOnly)
+
+        authHelper.didAuthorize()
+
+        #expect(!authHelper.isOfflineOnly)
+    }
+
+    @Test("isOfflineOnly по умолчанию false")
+    func isOfflineOnlyDefaultsToFalse() throws {
+        let userDefaults = try MockUserDefaults.create()
+        let authHelper = AuthHelperImp(userDefaults: userDefaults)
+
+        #expect(!authHelper.isOfflineOnly)
+    }
+
+    @Test("isOfflineOnly сохраняется в UserDefaults")
+    func isOfflineOnlyPersistsInUserDefaults() throws {
+        let userDefaults = try MockUserDefaults.create()
+        let authHelper1 = AuthHelperImp(userDefaults: userDefaults)
+
+        authHelper1.performOfflineLogin()
+        #expect(authHelper1.isOfflineOnly)
+
+        let authHelper2 = AuthHelperImp(userDefaults: userDefaults)
+        #expect(authHelper2.isOfflineOnly)
+    }
 }

@@ -50,7 +50,8 @@ struct AnalyticsServiceTests {
             (.deleteProgressPhoto(photoType: 2), "delete_progress_photo"),
             (.selectInfopostFontSize(size: "large", infopostId: "post_1"), "select_infopost_font_size"),
             (.selectExerciseIcon(iconName: "3", exerciseId: "ex_1"), "select_exercise_icon"),
-            (.confirmResetProgram, "confirm_reset_program")
+            (.confirmResetProgram, "confirm_reset_program"),
+            (.beginOfflineLogin, "begin_offline_login")
         ]
 
         for (action, expectedName) in values {
@@ -79,6 +80,8 @@ struct AnalyticsServiceTests {
         #expect(AnalyticsEvent.AppScreen.syncJournalEntry.rawValue == "sync_journal_entry")
         #expect(AnalyticsEvent.AppScreen.syncStartDate.rawValue == "sync_start_date")
         #expect(AnalyticsEvent.AppScreen.syncStartDateHelp.rawValue == "sync_start_date_help")
+        #expect(AnalyticsEvent.AppScreen.offlineLogin.rawValue == "offline_login")
+        #expect(AnalyticsEvent.AppScreen.onlineLogin.rawValue == "online_login")
     }
 
     @Test("AppErrorKind rawValue совпадает с контрактом аналитики")

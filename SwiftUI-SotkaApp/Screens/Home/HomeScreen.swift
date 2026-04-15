@@ -44,7 +44,7 @@ struct HomeScreen: View {
                     .scrollBounceBehavior(.basedOnSize)
                     .sheet(item: $sheetItem, content: makeSheetContent)
                 } else {
-                    Text(.loading)
+                    loadingView
                 }
             }
             .animation(.default, value: model)
@@ -96,6 +96,15 @@ extension HomeScreen {
 }
 
 private extension HomeScreen {
+    @ViewBuilder
+    var loadingView: some View {
+        if user?.isOfflineOnly == true {
+            ProgressView()
+        } else {
+            Text(.loading)
+        }
+    }
+
     func makeHorizontalView(with model: Model) -> some View {
         VStack(spacing: 12) {
             HStack(spacing: 16) {

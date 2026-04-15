@@ -324,6 +324,56 @@ struct UserTests {
         #expect(user.isMaximumsFilled(for: currentDay) == expected)
     }
 
+    // MARK: - isOfflineOnly Tests
+
+    @Test("isOfflineOnly true для offline-user")
+    func isOfflineOnlyTrueForOfflineUser() {
+        let user = User(id: -1, userName: "offline-user")
+        #expect(user.isOfflineOnly)
+    }
+
+    @Test("isOfflineOnly false для обычного userName")
+    func isOfflineOnlyFalseForRegularUser() {
+        let user = User(id: 1, userName: "john")
+        #expect(!user.isOfflineOnly)
+    }
+
+    @Test("isOfflineOnly false для nil userName")
+    func isOfflineOnlyFalseForNilUserName() {
+        let user = User(id: 1, userName: nil)
+        #expect(!user.isOfflineOnly)
+    }
+
+    // MARK: - init(offlineWithGenderCode:) Tests
+
+    @Test("Офлайн-инициализатор устанавливает id -1 и userName offline-user")
+    func offlineInitSetsIdAndUserName() {
+        let user = User(offlineWithGenderCode: Gender.male.code)
+        #expect(user.id == -1)
+        #expect(user.userName == "offline-user")
+        #expect(user.isOfflineOnly)
+    }
+
+    @Test("Офлайн-инициализатор устанавливает genderCode для каждого пола")
+    func offlineInitSetsGenderCodeForEachGender() {
+        for gender in Gender.allCases {
+            let user = User(offlineWithGenderCode: gender.code)
+            #expect(user.genderCode == gender.code)
+            #expect(user.gender == gender)
+        }
+    }
+
+    @Test("Офлайн-инициализатор не устанавливает профильные поля")
+    func offlineInitLeavesProfileFieldsNil() {
+        let user = User(offlineWithGenderCode: Gender.female.code)
+        #expect(user.fullName == nil)
+        #expect(user.email == nil)
+        #expect(user.imageStringURL == nil)
+        #expect(user.cityId == nil)
+        #expect(user.countryId == nil)
+        #expect(user.birthDateIsoString == nil)
+    }
+
     // MARK: - activitiesByDay Tests
 
     @Test("activitiesByDay возвращает пустой словарь для пользователя без активностей")

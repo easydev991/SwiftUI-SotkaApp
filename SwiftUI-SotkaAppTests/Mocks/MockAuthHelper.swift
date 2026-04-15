@@ -7,9 +7,11 @@ import SWKeychain
 final class MockAuthHelper: AuthHelper {
     var authToken: String? = "mock-token"
     private(set) var isAuthorized = false
+    private(set) var isOfflineOnly = false
 
     private(set) var didAuthorizeCallCount = 0
     private(set) var triggerLogoutCallCount = 0
+    private(set) var performOfflineLoginCallCount = 0
     private(set) var saveAuthDataCallCount = 0
     private(set) var lastAuthData: AuthData?
 
@@ -18,13 +20,22 @@ final class MockAuthHelper: AuthHelper {
 
     func didAuthorize() {
         isAuthorized = true
+        isOfflineOnly = false
         didAuthorizeCallCount += 1
         onDidAuthorize?()
+    }
+
+    func performOfflineLogin() {
+        isOfflineOnly = true
+        isAuthorized = true
+        authToken = nil
+        performOfflineLoginCallCount += 1
     }
 
     func triggerLogout() {
         isAuthorized = false
         authToken = nil
+        isOfflineOnly = false
         triggerLogoutCallCount += 1
         onTriggerLogout?()
     }

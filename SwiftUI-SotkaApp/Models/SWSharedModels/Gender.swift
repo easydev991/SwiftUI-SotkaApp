@@ -1,9 +1,9 @@
 import Foundation
 
 enum Gender: CaseIterable, CustomStringConvertible, Codable {
-    case unspecified
     case male
     case female
+    case unspecified
 
     init?(_ code: Int) {
         switch code {
@@ -39,7 +39,7 @@ enum Gender: CaseIterable, CustomStringConvertible, Codable {
 
     var description: String {
         switch self {
-        case .unspecified: ""
+        case .unspecified: String(localized: .genderNotSpecified)
         case .male: String(localized: .genderMale)
         case .female: String(localized: .genderFemale)
         }

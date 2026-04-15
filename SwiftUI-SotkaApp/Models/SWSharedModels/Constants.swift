@@ -24,6 +24,8 @@ extension Constants {
 extension Constants {
     /// Ключ для статуса авторизации в UserDefaults
     static let isAuthorizedKey = "isAuthorized"
+    /// Ключ для флага офлайн-пользователя в UserDefaults
+    static let isOfflineOnlyKey = "isOfflineOnly"
     /// Ключ для даты начала программы в UserDefaults
     static let startDateKey = "WorkoutStartDate"
     /// Ключ для времени отдыха между подходами/кругами в секундах

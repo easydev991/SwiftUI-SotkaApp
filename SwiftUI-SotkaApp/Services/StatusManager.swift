@@ -136,6 +136,18 @@ final class StatusManager: NSObject {
     func getStatus() async {
         let context = modelContainer.mainContext
         let now = Date.now
+
+        let user = try? context.fetch(FetchDescriptor<User>()).first
+        if let user, user.isOfflineOnly {
+            if startDate == nil {
+                startDate = now
+            }
+            currentDayCalculator = .init(startDate, now)
+            didLoadInitialData = true
+            state = .idle
+            return
+        }
+
         currentDayCalculator = .init(startDate, now)
 
         guard !state.isLoading else { return }
@@ -184,6 +196,15 @@ final class StatusManager: NSObject {
 
     func startNewRun(appDate: Date?) async {
         let newStartDate = appDate ?? .now
+
+        let context = modelContainer.mainContext
+        let user = try? context.fetch(FetchDescriptor<User>()).first
+        if let user, user.isOfflineOnly {
+            startDate = newStartDate
+            currentDayCalculator = .init(startDate, .now)
+            return
+        }
+
         let isoDateString = DateFormatterService.stringFromFullDate(newStartDate, iso: true)
         let currentRun = try? await statusClient.start(date: isoDateString)
         startDate = if let siteStartDate = currentRun?.date {
@@ -217,6 +238,12 @@ final class StatusManager: NSObject {
                 userGender: user?.gender,
                 force: true
             )
+
+            if let user, user.isOfflineOnly {
+                logger.debug("Пропуск syncReadPosts для офлайн-пользователя")
+                return
+            }
+
             syncReadPostsTask?.cancel()
             syncReadPostsTask = Task {
                 do {
@@ -236,6 +263,7 @@ final class StatusManager: NSObject {
         startDate = nil
         currentDayCalculator = nil
         maxReadInfoPostDay = 0
+        didLoadInitialData = false
         infopostsService.didLogout()
     }
 
@@ -904,13 +932,17 @@ private extension StatusManager {
 private extension StatusManager {
     func syncJournalAndProgress() async {
         let context = modelContainer.mainContext
+        let user = try? context.fetch(FetchDescriptor<User>()).first
+        if let user, user.isOfflineOnly {
+            return
+        }
+
         guard !isJournalSyncInProgress else { return }
         isJournalSyncInProgress = true
         defer { isJournalSyncInProgress = false }
         state = .init(didLoadInitialData: didLoadInitialData)
 
         let startDate = Date.now
-        let user = try? context.fetch(FetchDescriptor<User>()).first
         let entry = SyncJournalEntry(
             startDate: startDate,
             result: .success,
