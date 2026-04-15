@@ -106,6 +106,8 @@ private extension MoreScreen {
                 analytics.log(.userAction(action: .logout))
                 authHelper.triggerLogout()
             }
+        } message: {
+            Text(.alertLogoutMessage)
         }
     }
 
