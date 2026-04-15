@@ -82,5 +82,9 @@ extension RootScreen {
 #Preview {
     RootScreen()
         .environment(AppSettings())
+        .environment(StatusManager.preview)
+        .environment(DailyActivitiesService(client: MockDaysClient(result: .success)))
+        .environment(AuthHelperImp())
+        .modelContainer(PreviewModelContainer.make(with: .preview))
 }
 #endif
