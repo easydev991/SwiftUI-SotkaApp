@@ -23,22 +23,20 @@
 
 ## Актуальный статус
 
-- [x] Этапы 1–5.1 завершены: доменные типы, `ReviewManager`, `ReviewStorage`, `WorkoutCompletionsCounter`, UI-модификатор `reviewRequestHandling`, интеграция в iPhone/watch flow.
-- [x] Этап 6 завершён: OSLog-логирование в `ReviewManager`.
-- [x] Этап 7.1 завершён: багфикс — `reset()` при logout, тесты 1731/0.
-- [x] Этап 7.2 завершён: багфикс — milestone eligibility при count >= milestone, тесты 1736/0.
-- [x] Ревью этапа 7.2: уточнена семантика `isMilestoneWorkoutCount` (только точные milestone), поведение eligibility `milestone(forCompletedWorkoutCount:)` сохранено по `>=`.
+- [x] Этапы 1–5.1: доменные типы, `ReviewManager`, `ReviewStorage`, `WorkoutCompletionsCounter`, UI-модификатор, интеграция.
+- [x] Этапы 6, 7.1, 7.2 завершены: логирование, `reset()` при logout, milestone eligibility (`>=`), тесты 1736/0.
+- [x] Этап 7.3 завершён: фикс pending review после watch-save в фоне (повторный триггер на `scenePhase == .active`).
 - [ ] Этап 7: ручная валидация.
 - Код: `SwiftUI-SotkaApp/Services/Review/`.
 
-### Уточнения реализации
+### Ключевые уточнения
 
-- `ReviewContext.hadRecentError` — единственное поле (`sceneActive` удалён).
-- `WorkoutCompletionsCounter` — отдельный тип, фильтрация: `activityType == .workout`, `count != nil`, `!shouldDelete`, post-filter по `userId`.
-- DI: `StatusManager` через `init`, `WorkoutPreviewViewModel` через параметр `saveTrainingAsPassed(...)`.
-- `didRequestReviewThisSession` — in-memory; `lastReviewRequestAttemptDate` для будущего cooldown.
-- `ReviewMilestone.milestone(forCompletedWorkoutCount:)` — возвращает **nearest milestone where count >= milestone** (не точное совпадение).
-- UI-модификатор: configurable delay, `task(id:)`, `StoreKit` изолирован; `ReviewManager` через `.environment()` в `RootScreen`.
+- `ReviewContext.hadRecentError` — единственное поле.
+- `WorkoutCompletionsCounter`: `activityType == .workout`, `!shouldDelete`, post-filter по `userId`.
+- DI: `StatusManager` через `init`, `WorkoutPreviewViewModel` через параметр.
+- `milestone(forCompletedWorkoutCount:)` — nearest milestone where `count >= milestone`.
+- UI-модификатор: configurable delay, `task(id:)`, `StoreKit` изолирован.
+- Trigger review-запроса учитывает и `pendingRequest`, и `scenePhase`.
 
 ## Этап 6. Базовое OSLog-логирование в ReviewManager
 
@@ -48,41 +46,39 @@
 
 ## Этап 7.1. Багфикс: сброс review-состояния при logout (TDD)
 
-- [x] **RED:** Тест `ReviewStorageTests.resetClearsAllData`.
-- [x] **GREEN:** `reset()` в `ReviewAttemptStoring` + `ReviewStorage`.
-- [x] **RED:** Тест `ReviewManagerTests.resetClearsStateAndAllowsNewSession`.
-- [x] **GREEN:** `reset()` в `ReviewManager`, обновлён `MockReviewAttemptStore`.
-- [x] **INTEGRATE:** `reviewManager.reset()` в `onChange(of: authHelper.isAuthorized)` при logout.
-- [x] Сборка + все тесты: 1731/0 (1 skipped).
+- [x] Добавлен `reset()` в `ReviewAttemptStoring` + `ReviewStorage` + `ReviewManager`.
+- [x] `reviewManager.reset()` вызывается при logout.
+- [x] Тесты: 1731/0 (1 skipped).
 
 ---
 
 ## Этап 7.2. Багфикс: milestone eligibility при count > milestone (TDD)
 
-**Проблема:** `ReviewMilestone.milestone(forCompletedWorkoutCount:)` возвращает milestone только при **точном совпадении** count с milestone value (1, 10, 30). Если count=11 (тренировка 11), веха 10 уже недостижима по точной проверке, и пользователь никогда не увидит prompt для milestone 10, если сохранил 10 тренировок в одной сессии.
+**Проблема:** `milestone(forCompletedWorkoutCount:)` требовал точного совпадения count с milestone. При count=11 milestone 10 недостижим.
 
-**Решение:** Изменить проверку на `count >= milestone.rawValue` (nearest milestone not yet attempted).
+**Решение:** `count >= milestone.rawValue` (nearest milestone not yet attempted). `isMilestoneWorkoutCount` сохранён как точная проверка.
 
-- [x] **RED:** Тест `ReviewMilestoneTests.milestone10EligibleWhenCount11` — при count=11 и не attempted milestone 10, eligible = true.
-- [x] **GREEN:** Изменить `ReviewMilestone.milestone(forCompletedWorkoutCount:)` на `>=` логику.
-- [x] **REFINE:** `isMilestoneWorkoutCount` оставлен как точная проверка (`1/10/30`), чтобы не смешивать смысл с eligibility-логикой.
-- [x] **VERIFY:** Целевой прогон после ревью: `ReviewMilestoneTests`, `ReviewManagerTests`, `WorkoutPreviewViewModel/StatusManager ReviewEventTests` — 36/0.
-- [x] Сборка + все тесты: 1736/0 (1 skipped).
+- [x] Реализована `>=` логика в `milestone(forCompletedWorkoutCount:)`.
+- [x] Тесты: 1736/0 (1 skipped).
+
+---
+
+## Этап 7.3. Багфикс: pending review после watch-save в фоне (TDD)
+
+**Проблема:** если milestone достигнут при сохранении с часов, пока iPhone-приложение не активно, `pendingRequest` выставляется, но review не показывается при возвращении в активное состояние, потому что `.task(id:)` был привязан только к `pendingRequest`.
+
+**Решение:** привязать trigger `.task(id:)` к комбинации `(pendingRequest, scenePhase)`, чтобы при переходе в `.active` происходила повторная попытка показа pending review.
+
+- [x] Добавлен `ReviewRequestTriggerID` (`pendingRequest + scenePhase`) и подключён в `reviewRequestHandling`.
+- [x] Добавлены тесты `ReviewRequestTriggerIDTests` (изменение trigger при смене `scenePhase` и `pendingRequest`).
+- [x] Целевой прогон после фикса: `ReviewRequestTriggerIDTests` + review-flow тесты — 25/0.
 
 ---
 
 ## Этап 7. Регрессия, форматирование и финальная валидация
 
-- [x] `make format` + целевые тесты (`WorkoutPreviewViewModelTests` 109/0, `StatusManagerTests` 136/0, `Review*` 32/0) + полный прогон `make test` 1729/0 (1 skipped).
-- [ ] Ручная проверка сценариев:
-  - [ ] первая успешная тренировка -> попытка review;
-  - [ ] 10-я успешная тренировка -> попытка review;
-  - [ ] 30-я успешная тренировка -> попытка review;
-  - [ ] повтор внутри одной сессии не происходит;
-  - [ ] prompt не инициируется поверх модалок/алертов.
-  - [ ] проверка UI-обработки review выполнена вручную (без автотестов UI).
-
-**Критерий завершения:** функционал стабильно работает по milestone 1/10/30, без нарушения UX и проектных правил.
+- [x] `make format` + все тесты: 1729/0 (1 skipped).
+- [ ] Ручная проверка: milestone 1/10/30 → попытка review, повтор в сессии не происходит, prompt не показывается поверх модалок.
 
 ---
 
