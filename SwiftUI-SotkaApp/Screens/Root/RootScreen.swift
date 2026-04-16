@@ -20,6 +20,7 @@ struct RootScreen: View {
                     .tag(tab)
             }
         }
+        .reviewRequestHandling()
         .alert(
             isPresented: $settings.showNotificationError,
             error: appSettings.notificationError

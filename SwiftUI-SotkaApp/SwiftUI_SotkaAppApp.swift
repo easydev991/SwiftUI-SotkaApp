@@ -14,6 +14,7 @@ struct SwiftUI_SotkaAppApp: App {
     @State private var appSettings = AppSettings()
     @State private var authHelper: AuthHelperImp
     @State private var networkStatus = NetworkStatus()
+    @State private var reviewManager: ReviewManager
     private let client: SWClient
     private let analyticsService: AnalyticsService
 
@@ -36,12 +37,24 @@ struct SwiftUI_SotkaAppApp: App {
         } catch {
             fatalError("Не смогли создать ModelContainer: \(error)")
         }
+        let reviewStorage = ReviewStorage()
+        let completionsCounter = WorkoutCompletionsCounter(modelContainer: modelContainer)
+        let container = modelContainer
+        let reviewManager = ReviewManager(
+            attemptStore: reviewStorage,
+            completionsCounter: completionsCounter,
+            currentUserIdProvider: {
+                let context = container.mainContext
+                let descriptor = FetchDescriptor<User>(predicate: #Predicate { _ in true })
+                return (try? context.fetch(descriptor)).flatMap(\.first)?.id
+            }
+        )
+        self.reviewManager = reviewManager
+
         let analytics: AnalyticsService
         #if DEBUG
         if ProcessInfo.processInfo.arguments.contains("UITest") {
             UserDefaults.standard.removePersistentDomain(forName: Bundle.main.bundleIdentifier!)
-            // Seed демо-данных выполняем до создания сервисов и запуска фоновых задач,
-            // чтобы исключить гонку с getStatus() и гарантировать корректного пользователя.
             ScreenshotDemoData.setup(context: modelContainer.mainContext)
             analytics = AnalyticsService(providers: [NoopAnalyticsProvider()])
             let mockServices = Self.createMockServices(modelContainer: modelContainer)
@@ -64,7 +77,8 @@ struct SwiftUI_SotkaAppApp: App {
                 progressSyncService: .init(client: client),
                 dailyActivitiesService: .init(client: client),
                 statusClient: client,
-                modelContainer: modelContainer
+                modelContainer: modelContainer,
+                reviewEventReporter: reviewManager
             )
             self.countriesService = .init(client: client)
             self.authHelper = authHelper
@@ -90,7 +104,8 @@ struct SwiftUI_SotkaAppApp: App {
             progressSyncService: .init(client: client),
             dailyActivitiesService: .init(client: client),
             statusClient: client,
-            modelContainer: modelContainer
+            modelContainer: modelContainer,
+            reviewEventReporter: reviewManager
         )
         self.countriesService = .init(client: client)
         self.authHelper = authHelper
@@ -125,6 +140,7 @@ struct SwiftUI_SotkaAppApp: App {
             .dynamicTypeSize(...DynamicTypeSize.accessibility2)
             .environment(appSettings)
             .environment(authHelper)
+            .environment(reviewManager)
             .environment(statusManager)
             .environment(statusManager.customExercisesService)
             .environment(statusManager.dailyActivitiesService)

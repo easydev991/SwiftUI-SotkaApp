@@ -192,8 +192,11 @@ final class WorkoutPreviewViewModel {
     /// - Parameters:
     ///   - activitiesService: Сервис для работы с активностями
     ///   - modelContext: Контекст SwiftData
-    func saveTrainingAsPassed(activitiesService: DailyActivitiesService, modelContext: ModelContext) {
-        // Проверить валидность данных
+    func saveTrainingAsPassed(
+        activitiesService: DailyActivitiesService,
+        modelContext: ModelContext,
+        reviewEventReporter: (any ReviewEventReporting)? = nil
+    ) {
         guard selectedExecutionType != nil else {
             error = .executionTypeNotSelected
             analytics?.log(
@@ -218,22 +221,26 @@ final class WorkoutPreviewViewModel {
             return
         }
 
-        // Установить count = plannedCount, если count == nil
-        // Это соответствует логике Android приложения: actualCircles = getPlannedCircles(day) для непройденных дней
         if count == nil, let plannedCount {
             count = plannedCount
         }
 
-        // Построить модель DayActivity из простых данных
+        let hadErrorBeforeSave = error != nil
+
         let dayActivity = buildDayActivity()
 
-        // Сохранить через DailyActivitiesService
         activitiesService.createDailyActivity(dayActivity, context: modelContext)
 
-        // Сбросить ошибку при успехе
         error = nil
         let dayNumber = dayNumber
         logger.info("Тренировка для дня \(dayNumber) сохранена")
+
+        let reviewContext = ReviewContext(hadRecentError: hadErrorBeforeSave)
+        if let reporter = reviewEventReporter {
+            Task { @MainActor in
+                await reporter.workoutCompletedSuccessfully(context: reviewContext)
+            }
+        }
     }
 
     /// Определяет, нужно ли показывать пикер типа выполнения

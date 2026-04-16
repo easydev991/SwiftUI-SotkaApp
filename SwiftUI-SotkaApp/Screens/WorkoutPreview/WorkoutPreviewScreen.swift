@@ -9,6 +9,7 @@ struct WorkoutPreviewScreen: View {
     @Environment(\.modelContext) private var modelContext
     @Environment(\.dismiss) private var dismiss
     @Environment(StatusManager.self) private var statusManager
+    @Environment(ReviewManager.self) private var reviewManager
     @Environment(\.currentDay) private var currentDay
     @State private var viewModel = WorkoutPreviewViewModel()
     @State private var showEditorScreen = false
@@ -224,7 +225,8 @@ private extension WorkoutPreviewScreen {
                 analytics.log(.userAction(action: .saveWorkout))
                 viewModel.saveTrainingAsPassed(
                     activitiesService: activitiesService,
-                    modelContext: modelContext
+                    modelContext: modelContext,
+                    reviewEventReporter: reviewManager
                 )
                 // Отправляем данные на часы после сохранения
                 if currentDay == day {
@@ -249,13 +251,24 @@ private extension WorkoutPreviewScreen {
 }
 
 #if DEBUG
+@MainActor
+private func makePreviewReviewManager(modelContainer: ModelContainer) -> ReviewManager {
+    ReviewManager(
+        attemptStore: ReviewStorage(),
+        completionsCounter: WorkoutCompletionsCounter(modelContainer: modelContainer),
+        currentUserIdProvider: { nil }
+    )
+}
+
 #Preview {
+    let container = PreviewModelContainer.make(with: .preview)
     NavigationStack {
         WorkoutPreviewScreen(
             activitiesService: DailyActivitiesService(client: MockDaysClient(result: .success)),
             day: 50
         )
-        .modelContainer(PreviewModelContainer.make(with: .preview))
+        .modelContainer(container)
+        .environment(makePreviewReviewManager(modelContainer: container))
     }
 }
 #endif
