@@ -251,24 +251,15 @@ private extension WorkoutPreviewScreen {
 }
 
 #if DEBUG
-@MainActor
-private func makePreviewReviewManager(modelContainer: ModelContainer) -> ReviewManager {
-    ReviewManager(
-        attemptStore: ReviewStorage(),
-        completionsCounter: WorkoutCompletionsCounter(modelContainer: modelContainer),
-        currentUserIdProvider: { nil }
-    )
-}
-
 #Preview {
-    let container = PreviewModelContainer.make(with: .preview)
     NavigationStack {
         WorkoutPreviewScreen(
             activitiesService: DailyActivitiesService(client: MockDaysClient(result: .success)),
             day: 50
         )
-        .modelContainer(container)
-        .environment(makePreviewReviewManager(modelContainer: container))
+        .modelContainer(PreviewModelContainer.make(with: .preview))
+        .environment(StatusManager.preview)
+        .environment(ReviewManager.preview)
     }
 }
 #endif
