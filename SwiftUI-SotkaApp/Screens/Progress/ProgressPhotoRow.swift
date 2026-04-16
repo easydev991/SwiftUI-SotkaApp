@@ -3,7 +3,10 @@ import SWDesignSystem
 import SwiftUI
 
 struct ProgressPhotoRow: View {
-    private let logger = Logger(subsystem: "SotkaApp", category: "ProgressPhotoRow")
+    private let logger = Logger(
+        subsystem: "SotkaApp",
+        category: String(describing: ProgressPhotoRow.self)
+    )
     @State private var showDialog = false
     let model: TempPhotoModel
     let onPhotoTap: (Action) -> Void

@@ -3,7 +3,10 @@ import SWDesignSystem
 import SwiftUI
 
 struct ProgressGridView: View {
-    private let logger = Logger(subsystem: "SotkaApp", category: "ProgressGridView")
+    private let logger = Logger(
+        subsystem: "SotkaApp",
+        category: String(describing: ProgressGridView.self)
+    )
     @Environment(\.currentDay) private var currentDay
     private var progressItems: [UserProgress] {
         user.progressResults.filter { !$0.shouldDelete }

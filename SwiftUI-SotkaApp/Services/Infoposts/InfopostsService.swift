@@ -7,7 +7,10 @@ import SwiftData
 @MainActor
 @Observable
 final class InfopostsService {
-    @ObservationIgnored private let logger = Logger(subsystem: "SotkaApp", category: "InfopostsService")
+    @ObservationIgnored private let logger = Logger(
+        subsystem: "SotkaApp",
+        category: String(describing: InfopostsService.self)
+    )
     private let currentLanguage: String
     private let infopostsClient: InfopostsClient
     private let analytics: AnalyticsService

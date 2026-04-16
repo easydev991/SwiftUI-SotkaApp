@@ -10,7 +10,10 @@ import SWUtils
 final class ProgressSyncService {
     private let client: ProgressClient
     private let photoDownloadService: PhotoDownloadServiceProtocol
-    @ObservationIgnored private let logger = Logger(subsystem: "SotkaApp", category: "ProgressSync")
+    @ObservationIgnored private let logger = Logger(
+        subsystem: "SotkaApp",
+        category: String(describing: ProgressSyncService.self)
+    )
 
     /// Флаг загрузки синхронизации
     private(set) var isSyncing = false

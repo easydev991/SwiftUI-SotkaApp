@@ -5,7 +5,10 @@ import OSLog
 /// Сервис для работы с YouTube видео инфопостов
 @Observable
 final class YouTubeVideoService {
-    @ObservationIgnored private let logger = Logger(subsystem: "SotkaApp", category: "YouTubeVideoService")
+    @ObservationIgnored private let logger = Logger(
+        subsystem: "SotkaApp",
+        category: String(describing: YouTubeVideoService.self)
+    )
     @ObservationIgnored private var cachedVideos: [YouTubeVideo]?
 
     private let analytics: AnalyticsService
