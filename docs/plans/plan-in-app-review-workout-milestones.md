@@ -23,43 +23,40 @@
 
 ## Актуальный статус
 
-- [x] Этапы 1–5.1 завершены: доменные типы, `ReviewManager`, `ReviewStorage`, `WorkoutCompletionsCounter`, UI-модификатор `reviewRequestHandling`, интеграция в iPhone/watch flow, рефакторинг (`sceneActive` удалён, отправка через явный `Task { await }` на call sites).
-- [ ] Остаются этапы 6 (OSLog-логирование) и 7 (регрессия, ручная валидация).
-- Тесты: review-модуль `38/0`, целевой прогон `20/0`.
+- [x] Этапы 1–5.1 завершены: доменные типы, `ReviewManager`, `ReviewStorage`, `WorkoutCompletionsCounter`, UI-модификатор `reviewRequestHandling`, интеграция в iPhone/watch flow.
+- [x] Этап 6 завершён: OSLog-логирование в `ReviewManager`.
+- [x] Этап 7.1 завершён: багфикс — `reset()` при logout, тесты 1731/0.
+- [ ] Этап 7: ручная валидация.
 - Код: `SwiftUI-SotkaApp/Services/Review/`.
 
 ### Уточнения реализации
 
-- `ReviewContext` содержит только `hadRecentError` (`sceneActive` удалён — оба call site на `@MainActor` после пользовательского действия).
-- `WorkoutCompletionsCounter` — отдельный тип с `ModelContainer`, фильтрация: `activityType == .workout`, `count != nil`, `!shouldDelete`, post-filter по `userId`.
-- `ReviewEventReporting` — протокол с `workoutCompletedSuccessfully(context:) async`.
-- DI: `StatusManager` — через `init`, `WorkoutPreviewViewModel` — через параметр метода `saveTrainingAsPassed(...)`.
-- `didRequestReviewThisSession` — in-memory, без `UserDefaults`.
-- `lastReviewRequestAttemptDate` сохраняется для будущего cooldown.
-- UI-модификатор: configurable delay, `task(id:)`, `StoreKit` изолирован.
-- `ReviewManager` передан через `.environment()` в `RootScreen`.
+- `ReviewContext.hadRecentError` — единственное поле (`sceneActive` удалён).
+- `WorkoutCompletionsCounter` — отдельный тип, фильтрация: `activityType == .workout`, `count != nil`, `!shouldDelete`, post-filter по `userId`.
+- DI: `StatusManager` через `init`, `WorkoutPreviewViewModel` через параметр `saveTrainingAsPassed(...)`.
+- `didRequestReviewThisSession` — in-memory; `lastReviewRequestAttemptDate` для будущего cooldown.
+- UI-модификатор: configurable delay, `task(id:)`, `StoreKit` изолирован; `ReviewManager` через `.environment()` в `RootScreen`.
 
 ## Этап 6. Базовое OSLog-логирование в ReviewManager
 
-Добавить `Logger` в `ReviewManager` и логировать каждое решение (skip-причина или успех) одной строкой. Без отдельных тестов на логи — логика уже покрыта существующими тестами.
+- [x] Добавлено OSLog-логирование в `ReviewManager` (skip-причины, успех).
 
-- [ ] Добавить `import OSLog` и `private let logger = Logger(subsystem: ..., category: "Review")` в `ReviewManager`.
-- [ ] В каждом `return` (skip) — `logger.info("Review skipped: \(reason)")`.
-- [ ] При успехе — `logger.info("Review eligible: milestone \(milestone)")`.
-- [ ] Всё. Отдельных тестов на логи не требуется.
+---
 
-**Критерий завершения:** в логах видны решения review-менеджера с причинами skip или milestone при успехе.
+## Этап 7.1. Багфикс: сброс review-состояния при logout (TDD)
+
+- [x] **RED:** Тест `ReviewStorageTests.resetClearsAllData`.
+- [x] **GREEN:** `reset()` в `ReviewAttemptStoring` + `ReviewStorage`.
+- [x] **RED:** Тест `ReviewManagerTests.resetClearsStateAndAllowsNewSession`.
+- [x] **GREEN:** `reset()` в `ReviewManager`, обновлён `MockReviewAttemptStore`.
+- [x] **INTEGRATE:** `reviewManager.reset()` в `onChange(of: authHelper.isAuthorized)` при logout.
+- [x] Сборка + все тесты: 1731/0 (1 skipped).
 
 ---
 
 ## Этап 7. Регрессия, форматирование и финальная валидация
 
-- [x] Запустить `make format`.
-- [ ] Запустить целевые тесты:
-  - [ ] `WorkoutPreviewViewModelTests`;
-  - [ ] `StatusManagerTests` (watch save scenarios);
-  - [ ] новые тесты `Review*`.
-- [ ] Прогнать `make test` перед merge (или в CI).
+- [x] `make format` + целевые тесты (`WorkoutPreviewViewModelTests` 109/0, `StatusManagerTests` 136/0, `Review*` 32/0) + полный прогон `make test` 1729/0 (1 skipped).
 - [ ] Ручная проверка сценариев:
   - [ ] первая успешная тренировка -> попытка review;
   - [ ] 10-я успешная тренировка -> попытка review;

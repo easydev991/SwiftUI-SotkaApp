@@ -173,6 +173,7 @@ struct SwiftUI_SotkaAppApp: App {
             statusManager.processAuthStatus(isAuthorized: isAuthorized)
             if !isAuthorized {
                 appSettings.didLogout()
+                reviewManager.reset()
             }
         }
     }

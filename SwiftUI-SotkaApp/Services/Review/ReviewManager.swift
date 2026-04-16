@@ -75,4 +75,11 @@ final class ReviewManager: ReviewEventReporting {
         attemptStore.markAttempted(milestone)
         pendingRequest = nil
     }
+
+    func reset() {
+        pendingRequest = nil
+        lastSkipReason = nil
+        didRequestReviewThisSession = false
+        attemptStore.reset()
+    }
 }

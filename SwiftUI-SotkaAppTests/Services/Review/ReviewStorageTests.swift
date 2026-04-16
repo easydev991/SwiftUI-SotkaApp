@@ -65,4 +65,18 @@ struct ReviewStorageTests {
         storage.markAttempted(.first)
         #expect(storage.attemptedMilestones() == [.first])
     }
+
+    @Test("reset очищает attemptedMilestones и lastReviewRequestAttemptDate")
+    func resetClearsAllData() {
+        let storage = ReviewStorage(userDefaults: makeDefaults())
+        storage.markAttempted(.first)
+        storage.markAttempted(.tenth)
+        #expect(storage.attemptedMilestones() == [.first, .tenth])
+        #expect(storage.lastReviewRequestAttemptDate() != nil)
+
+        storage.reset()
+
+        #expect(storage.attemptedMilestones() == [])
+        #expect(storage.lastReviewRequestAttemptDate() == nil)
+    }
 }

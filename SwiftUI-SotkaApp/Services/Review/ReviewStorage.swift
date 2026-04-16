@@ -24,4 +24,9 @@ struct ReviewStorage: ReviewAttemptStoring, @unchecked Sendable {
     func lastReviewRequestAttemptDate() -> Date? {
         defaults.object(forKey: ReviewStorageKeys.lastReviewRequestAttemptDate) as? Date
     }
+
+    func reset() {
+        defaults.removeObject(forKey: ReviewStorageKeys.attemptedMilestones)
+        defaults.removeObject(forKey: ReviewStorageKeys.lastReviewRequestAttemptDate)
+    }
 }

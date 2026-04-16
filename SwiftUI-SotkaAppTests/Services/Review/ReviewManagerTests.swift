@@ -170,6 +170,29 @@ struct ReviewManagerTests {
 
         #expect(store.savedMilestones.contains(.first))
     }
+
+    @Test("reset очищает pendingRequest и разрешает повторный review в новой сессии")
+    func resetClearsStateAndAllowsNewSession() async throws {
+        let (manager, store, counter) = makeSUT(completedWorkoutCount: 1)
+
+        await manager.workoutCompletedSuccessfully(
+            context: ReviewContext(hadRecentError: false)
+        )
+        manager.markConsumed()
+        #expect(manager.pendingRequest == nil)
+        #expect(store.savedMilestones.contains(.first))
+
+        manager.reset()
+        #expect(manager.pendingRequest == nil)
+        #expect(store.didCallReset)
+
+        counter.count = 10
+        await manager.workoutCompletedSuccessfully(
+            context: ReviewContext(hadRecentError: false)
+        )
+        let pending = try #require(manager.pendingRequest)
+        #expect(pending == .tenth)
+    }
 }
 
 // MARK: - Mocks
@@ -178,6 +201,7 @@ private final class MockReviewAttemptStore: ReviewAttemptStoring, @unchecked Sen
     private var milestones: [ReviewMilestone]
     private var lastDate: Date?
     var savedMilestones: [ReviewMilestone] = []
+    private(set) var didCallReset = false
 
     init(attemptedMilestones: [ReviewMilestone]) {
         self.milestones = attemptedMilestones
@@ -195,6 +219,12 @@ private final class MockReviewAttemptStore: ReviewAttemptStoring, @unchecked Sen
 
     func lastReviewRequestAttemptDate() -> Date? {
         lastDate
+    }
+
+    func reset() {
+        didCallReset = true
+        milestones = []
+        lastDate = nil
     }
 }
 
