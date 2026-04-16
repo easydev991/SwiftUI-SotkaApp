@@ -18,6 +18,7 @@ final class StatusManager: NSObject {
     @ObservationIgnored let infopostsService: InfopostsService
     @ObservationIgnored let progressSyncService: ProgressSyncService
     @ObservationIgnored let dailyActivitiesService: DailyActivitiesService
+    @ObservationIgnored private let reviewEventReporter: (any ReviewEventReporting)?
     @ObservationIgnored private var isJournalSyncInProgress = false
     @ObservationIgnored private(set) var syncReadPostsTask: Task<Void, Error>?
     @ObservationIgnored private let sessionProtocol: WCSessionProtocol?
@@ -97,7 +98,8 @@ final class StatusManager: NSObject {
         statusClient: StatusClient,
         modelContainer: ModelContainer,
         userDefaults: UserDefaults? = nil,
-        watchConnectivitySessionProtocol: WCSessionProtocol? = nil
+        watchConnectivitySessionProtocol: WCSessionProtocol? = nil,
+        reviewEventReporter: (any ReviewEventReporting)? = nil
     ) {
         self.customExercisesService = customExercisesService
         self.infopostsService = infopostsService
@@ -105,6 +107,7 @@ final class StatusManager: NSObject {
         self.dailyActivitiesService = dailyActivitiesService
         self.statusClient = statusClient
         self.modelContainer = modelContainer
+        self.reviewEventReporter = reviewEventReporter
         if let userDefaults {
             self.defaults = userDefaults
         } else {
@@ -663,34 +666,34 @@ final class StatusManager: NSObject {
         let trainings = saveWorkoutData.trainings
         let comment = saveWorkoutData.comment
 
-        // Создаем WorkoutProgramCreator для дня
         let creator = WorkoutProgramCreator(
             day: day,
             executionType: executionType,
             count: workoutResult.count,
-            plannedCount: nil, // plannedCount будет вычислен автоматически
-            trainings: trainings, // Используем переданные trainings
+            plannedCount: nil,
+            trainings: trainings,
             comment: comment
         )
 
-        // Получаем DayActivity из creator
         let dayActivity = creator.dayActivity
 
-        // Устанавливаем duration из результата тренировки
         if let duration = workoutResult.duration {
             dayActivity.duration = duration
         }
 
-        // Сохраняем активность через DailyActivitiesService
         dailyActivitiesService.createDailyActivity(dayActivity, context: context)
 
-        // Отправляем обновленную активность на часы
+        let reviewContext = ReviewContext(hadRecentError: false)
+        if let reporter = reviewEventReporter {
+            Task { @MainActor in
+                await reporter.workoutCompletedSuccessfully(context: reviewContext)
+            }
+        }
+
         sendCurrentActivity(day: day)
 
-        // Отправляем обновленные данные тренировки на часы
         sendWorkoutDataToWatch(day: day)
 
-        // Если сохраненная тренировка относится к текущему дню, также отправляем статус
         if let currentDay = currentDayCalculator?.currentDay, currentDay == day {
             let currentActivity = dailyActivitiesService.getActivityType(day: day, context: context)
             sendCurrentStatus(

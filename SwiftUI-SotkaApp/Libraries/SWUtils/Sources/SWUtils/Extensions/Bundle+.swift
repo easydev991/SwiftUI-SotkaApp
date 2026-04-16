@@ -9,7 +9,7 @@ public extension Bundle {
         dateDecodingStrategy: JSONDecoder.DateDecodingStrategy = .deferredToDate,
         keyDecodingStrategy: JSONDecoder.KeyDecodingStrategy = .useDefaultKeys
     ) throws -> T {
-        let logger = Logger(subsystem: Bundle.main.bundleIdentifier!, category: "Bundle + decodeJson")
+        let logger = Logger(subsystem: Bundle.main.bundleIdentifier ?? "SWUtils", category: String(describing: Self.self))
         guard let url = url(forResource: fileName, withExtension: ext) else {
             let error = BundleError.cannotLoad(fileName)
             logger.error("\(error.localizedDescription, privacy: .public)")

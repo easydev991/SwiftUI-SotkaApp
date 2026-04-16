@@ -29,7 +29,8 @@ enum MockStatusManager {
         language: String = "ru",
         userDefaults: UserDefaults? = nil,
         modelContainer: ModelContainer? = nil,
-        watchConnectivitySessionProtocol: WCSessionProtocol? = nil
+        watchConnectivitySessionProtocol: WCSessionProtocol? = nil,
+        reviewEventReporter: (any ReviewEventReporting)? = nil
     ) throws -> StatusManager {
         let defaults = try userDefaults ?? MockUserDefaults.create()
         let container: ModelContainer
@@ -59,7 +60,8 @@ enum MockStatusManager {
             statusClient: statusClient,
             modelContainer: container,
             userDefaults: defaults,
-            watchConnectivitySessionProtocol: watchConnectivitySessionProtocol
+            watchConnectivitySessionProtocol: watchConnectivitySessionProtocol,
+            reviewEventReporter: reviewEventReporter
         )
     }
 }

@@ -5,7 +5,10 @@ import WebKit
 
 /// Детальный экран инфопоста с `WKWebView` для отображения `HTML` контента
 struct InfopostDetailScreen: View {
-    private let logger = Logger(subsystem: "SotkaApp", category: "InfopostDetailScreen")
+    private let logger = Logger(
+        subsystem: "SotkaApp",
+        category: String(describing: InfopostDetailScreen.self)
+    )
     @AppStorage(FontSize.appStorageKey) private var fontSize = FontSize.medium
     @Environment(\.analyticsService) private var analytics
     @Environment(\.dismiss) private var dismiss

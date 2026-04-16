@@ -3,7 +3,7 @@ import OSLog
 
 /// Сервис для управления ресурсами инфопостов (CSS, JS, изображения)
 struct InfopostResourceManager {
-    private let logger = Logger(subsystem: "SotkaApp", category: "InfopostResourceManager")
+    private let logger = Logger(subsystem: Bundle.sotkaAppBundleId, category: String(describing: InfopostResourceManager.self))
 
     /// Создает временную директорию для инфопоста
     /// - Returns: URL временной директории или nil в случае ошибки

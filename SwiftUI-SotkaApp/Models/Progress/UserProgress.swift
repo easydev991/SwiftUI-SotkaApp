@@ -4,7 +4,7 @@ import SwiftData
 import SwiftUI
 import SWUtils
 
-private let logger = Logger(subsystem: "SotkaApp", category: "UserProgress")
+private let logger = Logger(subsystem: Bundle.sotkaAppBundleId, category: String(describing: UserProgress.self))
 
 /// Прогресс пользователя
 @Model

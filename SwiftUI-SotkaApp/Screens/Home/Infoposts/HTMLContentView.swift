@@ -9,7 +9,10 @@ struct HTMLContentView: UIViewRepresentable, @preconcurrency Equatable {
     }
 
     @Environment(YouTubeVideoService.self) private var youtubeService
-    private let logger = Logger(subsystem: "SotkaApp", category: "HTMLContentView")
+    private let logger = Logger(
+        subsystem: "SotkaApp",
+        category: String(describing: HTMLContentView.self)
+    )
     private let resourceManager = InfopostResourceManager()
     private let htmlProcessor = InfopostHTMLProcessor()
     private let fontSize: FontSize
@@ -64,7 +67,10 @@ struct HTMLContentView: UIViewRepresentable, @preconcurrency Equatable {
     }
 
     final class Coordinator: NSObject, WKNavigationDelegate, WKScriptMessageHandler {
-        private let logger = Logger(subsystem: "SotkaApp", category: "HTMLContentView.Coordinator")
+        private let logger = Logger(
+            subsystem: "SotkaApp",
+            category: String(describing: Coordinator.self)
+        )
         private let onReachedEnd: () -> Void
 
         init(onReachedEnd: @escaping () -> Void) {

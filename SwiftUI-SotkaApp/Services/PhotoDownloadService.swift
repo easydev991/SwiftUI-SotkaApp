@@ -9,7 +9,7 @@ protocol PhotoDownloadServiceProtocol {
 
 /// Сервис для загрузки фотографий прогресса
 struct PhotoDownloadService: PhotoDownloadServiceProtocol {
-    private let logger = Logger(subsystem: "SotkaApp", category: "PhotoDownload")
+    private let logger = Logger(subsystem: Bundle.sotkaAppBundleId, category: String(describing: PhotoDownloadService.self))
 
     /// Загружает все новые фотографии для прогресса
     ///

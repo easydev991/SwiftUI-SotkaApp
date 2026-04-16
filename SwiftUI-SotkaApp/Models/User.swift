@@ -3,7 +3,7 @@ import OSLog
 import SwiftData
 import SWUtils
 
-private let logger = Logger(subsystem: "SotkaApp", category: "User")
+private let logger = Logger(subsystem: Bundle.sotkaAppBundleId, category: String(describing: User.self))
 
 @Model
 final class User {

@@ -4,7 +4,7 @@ import OSLog
 extension InfopostsService {
     /// Менеджер для управления порядком файлов инфопостов
     struct FilenameManager {
-        private let logger = Logger(subsystem: "SotkaApp", category: "InfopostsService.FilenameManager")
+        private let logger = Logger(subsystem: Bundle.sotkaAppBundleId, category: String(describing: FilenameManager.self))
         private let language: String
 
         /// Инициализатор менеджера файлов инфопостов
