@@ -3,7 +3,7 @@ import OSLog
 
 /// Сервис для обработки HTML контента инфопостов
 struct InfopostHTMLProcessor {
-    private let logger = Logger(subsystem: "SotkaApp", category: "InfopostHTMLProcessor")
+    private let logger = Logger(subsystem: Bundle.sotkaAppBundleId, category: String(describing: InfopostHTMLProcessor.self))
 
     /// Загружает и обрабатывает HTML контент для отображения
     /// - Parameters:

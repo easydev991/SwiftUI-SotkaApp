@@ -63,5 +63,5 @@ enum ImageProcessor {
 }
 
 private extension Logger {
-    static let imageProcessor = Logger(subsystem: "SotkaApp", category: "ImageProcessor")
+    static let imageProcessor = Logger(subsystem: Bundle.sotkaAppBundleId, category: String(describing: ImageProcessor.self))
 }

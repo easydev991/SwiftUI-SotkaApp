@@ -3,7 +3,7 @@ import OSLog
 
 /// Парсер HTML файлов инфопостов
 struct InfopostParser {
-    private let logger = Logger(subsystem: "SotkaApp", category: "InfopostParser")
+    private let logger = Logger(subsystem: Bundle.sotkaAppBundleId, category: String(describing: InfopostParser.self))
 
     let filename: String
     let language: String

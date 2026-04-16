@@ -3,7 +3,7 @@ import UIKit
 
 /// Менеджер для работы с изображениями инфопостов из Assets.xcassets
 enum ImageAssetManager {
-    private static let logger = Logger(subsystem: "SotkaApp", category: "ImageAssetManager")
+    private static let logger = Logger(subsystem: Bundle.sotkaAppBundleId, category: String(describing: ImageAssetManager.self))
 
     /// Получает URL изображения из Assets.xcassets
     /// - Parameter imageName: Имя изображения (например, "1", "1-1", "aims-0")
