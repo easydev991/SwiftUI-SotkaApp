@@ -39,29 +39,16 @@
 - UI-модификатор: configurable delay, `task(id:)`, `StoreKit` изолирован.
 - `ReviewManager` передан через `.environment()` в `RootScreen`.
 
-## Этап 6. Логирование и аналитика attempts (без зависимости от факта показа)
+## Этап 6. Базовое OSLog-логирование в ReviewManager
 
-### Red
+Добавить `Logger` в `ReviewManager` и логировать каждое решение (skip-причина или успех) одной строкой. Без отдельных тестов на логи — логика уже покрыта существующими тестами.
 
-- [ ] Тесты/проверки, что при каждом решении eligibility фиксируется причина (`eligible`/`skipped_reason`).
+- [ ] Добавить `import OSLog` и `private let logger = Logger(subsystem: ..., category: "Review")` в `ReviewManager`.
+- [ ] В каждом `return` (skip) — `logger.info("Review skipped: \(reason)")`.
+- [ ] При успехе — `logger.info("Review eligible: milestone \(milestone)")`.
+- [ ] Всё. Отдельных тестов на логи не требуется.
 
-### Green
-
-- [ ] Добавить OSLog-события:
-  - [ ] `review_eligible_true`;
-  - [ ] `review_eligible_false` + причина;
-  - [ ] `review_request_attempted`.
-- [ ] Enum причин skip уже существует (`ReviewSkipReason`):
-  - [ ] `milestone_not_reached`;
-  - [ ] `milestone_already_attempted`;
-  - [ ] `already_attempted_this_session`;
-  - [ ] `recent_error`.
-
-### Refactor
-
-- [ ] Централизовать формат логов в одном месте coordinator/service.
-
-**Критерий завершения:** в логах видны только попытки и причины отказа, без ложных предположений о факте показа prompt.
+**Критерий завершения:** в логах видны решения review-менеджера с причинами skip или milestone при успехе.
 
 ---
 
