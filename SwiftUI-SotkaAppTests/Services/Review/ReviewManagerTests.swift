@@ -57,15 +57,37 @@ struct ReviewManagerTests {
         #expect(pending == .thirtieth)
     }
 
-    @Test("Не выставляет pendingRequest для не-milestone количества тренировок", arguments: [0, 2, 5, 9, 11, 29, 31])
-    func noPendingForNonMilestone(count: Int) async {
-        let (manager, _, _) = makeSUT(completedWorkoutCount: count)
+    @Test("Не выставляет pendingRequest для count=0")
+    func noPendingForZeroCount() async {
+        let (manager, _, _) = makeSUT(completedWorkoutCount: 0)
 
         await manager.workoutCompletedSuccessfully(
             context: ReviewContext(hadRecentError: false)
         )
 
         #expect(manager.pendingRequest == nil)
+    }
+
+    @Test("Выставляет pendingRequest=.first для count в диапазоне 1-9")
+    func pendingFirstForCount1to9() async {
+        let (manager, _, _) = makeSUT(completedWorkoutCount: 5)
+
+        await manager.workoutCompletedSuccessfully(
+            context: ReviewContext(hadRecentError: false)
+        )
+
+        #expect(manager.pendingRequest == .first)
+    }
+
+    @Test("Выставляет pendingRequest=.tenth для count в диапазоне 10-29")
+    func pendingTenthForCount10to29() async {
+        let (manager, _, _) = makeSUT(completedWorkoutCount: 11)
+
+        await manager.workoutCompletedSuccessfully(
+            context: ReviewContext(hadRecentError: false)
+        )
+
+        #expect(manager.pendingRequest == .tenth)
     }
 
     // MARK: - Eligibility: duplicate milestone

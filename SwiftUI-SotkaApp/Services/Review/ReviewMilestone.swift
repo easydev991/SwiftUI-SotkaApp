@@ -6,10 +6,12 @@ enum ReviewMilestone: Int, CaseIterable {
     case thirtieth = 30
 
     static func milestone(forCompletedWorkoutCount count: Int) -> ReviewMilestone? {
-        ReviewMilestone(rawValue: count)
+        ReviewMilestone.allCases
+            .filter { $0.rawValue <= count }
+            .max(by: { $0.rawValue < $1.rawValue })
     }
 
     static func isMilestoneWorkoutCount(_ count: Int) -> Bool {
-        milestone(forCompletedWorkoutCount: count) != nil
+        ReviewMilestone(rawValue: count) != nil
     }
 }

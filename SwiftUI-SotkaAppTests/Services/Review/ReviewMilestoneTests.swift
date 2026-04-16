@@ -43,16 +43,16 @@ struct ReviewMilestoneTests {
         #expect(ReviewMilestone.thirtieth.rawValue == 30)
     }
 
-    @Test("isMilestoneWorkoutCount возвращает true для milestone-значений")
-    func isMilestoneWorkoutCountReturnsTrueForMilestoneValues() {
+    @Test("isMilestoneWorkoutCount возвращает false для count=0")
+    func isMilestoneWorkoutCountReturnsFalseForZero() {
+        #expect(!ReviewMilestone.isMilestoneWorkoutCount(0))
+    }
+
+    @Test("isMilestoneWorkoutCount возвращает true только для milestone значений")
+    func isMilestoneWorkoutCountReturnsTrueOnlyForMilestones() {
         #expect(ReviewMilestone.isMilestoneWorkoutCount(1))
         #expect(ReviewMilestone.isMilestoneWorkoutCount(10))
         #expect(ReviewMilestone.isMilestoneWorkoutCount(30))
-    }
-
-    @Test("isMilestoneWorkoutCount возвращает false для не-milestone значений")
-    func isMilestoneWorkoutCountReturnsFalseForNonMilestoneValues() {
-        #expect(!ReviewMilestone.isMilestoneWorkoutCount(0))
         #expect(!ReviewMilestone.isMilestoneWorkoutCount(5))
         #expect(!ReviewMilestone.isMilestoneWorkoutCount(15))
         #expect(!ReviewMilestone.isMilestoneWorkoutCount(100))
@@ -65,8 +65,26 @@ struct ReviewMilestoneTests {
         #expect(unwrapped == .tenth)
     }
 
-    @Test("milestone(forCompletedWorkoutCount:) возвращает nil для не-milestone")
-    func milestoneForCompletedWorkoutCountReturnsNilForNonMilestone() {
-        #expect(ReviewMilestone.milestone(forCompletedWorkoutCount: 7) == nil)
+    @Test("milestone(forCompletedWorkoutCount:) возвращает .first для count=7")
+    func milestoneForCount7ReturnsFirst() {
+        let milestone = ReviewMilestone.milestone(forCompletedWorkoutCount: 7)
+        #expect(milestone == .first)
+    }
+
+    @Test("milestone(forCompletedWorkoutCount:) возвращает ближайший milestone при count > milestone")
+    func milestone10EligibleWhenCount11() {
+        let milestone = ReviewMilestone.milestone(forCompletedWorkoutCount: 11)
+        #expect(milestone == .tenth)
+    }
+
+    @Test("milestone(forCompletedWorkoutCount:) возвращает ближайший не-attempted milestone")
+    func milestone30EligibleWhenCount35() {
+        let milestone = ReviewMilestone.milestone(forCompletedWorkoutCount: 35)
+        #expect(milestone == .thirtieth)
+    }
+
+    @Test("milestone(forCompletedWorkoutCount:) возвращает nil для count < first milestone")
+    func milestoneForCountLessThanFirstReturnsNil() {
+        #expect(ReviewMilestone.milestone(forCompletedWorkoutCount: 0) == nil)
     }
 }
