@@ -1,0 +1,12 @@
+#!/usr/bin/env bash
+export PATH="/opt/homebrew/bin:/usr/local/bin:$PATH"
+
+if ! swiftformat . --lint; then
+  echo ""
+  echo "Похоже, есть код, который нужно отформатировать."
+  echo "Запусти команду: make format"
+  echo ""
+  exit 1
+else
+  exit 0
+fi

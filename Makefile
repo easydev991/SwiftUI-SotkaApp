@@ -1,4 +1,4 @@
-.PHONY: help setup setup_hook setup_snapshot setup_fastlane setup_ssh setup_markdownlint update update_fastlane update_swiftformat format screenshots upload_screenshots testflight fastlane increment_build build test test_watch
+.PHONY: help setup setup_hook setup_snapshot setup_fastlane setup_ssh setup_markdownlint update update_fastlane update_swiftformat update_readme_versions test_readme_versions format screenshots upload_screenshots testflight fastlane increment_build build test test_watch
 
 # Цвета и шрифт
 YELLOW=\033[1;33m
@@ -129,27 +129,29 @@ setup:
 	@$(MAKE) setup_ssh
 	@$(MAKE) setup_markdownlint
 	
-## setup_hook: Установить pre-push git-хук для проверки форматирования Swift-кода
+## setup_hook: Установить git-хуки (pre-commit для синхронизации README и pre-push для swiftformat)
 setup_hook:
-	@HOOK_PATH=".git/hooks/pre-push"; \
-	if [ -f "$$HOOK_PATH" ] && grep -q "swiftformat" "$$HOOK_PATH"; then \
-		printf "$(GREEN)pre-push git-хук для проверки форматирования кода уже настроен$(RESET)\n"; \
+	@mkdir -p .git/hooks
+	@printf "$(YELLOW)Синхронизация скрипта pre-commit-readme-versions...$(RESET)\n"; \
+	if cp .githooks/pre-commit-readme-versions .git/hooks/pre-commit-readme-versions && chmod +x .git/hooks/pre-commit-readme-versions; then \
+		printf "$(GREEN)Скрипт pre-commit-readme-versions синхронизирован$(RESET)\n"; \
 	else \
-		printf "$(YELLOW)Устанавливаю pre-push git-хук для swiftformat...$(RESET)\n"; \
-		echo '#!/usr/bin/env bash' > "$$HOOK_PATH"; \
-		echo 'export PATH="/opt/homebrew/bin:/usr/local/bin:$$PATH"' >> "$$HOOK_PATH"; \
-		echo '' >> "$$HOOK_PATH"; \
-		echo 'if ! swiftformat . --lint; then' >> "$$HOOK_PATH"; \
-		echo '  echo ""' >> "$$HOOK_PATH"; \
-		echo '  echo "Похоже, есть код, который нужно отформатировать."' >> "$$HOOK_PATH"; \
-		echo '  echo "Запусти команду: make format"' >> "$$HOOK_PATH"; \
-		echo '  echo ""' >> "$$HOOK_PATH"; \
-		echo '  exit 1' >> "$$HOOK_PATH"; \
-		echo 'else' >> "$$HOOK_PATH"; \
-		echo '  exit 0' >> "$$HOOK_PATH"; \
-		echo 'fi' >> "$$HOOK_PATH"; \
-		chmod +x "$$HOOK_PATH"; \
-		printf "$(GREEN)pre-push git-хук для swiftformat успешно установлен в .git/hooks$(RESET)\n"; \
+		printf "$(RED)Не удалось синхронизировать pre-commit-readme-versions$(RESET)\n"; \
+		exit 1; \
+	fi
+	@printf "$(YELLOW)Синхронизация pre-commit git-хука...$(RESET)\n"; \
+	if cp .githooks/pre-commit .git/hooks/pre-commit && chmod +x .git/hooks/pre-commit; then \
+		printf "$(GREEN)pre-commit git-хук синхронизирован$(RESET)\n"; \
+	else \
+		printf "$(RED)Не удалось синхронизировать pre-commit git-хук$(RESET)\n"; \
+		exit 1; \
+	fi
+	@printf "$(YELLOW)Синхронизация pre-push git-хука...$(RESET)\n"; \
+	if cp .githooks/pre-push .git/hooks/pre-push && chmod +x .git/hooks/pre-push; then \
+		printf "$(GREEN)pre-push git-хук синхронизирован$(RESET)\n"; \
+	else \
+		printf "$(RED)Не удалось синхронизировать pre-push git-хук$(RESET)\n"; \
+		exit 1; \
 	fi
 
 ## setup_snapshot: Проверить инициализацию fastlane/fastlane snapshot, при необходимости предложить варианты установки
@@ -222,8 +224,18 @@ setup_markdownlint:
 		printf "$(GREEN)markdownlint-cli уже установлен$(RESET)\\n"; \
 	fi
 
-## update: Обновить fastlane и swiftformat (вызывает update_bundle и update_swiftformat)
-update: update_fastlane update_swiftformat
+## update: Обновить fastlane, swiftformat и версии Xcode/Swift/iOS в README
+update: update_fastlane update_swiftformat update_readme_versions
+
+## update_readme_versions: Обновить бейджи версий Xcode/Swift/iOS в README.md
+update_readme_versions:
+	@printf "$(YELLOW)Обновляю версии Xcode/Swift/iOS в README.md...$(RESET)\n"
+	@python3 scripts/update_readme_versions.py --root .
+	@printf "$(GREEN)Версии в README.md обновлены$(RESET)\n"
+
+## test_readme_versions: Запустить unit-тесты утилиты обновления README
+test_readme_versions:
+	@python3 -m unittest scripts.tests.test_update_readme_versions
 
 ## update_fastlane: Обновить только fastlane и его зависимости
 update_fastlane:
