@@ -6,6 +6,49 @@ import Testing
 @Suite("Тесты SwiftData миграции")
 @MainActor
 struct SwiftDataMigrationTests {
+    @Test("Апгрейд c релизов 4.0/4.1 на текущую схему сохраняет данные")
+    func opensStoreFromRelease40AndPreservesData() throws {
+        let (directoryURL, storeURL) = makeStoreURLs()
+        defer { try? FileManager.default.removeItem(at: directoryURL) }
+
+        do {
+            let oldSchema = makeRelease40Schema()
+            let oldConfiguration = ModelConfiguration("MigrationFrom40", schema: oldSchema, url: storeURL)
+            let oldContainer = try ModelContainer(for: oldSchema, configurations: [oldConfiguration])
+            let oldContext = oldContainer.mainContext
+
+            let user = User(id: 401, userName: "legacy-40-user", fullName: "Legacy40", email: "legacy40@example.com")
+            let progress = UserProgress(id: 7, pullUps: 11, pushUps: 22, squats: 33, weight: 70)
+            progress.user = user
+
+            oldContext.insert(user)
+            oldContext.insert(progress)
+            try oldContext.save()
+        }
+
+        let newSchema = makeCurrentSchema()
+        let newConfiguration = ModelConfiguration("MigrationFrom40", schema: newSchema, url: storeURL)
+        let migratedContainer = try ModelContainer(for: newSchema, configurations: [newConfiguration])
+        let context = migratedContainer.mainContext
+
+        let users = try context.fetch(FetchDescriptor<User>())
+        let progressList = try context.fetch(FetchDescriptor<UserProgress>())
+        let firstUser = try #require(users.first)
+        let firstProgress = try #require(progressList.first)
+
+        #expect(users.count == 1)
+        #expect(firstUser.id == 401)
+        #expect(progressList.count == 1)
+        #expect(firstProgress.id == 7)
+
+        let syncEntry = SyncJournalEntry(startDate: .now, result: .success)
+        context.insert(syncEntry)
+        try context.save()
+
+        let extensions = try context.fetch(FetchDescriptor<CalendarExtensionRecord>())
+        #expect(extensions.isEmpty)
+    }
+
     @Test("Открытие legacy БД не падает и сохраняет данные")
     func opensLegacySchemaAndPreservesData() throws {
         let (directoryURL, storeURL) = makeStoreURLs()
@@ -116,6 +159,19 @@ struct SwiftDataMigrationTests {
                 DayActivity.self,
                 DayActivityTraining.self,
                 SyncJournalEntry.self
+            ]
+        )
+    }
+
+    private func makeRelease40Schema() -> Schema {
+        Schema(
+            [
+                User.self,
+                Country.self,
+                CustomExercise.self,
+                UserProgress.self,
+                DayActivity.self,
+                DayActivityTraining.self
             ]
         )
     }
