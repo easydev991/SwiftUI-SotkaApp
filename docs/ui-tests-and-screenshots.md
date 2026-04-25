@@ -19,6 +19,12 @@
 make test_ui
 ```
 
+- Unit-тесты preflight-скрипта:
+
+```shell
+make test_ui_preflight_script
+```
+
 - Скриншоты iPhone/iPad:
 
 ```shell
@@ -45,6 +51,8 @@ Preflight:
 4. Останавливает запуск с понятной ошибкой, если симулятор или permission недоступны.
 
 Текущий набор permissions по умолчанию задаётся в `Makefile` переменной `UI_PREFLIGHT_PERMISSIONS`.
+
+Отдельно скрипт preflight покрыт unit-тестами и может проверяться командой `make test_ui_preflight_script`.
 
 ## Чек-лист для скриншотов
 

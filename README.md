@@ -41,5 +41,7 @@
 
 - [Установка и настройка](docs/setup-guide.md) - подробная инструкция по настройке проекта
 - [Миграция данных](docs/data-migration.md) - руководство по миграции данных SwiftData
+- [Продление календаря](docs/calendar-extension.md) - описание продления после 100-го дня и синхронизации
+- [UI-тесты и скриншоты](docs/ui-tests-and-screenshots.md) - запуск `make test_ui`/`make screenshots` и preflight симулятора
 - [Публикация приложения](docs/deployment.md) - инструкции по сборке и публикации в AppStore
 - Остальная документация есть в папке [docs](docs)
