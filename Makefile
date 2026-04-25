@@ -17,6 +17,7 @@ SWIFT_VERSION=6.3.0
 SHELL := /bin/bash
 .ONESHELL:
 BUNDLE_EXEC := RBENV_VERSION=$(RUBY_VERSION) bundle exec
+UI_PREFLIGHT_SCRIPT := ./scripts/simulator_ui_preflight.sh
 IOS_SIM_DEST ?= platform=iOS Simulator,name=iPhone 17
 WATCH_SIM_DEST ?= platform=watchOS Simulator,name=Apple Watch Ultra 3 (49mm)
 TEST_DERIVED_DATA_PATH ?= /tmp/SwiftUI-SotkaApp-test-derived-data
@@ -321,18 +322,18 @@ screenshots:
 
 ## ui_preflight_test_ui: Преднастройка iOS-симулятора для стабильного запуска UI-тестов
 ui_preflight_test_ui:
-	@./scripts/simulator_ui_preflight.sh \
+	@$(UI_PREFLIGHT_SCRIPT) \
 		--destination '$(IOS_SIM_DEST)' \
 		--bundle-id '$(APP_BUNDLE_ID)' \
 		--permissions '$(UI_PREFLIGHT_PERMISSIONS)'
 
 ## ui_preflight_screenshots: Преднастройка iOS-симуляторов для fastlane screenshots
 ui_preflight_screenshots:
-	@./scripts/simulator_ui_preflight.sh \
+	@$(UI_PREFLIGHT_SCRIPT) \
 		--device '$(SNAPSHOT_IOS_DEVICE_1)' \
 		--bundle-id '$(APP_BUNDLE_ID)' \
 		--permissions '$(UI_PREFLIGHT_PERMISSIONS)'
-	@./scripts/simulator_ui_preflight.sh \
+	@$(UI_PREFLIGHT_SCRIPT) \
 		--device '$(SNAPSHOT_IOS_DEVICE_2)' \
 		--bundle-id '$(APP_BUNDLE_ID)' \
 		--permissions '$(UI_PREFLIGHT_PERMISSIONS)'

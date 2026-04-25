@@ -205,11 +205,10 @@ let shouldShowInfopost = currentDay <= 100
 
 - [x] Добавлены `extendCalendar(targetTotalDays:)` и tap-логирование
 - [x] Поведение аналитики подтверждено unit-тестами
-- [x] Тесты этапа пройдены
 
 ### Refactor
 
-- [x] Выполнен рефактор `HomeCalendarExtensionView`, `make format`
+- [x] Выполнен рефактор Home-модуля, `make format`
 
 ---
 
@@ -247,13 +246,11 @@ let shouldShowInfopost = currentDay <= 100
 
 #### 4.2 Grid mode (пагинация)
 
-- [x] Реализована grid-пагинация по 100 дней (`controls` при `totalDays > 100`)
-- [x] Целевые тесты этапа проходят
+- [x] Реализована grid-пагинация по 100 дней (`controls` при `totalDays > 100`), тесты этапа проходят
 
 ### Refactor
 
-- [x] Секции и пагинация вынесены в модели
-- [x] Починены preview, выполнен `make format`
+- [x] Секции/пагинация вынесены в модели, preview починены, `make format` выполнен
 
 ---
 
@@ -333,7 +330,7 @@ let shouldShowInfopost = currentDay <= 100
 
 ### Red: пишем тесты (ожидаем падений)
 
-- [x] Обновлены тесты debug/fallback (`101+`), Red-фаза зафиксирована
+- [x] Обновлены тесты debug/fallback (`101+`)
 
 ### Green: минимальная реализация
 
@@ -348,8 +345,7 @@ let shouldShowInfopost = currentDay <= 100
 
 ### Refactor
 
-- [x] Убрано дублирование `extensionCount`, обновлены preview `101+`
-- [x] Проверена стабильность preview, выполнен `make format`
+- [x] Убрано дублирование `extensionCount`, preview `101+` стабилизированы, `make format` выполнен
 
 ---
 
@@ -357,8 +353,7 @@ let shouldShowInfopost = currentDay <= 100
 
 ### Red: запускаем полный набор тестов
 
-- [x] Пройдены последовательные прогоны unit/UI/watch и сценарии online/offline-only
-- [x] Добавлен `make test_ui` без зависимости от runtime-взаимодействия с `SpringBoard`
+- [x] Пройдены последовательные прогоны unit/UI/watch (online/offline-only), `make test_ui` не зависит от runtime-взаимодействия с `SpringBoard`
 
 ### Green: фиксим регрессии
 
@@ -366,8 +361,7 @@ let shouldShowInfopost = currentDay <= 100
 
 ### Refactor
 
-- [x] Выполнены `make format`, финальный review и актуализация `docs/`
-- [x] Проверен coverage новых модулей (`xccov`)
+- [x] Выполнены `make format`, финальный review, актуализация docs и проверка coverage (`xccov`)
 
 ### Актуальный остаток после этапа 10
 
@@ -434,12 +428,11 @@ let shouldShowInfopost = currentDay <= 100
 
 ### Red: пишем тесты (ожидаем падений)
 
-- [x] Добавлены/расширены тесты list-пагинации, включая disabled-состояние дней `> currentDay`
+- [x] Добавлены тесты list-пагинации, включая disabled-состояние дней `> currentDay`
 
 ### Green: минимальная реализация
 
-- [x] Реализована list-пагинация для `totalDays > 100` (включая сортировку `101+`)
-- [x] Переиспользована общая математика пагинации, preview проверены
+- [x] Реализована list-пагинация для `totalDays > 100` (включая сортировку `101+`), переиспользована общая математика
 
 ### Refactor
 
@@ -461,19 +454,15 @@ let shouldShowInfopost = currentDay <= 100
 
 ### Red: пишем тесты (ожидаем падений)
 
-- [x] Добавлены/расширены тесты восстановления, clamp и cleanup persisted `selectedPage`
-- [x] Добавлены unit-тесты helper-модели персистентного состояния страницы
+- [x] Добавлены тесты восстановления/clamp/cleanup persisted `selectedPage` и helper-модели
 
 ### Green: минимальная реализация
 
-- [x] Добавлены модель/хелпер сохранения страницы Journal в `UserDefaults`
-- [x] Подключены чтение/запись состояния в `JournalScreen`
-- [x] Добавлен reset persisted page в `didLogout()` и `resetProgram()`
+- [x] Реализованы сохранение страницы Journal в `UserDefaults`, чтение/запись в `JournalScreen` и reset в `didLogout()/resetProgram()`
 
 ### Refactor
 
-- [x] Переиспользована `JournalGridPagination` для валидации диапазона
-- [x] Убрано дублирование ключей/валидации, выполнен `make format`
+- [x] Переиспользована `JournalGridPagination`, убрано дублирование ключей/валидации, выполнен `make format`
 
 ---
 

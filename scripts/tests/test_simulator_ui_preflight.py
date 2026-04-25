@@ -110,6 +110,59 @@ class SimulatorUiPreflightScriptTests(unittest.TestCase):
             self.assertIn("simctl privacy TEST-UDID grant photos", calls)
             self.assertIn("simctl privacy TEST-UDID grant microphone", calls)
 
+    def test_fails_with_clear_hint_when_permission_grant_fails(self) -> None:
+        with tempfile.TemporaryDirectory() as temp_dir:
+            temp_path = Path(temp_dir)
+            fake_xcrun = temp_path / "xcrun"
+
+            fake_xcrun.write_text(
+                textwrap.dedent(
+                    """\
+                    #!/usr/bin/env bash
+                    set -euo pipefail
+
+                    if [[ "$1" == "simctl" && "$2" == "list" && "$3" == "devices" && "$4" == "available" && "$5" == "-j" ]]; then
+                      cat <<'JSON'
+                    {"devices":{"com.apple.CoreSimulator.SimRuntime.iOS-26-0":[{"name":"iPhone 17","udid":"TEST-UDID","state":"Shutdown","isAvailable":true}]}}
+                    JSON
+                      exit 0
+                    fi
+
+                    if [[ "$1" == "simctl" && "$2" == "boot" && "$3" == "TEST-UDID" ]]; then
+                      exit 0
+                    fi
+
+                    if [[ "$1" == "simctl" && "$2" == "bootstatus" && "$3" == "TEST-UDID" && "$4" == "-b" ]]; then
+                      exit 0
+                    fi
+
+                    if [[ "$1" == "simctl" && "$2" == "privacy" && "$3" == "TEST-UDID" && "$4" == "grant" ]]; then
+                      exit 1
+                    fi
+
+                    exit 1
+                    """
+                ),
+                encoding="utf-8"
+            )
+            fake_xcrun.chmod(fake_xcrun.stat().st_mode | stat.S_IXUSR)
+
+            result = self.run_script(
+                [
+                    "--destination",
+                    "platform=iOS Simulator,name=iPhone 17",
+                    "--bundle-id",
+                    "com.oleg991.SwiftUI-SotkaApp",
+                    "--permissions",
+                    "photos"
+                ],
+                env={"PATH": f"{temp_dir}:{os.environ['PATH']}"}
+            )
+
+            self.assertNotEqual(result.returncode, 0)
+            self.assertIn("не удалось выдать permission 'photos'", result.stderr)
+            self.assertIn("проверьте корректность имени permission", result.stderr)
+
 
 if __name__ == "__main__":
     unittest.main()
