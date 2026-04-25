@@ -12,7 +12,8 @@ extension StatusManager {
                 UserProgress.self,
                 DayActivity.self,
                 DayActivityTraining.self,
-                SyncJournalEntry.self
+                SyncJournalEntry.self,
+                CalendarExtensionRecord.self
             ]
         )
         let config = ModelConfiguration(schema: schema, isStoredInMemoryOnly: true)
@@ -32,6 +33,29 @@ extension StatusManager {
             statusClient: MockLoginClient(result: .success),
             modelContainer: modelContainer
         )
+    }
+
+    static var previewWithCalendarExtension: StatusManager {
+        let statusManager = preview
+        let context = statusManager.modelContainer.mainContext
+        let user = User.preview
+        context.insert(user)
+        try? context.save()
+
+        statusManager.setCurrentDayForDebug(100)
+        statusManager.addExtensionDate(.now, isSynced: true)
+        return statusManager
+    }
+
+    static var previewWithCalendarExtensionDay130: StatusManager {
+        let statusManager = preview
+        let context = statusManager.modelContainer.mainContext
+        let user = User.preview
+        context.insert(user)
+        try? context.save()
+
+        statusManager.setCurrentDayForDebug(130, extensionCount: 1)
+        return statusManager
     }
 }
 #endif

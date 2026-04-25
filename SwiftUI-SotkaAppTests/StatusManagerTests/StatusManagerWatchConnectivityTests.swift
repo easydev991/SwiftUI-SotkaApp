@@ -170,6 +170,22 @@ struct StatusManagerWatchConnectivityTests {
         #expect(applicationContext["restTime"] == nil)
     }
 
+    @Test("Не должен включать totalDays в payload для часов")
+    func shouldNotIncludeTotalDaysInWatchPayload() {
+        let message = WatchStatusMessage(
+            isAuthorized: true,
+            currentDay: 42,
+            currentActivity: .workout,
+            restTime: nil
+        )
+
+        let result = message.message
+        let applicationContext = message.applicationContext
+
+        #expect(result["totalDays"] == nil)
+        #expect(applicationContext["totalDays"] == nil)
+    }
+
     // MARK: - Тесты методов отправки данных
 
     @Test("Должен отправлять текущий статус в начале getStatus")
@@ -619,7 +635,8 @@ struct StatusManagerWatchConnectivityTests {
         let activity = statusManager.dailyActivitiesService.getActivity(dayNumber: 42, context: context)
         let activityType = try #require(activity?.activityType)
         #expect(activityType == .stretch)
-        #expect(activity?.user?.id == user.id)
+        let activityUser = try #require(activity?.user)
+        #expect(activityUser.id == user.id)
     }
 
     // MARK: - Тесты отправки applicationContext при активации WCSession

@@ -1,4 +1,6 @@
 #if DEBUG
+import Foundation
+
 /// Единый мок-клиент для UI-тестов, реализующий все протоколы
 struct MockSWClient {
     private let loginClient: MockLoginClient
@@ -129,6 +131,16 @@ extension MockSWClient: ProfileClient {
 extension MockSWClient: CountriesClient {
     func getCountries() async throws -> [CountryResponse] {
         try await countriesClient.getCountries()
+    }
+}
+
+extension MockSWClient: PurchasesClient {
+    func getPurchases() async throws -> CalendarPurchasesResponse {
+        CalendarPurchasesResponse(customEditor: false, calendars: [])
+    }
+
+    func postCalendarPurchase(date _: Date) async throws -> CalendarPurchasesResponse {
+        CalendarPurchasesResponse(customEditor: false, calendars: [])
     }
 }
 #endif

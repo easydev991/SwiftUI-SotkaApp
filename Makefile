@@ -1,4 +1,4 @@
-.PHONY: help setup setup_hook setup_snapshot setup_fastlane setup_ssh setup_markdownlint update update_fastlane update_swiftformat update_readme_versions test_readme_versions format screenshots upload_screenshots testflight fastlane increment_build build test test_watch
+.PHONY: help setup setup_hook setup_snapshot setup_fastlane setup_ssh setup_markdownlint update update_fastlane update_swiftformat update_readme_versions test_readme_versions format screenshots upload_screenshots testflight fastlane increment_build build test test_ui test_watch
 
 # Цвета и шрифт
 YELLOW=\033[1;33m
@@ -17,7 +17,9 @@ SWIFT_VERSION=6.3.0
 SHELL := /bin/bash
 .ONESHELL:
 BUNDLE_EXEC := RBENV_VERSION=$(RUBY_VERSION) bundle exec
-IOS_SIM_DEST ?= platform=iOS Simulator,name=iPhone 13 Pro,OS=18.6
+IOS_SIM_DEST ?= platform=iOS Simulator,name=iPhone 17
+WATCH_SIM_DEST ?= platform=watchOS Simulator,name=Apple Watch Ultra 3 (49mm)
+TEST_DERIVED_DATA_PATH ?= /tmp/SwiftUI-SotkaApp-test-derived-data
 
 ## help: Показать это справочное сообщение
 help:
@@ -328,16 +330,58 @@ build:
 test:
 	xcodebuild -project SwiftUI-SotkaApp.xcodeproj \
 		-scheme SwiftUI-SotkaAppTests \
-		-resolvePackageDependencies && \
+		-resolvePackageDependencies
 	xcodebuild -project SwiftUI-SotkaApp.xcodeproj \
 		-scheme SwiftUI-SotkaAppTests \
 		-sdk iphonesimulator \
 		-destination '$(IOS_SIM_DEST)' \
-		test -testPlan SwiftUI-SotkaAppTests
+		-derivedDataPath '$(TEST_DERIVED_DATA_PATH)' \
+		build-for-testing -testPlan SwiftUI-SotkaAppTests
+	@WATCH_INFO_PLIST="$(TEST_DERIVED_DATA_PATH)/Build/Products/Debug-iphonesimulator/SwiftUI-SotkaApp.app/Watch/SotkaWatch Watch App.app/Info.plist"; \
+	if [ -f "$$WATCH_INFO_PLIST" ]; then \
+		/usr/libexec/PlistBuddy -c "Delete :UIDeviceFamily" "$$WATCH_INFO_PLIST" >/dev/null 2>&1 || true; \
+		/usr/libexec/PlistBuddy -c "Add :UIDeviceFamily array" "$$WATCH_INFO_PLIST"; \
+		/usr/libexec/PlistBuddy -c "Add :UIDeviceFamily:0 integer 4" "$$WATCH_INFO_PLIST"; \
+		/usr/libexec/PlistBuddy -c "Set :WKApplication true" "$$WATCH_INFO_PLIST" >/dev/null 2>&1 || \
+		/usr/libexec/PlistBuddy -c "Add :WKApplication bool true" "$$WATCH_INFO_PLIST"; \
+	fi
+	xcodebuild -project SwiftUI-SotkaApp.xcodeproj \
+		-scheme SwiftUI-SotkaAppTests \
+		-sdk iphonesimulator \
+		-destination '$(IOS_SIM_DEST)' \
+		-derivedDataPath '$(TEST_DERIVED_DATA_PATH)' \
+		test-without-building -testPlan SwiftUI-SotkaAppTests
 
 ## test_watch: Запускает unit-тесты для Apple Watch в терминале
 test_watch:
-	xcodebuild -project SwiftUI-SotkaApp.xcodeproj -scheme "SotkaWatch Watch AppTests" -sdk watchsimulator -destination 'platform=watchOS Simulator,name=Apple Watch Series 8 (45mm)' test -testPlan "SotkaWatch-UnitTests"
+	xcodebuild -project SwiftUI-SotkaApp.xcodeproj -scheme "SotkaWatch Watch AppTests" -sdk watchsimulator -destination '$(WATCH_SIM_DEST)' test -testPlan "SotkaWatch-UnitTests"
+
+## test_ui: Запускает UI-тесты iOS-приложения в терминале
+test_ui:
+	xcodebuild -project SwiftUI-SotkaApp.xcodeproj \
+		-scheme SwiftUI-SotkaAppUITests \
+		-resolvePackageDependencies
+	xcodebuild -project SwiftUI-SotkaApp.xcodeproj \
+		-scheme SwiftUI-SotkaAppUITests \
+		-sdk iphonesimulator \
+		-destination '$(IOS_SIM_DEST)' \
+		-derivedDataPath '$(TEST_DERIVED_DATA_PATH)' \
+		build-for-testing -testPlan SwiftUI-SotkaAppUITests
+	@WATCH_INFO_PLIST="$(TEST_DERIVED_DATA_PATH)/Build/Products/Debug-iphonesimulator/SwiftUI-SotkaApp.app/Watch/SotkaWatch Watch App.app/Info.plist"; \
+	if [ -f "$$WATCH_INFO_PLIST" ]; then \
+		/usr/libexec/PlistBuddy -c "Delete :UIDeviceFamily" "$$WATCH_INFO_PLIST" >/dev/null 2>&1 || true; \
+		/usr/libexec/PlistBuddy -c "Add :UIDeviceFamily array" "$$WATCH_INFO_PLIST"; \
+		/usr/libexec/PlistBuddy -c "Add :UIDeviceFamily:0 integer 4" "$$WATCH_INFO_PLIST"; \
+		/usr/libexec/PlistBuddy -c "Set :WKApplication true" "$$WATCH_INFO_PLIST" >/dev/null 2>&1 || \
+		/usr/libexec/PlistBuddy -c "Add :WKApplication bool true" "$$WATCH_INFO_PLIST"; \
+	fi
+	xcodebuild -project SwiftUI-SotkaApp.xcodeproj \
+		-scheme SwiftUI-SotkaAppUITests \
+		-sdk iphonesimulator \
+		-destination '$(IOS_SIM_DEST)' \
+		-derivedDataPath '$(TEST_DERIVED_DATA_PATH)' \
+		test-without-building -testPlan SwiftUI-SotkaAppUITests \
+		-test-timeouts-enabled NO
 
 ## setup_ssh: Настраивает SSH-доступ к GitHub (интерактивно: создаст ключ при необходимости, добавит в агент, опционально добавит ключ в аккаунт GitHub)
 setup_ssh:

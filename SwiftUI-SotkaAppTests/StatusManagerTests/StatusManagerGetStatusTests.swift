@@ -544,6 +544,41 @@ extension StatusManagerTests {
             let calculator = try #require(statusManager.currentDayCalculator)
             #expect(calculator.startDate.isTheSameDayIgnoringTime(startDate))
         }
+
+        @Test("Ограничивает currentDay до 100, если с даты старта прошло больше 100 дней")
+        func getStatusCapsCurrentDayForUiWhenProgramRunsOver100Days() async throws {
+            let now = Date.now
+            let siteDate = try #require(Calendar.current.date(byAdding: .day, value: -129, to: now))
+            let mockStatusClient = MockStatusClient(
+                currentResult: .success(CurrentRunResponse(date: siteDate, maxForAllRunsDay: nil))
+            )
+
+            let modelConfiguration = ModelConfiguration(isStoredInMemoryOnly: true)
+            let modelContainer = try ModelContainer(
+                for: User.self,
+                DayActivity.self,
+                DayActivityTraining.self,
+                UserProgress.self,
+                CustomExercise.self,
+                configurations: modelConfiguration
+            )
+            let context = modelContainer.mainContext
+
+            let user = User(id: 1, userName: "testuser", fullName: "Test User", email: "test@example.com")
+            context.insert(user)
+            try context.save()
+
+            let statusManager = try MockStatusManager.create(
+                statusClient: mockStatusClient,
+                modelContainer: modelContainer
+            )
+
+            await statusManager.getStatus()
+
+            let calculator = try #require(statusManager.currentDayCalculator)
+            #expect(calculator.currentDay == 100)
+            #expect(calculator.daysLeft == 0)
+        }
     }
 }
 

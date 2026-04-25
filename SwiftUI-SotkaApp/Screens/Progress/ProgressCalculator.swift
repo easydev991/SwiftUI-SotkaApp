@@ -12,6 +12,8 @@ struct ProgressCalculator {
     }
 
     /// Рассчитывает полный прогресс (дни с активностью И инфопостом)
+    ///
+    /// KPI остаются 100-дневными даже после продления календаря.
     var fullProgressPercent: Int {
         let totalDays = min(100, currentDay)
         guard totalDays > 0 else { return 0 }

@@ -1884,6 +1884,40 @@
         }
       }
     },
+    "Home.CalendarExtensionButton" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Add 100 days"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Добавить 100 дней"
+          }
+        }
+      }
+    },
+    "Home.CalendarExtensionHint" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Extend the calendar for 100 more days - continue training by yourself (without a program)"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Продлить календарь на 100 дней и продолжить в своем режиме (без новых инфопостов)"
+          }
+        }
+      }
+    },
     "Home.FillResults" : {
       "comment" : "A label displayed in the navigation link leading to the progress screen.",
       "extractionState" : "manual",
@@ -2264,6 +2298,60 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Изменить"
+          }
+        }
+      }
+    },
+    "Journal.Range" : {
+      "comment" : "Title for selecting the day range page in journal grid mode.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Day range"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Диапазон дней"
+          }
+        }
+      }
+    },
+    "Journal.Range.Next" : {
+      "comment" : "Accessibility label for the button that switches journal grid to the next day range page.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Next day range"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Следующий диапазон дней"
+          }
+        }
+      }
+    },
+    "Journal.Range.Previous" : {
+      "comment" : "Accessibility label for the button that switches journal grid to the previous day range page.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Previous day range"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Предыдущий диапазон дней"
           }
         }
       }

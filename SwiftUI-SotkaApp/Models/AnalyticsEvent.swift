@@ -85,6 +85,7 @@ extension AnalyticsEvent {
         case saveWorkout
         case confirmResetProgram
         case beginOfflineLogin
+        case extendCalendar(targetTotalDays: Int)
 
         var name: String {
             switch self {
@@ -136,6 +137,7 @@ extension AnalyticsEvent {
             case .saveWorkout: "save_workout"
             case .confirmResetProgram: "confirm_reset_program"
             case .beginOfflineLogin: "begin_offline_login"
+            case .extendCalendar: "extend_calendar"
             }
         }
     }

@@ -71,6 +71,8 @@ struct FirebaseAnalyticsProvider: AnalyticsProvider {
             case let .selectExerciseIcon(iconName, exerciseId):
                 params["icon_name"] = iconName
                 params["exercise_id"] = exerciseId
+            case let .extendCalendar(targetTotalDays):
+                params["target_total_days"] = targetTotalDays
             default:
                 break
             }

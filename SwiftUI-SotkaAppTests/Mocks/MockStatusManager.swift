@@ -26,6 +26,7 @@ enum MockStatusManager {
         infopostsClient: InfopostsClient = MockInfopostsClient(),
         progressClient: ProgressClient = MockProgressClient(),
         daysClient: DaysClient = MockDaysClient(),
+        purchasesClient: PurchasesClient = MockPurchasesClient(),
         language: String = "ru",
         userDefaults: UserDefaults? = nil,
         modelContainer: ModelContainer? = nil,
@@ -45,6 +46,7 @@ enum MockStatusManager {
                 UserProgress.self,
                 DayActivity.self,
                 DayActivityTraining.self,
+                CalendarExtensionRecord.self,
                 configurations: modelConfiguration
             )
         }
@@ -58,6 +60,7 @@ enum MockStatusManager {
             progressSyncService: ProgressSyncService(client: progressClient),
             dailyActivitiesService: DailyActivitiesService(client: daysClient),
             statusClient: statusClient,
+            purchasesClient: purchasesClient,
             modelContainer: container,
             userDefaults: defaults,
             watchConnectivitySessionProtocol: watchConnectivitySessionProtocol,

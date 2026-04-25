@@ -636,5 +636,51 @@ extension StatusManagerTests {
             let errors = try #require(details.errors)
             #expect(!errors.isEmpty)
         }
+
+        @Test("Сохраняет в SwiftData все дни с сервера, включая диапазон > 100")
+        func syncJournalStoresAllServerDaysIncludingDaysOver100() async throws {
+            let now = Date.now
+            let startDate = try #require(Calendar.current.date(byAdding: .day, value: -129, to: now))
+            let mockStatusClient = MockStatusClient(
+                currentResult: .success(CurrentRunResponse(date: startDate, maxForAllRunsDay: nil))
+            )
+            let dayResponses = (1 ... 130).map { day in
+                DayResponse(id: day)
+            }
+            let mockDaysClient = MockDaysClient(mockedDayResponses: dayResponses)
+
+            let modelConfiguration = ModelConfiguration(isStoredInMemoryOnly: true)
+            let modelContainer = try ModelContainer(
+                for: User.self,
+                DayActivity.self,
+                DayActivityTraining.self,
+                UserProgress.self,
+                CustomExercise.self,
+                SyncJournalEntry.self,
+                configurations: modelConfiguration
+            )
+            let context = modelContainer.mainContext
+
+            let user = User(id: 1, userName: "testuser", fullName: "Test User", email: "test@example.com")
+            context.insert(user)
+            try context.save()
+
+            let statusManager = try MockStatusManager.create(
+                statusClient: mockStatusClient,
+                daysClient: mockDaysClient,
+                modelContainer: modelContainer
+            )
+
+            await statusManager.getStatus()
+
+            let activities = try context.fetch(FetchDescriptor<DayActivity>())
+                .filter { $0.user?.id == user.id }
+            #expect(activities.count == 130)
+            #expect(activities.contains { $0.day == 100 })
+            #expect(activities.contains { $0.day == 130 })
+
+            let calculator = try #require(statusManager.currentDayCalculator)
+            #expect(calculator.currentDay == 100)
+        }
     }
 }

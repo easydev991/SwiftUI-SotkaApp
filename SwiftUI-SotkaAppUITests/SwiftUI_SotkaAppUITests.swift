@@ -2,7 +2,6 @@ import XCTest
 
 @MainActor
 final class SwiftUI_SotkaAppUITests: XCTestCase {
-    private let springBoard = XCUIApplication(bundleIdentifier: "com.apple.springboard")
     private var app: XCUIApplication!
 
     override func setUp() async throws {
@@ -20,7 +19,6 @@ final class SwiftUI_SotkaAppUITests: XCTestCase {
     }
 
     func testMakeScreenshots() {
-        handleNotificationAlert()
         sleep(3)
         snapshot("1-mainScreen")
         waitAndTapOrFail(element: todayInfopostButton)
@@ -45,19 +43,6 @@ final class SwiftUI_SotkaAppUITests: XCTestCase {
         expandWorkoutSettingsGroup()
         waitAndTapOrFail(element: customExercisesButton)
         snapshot("8-userExercises")
-    }
-}
-
-private extension SwiftUI_SotkaAppUITests {
-    func handleNotificationAlert() {
-        let alert = springBoard.alerts.firstMatch
-        let button = alert.buttons.element(
-            matching: NSPredicate(
-                format:
-                "label IN {'Allow', 'Разрешить'}"
-            )
-        )
-        waitAndTap(timeout: 5, element: button)
     }
 }
 

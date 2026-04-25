@@ -13,12 +13,15 @@ struct JournalGridView: View {
     @State private var sheetItem: DayActivitySheetItem?
     private let itemHeight: CGFloat = 44
     let activitiesByDay: [Int: DayActivity]
+    let selectedPage: Int
+    let pageDaysRange: ClosedRange<Int>
+    let pageSections: [JournalSection]
 
     var body: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: 28) {
                 legendView
-                ForEach(journalSections) { section in
+                ForEach(pageSections) { section in
                     makeSectionView(for: section)
                 }
             }
@@ -47,10 +50,6 @@ struct JournalGridView: View {
 }
 
 private extension JournalGridView {
-    var journalSections: [InfopostSection] {
-        InfopostSection.journalSections
-    }
-
     var legendView: some View {
         ViewThatFits {
             // Вариант для ландшафтной ориентации - все элементы по горизонтали
@@ -79,25 +78,26 @@ private extension JournalGridView {
         }
     }
 
-    func makeSectionView(for section: InfopostSection) -> some View {
+    func makeSectionView(for section: JournalSection) -> some View {
         VStack(alignment: .leading, spacing: 12) {
-            Text(section.localizedTitle)
+            Text(section.title)
                 .font(.headline)
                 .frame(maxWidth: .infinity, alignment: .leading)
             makeGridView(for: section)
         }
     }
 
-    func makeGridView(for section: InfopostSection) -> some View {
+    func makeGridView(for section: JournalSection) -> some View {
         LazyVGrid(
             columns: .init(repeating: GridItem(.flexible(), spacing: 8), count: 7),
             spacing: 8
         ) {
             ForEach(section.days, id: \.self) { day in
                 makeDayButton(for: day)
-                    .disabled(day > currentDay)
+                    .disabled(!JournalGridPagination.isDayEnabled(day: day, currentDay: currentDay))
             }
-            if section == .conclusion {
+            if selectedPage == 0, pageDaysRange.upperBound == DayCalculator.baseProgramDays,
+               section.days.last == DayCalculator.baseProgramDays {
                 ForEach(0 ..< 5, id: \.self) { _ in
                     Color.clear.frame(height: itemHeight)
                 }
@@ -183,9 +183,28 @@ private extension JournalGridView {
 
 #if DEBUG
 #Preview("День 50") {
-    JournalGridView(activitiesByDay: User.preview.activitiesByDay)
-        .environment(DailyActivitiesService(client: MockDaysClient(result: .success)))
-        .modelContainer(PreviewModelContainer.make(with: .preview))
-        .environment(\.currentDay, 50)
+    JournalGridView(
+        activitiesByDay: User.preview.activitiesByDay,
+        selectedPage: 0,
+        pageDaysRange: 1 ... 100,
+        pageSections: JournalGridPagination.makeSections(totalDays: 100, page: 0)
+    )
+    .environment(DailyActivitiesService(client: MockDaysClient(result: .success)))
+    .environment(StatusManager.preview)
+    .modelContainer(PreviewModelContainer.make(with: .preview))
+    .environment(\.currentDay, 50)
+}
+
+#Preview("День 130, страница 101-200") {
+    JournalGridView(
+        activitiesByDay: User.preview.activitiesByDay,
+        selectedPage: 1,
+        pageDaysRange: 101 ... 200,
+        pageSections: JournalGridPagination.makeSections(totalDays: 300, page: 1)
+    )
+    .environment(DailyActivitiesService(client: MockDaysClient(result: .success)))
+    .environment(StatusManager.previewWithCalendarExtensionDay130)
+    .modelContainer(PreviewModelContainer.make(with: .preview))
+    .environment(\.currentDay, 130)
 }
 #endif

@@ -42,10 +42,10 @@ struct HomeScreenModelTests {
     }
 
     @Test(
-        "Должен показывать секцию активности при текущем дне < 100",
-        arguments: [1, 50, 99]
+        "Должен показывать секцию активности на любом валидном дне программы",
+        arguments: [1, 50, 99, 100, 101, 150]
     )
-    func showsActivitySectionForDaysBelow100(currentDay: Int) throws {
+    func showsActivitySectionForValidProgramDays(currentDay: Int) throws {
         let calculator = DayCalculator(now, now)
         let model = try #require(
             HomeScreen.Model(
@@ -56,23 +56,6 @@ struct HomeScreenModelTests {
             )
         )
         #expect(model.showActivitySection)
-    }
-
-    @Test(
-        "Не должен показывать секцию активности при текущем дне > 100",
-        arguments: [101, 150]
-    )
-    func hidesActivitySectionForDays100AndAbove(currentDay: Int) throws {
-        let calculator = DayCalculator(now, now)
-        let model = try #require(
-            HomeScreen.Model(
-                currentDay: currentDay,
-                dayCalculator: calculator,
-                isMaximumsFilled: false,
-                todayInfopost: nil
-            )
-        )
-        #expect(!model.showActivitySection)
     }
 
     @Test("Должен инвертировать флаг isMaximumsFilled в showProgressSection (true → false)")
@@ -101,5 +84,30 @@ struct HomeScreenModelTests {
             )
         )
         #expect(model.showProgressSection)
+    }
+
+    @Test("Инфопост на главной скрывается после 100-го дня")
+    func infopostIsHiddenAfterBaseProgramDays() throws {
+        let startDate = Calendar.current.date(byAdding: .day, value: -149, to: now) ?? now
+        let calculator = DayCalculator(startDate, now, extensionCount: 1)
+        let infopost = Infopost(
+            id: "d150",
+            title: "День 150",
+            content: "<p>content</p>",
+            section: .conclusion,
+            dayNumber: 100,
+            language: "ru"
+        )
+
+        let model = try #require(
+            HomeScreen.Model(
+                currentDay: calculator.currentDay,
+                dayCalculator: calculator,
+                isMaximumsFilled: false,
+                todayInfopost: infopost
+            )
+        )
+
+        #expect(model.todayInfopost == nil)
     }
 }

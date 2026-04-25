@@ -11,37 +11,65 @@ struct JournalListView: View {
     @State private var dayForConfirmationDialog: Int?
     @State private var sheetItem: DayActivitySheetItem?
     let activitiesByDay: [Int: DayActivity]
+    let totalDays: Int
     let sortOrder: SortOrder
+    let selectedPage: Int
 
     var body: some View {
-        List(InfopostSection.sectionsSortedBy(sortOrder), rowContent: makeSectionView)
-            .animation(.default, value: sortOrder)
-            .confirmationDialog(
-                .journalDeleteEntry,
-                isPresented: $dayForConfirmationDialog.mappedToBool(),
-                titleVisibility: .visible
-            ) {
-                confirmationDialogContent
-            } message: {
-                if let day = dayForConfirmationDialog {
-                    Text(.journalDeleteEntryMessage(day))
-                }
+        Group {
+            if shouldRenderFlatPage {
+                List(flatDays, id: \.self, rowContent: makeRowViewForList)
+            } else {
+                List(sectionDays, rowContent: makeSectionView)
             }
-            .sheet(item: $sheetItem) { item in
-                switch item {
-                case let .comment(activity):
-                    EditCommentSheet(activity: activity)
-                case let .workoutPreview(day):
-                    WorkoutPreviewScreen(activitiesService: activitiesService, day: day)
-                }
+        }
+        .animation(.default, value: sortOrder)
+        .confirmationDialog(
+            .journalDeleteEntry,
+            isPresented: $dayForConfirmationDialog.mappedToBool(),
+            titleVisibility: .visible
+        ) {
+            confirmationDialogContent
+        } message: {
+            if let day = dayForConfirmationDialog {
+                Text(.journalDeleteEntryMessage(day))
             }
+        }
+        .sheet(item: $sheetItem) { item in
+            switch item {
+            case let .comment(activity):
+                EditCommentSheet(activity: activity)
+            case let .workoutPreview(day):
+                WorkoutPreviewScreen(activitiesService: activitiesService, day: day)
+            }
+        }
     }
 }
 
 private extension JournalListView {
-    func makeSectionView(for section: InfopostSection) -> some View {
-        Section(section.localizedTitle) {
-            ForEach(section.daysSortedBy(sortOrder), id: \.self) { day in
+    var shouldRenderFlatPage: Bool {
+        paginationContent.shouldRenderFlatPage
+    }
+
+    var sectionDays: [JournalSection] {
+        paginationContent.sections
+    }
+
+    var flatDays: [Int] {
+        paginationContent.flatDays
+    }
+
+    var paginationContent: JournalListPagination.Content {
+        JournalListPagination.makeContent(
+            totalDays: totalDays,
+            sortOrder: sortOrder,
+            selectedPage: selectedPage
+        )
+    }
+
+    func makeSectionView(for section: JournalSection) -> some View {
+        Section(section.title) {
+            ForEach(section.days, id: \.self) { day in
                 makeRowView(for: day)
                     .listRowInsets(
                         .init(
@@ -51,9 +79,22 @@ private extension JournalListView {
                             trailing: 16
                         )
                     )
-                    .disabled(day > currentDay)
+                    .disabled(!JournalGridPagination.isDayEnabled(day: day, currentDay: currentDay))
             }
         }
+    }
+
+    func makeRowViewForList(for day: Int) -> some View {
+        makeRowView(for: day)
+            .listRowInsets(
+                .init(
+                    top: 24,
+                    leading: 16,
+                    bottom: 24,
+                    trailing: 16
+                )
+            )
+            .disabled(!JournalGridPagination.isDayEnabled(day: day, currentDay: currentDay))
     }
 
     func makeRowView(for day: Int) -> some View {
@@ -148,9 +189,12 @@ private extension JournalListView {
     NavigationStack {
         JournalListView(
             activitiesByDay: User.preview.activitiesByDay,
-            sortOrder: .forward
+            totalDays: 100,
+            sortOrder: .forward,
+            selectedPage: 0
         )
         .environment(DailyActivitiesService(client: MockDaysClient(result: .success)))
+        .environment(StatusManager.preview)
     }
     .modelContainer(PreviewModelContainer.make(with: .preview))
     .environment(\.currentDay, 7)
@@ -160,11 +204,44 @@ private extension JournalListView {
     NavigationStack {
         JournalListView(
             activitiesByDay: User.preview.activitiesByDay,
-            sortOrder: .reverse
+            totalDays: 100,
+            sortOrder: .reverse,
+            selectedPage: 0
         )
         .environment(DailyActivitiesService(client: MockDaysClient(result: .success)))
+        .environment(StatusManager.preview)
     }
     .modelContainer(PreviewModelContainer.make(with: .preview))
     .environment(\.currentDay, 100)
+}
+
+#Preview("День 130, страница 101-200") {
+    NavigationStack {
+        JournalListView(
+            activitiesByDay: User.preview.activitiesByDay,
+            totalDays: 300,
+            sortOrder: .forward,
+            selectedPage: 1
+        )
+        .environment(DailyActivitiesService(client: MockDaysClient(result: .success)))
+        .environment(StatusManager.previewWithCalendarExtensionDay130)
+    }
+    .modelContainer(PreviewModelContainer.make(with: .preview))
+    .environment(\.currentDay, 130)
+}
+
+#Preview("Страница 101-200, плоский список") {
+    NavigationStack {
+        JournalListView(
+            activitiesByDay: User.preview.activitiesByDay,
+            totalDays: 300,
+            sortOrder: .forward,
+            selectedPage: 1
+        )
+        .environment(DailyActivitiesService(client: MockDaysClient(result: .success)))
+        .environment(StatusManager.previewWithCalendarExtensionDay130)
+    }
+    .modelContainer(PreviewModelContainer.make(with: .preview))
+    .environment(\.currentDay, 130)
 }
 #endif

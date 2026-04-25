@@ -785,6 +785,43 @@ struct WatchConnectivityServiceTests {
         #expect(service.restTime == nil)
     }
 
+    @Test("Игнорирует totalDays в authStatus и использует только currentDay")
+    func ignoresTotalDaysInAuthStatusMessage() throws {
+        let authService = WatchAuthService()
+        let service = WatchConnectivityService(authService: authService)
+
+        let message: [String: Any] = [
+            "command": Constants.WatchCommand.authStatus.rawValue,
+            "isAuthorized": true,
+            "currentDay": 42,
+            "totalDays": 200
+        ]
+
+        service.testHandleReceivedMessage(message)
+
+        #expect(authService.isAuthorized)
+        let currentDay = try #require(service.currentDay)
+        #expect(currentDay == 42)
+    }
+
+    @Test("Игнорирует totalDays в applicationContext и использует только currentDay")
+    func ignoresTotalDaysInApplicationContext() throws {
+        let authService = WatchAuthService()
+        let service = WatchConnectivityService(authService: authService)
+
+        let applicationContext: [String: Any] = [
+            "isAuthorized": true,
+            "currentDay": 77,
+            "totalDays": 300
+        ]
+
+        service.testHandleApplicationContext(applicationContext)
+
+        #expect(authService.isAuthorized)
+        let currentDay = try #require(service.currentDay)
+        #expect(currentDay == 77)
+    }
+
     @Test("Должен делать restTime доступным через протокол WatchConnectivityServiceProtocol")
     func shouldMakeRestTimeAvailableThroughProtocol() throws {
         let authService = WatchAuthService()
