@@ -516,10 +516,22 @@ private extension InfopostParser {
     func localizedText(forKey key: String) -> String {
         guard let localizationPath = Bundle.main.path(forResource: language, ofType: "lproj"),
               let localizationBundle = Bundle(path: localizationPath) else {
-            return Bundle.main.localizedString(forKey: key, value: nil, table: nil)
+            return NSLocalizedString(
+                key,
+                tableName: nil,
+                bundle: Bundle.main,
+                value: key,
+                comment: ""
+            )
         }
 
-        return localizationBundle.localizedString(forKey: key, value: nil, table: nil)
+        return NSLocalizedString(
+            key,
+            tableName: nil,
+            bundle: localizationBundle,
+            value: key,
+            comment: ""
+        )
     }
 
     /// Исправляет пути к изображениям в HTML контенте (встроенная версия)
