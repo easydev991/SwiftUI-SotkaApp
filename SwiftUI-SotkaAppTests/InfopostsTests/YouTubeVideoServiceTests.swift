@@ -35,6 +35,8 @@ extension AllInfopostsTests {
             let videoValue = try #require(video)
             #expect(videoValue.dayNumber == dayNumber)
             #expect(videoValue.url.contains("youtube.com"))
+            #expect(!videoValue.title.isEmpty)
+            #expect(videoValue.title != "#моястодневка от Антона Кучумова")
         }
 
         @Test
@@ -94,6 +96,39 @@ extension AllInfopostsTests {
                 #expect(video.url.contains("youtube.com"))
                 #expect(video.url.contains("embed"))
             }
+        }
+
+        @Test
+        func loadVideosContainsTitlesFromLocalJSON() throws {
+            // Given & When
+            let videos = try youtubeService.loadVideos()
+
+            // Then
+            #expect(videos.contains(where: { !$0.title.isEmpty }))
+        }
+
+        @Test
+        func dayDisplayTitleUsesResolvedVideoTitleWhenAvailable() {
+            // Given
+            let video = YouTubeVideo(dayNumber: 1, url: "https://www.youtube.com/embed/test", title: "Resolved title")
+
+            // When
+            let displayTitle = youtubeService.dayDisplayTitle(for: video)
+
+            // Then
+            #expect(displayTitle == "Resolved title")
+        }
+
+        @Test
+        func dayDisplayTitleFallsBackWhenVideoTitleIsEmpty() {
+            // Given
+            let video = YouTubeVideo(dayNumber: 1, url: "https://www.youtube.com/embed/test", title: "")
+
+            // When
+            let displayTitle = youtubeService.dayDisplayTitle(for: video)
+
+            // Then
+            #expect(displayTitle == YouTubeVideoService.dayTitleFallback)
         }
 
         @Test

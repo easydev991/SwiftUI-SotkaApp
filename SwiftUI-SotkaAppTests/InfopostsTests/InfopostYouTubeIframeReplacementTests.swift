@@ -47,14 +47,14 @@ extension AllInfopostsTests {
             #expect(result.contains("https%3A%2F%2Fwww.youtube.com%2Fwatch%3Fv%3DOM0m9CEjq2Y"))
         }
 
-        @Test("Скрывает бесполезный заголовок YouTube video player в блоке")
-        func hidesGenericYouTubePlayerTitle() {
+        @Test("Для generic iframe-title подставляет заголовок из локального JSON")
+        func usesLocalTitleForGenericYouTubePlayerTitle() {
             // Given
             let html = """
             <html>
             <body>
               <div class="text post-body-text">
-                <iframe src="https://www.youtube.com/embed/OM0m9CEjq2Y" title="YouTube video player"></iframe>
+                <iframe src="https://www.youtube.com/embed/JQSFrVyvUfk" title="YouTube video player"></iframe>
               </div>
             </body>
             </html>
@@ -81,7 +81,7 @@ extension AllInfopostsTests {
             // Then
             #expect(result.contains("video-external-container"))
             #expect(!result.contains("YouTube video player"))
-            #expect(!result.contains("video-external-title"))
+            #expect(result.contains("video-external-title"))
         }
 
         @Test("Не изменяет iframe, которые не относятся к YouTube")

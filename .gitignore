@@ -26,3 +26,10 @@ fastlane/report.xml
 fastlane/screenshots/**/screenshots.html
 SwiftUI-SotkaApp/GoogleService-Info.plist
 .xcodebuildmcp/config.yaml
+
+# Local secrets
+.env
+.env.local
+.env.youtube.local
+*.env.local
+*.youtube_key

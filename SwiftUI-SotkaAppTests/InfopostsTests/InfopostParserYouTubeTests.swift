@@ -7,7 +7,7 @@ extension AllInfopostsTests {
         private let youtubeService = YouTubeVideoService(analytics: AnalyticsService(providers: [NoopAnalyticsProvider()]))
 
         @Test("Для дневного инфопоста добавляется внешний блок видео вместо iframe")
-        func prepareHTMLForDisplayWithDayVideoUsesExternalBlock() {
+        func prepareHTMLForDisplayWithDayVideoUsesExternalBlock() throws {
             // Given
             let htmlContent = """
             <html>
@@ -45,8 +45,12 @@ extension AllInfopostsTests {
             #expect(modifiedHTML.contains("data-video-source=\"day\""))
             #expect(modifiedHTML.contains("sotka://youtube?url="))
             #expect(modifiedHTML.contains("Смотреть видео"))
-            #expect(modifiedHTML.contains("Откроется в браузере"))
-            #expect(modifiedHTML.contains("#моястодневка от Антона Кучумова"))
+            #expect(modifiedHTML.contains("YouTube"))
+            #expect(!modifiedHTML.contains("#моястодневка от Антона Кучумова"))
+
+            let dayTitleIndex = try #require(modifiedHTML.range(of: "video-external-title")?.lowerBound)
+            let buttonIndex = try #require(modifiedHTML.range(of: "video-external-link")?.lowerBound)
+            #expect(dayTitleIndex < buttonIndex)
         }
 
         @Test("Для инфопоста без dayNumber внешний YouTube-блок не добавляется")

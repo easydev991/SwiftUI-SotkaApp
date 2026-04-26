@@ -1,4 +1,4 @@
-.PHONY: help setup setup_hook setup_snapshot setup_fastlane setup_ssh setup_markdownlint update update_fastlane update_swiftformat update_readme_versions test_readme_versions test_ui_preflight_script format screenshots ui_preflight_test_ui ui_preflight_screenshots upload_screenshots testflight fastlane increment_build build test test_ui test_watch
+.PHONY: help setup setup_hook setup_snapshot setup_fastlane setup_ssh setup_markdownlint update update_fastlane update_swiftformat update_readme_versions test_readme_versions test_ui_preflight_script test_get_video_titles_script get_video_titles format screenshots ui_preflight_test_ui ui_preflight_screenshots upload_screenshots testflight fastlane increment_build build test test_ui test_watch
 
 # Цвета и шрифт
 YELLOW=\033[1;33m
@@ -247,6 +247,19 @@ test_readme_versions:
 ## test_ui_preflight_script: Запустить unit-тесты скрипта simulator_ui_preflight.sh
 test_ui_preflight_script:
 	@python3 -m unittest scripts.tests.test_simulator_ui_preflight
+
+## test_get_video_titles_script: Запустить unit-тесты скрипта get_video_titles.py
+test_get_video_titles_script:
+	@python3 -m unittest scripts.tests.test_get_video_titles
+
+## get_video_titles: Обновить локальный JSON с заголовками YouTube-видео
+get_video_titles:
+	@if [ -z "$$YOUTUBE_API_KEY" ]; then \
+		printf "$(RED)Переменная YOUTUBE_API_KEY не установлена$(RESET)\n"; \
+		printf "$(YELLOW)Подсказка: set -a; source .env.youtube.local; set +a$(RESET)\n"; \
+		exit 1; \
+	fi
+	@python3 scripts/get_video_titles.py
 
 ## update_fastlane: Обновить только fastlane и его зависимости
 update_fastlane:

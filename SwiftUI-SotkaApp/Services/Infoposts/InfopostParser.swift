@@ -82,7 +82,7 @@ struct InfopostParser {
             )
         logger.debug("📏 Исходный размер HTML: \(html.count) символов")
 
-        let transformedHTML = transformHTMLContent(html, fontSize: fontSize)
+        let transformedHTML = transformHTMLContent(html, fontSize: fontSize, youtubeService: youtubeService)
         let finalHTML = enrichHTMLContentWithVideoAndScripts(
             transformedHTML,
             infopost: infopost,
@@ -125,7 +125,7 @@ private extension InfopostParser {
     private static let youtubeLinkNormalizer = YouTubeLinkNormalizer()
     private static let lineBreakWithPadding = "\n<br>\n"
 
-    func transformHTMLContent(_ html: String, fontSize: FontSize) -> String {
+    func transformHTMLContent(_ html: String, fontSize: FontSize, youtubeService: YouTubeVideoService) -> String {
         logger.debug("🧹 Этап 1: Очистка HTML от лишних элементов")
         let cleanedHTML = cleanHTMLContent(html)
         logger.debug("📏 Размер после очистки: \(cleanedHTML.count) символов")
@@ -139,7 +139,7 @@ private extension InfopostParser {
         logger.debug("📏 Размер после применения шрифта: \(htmlWithFontSize.count) символов")
 
         logger.debug("🎬 Этап 4: Замена YouTube iframe на внешний блок")
-        let htmlWithReplacedIframes = replaceYouTubeIframes(in: htmlWithFontSize)
+        let htmlWithReplacedIframes = replaceYouTubeIframes(in: htmlWithFontSize, youtubeService: youtubeService)
         logger.debug("📏 Размер после замены YouTube iframe: \(htmlWithReplacedIframes.count) символов")
 
         return htmlWithReplacedIframes
@@ -405,8 +405,9 @@ private extension InfopostParser {
                 return html
             }
 
+            let displayTitle = youtubeService.dayDisplayTitle(for: video)
             let videoBlock = Self
-                .lineBreakWithPadding + makeYouTubeExternalBlock(title: video.title, watchURL: watchURL, source: .day) + Self
+                .lineBreakWithPadding + makeYouTubeExternalBlock(title: displayTitle, watchURL: watchURL, source: .day) + Self
                 .lineBreakWithPadding
             let modifiedHTML = insertBeforeFooterOrAppend(videoBlock, in: html)
             logger.info("🎬 YouTube видео успешно добавлено в HTML для дня \(dayNumber)")
@@ -437,7 +438,7 @@ private extension InfopostParser {
         }
     }
 
-    func replaceYouTubeIframes(in html: String) -> String {
+    func replaceYouTubeIframes(in html: String, youtubeService: YouTubeVideoService) -> String {
         guard let regex = Self.youtubeIframeRegex else {
             logger.error("❌ Ошибка компиляции regex для поиска iframe")
             return html
@@ -464,7 +465,11 @@ private extension InfopostParser {
             }
 
             let rawTitle = extractAttribute(named: "title", in: iframeTag) ?? YouTubeHTMLConstants.defaultTitle
-            let replacement = makeYouTubeExternalBlock(title: rawTitle, watchURL: watchURL, source: .embedded)
+            let fallbackTitle = youtubeService.getTitle(for: sourceURL)
+            let titleForRender = shouldRenderVideoTitle(normalizeVideoTitle(rawTitle))
+                ? rawTitle
+                : fallbackTitle
+            let replacement = makeYouTubeExternalBlock(title: titleForRender, watchURL: watchURL, source: .embedded)
             modifiedHTML.replaceSubrange(iframeRange, with: replacement)
         }
 
@@ -473,16 +478,7 @@ private extension InfopostParser {
 
     private func makeYouTubeExternalBlock(title: String, watchURL: URL, source: VideoBlockSource) -> String {
         let normalizedTitle = normalizeVideoTitle(title)
-        let titleBlock: String
-        if shouldRenderVideoTitle(normalizedTitle) {
-            let safeTitle = escapeHTML(normalizedTitle)
-            titleBlock = """
-              <div class="video-external-title">\(safeTitle)</div>
-
-            """
-        } else {
-            titleBlock = ""
-        }
+        let titleBlock = renderTitleBlock(title: normalizedTitle)
 
         let buttonTitle = escapeHTML(localizedText(forKey: YouTubeHTMLConstants.watchVideoLocalizationKey))
         let hint = escapeHTML(localizedText(forKey: YouTubeHTMLConstants.openInBrowserLocalizationKey))
@@ -497,6 +493,18 @@ private extension InfopostParser {
           </a>
           <div class="video-external-hint">\(hint)</div>
         </div>
+        """
+    }
+
+    private func renderTitleBlock(title: String) -> String {
+        guard shouldRenderVideoTitle(title) else {
+            return ""
+        }
+
+        let safeTitle = escapeHTML(title)
+        return """
+          <div class="video-external-title">\(safeTitle)</div>
+
         """
     }
 

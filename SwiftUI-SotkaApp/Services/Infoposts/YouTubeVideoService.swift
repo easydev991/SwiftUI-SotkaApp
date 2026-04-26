@@ -5,11 +5,14 @@ import OSLog
 /// Сервис для работы с YouTube видео инфопостов
 @Observable
 final class YouTubeVideoService {
+    static let dayTitleFallback = "#моястодневка от Антона Кучумова"
+
     @ObservationIgnored private let logger = Logger(
         subsystem: "SotkaApp",
         category: String(describing: YouTubeVideoService.self)
     )
     @ObservationIgnored private var cachedVideos: [YouTubeVideo]?
+    @ObservationIgnored private var cachedVideoTitles: [String: String]?
 
     private let analytics: AnalyticsService
 
@@ -49,6 +52,25 @@ final class YouTubeVideoService {
         try getVideo(for: dayNumber) != nil
     }
 
+    /// Возвращает заголовок YouTube-видео по URL, используя локальный json-словарь
+    /// - Parameter urlString: YouTube URL (embed/watch/short/youtu.be)
+    /// - Returns: Заголовок или пустая строка, если не найден
+    func getTitle(for urlString: String) -> String {
+        let videoTitles = loadVideoTitles()
+        return resolveVideoTitle(for: urlString, from: videoTitles)
+    }
+
+    /// Возвращает заголовок для day-видео:
+    /// при наличии локального title возвращает его,
+    /// иначе использует fallback.
+    func dayDisplayTitle(for video: YouTubeVideo) -> String {
+        let normalizedTitle = video.title.trimmingCharacters(in: .whitespacesAndNewlines)
+        if !normalizedTitle.isEmpty {
+            return normalizedTitle
+        }
+        return Self.dayTitleFallback
+    }
+
     /// Загружает список YouTube видео из файла `youtube_list.txt`
     /// - Returns: Массив YouTube видео
     /// - Throws: Ошибка при загрузке или парсинге файла
@@ -82,7 +104,10 @@ final class YouTubeVideoService {
             logger.debug("📄 Содержимое файла загружено: \(content.count) символов")
             logger.debug("📄 Первые 200 символов: \(String(content.prefix(200)))")
 
-            let videos = try parseVideos(from: content)
+            let videoTitles = loadVideoTitles()
+            logger.debug("📝 Загружено локальных заголовков видео: \(videoTitles.count)")
+
+            let videos = try parseVideos(from: content, videoTitles: videoTitles)
             cachedVideos = videos
             logger.info("✅ Успешно загружено \(videos.count) YouTube видео")
             return videos
@@ -95,11 +120,19 @@ final class YouTubeVideoService {
 }
 
 private extension YouTubeVideoService {
+    struct YouTubeVideoTitlesPayload: Decodable {
+        let items: [String: String]
+    }
+
+    var youtubeLinkNormalizer: YouTubeLinkNormalizer {
+        YouTubeLinkNormalizer()
+    }
+
     /// Парсит видео из содержимого файла
     /// - Parameter content: Содержимое файла youtube_list.txt
     /// - Returns: Массив YouTube видео
     /// - Throws: Ошибка при парсинге
-    func parseVideos(from content: String) throws -> [YouTubeVideo] {
+    func parseVideos(from content: String, videoTitles: [String: String]) throws -> [YouTubeVideo] {
         logger.debug("🔍 Начинаем парсинг видео из файла")
 
         let lines = content.components(separatedBy: .newlines)
@@ -125,7 +158,11 @@ private extension YouTubeVideoService {
             }
 
             let dayNumber = index + 1
-            let video = YouTubeVideo(dayNumber: dayNumber, url: trimmedLine)
+            let video = YouTubeVideo(
+                dayNumber: dayNumber,
+                url: trimmedLine,
+                title: resolveVideoTitle(for: trimmedLine, from: videoTitles)
+            )
             videos.append(video)
 
             if dayNumber <= 5 || dayNumber % 10 == 0 {
@@ -147,6 +184,53 @@ private extension YouTubeVideoService {
     func isValidYouTubeURL(_ urlString: String) -> Bool {
         // Проверяем, что строка содержит youtube.com или youtu.be
         urlString.contains("youtube.com") || urlString.contains("youtu.be")
+    }
+
+    func loadVideoTitles() -> [String: String] {
+        if let cachedVideoTitles {
+            return cachedVideoTitles
+        }
+
+        guard let url = Bundle.main.url(forResource: "youtube_video_titles", withExtension: "json") else {
+            logger.warning("⚠️ Файл youtube_video_titles.json не найден, продолжаем без дополнительных заголовков")
+            cachedVideoTitles = [:]
+            return [:]
+        }
+
+        do {
+            let data = try Data(contentsOf: url)
+            let payload = try JSONDecoder().decode(YouTubeVideoTitlesPayload.self, from: data)
+            let normalizedItems = payload.items.reduce(into: [String: String]()) { partialResult, item in
+                let normalizedTitle = item.value.trimmingCharacters(in: .whitespacesAndNewlines)
+                guard !normalizedTitle.isEmpty else {
+                    return
+                }
+                partialResult[item.key] = normalizedTitle
+            }
+            cachedVideoTitles = normalizedItems
+            return normalizedItems
+        } catch {
+            logger.error("❌ Ошибка чтения youtube_video_titles.json: \(error.localizedDescription)")
+            cachedVideoTitles = [:]
+            return [:]
+        }
+    }
+
+    func resolveVideoTitle(for urlString: String, from videoTitles: [String: String]) -> String {
+        guard let videoId = extractVideoID(from: urlString) else {
+            return ""
+        }
+        return videoTitles[videoId] ?? ""
+    }
+
+    func extractVideoID(from urlString: String) -> String? {
+        guard let watchURL = youtubeLinkNormalizer.normalizedWatchURL(from: urlString),
+              let components = URLComponents(url: watchURL, resolvingAgainstBaseURL: false),
+              let queryItems = components.queryItems else {
+            return nil
+        }
+
+        return queryItems.first(where: { $0.name == "v" })?.value
     }
 }
 

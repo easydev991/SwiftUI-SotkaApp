@@ -9,8 +9,8 @@
             return;
         }
         
-        // Ищем элемент с классом video-container (YouTube видео)
-        const videoContainer = document.querySelector('.video-container');
+        // Ищем внешний блок видео (YouTube кнопка-ссылка)
+        const videoContainer = document.querySelector('.video-external-container');
         
         if (!videoContainer) {
             // Если видео нет, проверяем footer (место где должно быть видео)
