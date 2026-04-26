@@ -809,6 +809,9 @@ img.bbcode_img {
     padding: 12px 22px;
     border-radius: 8px;
     text-decoration: none;
+    -webkit-user-select: none;
+    user-select: none;
+    -webkit-touch-callout: none;
     font-size: 16px;
     font-weight: 700;
     color: #fff !important;
