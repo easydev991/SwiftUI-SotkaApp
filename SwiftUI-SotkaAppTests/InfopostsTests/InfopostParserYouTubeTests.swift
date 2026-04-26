@@ -6,7 +6,7 @@ extension AllInfopostsTests {
     struct InfopostParserYouTubeTests {
         private let youtubeService = YouTubeVideoService(analytics: AnalyticsService(providers: [NoopAnalyticsProvider()]))
 
-        @Test
+        @Test("Для дневного инфопоста добавляется внешний блок видео вместо iframe")
         func prepareHTMLForDisplayWithDayVideoUsesExternalBlock() {
             // Given
             let htmlContent = """
@@ -48,7 +48,7 @@ extension AllInfopostsTests {
             #expect(modifiedHTML.contains("#моястодневка от Антона Кучумова"))
         }
 
-        @Test
+        @Test("Для инфопоста без dayNumber внешний YouTube-блок не добавляется")
         func prepareHTMLForDisplayWithoutDayVideoKeepsContentWithoutInjectedYouTubeBlock() {
             // Given
             let htmlContent = """
@@ -85,7 +85,7 @@ extension AllInfopostsTests {
             #expect(!modifiedHTML.contains("video-external-container"))
         }
 
-        @Test
+        @Test("Для dayNumber равного нулю блок видео не добавляется")
         func prepareHTMLForDisplayWithZeroDayNumberDoesNotInjectVideo() {
             // Given
             let htmlContent = """
@@ -122,7 +122,7 @@ extension AllInfopostsTests {
             #expect(!modifiedHTML.contains("video-external-container"))
         }
 
-        @Test
+        @Test("В HTML добавляются актуальные скрипты без legacy video_handler.js")
         func prepareHTMLForDisplayAddsScriptsWithoutLegacyVideoHandler() {
             // Given
             let htmlContent = """
@@ -161,7 +161,7 @@ extension AllInfopostsTests {
             #expect(!modifiedHTML.contains("video_handler.js"))
         }
 
-        @Test
+        @Test("Дневной блок видео вставляется в конец статьи")
         func dayVideoBlockIsAddedAtBottomOfArticle() throws {
             // Given
             let htmlContent = """
@@ -198,7 +198,7 @@ extension AllInfopostsTests {
             #expect(blockIndex > contentIndex)
         }
 
-        @Test
+        @Test("Для английского языка используется английская локализация внешнего блока")
         func externalBlockUsesEnglishLocalizationForEnglishParserLanguage() {
             // Given
             let htmlContent = """

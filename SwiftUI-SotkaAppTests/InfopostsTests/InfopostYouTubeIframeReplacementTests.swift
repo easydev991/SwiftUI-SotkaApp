@@ -5,7 +5,7 @@ extension AllInfopostsTests {
     struct InfopostYouTubeIframeReplacementTests {
         private let youtubeService = YouTubeVideoService(analytics: AnalyticsService(providers: [NoopAnalyticsProvider()]))
 
-        @Test
+        @Test("Заменяет YouTube iframe внутри вложенных контейнеров на внешний блок")
         func replacesYouTubeIframesInsideNestedContainers() {
             // Given
             let html = """
@@ -46,7 +46,7 @@ extension AllInfopostsTests {
             #expect(result.contains("https%3A%2F%2Fwww.youtube.com%2Fwatch%3Fv%3DOM0m9CEjq2Y"))
         }
 
-        @Test
+        @Test("Не изменяет iframe, которые не относятся к YouTube")
         func keepsNonYouTubeIframesUntouched() {
             // Given
             let html = """
@@ -82,7 +82,7 @@ extension AllInfopostsTests {
             #expect(!result.contains("video-external-container"))
         }
 
-        @Test
+        @Test("Одновременно заменяет встроенный и дневной YouTube-блоки")
         func replacesBothEmbeddedAndDayYouTubeBlocks() {
             // Given
             let html = """

@@ -145,7 +145,7 @@ extension AllInfopostsTests {
             }
         }
 
-        @Test
+        @Test("Офлайн-пользователь не выполняет сетевые вызовы при syncReadPosts")
         @MainActor
         func syncReadPostsOfflineUserSkipsNetwork() async throws {
             // Arrange
@@ -582,7 +582,7 @@ extension AllInfopostsTests {
             #expect(!user.unsyncedReadInfopostDays.contains(-1))
         }
 
-        @Test
+        @Test("Офлайн-пользователь не вызывает setPostRead при отметке поста как прочитанного")
         @MainActor
         func markPostAsReadOfflineUserDoesNotCallSetPostRead() async throws {
             // Arrange
