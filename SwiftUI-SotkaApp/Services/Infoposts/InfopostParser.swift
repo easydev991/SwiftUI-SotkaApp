@@ -98,9 +98,15 @@ struct InfopostParser {
 private extension InfopostParser {
     private enum YouTubeHTMLConstants {
         static let defaultTitle = "YouTube"
+        static let genericPlayerTitle = "YouTube video player"
         static let watchVideoLocalizationKey = "infopost.youtube.watchVideo"
         static let openInBrowserLocalizationKey = "infopost.youtube.openInBrowser"
         static let youtubeIframePattern = #"<iframe\b[^>]*\bsrc\s*=\s*['"]([^'"]+)['"][^>]*>(?:\s*</iframe>)?"#
+    }
+
+    private enum VideoBlockSource: String {
+        case embedded
+        case day
     }
 
     private enum HTMLScriptConstants {
@@ -399,7 +405,8 @@ private extension InfopostParser {
                 return html
             }
 
-            let videoBlock = Self.lineBreakWithPadding + makeYouTubeExternalBlock(title: video.title, watchURL: watchURL) + Self
+            let videoBlock = Self
+                .lineBreakWithPadding + makeYouTubeExternalBlock(title: video.title, watchURL: watchURL, source: .day) + Self
                 .lineBreakWithPadding
             let modifiedHTML = insertBeforeFooterOrAppend(videoBlock, in: html)
             logger.info("🎬 YouTube видео успешно добавлено в HTML для дня \(dayNumber)")
@@ -457,15 +464,26 @@ private extension InfopostParser {
             }
 
             let rawTitle = extractAttribute(named: "title", in: iframeTag) ?? YouTubeHTMLConstants.defaultTitle
-            let replacement = makeYouTubeExternalBlock(title: rawTitle, watchURL: watchURL)
+            let replacement = makeYouTubeExternalBlock(title: rawTitle, watchURL: watchURL, source: .embedded)
             modifiedHTML.replaceSubrange(iframeRange, with: replacement)
         }
 
         return modifiedHTML
     }
 
-    func makeYouTubeExternalBlock(title: String, watchURL: URL) -> String {
-        let safeTitle = escapeHTML(title)
+    private func makeYouTubeExternalBlock(title: String, watchURL: URL, source: VideoBlockSource) -> String {
+        let normalizedTitle = normalizeVideoTitle(title)
+        let titleBlock: String
+        if shouldRenderVideoTitle(normalizedTitle) {
+            let safeTitle = escapeHTML(normalizedTitle)
+            titleBlock = """
+              <div class="video-external-title">\(safeTitle)</div>
+
+            """
+        } else {
+            titleBlock = ""
+        }
+
         let buttonTitle = escapeHTML(localizedText(forKey: YouTubeHTMLConstants.watchVideoLocalizationKey))
         let hint = escapeHTML(localizedText(forKey: YouTubeHTMLConstants.openInBrowserLocalizationKey))
         let watchURLString = watchURL.absoluteString
@@ -473,14 +491,29 @@ private extension InfopostParser {
         let externalLink = "sotka://youtube?url=\(encodedURL)"
 
         return """
-        <div class="video-external-container" data-video-kind="youtube">
-          <div class="video-external-title">\(safeTitle)</div>
-          <a class="video-external-link" href="\(externalLink)">
+        <div class="video-external-container" data-video-kind="youtube" data-video-source="\(source.rawValue)">
+        \(titleBlock)  <a class="video-external-link" href="\(externalLink)">
             \(buttonTitle)
           </a>
           <div class="video-external-hint">\(hint)</div>
         </div>
         """
+    }
+
+    private func normalizeVideoTitle(_ title: String) -> String {
+        title
+            .replacingOccurrences(of: #"\s+"#, with: " ", options: .regularExpression)
+            .trimmingCharacters(in: .whitespacesAndNewlines)
+    }
+
+    private func shouldRenderVideoTitle(_ title: String) -> Bool {
+        guard !title.isEmpty else {
+            return false
+        }
+
+        let loweredTitle = title.lowercased()
+        return loweredTitle != YouTubeHTMLConstants.defaultTitle.lowercased()
+            && loweredTitle != YouTubeHTMLConstants.genericPlayerTitle.lowercased()
     }
 
     func extractAttribute(named attribute: String, in tag: String) -> String? {

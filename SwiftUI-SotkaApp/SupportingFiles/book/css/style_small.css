@@ -779,7 +779,7 @@ img.bbcode_img {
 
 /* External video link block */
 .video-external-container[data-video-kind="youtube"] {
-    margin: 20px auto;
+    margin: 8px 0;
     padding: 16px;
     border-radius: 12px;
     border: 1px solid rgba(0, 0, 0, 0.15);
@@ -787,7 +787,13 @@ img.bbcode_img {
     text-align: center;
 }
 
+.video-external-container[data-video-kind="youtube"][data-video-source="day"] {
+    margin-left: 16px;
+    margin-right: 16px;
+}
+
 .video-external-title {
+    font-size: 1.08em;
     margin-bottom: 10px;
     font-weight: 700;
     line-height: 1.4;
@@ -795,9 +801,11 @@ img.bbcode_img {
 
 .video-external-link {
     display: inline-block;
-    padding: 10px 18px;
+    min-width: 220px;
+    padding: 12px 22px;
     border-radius: 8px;
     text-decoration: none;
+    font-size: 20px;
     font-weight: 700;
     color: #fff !important;
     background-color: #d50000;
@@ -809,7 +817,7 @@ img.bbcode_img {
 
 .video-external-hint {
     margin-top: 10px;
-    font-size: 0.9em;
+    font-size: 16px;
     opacity: 0.75;
 }
 

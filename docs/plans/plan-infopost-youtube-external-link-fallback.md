@@ -145,6 +145,35 @@
 
 ---
 
+## Этап 7: Полировка видеоблока по UI-замечаниям
+
+**Файлы:**
+
+- [x] Изменить: `SwiftUI-SotkaApp/Services/Infoposts/InfopostParser.swift`
+- [x] Изменить: `SwiftUI-SotkaAppTests/InfopostsTests/InfopostYouTubeIframeReplacementTests.swift`
+- [x] Изменить: `SwiftUI-SotkaApp/SupportingFiles/book/css/style.css`
+- [x] Изменить: `SwiftUI-SotkaApp/SupportingFiles/book/css/style_small.css`
+- [x] Изменить: `SwiftUI-SotkaApp/SupportingFiles/book/css/style_medium.css`
+- [x] Изменить: `SwiftUI-SotkaApp/SupportingFiles/book/css/style_big.css`
+- [x] Изменить: `SwiftUI-SotkaApp/SupportingFiles/book/css/style_small_ipad.css`
+- [x] Изменить: `SwiftUI-SotkaApp/SupportingFiles/book/css/style_medium_ipad.css`
+- [x] Изменить: `SwiftUI-SotkaApp/SupportingFiles/book/css/style_big_ipad.css`
+
+**Шаги:**
+
+- [x] Убрать отображение бесполезного заголовка `YouTube video player` (и пустых/служебных заголовков) у блоков, полученных из iframe.
+- [x] Сохранить осмысленные заголовки day-видео из `youtube_list.txt` без изменений.
+- [x] Привести отступы к целевым значениям: по бокам `16` и по вертикали `8`, без раздувания блоков внутри статьи; нижний day-блок выровнять тем же визуальным стилем.
+- [x] Добавить unit-тест на скрытие generic-заголовка.
+- [x] Выполнить `make format`.
+- [x] Запустить тесты инфопостов через `xcodebuild-mcp`.
+
+**Критерий завершения этапа:**
+
+- [x] Блоки видео выглядят единообразно, а `YouTube video player` не отображается в UI.
+
+---
+
 ## Риски
 
 - Regex-трансформация HTML должна быть устойчивой к разным форматам iframe и атрибутов.

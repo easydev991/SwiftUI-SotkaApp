@@ -41,9 +41,47 @@ extension AllInfopostsTests {
             // Then
             #expect(!result.contains("<iframe"))
             #expect(result.contains("video-external-container"))
+            #expect(result.contains("data-video-source=\"embedded\""))
             #expect(result.contains("sotka://youtube?url="))
             #expect(result.contains("Video Title"))
             #expect(result.contains("https%3A%2F%2Fwww.youtube.com%2Fwatch%3Fv%3DOM0m9CEjq2Y"))
+        }
+
+        @Test("Скрывает бесполезный заголовок YouTube video player в блоке")
+        func hidesGenericYouTubePlayerTitle() {
+            // Given
+            let html = """
+            <html>
+            <body>
+              <div class="text post-body-text">
+                <iframe src="https://www.youtube.com/embed/OM0m9CEjq2Y" title="YouTube video player"></iframe>
+              </div>
+            </body>
+            </html>
+            """
+
+            let infopost = Infopost(
+                id: "about",
+                title: "About",
+                content: html,
+                section: .preparation,
+                dayNumber: nil,
+                language: "ru"
+            )
+
+            // When
+            let parser = InfopostParser(filename: "about", language: "ru")
+            let result = parser.prepareHTMLForDisplay(
+                html,
+                fontSize: .medium,
+                infopost: infopost,
+                youtubeService: youtubeService
+            )
+
+            // Then
+            #expect(result.contains("video-external-container"))
+            #expect(!result.contains("YouTube video player"))
+            #expect(!result.contains("video-external-title"))
         }
 
         @Test("Не изменяет iframe, которые не относятся к YouTube")

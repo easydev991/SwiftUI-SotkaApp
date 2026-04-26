@@ -42,6 +42,7 @@ extension AllInfopostsTests {
             #expect(!modifiedHTML.contains("<iframe"))
             #expect(modifiedHTML.contains("video-external-container"))
             #expect(modifiedHTML.contains("data-video-kind=\"youtube\""))
+            #expect(modifiedHTML.contains("data-video-source=\"day\""))
             #expect(modifiedHTML.contains("sotka://youtube?url="))
             #expect(modifiedHTML.contains("Смотреть видео"))
             #expect(modifiedHTML.contains("Откроется в браузере"))

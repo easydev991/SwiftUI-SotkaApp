@@ -2127,13 +2127,13 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Opens in browser"
+            "value" : "YouTube"
           }
         },
         "ru" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Откроется в браузере"
+            "value" : "YouTube"
           }
         }
       }
