@@ -4,9 +4,9 @@ import Testing
 
 extension WorkoutScreenViewModelTests {
     @Suite("Тесты для setupWorkoutData и initializeStepStates")
+    @MainActor
     struct SetupTests {
         @Test("Должен настраивать данные тренировки из переданных параметров")
-        @MainActor
         func setupWorkoutData() throws {
             let viewModel = WorkoutScreenViewModel()
             let trainings = [
@@ -41,7 +41,6 @@ extension WorkoutScreenViewModelTests {
         }
 
         @Test("Должен инициализировать этапы для типа выполнения 'круги'")
-        @MainActor
         func initializeStepStatesForCycles() throws {
             let viewModel = WorkoutScreenViewModel()
             let trainings = [
@@ -84,7 +83,6 @@ extension WorkoutScreenViewModelTests {
         }
 
         @Test("Должен инициализировать этапы для типа выполнения 'подходы'")
-        @MainActor
         func initializeStepStatesForSets() throws {
             let viewModel = WorkoutScreenViewModel()
             let trainings = [
@@ -122,7 +120,6 @@ extension WorkoutScreenViewModelTests {
         }
 
         @Test("Должен инициализировать этапы для типа выполнения 'турбо' на день 1")
-        @MainActor
         func initializeStepStatesForTurbo() throws {
             let viewModel = WorkoutScreenViewModel()
             let trainings = [

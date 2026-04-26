@@ -4,6 +4,7 @@ import SwiftData
 import Testing
 
 extension AllInfopostsTests {
+    @MainActor
     struct InfopostsServiceSyncTests {
         // MARK: - Private Methods
 
@@ -12,7 +13,6 @@ extension AllInfopostsTests {
         ///   - language: Язык для сервиса
         ///   - mockClient: Mock клиент
         /// - Returns: Настроенный сервис для тестов
-        @MainActor
         private func createService(
             language: String = "ru",
             mockClient: MockInfopostsClient
@@ -30,7 +30,6 @@ extension AllInfopostsTests {
         ///   - readDays: Синхронизированные прочитанные дни
         ///   - unsyncedDays: Несинхронизированные прочитанные дни
         /// - Returns: Созданный пользователь
-        @MainActor
         private func createTestUser(
             modelContext: ModelContext,
             readDays: [Int] = [],
@@ -46,7 +45,6 @@ extension AllInfopostsTests {
         // MARK: - Тесты синхронизации прочитанных постов
 
         @Test
-        @MainActor
         func syncReadPostsSuccess() async throws {
             // Arrange
             let serverReadDays = [1, 2, 3, 5]
@@ -77,7 +75,6 @@ extension AllInfopostsTests {
         }
 
         @Test
-        @MainActor
         func syncReadPostsWithEmptyServerData() async throws {
             // Arrange
             let unsyncedDays = [3, 4]
@@ -106,7 +103,6 @@ extension AllInfopostsTests {
         }
 
         @Test
-        @MainActor
         func syncReadPostsWhenUserNotFound() async throws {
             // Arrange
             let mockClient = MockInfopostsClient()
@@ -122,7 +118,6 @@ extension AllInfopostsTests {
         }
 
         @Test
-        @MainActor
         func syncReadPostsWithServerError() async throws {
             // Arrange
             let serverError = MockInfopostsClient.MockError.serverError
@@ -145,10 +140,39 @@ extension AllInfopostsTests {
             }
         }
 
+        @Test("Офлайн-пользователь не выполняет сетевые вызовы при syncReadPosts")
+        func syncReadPostsOfflineUserSkipsNetwork() async throws {
+            // Arrange
+            let recorder = MockInfopostsClientRecorder()
+            let mockClient = MockInfopostsClient(
+                getReadPostsResult: .success([1, 2, 3]),
+                setPostReadResult: .success(()),
+                recorder: recorder
+            )
+            let service = createService(mockClient: mockClient)
+
+            let modelContainer = try ModelContainer(for: User.self, configurations: ModelConfiguration(isStoredInMemoryOnly: true))
+            let modelContext = modelContainer.mainContext
+
+            let user = User(id: -1, userName: "offline-user")
+            user.setReadInfopostDays([10])
+            user.setUnsyncedReadInfopostDays([11, 12])
+            modelContext.insert(user)
+            try modelContext.save()
+
+            // Act
+            try await service.syncReadPosts(context: modelContext)
+
+            // Assert
+            #expect(user.readInfopostDays == [10])
+            #expect(user.unsyncedReadInfopostDays == [11, 12])
+            #expect(await recorder.getReadPostsCallCount == 0)
+            #expect(await recorder.setPostReadCallCount == 0)
+        }
+
         // MARK: - Тесты отметки поста как прочитанного
 
         @Test
-        @MainActor
         func markPostAsReadSuccess() async throws {
             // Arrange
             let mockClient = MockInfopostsClient(setPostReadResult: .success(()))
@@ -169,7 +193,6 @@ extension AllInfopostsTests {
         }
 
         @Test
-        @MainActor
         func markPostAsReadWithSyncError() async throws {
             // Arrange
             let syncError = MockInfopostsClient.MockError.syncError
@@ -191,7 +214,6 @@ extension AllInfopostsTests {
         }
 
         @Test
-        @MainActor
         func markPostAsReadWithNilDay() async throws {
             // Arrange
             let mockClient = MockInfopostsClient()
@@ -212,7 +234,6 @@ extension AllInfopostsTests {
         }
 
         @Test
-        @MainActor
         func markPostAsReadWhenUserNotFound() async throws {
             // Arrange
             let mockClient = MockInfopostsClient()
@@ -228,7 +249,6 @@ extension AllInfopostsTests {
         }
 
         @Test
-        @MainActor
         func markPostAsReadDuplicateDay() async throws {
             // Arrange
             let mockClient = MockInfopostsClient(setPostReadResult: .success(()))
@@ -258,7 +278,6 @@ extension AllInfopostsTests {
         // MARK: - Тесты проверки статуса прочитанного
 
         @Test
-        @MainActor
         func isPostReadWhenRead() throws {
             // Arrange
             let mockClient = MockInfopostsClient()
@@ -290,7 +309,6 @@ extension AllInfopostsTests {
         }
 
         @Test
-        @MainActor
         func isPostReadWhenUnsynced() throws {
             // Arrange
             let mockClient = MockInfopostsClient()
@@ -322,7 +340,6 @@ extension AllInfopostsTests {
         }
 
         @Test
-        @MainActor
         func isPostReadWhenNotRead() throws {
             // Arrange
             let mockClient = MockInfopostsClient()
@@ -351,7 +368,6 @@ extension AllInfopostsTests {
         }
 
         @Test
-        @MainActor
         func isPostReadWhenUserNotFound() throws {
             // Arrange
             let mockClient = MockInfopostsClient()
@@ -371,7 +387,6 @@ extension AllInfopostsTests {
         }
 
         @Test
-        @MainActor
         func isPostReadWhenInfopostHasNoDayNumber() throws {
             // Arrange
             let mockClient = MockInfopostsClient()
@@ -405,7 +420,6 @@ extension AllInfopostsTests {
         // MARK: - Тесты обработки ошибок синхронизации
 
         @Test
-        @MainActor
         func syncReadPostsWithPartialSyncFailure() async throws {
             // Arrange
             let serverReadDays = [1, 2, 3]
@@ -455,7 +469,6 @@ extension AllInfopostsTests {
         }
 
         @Test
-        @MainActor
         func markPostAsReadWithNetworkError() async throws {
             // Arrange
             let networkError = MockInfopostsClient.MockError.networkError
@@ -479,7 +492,6 @@ extension AllInfopostsTests {
         // MARK: - Тесты граничных случаев
 
         @Test
-        @MainActor
         func syncReadPostsWithLargeDataSet() async throws {
             // Arrange
             let serverReadDays = Array(1 ... 100)
@@ -510,7 +522,6 @@ extension AllInfopostsTests {
         }
 
         @Test
-        @MainActor
         func markPostAsReadWithZeroDay() async throws {
             // Arrange
             let mockClient = MockInfopostsClient(setPostReadResult: .success(()))
@@ -531,7 +542,6 @@ extension AllInfopostsTests {
         }
 
         @Test
-        @MainActor
         func markPostAsReadWithNegativeDay() async throws {
             // Arrange
             let mockClient = MockInfopostsClient(setPostReadResult: .success(()))
@@ -549,6 +559,32 @@ extension AllInfopostsTests {
             // Assert
             #expect(user.readInfopostDays.contains(-1))
             #expect(!user.unsyncedReadInfopostDays.contains(-1))
+        }
+
+        @Test("Офлайн-пользователь не вызывает setPostRead при отметке поста как прочитанного")
+        func markPostAsReadOfflineUserDoesNotCallSetPostRead() async throws {
+            // Arrange
+            let recorder = MockInfopostsClientRecorder()
+            let mockClient = MockInfopostsClient(
+                setPostReadResult: .success(()),
+                recorder: recorder
+            )
+            let service = createService(mockClient: mockClient)
+
+            let modelContainer = try ModelContainer(for: User.self, configurations: ModelConfiguration(isStoredInMemoryOnly: true))
+            let modelContext = modelContainer.mainContext
+
+            let user = User(id: -1, userName: "offline-user")
+            modelContext.insert(user)
+            try modelContext.save()
+
+            // Act
+            try await service.markPostAsRead(day: 7, modelContext: modelContext)
+
+            // Assert
+            #expect(!user.readInfopostDays.contains(7))
+            #expect(user.unsyncedReadInfopostDays.contains(7))
+            #expect(await recorder.setPostReadCallCount == 0)
         }
     }
 }

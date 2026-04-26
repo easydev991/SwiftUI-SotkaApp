@@ -5,9 +5,9 @@ import Testing
 
 extension WorkoutPreviewViewModelTests {
     @Suite("Тесты для handleWorkoutResult")
+    @MainActor
     struct HandleWorkoutResultTests {
         @Test("Должен обновлять состояние ViewModel из результата тренировки")
-        @MainActor
         func handleWorkoutResult() throws {
             let viewModel = WorkoutPreviewViewModel()
             let modelConfiguration = ModelConfiguration(isStoredInMemoryOnly: true)
@@ -38,7 +38,6 @@ extension WorkoutPreviewViewModelTests {
         }
 
         @Test("Должен обрабатывать результат с duration = nil")
-        @MainActor
         func handleWorkoutResultWithNilDuration() throws {
             let viewModel = WorkoutPreviewViewModel()
             let modelConfiguration = ModelConfiguration(isStoredInMemoryOnly: true)
@@ -67,7 +66,6 @@ extension WorkoutPreviewViewModelTests {
         }
 
         @Test("Должен не устанавливать isWorkoutCompleted при count == 0")
-        @MainActor
         func handleWorkoutResultWithZeroCount() throws {
             let viewModel = WorkoutPreviewViewModel()
             let modelConfiguration = ModelConfiguration(isStoredInMemoryOnly: true)
@@ -98,7 +96,6 @@ extension WorkoutPreviewViewModelTests {
         }
 
         @Test("Должен устанавливать isWorkoutCompleted и обновлять count при count > 0")
-        @MainActor
         func handleWorkoutResultWithPositiveCount() throws {
             let viewModel = WorkoutPreviewViewModel()
             let modelConfiguration = ModelConfiguration(isStoredInMemoryOnly: true)
@@ -129,7 +126,6 @@ extension WorkoutPreviewViewModelTests {
         }
 
         @Test("Для прерванной тренировки с подходами handleWorkoutResult должен установить count = plannedCount из результата")
-        @MainActor
         func handleWorkoutResultForInterruptedSetsWorkout() throws {
             let viewModel = WorkoutPreviewViewModel()
             let modelConfiguration = ModelConfiguration(isStoredInMemoryOnly: true)
@@ -161,7 +157,6 @@ extension WorkoutPreviewViewModelTests {
         @Test(
             "Для завершенной тренировки с подходами handleWorkoutResult должен установить count равным фактическому количеству из результата"
         )
-        @MainActor
         func handleWorkoutResultForCompletedSetsWorkout() throws {
             let viewModel = WorkoutPreviewViewModel()
             let modelConfiguration = ModelConfiguration(isStoredInMemoryOnly: true)
@@ -193,7 +188,6 @@ extension WorkoutPreviewViewModelTests {
         @Test(
             "Для прерванной тренировки с кругами handleWorkoutResult должен установить count равным количеству завершенных кругов из результата"
         )
-        @MainActor
         func handleWorkoutResultForInterruptedCyclesWorkout() throws {
             let viewModel = WorkoutPreviewViewModel()
             let modelConfiguration = ModelConfiguration(isStoredInMemoryOnly: true)

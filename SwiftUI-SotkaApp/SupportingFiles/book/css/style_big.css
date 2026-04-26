@@ -105,40 +105,6 @@ a, a:visited, a:hover {
     line-height: 25px;
 }
 
-/* Video container styles */
-.video-container {
-    text-align: center;
-    background-color: transparent;
-}
-
-.video-title {
-    color: inherit;
-}
-
-@media (prefers-color-scheme: dark) {
-    .video-container {
-        background-color: transparent;
-    }
-    
-    .video-title {
-        color: #FFF;
-    }
-    
-    .video-error-container {
-        background-color: #2d2d2d !important;
-        border-color: #555 !important;
-        color: #FFF !important;
-    }
-    
-    .video-error-container div {
-        color: #ff6b6b !important;
-    }
-    
-    .video-error-container div:last-of-type {
-        color: #ccc !important;
-    }
-}
-
 hr {
   border-top: 1px dashed #ccc;
   margin: 0;
@@ -781,3 +747,72 @@ img.bbcode_img {
     height: auto;
 
 */
+/* External video link block */
+.video-external-container[data-video-kind="youtube"] {
+    margin: 8px 0;
+    padding: 16px;
+    border-radius: 12px;
+    border: 1px solid rgba(0, 0, 0, 0.15);
+    background-color: rgba(0, 0, 0, 0.04);
+    text-align: center;
+}
+
+.video-external-container[data-video-kind="youtube"][data-video-source="day"] {
+    margin-left: 16px;
+    margin-right: 16px;
+}
+
+.video-external-day-title {
+    font-size: 18px;
+    margin-bottom: 10px;
+    font-weight: 700;
+    line-height: 1.4;
+}
+
+.video-external-title {
+    font-size: 18px;
+    margin-bottom: 10px;
+    font-weight: 700;
+    line-height: 1.4;
+}
+
+.video-external-link {
+    display: inline-block;
+    min-width: 220px;
+    padding: 12px 22px;
+    border-radius: 8px;
+    text-decoration: none;
+    -webkit-user-select: none;
+    user-select: none;
+    -webkit-touch-callout: none;
+    font-size: 16px;
+    font-weight: 700;
+    color: #fff !important;
+    background-color: #d50000;
+}
+
+.video-external-link:hover {
+    opacity: 0.9;
+}
+
+.video-external-hint {
+    margin-top: 10px;
+    font-size: 16px;
+    opacity: 0.75;
+}
+
+@media (prefers-color-scheme: dark) {
+    .video-external-container[data-video-kind="youtube"] {
+        border-color: rgba(255, 255, 255, 0.2);
+        background-color: rgba(255, 255, 255, 0.08);
+    }
+
+    .video-external-link {
+        color: #fff !important;
+        background-color: #ff2e2e;
+    }
+
+    .video-external-hint {
+        opacity: 0.85;
+    }
+}

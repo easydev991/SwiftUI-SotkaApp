@@ -117,6 +117,20 @@ final class CustomExercisesService {
     /// - Parameter context: Контекст Swift Data
     /// - Returns: Результат синхронизации с детальной информацией
     func syncCustomExercises(context: ModelContext) async throws -> SyncResult {
+        if let user = try? context.fetch(FetchDescriptor<User>()).first, user.isOfflineOnly {
+            let emptyStats = SyncStats(created: 0, updated: 0, deleted: 0)
+            logger.info("Офлайн-пользователь: syncCustomExercises выполняется только локально, сетевой sync пропущен")
+            return SyncResult(
+                type: SyncResultType(errors: nil, stats: emptyStats),
+                details: SyncResultDetails(
+                    progress: nil,
+                    exercises: emptyStats,
+                    activities: nil,
+                    errors: nil
+                )
+            )
+        }
+
         guard !isLoading else {
             throw AlreadySyncingError()
         }

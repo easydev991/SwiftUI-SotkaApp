@@ -4,9 +4,9 @@ import Testing
 
 extension WorkoutPreviewViewModelTests {
     @Suite("Тесты для computed properties")
+    @MainActor
     struct ComputedPropertiesTests {
         @Test("Должен возвращать true для isPlannedCountDisabled когда selectedExecutionType = turbo")
-        @MainActor
         func returnsTrueForIsPlannedCountDisabledWhenTurbo() {
             let connectivityService = MockWatchConnectivityService()
             let viewModel = WorkoutPreviewViewModel(
@@ -19,7 +19,6 @@ extension WorkoutPreviewViewModelTests {
         }
 
         @Test("Должен возвращать false для isPlannedCountDisabled когда selectedExecutionType = cycles")
-        @MainActor
         func returnsFalseForIsPlannedCountDisabledWhenCycles() {
             let connectivityService = MockWatchConnectivityService()
             let viewModel = WorkoutPreviewViewModel(
@@ -32,7 +31,6 @@ extension WorkoutPreviewViewModelTests {
         }
 
         @Test("Должен возвращать count когда оба установлены (приоритет у count для сохраненных тренировок)")
-        @MainActor
         func returnsCountWhenBothAreSet() throws {
             let connectivityService = MockWatchConnectivityService()
             let viewModel = WorkoutPreviewViewModel(
@@ -47,7 +45,6 @@ extension WorkoutPreviewViewModelTests {
         }
 
         @Test("Должен возвращать plannedCount когда count == nil (непройденная тренировка)")
-        @MainActor
         func returnsPlannedCountWhenCountIsNil() throws {
             let connectivityService = MockWatchConnectivityService()
             let viewModel = WorkoutPreviewViewModel(
@@ -62,7 +59,6 @@ extension WorkoutPreviewViewModelTests {
         }
 
         @Test("Должен возвращать count когда plannedCount == nil (сохраненная тренировка)")
-        @MainActor
         func returnsCountWhenPlannedCountIsNil() throws {
             let connectivityService = MockWatchConnectivityService()
             let viewModel = WorkoutPreviewViewModel(
@@ -77,7 +73,6 @@ extension WorkoutPreviewViewModelTests {
         }
 
         @Test("Должен возвращать nil когда оба count и plannedCount равны nil")
-        @MainActor
         func returnsNilWhenBothAreNil() {
             let connectivityService = MockWatchConnectivityService()
             let viewModel = WorkoutPreviewViewModel(
@@ -91,7 +86,6 @@ extension WorkoutPreviewViewModelTests {
         }
 
         @Test("Должен возвращать true для shouldShowEditButton когда selectedExecutionType = cycles")
-        @MainActor
         func returnsTrueForShouldShowEditButtonWhenCycles() {
             let connectivityService = MockWatchConnectivityService()
             let viewModel = WorkoutPreviewViewModel(
@@ -104,7 +98,6 @@ extension WorkoutPreviewViewModelTests {
         }
 
         @Test("Должен возвращать true для shouldShowEditButton когда selectedExecutionType = sets")
-        @MainActor
         func returnsTrueForShouldShowEditButtonWhenSets() {
             let connectivityService = MockWatchConnectivityService()
             let viewModel = WorkoutPreviewViewModel(
@@ -117,7 +110,6 @@ extension WorkoutPreviewViewModelTests {
         }
 
         @Test("Должен возвращать false для shouldShowEditButton когда selectedExecutionType = turbo")
-        @MainActor
         func returnsFalseForShouldShowEditButtonWhenTurbo() {
             let connectivityService = MockWatchConnectivityService()
             let viewModel = WorkoutPreviewViewModel(
@@ -130,7 +122,6 @@ extension WorkoutPreviewViewModelTests {
         }
 
         @Test("Должен возвращать false для hasChanges при первоначальной загрузке")
-        @MainActor
         func returnsFalseForHasChangesOnInitialLoad() async {
             let connectivityService = MockWatchConnectivityService()
             let viewModel = WorkoutPreviewViewModel(
@@ -152,7 +143,6 @@ extension WorkoutPreviewViewModelTests {
         }
 
         @Test("Должен возвращать true для hasChanges после изменения plannedCount")
-        @MainActor
         func returnsTrueForHasChangesAfterChangingPlannedCount() async {
             let connectivityService = MockWatchConnectivityService()
             let viewModel = WorkoutPreviewViewModel(
@@ -176,7 +166,6 @@ extension WorkoutPreviewViewModelTests {
         }
 
         @Test("Должен возвращать только упражнения с count > 0")
-        @MainActor
         func returnsOnlyTrainingsWithCountGreaterThanZero() {
             let connectivityService = MockWatchConnectivityService()
             let viewModel = WorkoutPreviewViewModel(
@@ -198,7 +187,6 @@ extension WorkoutPreviewViewModelTests {
         }
 
         @Test("Должен возвращать пустой список если все упражнения имеют count == 0 или nil")
-        @MainActor
         func returnsEmptyListWhenAllTrainingsHaveZeroOrNilCount() {
             let connectivityService = MockWatchConnectivityService()
             let viewModel = WorkoutPreviewViewModel(
@@ -216,7 +204,6 @@ extension WorkoutPreviewViewModelTests {
         }
 
         @Test("Должен возвращать все упражнения если все имеют count > 0")
-        @MainActor
         func returnsAllTrainingsWhenAllHaveCountGreaterThanZero() {
             let connectivityService = MockWatchConnectivityService()
             let viewModel = WorkoutPreviewViewModel(
@@ -235,7 +222,6 @@ extension WorkoutPreviewViewModelTests {
         }
 
         @Test("Должен возвращать пустой список если trainings пуст")
-        @MainActor
         func returnsEmptyListWhenTrainingsIsEmpty() {
             let connectivityService = MockWatchConnectivityService()
             let viewModel = WorkoutPreviewViewModel(

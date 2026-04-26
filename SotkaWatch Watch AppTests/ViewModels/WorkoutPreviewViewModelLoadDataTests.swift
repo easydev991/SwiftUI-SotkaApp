@@ -4,9 +4,9 @@ import Testing
 
 extension WorkoutPreviewViewModelTests {
     @Suite("Тесты для loadData")
+    @MainActor
     struct LoadDataTests {
         @Test("Должен загружать данные тренировки из connectivityService")
-        @MainActor
         func loadsWorkoutDataFromConnectivityService() async throws {
             let connectivityService = MockWatchConnectivityService()
             let viewModel = WorkoutPreviewViewModel(
@@ -38,7 +38,6 @@ extension WorkoutPreviewViewModelTests {
         }
 
         @Test("Должен устанавливать wasOriginallyPassed в true если executionCount установлен")
-        @MainActor
         func setsWasOriginallyPassedToTrueWhenExecutionCountIsSet() async throws {
             let connectivityService = MockWatchConnectivityService()
             let viewModel = WorkoutPreviewViewModel(
@@ -65,7 +64,6 @@ extension WorkoutPreviewViewModelTests {
         }
 
         @Test("Должен устанавливать wasOriginallyPassed в false если executionCount равен nil")
-        @MainActor
         func setsWasOriginallyPassedToFalseWhenExecutionCountIsNil() async {
             let connectivityService = MockWatchConnectivityService()
             let viewModel = WorkoutPreviewViewModel(
@@ -91,7 +89,6 @@ extension WorkoutPreviewViewModelTests {
         }
 
         @Test("Должен устанавливать comment из response")
-        @MainActor
         func setsCommentFromResponse() async throws {
             let connectivityService = MockWatchConnectivityService()
             let viewModel = WorkoutPreviewViewModel(
@@ -117,7 +114,6 @@ extension WorkoutPreviewViewModelTests {
         }
 
         @Test("Должен устанавливать isLoading в true во время загрузки")
-        @MainActor
         func setsIsLoadingToTrueDuringLoad() async throws {
             let connectivityService = MockWatchConnectivityService()
             let viewModel = WorkoutPreviewViewModel(
@@ -145,7 +141,6 @@ extension WorkoutPreviewViewModelTests {
         }
 
         @Test("Должен не устанавливать error при сетевой ошибке загрузки (error только для валидации)")
-        @MainActor
         func doesNotSetErrorOnNetworkLoadFailure() async {
             let connectivityService = MockWatchConnectivityService()
             let viewModel = WorkoutPreviewViewModel(
@@ -162,7 +157,6 @@ extension WorkoutPreviewViewModelTests {
         }
 
         @Test("Должен определять availableExecutionTypes на основе dayNumber")
-        @MainActor
         func determinesAvailableExecutionTypesBasedOnDayNumber() async {
             let connectivityService = MockWatchConnectivityService()
             let viewModel = WorkoutPreviewViewModel(
@@ -187,7 +181,6 @@ extension WorkoutPreviewViewModelTests {
         }
 
         @Test("Должен определять availableExecutionTypes для дня 92-98")
-        @MainActor
         func determinesAvailableExecutionTypesForDays92To98() async {
             let connectivityService = MockWatchConnectivityService()
             let viewModel = WorkoutPreviewViewModel(
@@ -213,7 +206,6 @@ extension WorkoutPreviewViewModelTests {
         }
 
         @Test("Должен использовать restTime из connectivityService.restTime если оно доступно")
-        @MainActor
         func shouldUseRestTimeFromConnectivityService() async {
             let connectivityService = MockWatchConnectivityService()
             connectivityService.restTime = 90
@@ -239,7 +231,6 @@ extension WorkoutPreviewViewModelTests {
         }
 
         @Test("Должен использовать дефолтное значение restTime если connectivityService.restTime == nil")
-        @MainActor
         func shouldUseDefaultRestTimeWhenConnectivityServiceRestTimeIsNil() async {
             let connectivityService = MockWatchConnectivityService()
             connectivityService.restTime = nil
@@ -265,7 +256,6 @@ extension WorkoutPreviewViewModelTests {
         }
 
         @Test("Должен передавать restTime в метод updateData при загрузке данных")
-        @MainActor
         func shouldPassRestTimeToUpdateDataMethod() async {
             let connectivityService = MockWatchConnectivityService()
             connectivityService.restTime = 120

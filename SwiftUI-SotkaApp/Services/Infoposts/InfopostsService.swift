@@ -298,6 +298,11 @@ extension InfopostsService {
     func syncReadPosts(context: ModelContext) async throws {
         let user = try getCurrentUser(modelContext: context)
 
+        if user.isOfflineOnly {
+            logger.debug("Пропуск syncReadPosts для офлайн-пользователя")
+            return
+        }
+
         logger.info("Начинаем синхронизацию прочитанных инфопостов")
 
         do {
@@ -382,6 +387,13 @@ extension InfopostsService {
         // Сохраняем изменения
         try modelContext.save()
         logger.debug("Инфопост дня \(day) отмечен как прочитанный локально")
+
+        // Для офлайн-пользователя оставляем день в локальной очереди синхронизации
+        // и не пытаемся отправлять mark-as-read на сервер.
+        if user.isOfflineOnly {
+            logger.debug("Пропуск setPostRead для офлайн-пользователя (day: \(day))")
+            return
+        }
 
         // Пытаемся синхронизировать с сервером
         do {

@@ -2120,6 +2120,42 @@
         }
       }
     },
+    "infopost.youtube.openInBrowser" : {
+      "comment" : "Подсказка под кнопкой перехода к YouTube во внешнем браузере",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "YouTube"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "YouTube"
+          }
+        }
+      }
+    },
+    "infopost.youtube.watchVideo" : {
+      "comment" : "Текст кнопки перехода к YouTube видео",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Watch video"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Смотреть видео"
+          }
+        }
+      }
+    },
     "Infoposts" : {
       "comment" : "A navigation link to the list of infoposts.",
       "extractionState" : "manual",

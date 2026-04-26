@@ -5,9 +5,9 @@ import Testing
 
 extension WorkoutPreviewViewModelTests {
     @Suite("Тесты для shouldShowExecutionTypePicker")
+    @MainActor
     struct ShouldShowExecutionTypePickerTests {
         @Test("Должен возвращать false если dayNumber не совпадает с day")
-        @MainActor
         func returnsFalseIfDayNumberDoesNotMatchDay() throws {
             let container = try ModelContainer(
                 for: DayActivity.self,
@@ -33,7 +33,6 @@ extension WorkoutPreviewViewModelTests {
         }
 
         @Test("Должен возвращать false если trainings пустой")
-        @MainActor
         func returnsFalseIfTrainingsIsEmpty() throws {
             let container = try ModelContainer(
                 for: DayActivity.self,
@@ -57,7 +56,6 @@ extension WorkoutPreviewViewModelTests {
         }
 
         @Test("Должен возвращать false если активность найдена и пройдена")
-        @MainActor
         func returnsFalseIfActivityFoundAndPassed() throws {
             let container = try ModelContainer(
                 for: DayActivity.self,
@@ -96,7 +94,6 @@ extension WorkoutPreviewViewModelTests {
         }
 
         @Test("Должен возвращать false если доступно только один тип выполнения")
-        @MainActor
         func returnsFalseIfOnlyOneExecutionTypeAvailable() throws {
             let container = try ModelContainer(
                 for: DayActivity.self,
@@ -122,7 +119,6 @@ extension WorkoutPreviewViewModelTests {
         }
 
         @Test("Должен возвращать true если активность не найдена и доступно больше одного типа")
-        @MainActor
         func returnsTrueIfActivityNotFoundAndMultipleTypesAvailable() throws {
             let container = try ModelContainer(
                 for: DayActivity.self,
@@ -148,7 +144,6 @@ extension WorkoutPreviewViewModelTests {
         }
 
         @Test("Должен возвращать true если активность найдена, не пройдена и доступно больше одного типа")
-        @MainActor
         func returnsTrueIfActivityFoundNotPassedAndMultipleTypesAvailable() throws {
             let container = try ModelContainer(
                 for: DayActivity.self,
@@ -187,7 +182,6 @@ extension WorkoutPreviewViewModelTests {
         }
 
         @Test("Должен игнорировать активность с shouldDelete = true")
-        @MainActor
         func ignoresActivityWithShouldDeleteTrue() throws {
             let container = try ModelContainer(
                 for: DayActivity.self,

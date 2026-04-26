@@ -4,9 +4,9 @@ import Testing
 
 extension WorkoutPreviewViewModelTests {
     @Suite("Тесты для shouldShowEditButton")
+    @MainActor
     struct ShouldShowEditButtonTests {
         @Test("Должен возвращать true для shouldShowEditButton когда selectedExecutionType = cycles")
-        @MainActor
         func returnsTrueForShouldShowEditButtonWhenCycles() {
             let viewModel = WorkoutPreviewViewModel()
             viewModel.selectedExecutionType = .cycles
@@ -15,7 +15,6 @@ extension WorkoutPreviewViewModelTests {
         }
 
         @Test("Должен возвращать true для shouldShowEditButton когда selectedExecutionType = sets")
-        @MainActor
         func returnsTrueForShouldShowEditButtonWhenSets() {
             let viewModel = WorkoutPreviewViewModel()
             viewModel.selectedExecutionType = .sets
@@ -24,7 +23,6 @@ extension WorkoutPreviewViewModelTests {
         }
 
         @Test("Должен возвращать false для shouldShowEditButton когда selectedExecutionType = turbo")
-        @MainActor
         func returnsFalseForShouldShowEditButtonWhenTurbo() {
             let viewModel = WorkoutPreviewViewModel()
             viewModel.selectedExecutionType = .turbo
@@ -33,7 +31,6 @@ extension WorkoutPreviewViewModelTests {
         }
 
         @Test("Должен возвращать false для shouldShowEditButton когда selectedExecutionType = nil")
-        @MainActor
         func returnsFalseForShouldShowEditButtonWhenNil() {
             let viewModel = WorkoutPreviewViewModel()
             viewModel.selectedExecutionType = nil
@@ -42,7 +39,6 @@ extension WorkoutPreviewViewModelTests {
         }
 
         @Test("Должен возвращать true для shouldShowEditButton когда selectedExecutionType = cycles и isWorkoutCompleted = true")
-        @MainActor
         func returnsTrueForShouldShowEditButtonWhenCyclesAndWorkoutCompleted() {
             let viewModel = WorkoutPreviewViewModel()
             viewModel.selectedExecutionType = .cycles
@@ -52,7 +48,6 @@ extension WorkoutPreviewViewModelTests {
         }
 
         @Test("Должен возвращать true для shouldShowEditButton когда selectedExecutionType = sets и isWorkoutCompleted = true")
-        @MainActor
         func returnsTrueForShouldShowEditButtonWhenSetsAndWorkoutCompleted() {
             let viewModel = WorkoutPreviewViewModel()
             viewModel.selectedExecutionType = .sets
@@ -62,7 +57,6 @@ extension WorkoutPreviewViewModelTests {
         }
 
         @Test("Должен возвращать true для shouldShowEditButton когда selectedExecutionType = cycles и isWorkoutCompleted = false")
-        @MainActor
         func returnsTrueForShouldShowEditButtonWhenCyclesAndWorkoutNotCompleted() {
             let viewModel = WorkoutPreviewViewModel()
             viewModel.selectedExecutionType = .cycles
@@ -72,7 +66,6 @@ extension WorkoutPreviewViewModelTests {
         }
 
         @Test("Должен возвращать true для shouldShowEditButton когда selectedExecutionType = sets и isWorkoutCompleted = false")
-        @MainActor
         func returnsTrueForShouldShowEditButtonWhenSetsAndWorkoutNotCompleted() {
             let viewModel = WorkoutPreviewViewModel()
             viewModel.selectedExecutionType = .sets

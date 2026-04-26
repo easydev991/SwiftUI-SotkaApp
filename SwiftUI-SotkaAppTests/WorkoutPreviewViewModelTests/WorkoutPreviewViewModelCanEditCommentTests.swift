@@ -5,9 +5,9 @@ import Testing
 
 extension WorkoutPreviewViewModelTests {
     @Suite("Тесты для canEditComment")
+    @MainActor
     struct CanEditCommentTests {
         @Test("Должен возвращать true для canEditComment когда isWorkoutCompleted == true")
-        @MainActor
         func returnsTrueForCanEditCommentWhenWorkoutCompleted() {
             let viewModel = WorkoutPreviewViewModel()
             viewModel.isWorkoutCompleted = true
@@ -16,7 +16,6 @@ extension WorkoutPreviewViewModelTests {
         }
 
         @Test("Должен возвращать true для canEditComment когда wasOriginallyPassed == true")
-        @MainActor
         func returnsTrueForCanEditCommentWhenWasOriginallyPassed() throws {
             let container = try ModelContainer(
                 for: DayActivity.self,
@@ -55,7 +54,6 @@ extension WorkoutPreviewViewModelTests {
         }
 
         @Test("Должен возвращать false для canEditComment когда isWorkoutCompleted == false и wasOriginallyPassed == false")
-        @MainActor
         func returnsFalseForCanEditCommentWhenBothFalse() {
             let viewModel = WorkoutPreviewViewModel()
             viewModel.isWorkoutCompleted = false

@@ -82,30 +82,12 @@ struct InfopostParser {
             )
         logger.debug("📏 Исходный размер HTML: \(html.count) символов")
 
-        // 1. Очищаем HTML от лишних элементов
-        logger.debug("🧹 Этап 1: Очистка HTML от лишних элементов")
-        let cleanedHTML = cleanHTMLContent(html)
-        logger.debug("📏 Размер после очистки: \(cleanedHTML.count) символов")
-
-        // 2. Исправляем пути к изображениям
-        logger.debug("🖼️ Этап 2: Исправление путей к изображениям")
-        let htmlWithFixedImages = fixImagePaths(cleanedHTML)
-        logger.debug("📏 Размер после исправления путей: \(htmlWithFixedImages.count) символов")
-
-        // 3. Применяем размер шрифта
-        logger.debug("🔤 Этап 3: Применение размера шрифта")
-        let htmlWithFontSize = applyFontSize(htmlWithFixedImages, fontSize: fontSize)
-        logger.debug("📏 Размер после применения шрифта: \(htmlWithFontSize.count) символов")
-
-        // 4. Добавляем YouTube видео для постов с номерами дней
-        logger.debug("🎬 Этап 4: Добавление YouTube видео")
-        let htmlWithYouTube = addYouTubeVideo(to: htmlWithFontSize, infopost: infopost, youtubeService: youtubeService)
-        logger.debug("📏 Размер после добавления YouTube: \(htmlWithYouTube.count) символов")
-
-        // 5. Добавляем универсальный обработчик видео
-        logger.debug("🎥 Этап 5: Добавление универсального обработчика видео")
-        let finalHTML = addUniversalVideoHandler(to: htmlWithYouTube)
-        logger.debug("📏 Финальный размер HTML: \(finalHTML.count) символов")
+        let transformedHTML = transformHTMLContent(html, fontSize: fontSize, youtubeService: youtubeService)
+        let finalHTML = enrichHTMLContentWithVideoAndScripts(
+            transformedHTML,
+            infopost: infopost,
+            youtubeService: youtubeService
+        )
 
         logger.info("✅ Подготовка HTML завершена для инфопоста: \(infopost.id)")
 
@@ -114,6 +96,81 @@ struct InfopostParser {
 }
 
 private extension InfopostParser {
+    private enum YouTubeHTMLConstants {
+        static let defaultTitle = "YouTube"
+        static let genericPlayerTitle = "YouTube video player"
+        static let watchVideoLocalizationKey = "infopost.youtube.watchVideo"
+        static let openInBrowserLocalizationKey = "infopost.youtube.openInBrowser"
+        static let youtubeIframePattern = #"<iframe\b[^>]*\bsrc\s*=\s*['"]([^'"]+)['"][^>]*>(?:\s*</iframe>)?"#
+    }
+
+    private enum VideoBlockSource: String {
+        case embedded
+        case day
+    }
+
+    private enum HTMLScriptConstants {
+        static let injectedScripts = """
+        <script type="text/javascript" src="js/console_interceptor.js"></script>
+        <script type="text/javascript" src="js/scroll_tracker.js"></script>
+        <script type="text/javascript" src="js/font_size_handler.js"></script>
+        """
+    }
+
+    private static let youtubeIframeRegex = try? NSRegularExpression(
+        pattern: YouTubeHTMLConstants.youtubeIframePattern,
+        options: [.caseInsensitive, .dotMatchesLineSeparators]
+    )
+
+    private static let youtubeLinkNormalizer = YouTubeLinkNormalizer()
+    private static let lineBreakWithPadding = "\n<br>\n"
+
+    func transformHTMLContent(_ html: String, fontSize: FontSize, youtubeService: YouTubeVideoService) -> String {
+        logger.debug("🧹 Этап 1: Очистка HTML от лишних элементов")
+        let cleanedHTML = cleanHTMLContent(html)
+        logger.debug("📏 Размер после очистки: \(cleanedHTML.count) символов")
+
+        logger.debug("🖼️ Этап 2: Исправление путей к изображениям")
+        let htmlWithFixedImages = fixImagePaths(cleanedHTML)
+        logger.debug("📏 Размер после исправления путей: \(htmlWithFixedImages.count) символов")
+
+        logger.debug("🔤 Этап 3: Применение размера шрифта")
+        let htmlWithFontSize = applyFontSize(htmlWithFixedImages, fontSize: fontSize)
+        logger.debug("📏 Размер после применения шрифта: \(htmlWithFontSize.count) символов")
+
+        logger.debug("🎬 Этап 4: Замена YouTube iframe на внешний блок")
+        let htmlWithReplacedIframes = replaceYouTubeIframes(in: htmlWithFontSize, youtubeService: youtubeService)
+        logger.debug("📏 Размер после замены YouTube iframe: \(htmlWithReplacedIframes.count) символов")
+
+        return htmlWithReplacedIframes
+    }
+
+    func enrichHTMLContentWithVideoAndScripts(
+        _ html: String,
+        infopost: Infopost,
+        youtubeService: YouTubeVideoService
+    ) -> String {
+        logger.debug("🎬 Этап 5: Добавление day-видео YouTube")
+        let htmlWithYouTube = addYouTubeVideo(to: html, infopost: infopost, youtubeService: youtubeService)
+        logger.debug("📏 Размер после добавления day-видео: \(htmlWithYouTube.count) символов")
+
+        logger.debug("🎥 Этап 6: Добавление JS-обработчиков")
+        let finalHTML = addUniversalVideoHandler(to: htmlWithYouTube)
+        logger.debug("📏 Финальный размер HTML: \(finalHTML.count) символов")
+
+        return finalHTML
+    }
+
+    func insertBeforeFooterOrAppend(_ block: String, in html: String) -> String {
+        if html.contains("<footer>") {
+            logger.debug("✅ Найден тег <footer> в HTML, вставляем видео блок")
+            return html.replacingOccurrences(of: "<footer>", with: block + "<footer>")
+        }
+
+        logger.warning("⚠️ Тег <footer> не найден в HTML, добавляем видео блок в конец")
+        return html + block
+    }
+
     /// Очищает HTML контент от лишних элементов (как в старом приложении SOTKA-ObjC)
     /// - Parameter html: Исходное HTML содержимое
     /// - Returns: Очищенное HTML содержимое
@@ -343,30 +400,18 @@ private extension InfopostParser {
             logger.info("🎥 Найдено YouTube видео для дня \(dayNumber): \(video.url)")
             logger.debug("📺 Заголовок видео: \(video.title)")
 
-            // Создаем простой HTML блок с правильным контейнером для обработки ошибок
-            let videoBlock = """
-            <br><h2 class="video-title">&nbsp;&nbsp;&nbsp;&nbsp;\(video.title)</h2>
-            <div class="video-container">
-                <iframe src="\(video.url)" 
-                        frameborder="0" 
-                        allowfullscreen>
-                </iframe>
-            </div>
-            <br><br><footer>
-            """
-
-            // Проверяем, есть ли тег <footer> в HTML
-            if html.contains("<footer>") {
-                logger.debug("✅ Найден тег <footer> в HTML, вставляем видео блок")
-                let modifiedHTML = html.replacingOccurrences(of: "<footer>", with: videoBlock)
-                logger.info("🎬 YouTube видео успешно добавлено в HTML для дня \(dayNumber)")
-                return modifiedHTML
-            } else {
-                logger.warning("⚠️ Тег <footer> не найден в HTML, добавляем видео блок в конец")
-                let modifiedHTML = html + videoBlock
-                logger.info("🎬 YouTube видео добавлено в конец HTML для дня \(dayNumber)")
-                return modifiedHTML
+            guard let watchURL = Self.youtubeLinkNormalizer.normalizedWatchURL(from: video.url) else {
+                logger.warning("⚠️ Не удалось нормализовать ссылку YouTube для дня \(dayNumber): \(video.url)")
+                return html
             }
+
+            let displayTitle = youtubeService.dayDisplayTitle(for: video)
+            let videoBlock = Self
+                .lineBreakWithPadding + makeYouTubeExternalBlock(title: displayTitle, watchURL: watchURL, source: .day) + Self
+                .lineBreakWithPadding
+            let modifiedHTML = insertBeforeFooterOrAppend(videoBlock, in: html)
+            logger.info("🎬 YouTube видео успешно добавлено в HTML для дня \(dayNumber)")
+            return modifiedHTML
 
         } catch {
             logger.error("❌ Ошибка при получении YouTube видео для дня \(dayNumber): \(error.localizedDescription)")
@@ -380,45 +425,154 @@ private extension InfopostParser {
     func addUniversalVideoHandler(to html: String) -> String {
         logger.debug("🎥 Добавляем универсальный обработчик видео")
 
-        // Создаем скрипт для подключения перехватчика консоли
-        let consoleInterceptorScript = """
-        <script type="text/javascript" src="js/console_interceptor.js"></script>
-        """
-
-        // Создаем скрипт для подключения универсального обработчика видео
-        let videoHandlerScript = """
-        <script type="text/javascript" src="js/video_handler.js"></script>
-        """
-
-        // Создаем скрипт для подключения отслеживания скролла
-        let scrollTrackerScript = """
-        <script type="text/javascript" src="js/scroll_tracker.js"></script>
-        """
-
-        // Создаем скрипт для подключения обработчика размера шрифта
-        let fontSizeHandlerScript = """
-        <script type="text/javascript" src="js/font_size_handler.js"></script>
-        """
-
         // Добавляем скрипты в head, если он есть
         if html.contains("</head>") {
-            let scripts = consoleInterceptorScript + "\n" + videoHandlerScript + "\n" + scrollTrackerScript + "\n" + fontSizeHandlerScript
-            let modifiedHTML = html.replacingOccurrences(of: "</head>", with: "\(scripts)\n</head>")
-            logger
-                .debug(
-                    "✅ Универсальный обработчик видео, перехватчик консоли, отслеживание скролла и обработчик размера шрифта добавлены в head"
-                )
+            let modifiedHTML = html.replacingOccurrences(of: "</head>", with: "\(HTMLScriptConstants.injectedScripts)\n</head>")
+            logger.debug("✅ Перехватчик консоли, отслеживание скролла и обработчик размера шрифта добавлены в head")
             return modifiedHTML
         } else {
             // Если нет head, добавляем перед закрывающим тегом body
-            let scripts = consoleInterceptorScript + "\n" + videoHandlerScript + "\n" + scrollTrackerScript + "\n" + fontSizeHandlerScript
-            let modifiedHTML = html.replacingOccurrences(of: "</body>", with: "\(scripts)\n</body>")
-            logger
-                .debug(
-                    "✅ Универсальный обработчик видео, перехватчик консоли, отслеживание скролла и обработчик размера шрифта добавлены перед </body>"
-                )
+            let modifiedHTML = html.replacingOccurrences(of: "</body>", with: "\(HTMLScriptConstants.injectedScripts)\n</body>")
+            logger.debug("✅ Перехватчик консоли, отслеживание скролла и обработчик размера шрифта добавлены перед </body>")
             return modifiedHTML
         }
+    }
+
+    func replaceYouTubeIframes(in html: String, youtubeService: YouTubeVideoService) -> String {
+        guard let regex = Self.youtubeIframeRegex else {
+            logger.error("❌ Ошибка компиляции regex для поиска iframe")
+            return html
+        }
+
+        let matches = regex.matches(in: html, range: NSRange(html.startIndex ..< html.endIndex, in: html))
+        if matches.isEmpty {
+            return html
+        }
+
+        var modifiedHTML = html
+
+        for match in matches.reversed() {
+            guard let iframeRange = Range(match.range(at: 0), in: modifiedHTML),
+                  let srcRange = Range(match.range(at: 1), in: modifiedHTML) else {
+                continue
+            }
+
+            let iframeTag = String(modifiedHTML[iframeRange])
+            let sourceURL = String(modifiedHTML[srcRange]).replacingOccurrences(of: "&amp;", with: "&")
+
+            guard let watchURL = Self.youtubeLinkNormalizer.normalizedWatchURL(from: sourceURL) else {
+                continue
+            }
+
+            let rawTitle = extractAttribute(named: "title", in: iframeTag) ?? YouTubeHTMLConstants.defaultTitle
+            let fallbackTitle = youtubeService.getTitle(for: sourceURL)
+            let titleForRender = shouldRenderVideoTitle(normalizeVideoTitle(rawTitle))
+                ? rawTitle
+                : fallbackTitle
+            let replacement = makeYouTubeExternalBlock(title: titleForRender, watchURL: watchURL, source: .embedded)
+            modifiedHTML.replaceSubrange(iframeRange, with: replacement)
+        }
+
+        return modifiedHTML
+    }
+
+    private func makeYouTubeExternalBlock(title: String, watchURL: URL, source: VideoBlockSource) -> String {
+        let normalizedTitle = normalizeVideoTitle(title)
+        let titleBlock = renderTitleBlock(title: normalizedTitle)
+
+        let buttonTitle = escapeHTML(localizedText(forKey: YouTubeHTMLConstants.watchVideoLocalizationKey))
+        let hint = escapeHTML(localizedText(forKey: YouTubeHTMLConstants.openInBrowserLocalizationKey))
+        let watchURLString = watchURL.absoluteString
+        let encodedURL = percentEncodeQueryValue(watchURLString) ?? watchURLString
+        let externalLink = "sotka://youtube?url=\(encodedURL)"
+
+        return """
+        <div class="video-external-container" data-video-kind="youtube" data-video-source="\(source.rawValue)">
+        \(titleBlock)  <a class="video-external-link" href="\(externalLink)">
+            \(buttonTitle)
+          </a>
+          <div class="video-external-hint">\(hint)</div>
+        </div>
+        """
+    }
+
+    private func renderTitleBlock(title: String) -> String {
+        guard shouldRenderVideoTitle(title) else {
+            return ""
+        }
+
+        let safeTitle = escapeHTML(title)
+        return """
+          <div class="video-external-title">\(safeTitle)</div>
+
+        """
+    }
+
+    private func normalizeVideoTitle(_ title: String) -> String {
+        title
+            .replacingOccurrences(of: #"\s+"#, with: " ", options: .regularExpression)
+            .trimmingCharacters(in: .whitespacesAndNewlines)
+    }
+
+    private func shouldRenderVideoTitle(_ title: String) -> Bool {
+        guard !title.isEmpty else {
+            return false
+        }
+
+        let loweredTitle = title.lowercased()
+        return loweredTitle != YouTubeHTMLConstants.defaultTitle.lowercased()
+            && loweredTitle != YouTubeHTMLConstants.genericPlayerTitle.lowercased()
+    }
+
+    func extractAttribute(named attribute: String, in tag: String) -> String? {
+        let escapedAttribute = NSRegularExpression.escapedPattern(for: attribute)
+        let pattern = #"\b\#(escapedAttribute)\s*=\s*['"]([^'"]+)['"]"#
+        guard let regex = try? NSRegularExpression(pattern: pattern, options: [.caseInsensitive]) else {
+            return nil
+        }
+
+        let range = NSRange(tag.startIndex ..< tag.endIndex, in: tag)
+        guard let match = regex.firstMatch(in: tag, range: range),
+              let valueRange = Range(match.range(at: 1), in: tag) else {
+            return nil
+        }
+
+        return String(tag[valueRange])
+    }
+
+    func percentEncodeQueryValue(_ value: String) -> String? {
+        let allowedCharacters = CharacterSet(charactersIn: "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789-._~")
+        return value.addingPercentEncoding(withAllowedCharacters: allowedCharacters)
+    }
+
+    func escapeHTML(_ text: String) -> String {
+        text
+            .replacingOccurrences(of: "&", with: "&amp;")
+            .replacingOccurrences(of: "\"", with: "&quot;")
+            .replacingOccurrences(of: "'", with: "&#39;")
+            .replacingOccurrences(of: "<", with: "&lt;")
+            .replacingOccurrences(of: ">", with: "&gt;")
+    }
+
+    func localizedText(forKey key: String) -> String {
+        guard let localizationPath = Bundle.main.path(forResource: language, ofType: "lproj"),
+              let localizationBundle = Bundle(path: localizationPath) else {
+            return NSLocalizedString(
+                key,
+                tableName: nil,
+                bundle: Bundle.main,
+                value: key,
+                comment: ""
+            )
+        }
+
+        return NSLocalizedString(
+            key,
+            tableName: nil,
+            bundle: localizationBundle,
+            value: key,
+            comment: ""
+        )
     }
 
     /// Исправляет пути к изображениям в HTML контенте (встроенная версия)

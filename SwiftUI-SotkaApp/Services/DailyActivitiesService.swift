@@ -346,6 +346,21 @@ final class DailyActivitiesService {
     /// - Returns: Результат синхронизации с детальной информацией
     func syncDailyActivities(context: ModelContext) async throws -> SyncResult {
         logger.info("[sync] Начинаем синхронизацию активностей")
+
+        if let user = try? context.fetch(FetchDescriptor<User>()).first, user.isOfflineOnly {
+            let emptyStats = SyncStats(created: 0, updated: 0, deleted: 0)
+            logger.info("[sync] Офлайн-пользователь: сетевой sync активностей пропущен")
+            return SyncResult(
+                type: SyncResultType(errors: nil, stats: emptyStats),
+                details: SyncResultDetails(
+                    progress: nil,
+                    exercises: nil,
+                    activities: emptyStats,
+                    errors: nil
+                )
+            )
+        }
+
         guard !isLoading else {
             throw AlreadySyncingError()
         }

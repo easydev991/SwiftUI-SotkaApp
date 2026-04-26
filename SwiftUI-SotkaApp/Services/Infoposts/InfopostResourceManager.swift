@@ -3,32 +3,47 @@ import OSLog
 
 /// Сервис для управления ресурсами инфопостов (CSS, JS, изображения)
 struct InfopostResourceManager {
+    private static let tempDirectoryLock = NSLock()
     private let logger = Logger(subsystem: Bundle.sotkaAppBundleId, category: String(describing: InfopostResourceManager.self))
 
     /// Создает временную директорию для инфопоста
     /// - Returns: URL временной директории или nil в случае ошибки
     func createTempDirectory() -> URL? {
+        Self.tempDirectoryLock.lock()
+        defer { Self.tempDirectoryLock.unlock() }
+
         let fileManager = FileManager.default
-        let tempDirectory = fileManager.temporaryDirectory.appendingPathComponent("infopost_preview")
+        let tempDirectory = fileManager.temporaryDirectory.appendingPathComponent("infopost_preview", isDirectory: true)
 
         // Удаляем существующую директорию если есть
-        if fileManager.fileExists(atPath: tempDirectory.path) {
+        var isDirectory = ObjCBool(false)
+        if fileManager.fileExists(atPath: tempDirectory.path, isDirectory: &isDirectory) {
             do {
                 try fileManager.removeItem(at: tempDirectory)
                 logger.debug("🗑️ Удалена существующая временная директория")
             } catch {
                 logger.warning("⚠️ Не удалось удалить существующую директорию: \(error.localizedDescription)")
             }
+        } else if isDirectory.boolValue == false {
+            logger.debug("📁 Временная директория отсутствует, создаем заново")
         }
 
-        do {
-            try fileManager.createDirectory(at: tempDirectory, withIntermediateDirectories: true)
-            logger.debug("✅ Создана временная директория: \(tempDirectory.path)")
-            return tempDirectory
-        } catch {
-            logger.error("❌ Ошибка создания временной директории: \(error.localizedDescription)")
-            return nil
+        // Повторяем попытку создания каталога несколько раз, чтобы пережить
+        // редкие гонки файловой системы в параллельных тестах.
+        for attempt in 1 ... 3 {
+            do {
+                try fileManager.createDirectory(at: tempDirectory, withIntermediateDirectories: true)
+                logger.debug("✅ Создана временная директория: \(tempDirectory.path)")
+                return tempDirectory
+            } catch {
+                logger.error("❌ Ошибка создания временной директории (попытка \(attempt)): \(error.localizedDescription)")
+                if attempt < 3 {
+                    Thread.sleep(forTimeInterval: 0.05)
+                }
+            }
         }
+
+        return nil
     }
 
     /// Копирует все необходимые ресурсы в временную директорию

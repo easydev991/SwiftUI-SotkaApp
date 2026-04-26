@@ -5,9 +5,9 @@ import UserNotifications
 
 extension WorkoutScreenViewModelTests {
     @Suite("Тесты для completeCurrentStep и handleTimerFinish")
+    @MainActor
     struct StepCompletionTests {
         @Test("Должен завершать текущий этап, показывать таймер и планировать уведомление, НЕ обновляя состояние следующего этапа")
-        @MainActor
         func completeCurrentStep() async throws {
             let viewModel = WorkoutScreenViewModel()
             let trainings = [
@@ -40,7 +40,6 @@ extension WorkoutScreenViewModelTests {
         }
 
         @Test("Должен завершать последний этап (coolDown), не показывать таймер и не планировать уведомление")
-        @MainActor
         func completeCurrentStepForLastStep() async throws {
             let viewModel = WorkoutScreenViewModel()
             let trainings = [
@@ -77,7 +76,6 @@ extension WorkoutScreenViewModelTests {
         @Test(
             "Должен отменять уведомление, скрывать таймер, учитывать время отдыха, обновлять состояние следующего этапа, воспроизводить звук/вибрацию и продолжать тренировку"
         )
-        @MainActor
         func handleTimerFinish() async throws {
             let viewModel = WorkoutScreenViewModel()
             let trainings = [
@@ -134,7 +132,6 @@ extension WorkoutScreenViewModelTests {
         }
 
         @Test("Должен НЕ показывать таймер отдыха после warmUp")
-        @MainActor
         func completeCurrentStepDoesNotShowTimerAfterWarmUp() async throws {
             let viewModel = WorkoutScreenViewModel()
             let trainings = [
@@ -169,7 +166,6 @@ extension WorkoutScreenViewModelTests {
         }
 
         @Test("Должен НЕ показывать таймер отдыха перед coolDown")
-        @MainActor
         func completeCurrentStepDoesNotShowTimerBeforeCoolDown() async throws {
             let viewModel = WorkoutScreenViewModel()
             let trainings = [
@@ -205,7 +201,6 @@ extension WorkoutScreenViewModelTests {
         }
 
         @Test("Должен показывать таймер отдыха после обычного круга")
-        @MainActor
         func completeCurrentStepShowsTimerAfterRegularStep() async throws {
             let viewModel = WorkoutScreenViewModel()
             let trainings = [
@@ -238,7 +233,6 @@ extension WorkoutScreenViewModelTests {
         @Test(
             "Должен отменять уведомление, скрывать таймер, учитывать время отдыха, обновлять состояние следующего этапа, воспроизводить звук/вибрацию при force = false"
         )
-        @MainActor
         func handleTimerFinishWithForceFalse() async throws {
             let viewModel = WorkoutScreenViewModel()
             let trainings = [
@@ -297,7 +291,6 @@ extension WorkoutScreenViewModelTests {
         @Test(
             "Должен отменять уведомление, скрывать таймер, учитывать время отдыха, обновлять состояние следующего этапа, НЕ воспроизводить звук/вибрацию при force = true"
         )
-        @MainActor
         func handleTimerFinishWithForceTrue() async throws {
             let viewModel = WorkoutScreenViewModel()
             let trainings = [

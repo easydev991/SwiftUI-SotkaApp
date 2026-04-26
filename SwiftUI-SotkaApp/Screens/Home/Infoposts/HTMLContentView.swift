@@ -1,5 +1,6 @@
 import OSLog
 import SwiftUI
+import UIKit
 import WebKit
 
 /// Компонент для отображения HTML контента с использованием WKWebView
@@ -58,7 +59,11 @@ struct HTMLContentView: UIViewRepresentable, @preconcurrency Equatable {
         return webView
     }
 
-    func updateUIView(_ webView: WKWebView, context _: Context) {
+    func updateUIView(_ webView: WKWebView, context: Context) {
+        let reloadKey = "\(infopost.id)-\(filename)-\(fontSize.rawValue)"
+        guard context.coordinator.shouldReloadContent(for: reloadKey, currentURL: webView.url) else {
+            return
+        }
         loadContent(in: webView)
     }
 
@@ -71,10 +76,21 @@ struct HTMLContentView: UIViewRepresentable, @preconcurrency Equatable {
             subsystem: "SotkaApp",
             category: String(describing: Coordinator.self)
         )
+        private let externalURLRouter: InfopostExternalURLRouter
+        private let openExternalURL: (URL) -> Void
         private let onReachedEnd: () -> Void
+        private var lastReloadKey: String?
 
-        init(onReachedEnd: @escaping () -> Void) {
+        init(
+            onReachedEnd: @escaping () -> Void,
+            externalURLRouter: InfopostExternalURLRouter = .init(),
+            openExternalURL: @escaping (URL) -> Void = { url in
+                UIApplication.shared.open(url)
+            }
+        ) {
             self.onReachedEnd = onReachedEnd
+            self.externalURLRouter = externalURLRouter
+            self.openExternalURL = openExternalURL
         }
 
         func webView(_: WKWebView, didFinish _: WKNavigation!) {
@@ -94,20 +110,7 @@ struct HTMLContentView: UIViewRepresentable, @preconcurrency Equatable {
             decidePolicyFor navigationAction: WKNavigationAction
         ) async -> WKNavigationActionPolicy {
             logger.debug("🌐 Решение о навигации: \(navigationAction.request.url?.absoluteString ?? "nil")")
-
-            // Разрешаем все навигационные действия для локальных файлов
-            if let url = navigationAction.request.url {
-                if url.isFileURL {
-                    logger.debug("🌐 Разрешаем навигацию к локальному файлу: \(url.path)")
-                    return .allow
-                }
-
-                // Для внешних ссылок можем добавить дополнительную логику
-                logger.debug("🌐 Внешняя ссылка: \(url.absoluteString)")
-            }
-
-            // По умолчанию разрешаем навигацию
-            return .allow
+            return await navigationPolicy(for: navigationAction.request.url)
         }
 
         func webView(
@@ -145,6 +148,44 @@ struct HTMLContentView: UIViewRepresentable, @preconcurrency Equatable {
             default:
                 logger.debug("🔵 JS: неизвестное сообщение от \(message.name)")
             }
+        }
+
+        func navigationPolicy(for requestURL: URL?) async -> WKNavigationActionPolicy {
+            if let requestURL, requestURL.isFileURL {
+                logger.debug("🌐 Разрешаем навигацию к локальному файлу: \(requestURL.path)")
+                return .allow
+            }
+
+            switch externalURLRouter.decision(for: requestURL) {
+            case .allow:
+                if let requestURL {
+                    logger.debug("🌐 Внешняя ссылка: \(requestURL.absoluteString)")
+                }
+                return .allow
+            case .cancel:
+                logger.warning("🌐 Отменяем некорректную внешнюю ссылку: \(requestURL?.absoluteString ?? "nil")")
+                return .cancel
+            case let .openExternally(externalURL):
+                await MainActor.run {
+                    openExternalURL(externalURL)
+                }
+                logger.info("🌐 Открываем ссылку во внешнем браузере: \(externalURL.absoluteString)")
+                return .cancel
+            }
+        }
+
+        func shouldReloadContent(for key: String, currentURL: URL?) -> Bool {
+            if currentURL == nil {
+                lastReloadKey = key
+                return true
+            }
+
+            if lastReloadKey == key {
+                return false
+            }
+
+            lastReloadKey = key
+            return true
         }
     }
 }

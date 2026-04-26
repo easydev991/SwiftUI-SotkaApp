@@ -4,9 +4,9 @@ import Testing
 
 extension WorkoutPreviewViewModelTests {
     @Suite("Тесты для updateTrainings")
+    @MainActor
     struct UpdateTrainingsTests {
         @Test("Должен обновлять список упражнений")
-        @MainActor
         func updatesTrainingsList() {
             let viewModel = WorkoutPreviewViewModel()
             viewModel.trainings = [
@@ -24,7 +24,6 @@ extension WorkoutPreviewViewModelTests {
         }
 
         @Test("Должен пересчитывать sortOrder на основе порядка в массиве")
-        @MainActor
         func recalculatesSortOrderBasedOnArrayOrder() throws {
             let viewModel = WorkoutPreviewViewModel()
 
@@ -46,7 +45,6 @@ extension WorkoutPreviewViewModelTests {
         }
 
         @Test("Должен сохранять id упражнений при обновлении")
-        @MainActor
         func preservesExerciseIdsWhenUpdating() {
             let viewModel = WorkoutPreviewViewModel()
 
@@ -61,7 +59,6 @@ extension WorkoutPreviewViewModelTests {
         }
 
         @Test("Должен сохранять count упражнений при обновлении")
-        @MainActor
         func preservesExerciseCountsWhenUpdating() throws {
             let viewModel = WorkoutPreviewViewModel()
 
@@ -80,7 +77,6 @@ extension WorkoutPreviewViewModelTests {
         }
 
         @Test("Должен обрабатывать пустой список упражнений")
-        @MainActor
         func handlesEmptyTrainingsList() {
             let viewModel = WorkoutPreviewViewModel()
             viewModel.trainings = [

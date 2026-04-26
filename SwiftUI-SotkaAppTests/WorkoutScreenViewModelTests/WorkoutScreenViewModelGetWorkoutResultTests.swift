@@ -5,9 +5,9 @@ import UserNotifications
 
 extension WorkoutScreenViewModelTests {
     @Suite("Тесты для getWorkoutResult")
+    @MainActor
     struct GetWorkoutResultTests {
         @Test("Должен возвращать результат для полной тренировки типа 'круги'")
-        @MainActor
         func getWorkoutResultForCompleteCyclesWorkout() async throws {
             let viewModel = WorkoutScreenViewModel()
             let trainings = [
@@ -67,7 +67,6 @@ extension WorkoutScreenViewModelTests {
         }
 
         @Test("Должен возвращать nil для незавершенной тренировки")
-        @MainActor
         func getWorkoutResultForIncompleteWorkout() async throws {
             let viewModel = WorkoutScreenViewModel()
             let trainings = [
@@ -108,7 +107,6 @@ extension WorkoutScreenViewModelTests {
         }
 
         @Test("Должен правильно подсчитывать количество подходов для типа 'подходы'")
-        @MainActor
         func getWorkoutResultForSets() throws {
             let viewModel = WorkoutScreenViewModel()
             let trainings = [
@@ -144,7 +142,6 @@ extension WorkoutScreenViewModelTests {
         }
 
         @Test("Должен возвращать duration = nil, если время начала не засечено")
-        @MainActor
         func getWorkoutResultWithoutStartTime() throws {
             let viewModel = WorkoutScreenViewModel()
             let trainings = [
@@ -181,7 +178,6 @@ extension WorkoutScreenViewModelTests {
         }
 
         @Test("Должен правильно подсчитывать количество кругов для типа 'турбо'")
-        @MainActor
         func getWorkoutResultForTurbo() throws {
             let viewModel = WorkoutScreenViewModel()
             let trainings = [
@@ -214,7 +210,6 @@ extension WorkoutScreenViewModelTests {
         }
 
         @Test("Должен возвращать count = 0 при прерывании, если не выполнено ни одного упражнения")
-        @MainActor
         func getWorkoutResultWithInterruptWhenNoExercisesCompleted() async throws {
             let viewModel = WorkoutScreenViewModel()
             let trainings = [
@@ -253,7 +248,6 @@ extension WorkoutScreenViewModelTests {
         }
 
         @Test("Должен возвращать количество выполненных упражнений при прерывании")
-        @MainActor
         func getWorkoutResultWithInterruptWhenSomeExercisesCompleted() throws {
             let viewModel = WorkoutScreenViewModel()
             let trainings = [
@@ -290,7 +284,6 @@ extension WorkoutScreenViewModelTests {
         }
 
         @Test("Должен вычислять длительность при прерывании")
-        @MainActor
         func getWorkoutResultWithInterruptWithDuration() throws {
             let viewModel = WorkoutScreenViewModel()
             let trainings = [
@@ -330,7 +323,6 @@ extension WorkoutScreenViewModelTests {
         }
 
         @Test("Должен возвращать duration = nil при прерывании, если время начала не засечено")
-        @MainActor
         func getWorkoutResultWithInterruptWithoutStartTime() throws {
             let viewModel = WorkoutScreenViewModel()
             let trainings = [
@@ -367,7 +359,6 @@ extension WorkoutScreenViewModelTests {
         }
 
         @Test("Должен работать как раньше при interrupt = false")
-        @MainActor
         func getWorkoutResultWithoutInterruptStillWorksAsBefore() async throws {
             let viewModel = WorkoutScreenViewModel()
             let trainings = [
@@ -408,7 +399,6 @@ extension WorkoutScreenViewModelTests {
         }
 
         @Test("Для executionType = .sets и interrupt = true должен возвращать WorkoutResult с count = plannedCount")
-        @MainActor
         func getWorkoutResultForSetsWithInterruptShouldReturnPlannedCount() async throws {
             let viewModel = WorkoutScreenViewModel()
             let trainings = [
@@ -463,7 +453,6 @@ extension WorkoutScreenViewModelTests {
         @Test(
             "Для executionType = .sets и interrupt = false должен возвращать WorkoutResult с count равным количеству всех этапов упражнений"
         )
-        @MainActor
         func getWorkoutResultForSetsWithoutInterruptShouldReturnAllSteps() throws {
             let viewModel = WorkoutScreenViewModel()
             let trainings = [
@@ -499,7 +488,6 @@ extension WorkoutScreenViewModelTests {
         }
 
         @Test("Для executionType = .cycles и interrupt = true должен возвращать WorkoutResult с count равным количеству завершенных этапов")
-        @MainActor
         func getWorkoutResultForCyclesWithInterruptShouldReturnCompletedSteps() throws {
             let viewModel = WorkoutScreenViewModel()
             let trainings = [
@@ -540,7 +528,6 @@ extension WorkoutScreenViewModelTests {
         @Test(
             "Для executionType = .cycles и interrupt = false должен возвращать WorkoutResult с count равным количеству всех этапов упражнений"
         )
-        @MainActor
         func getWorkoutResultForCyclesWithoutInterruptShouldReturnAllSteps() throws {
             let viewModel = WorkoutScreenViewModel()
             let trainings = [
@@ -575,7 +562,6 @@ extension WorkoutScreenViewModelTests {
         }
 
         @Test("Для executionType = .turbo с подходами и interrupt = true должен возвращать WorkoutResult с count = plannedCount")
-        @MainActor
         func getWorkoutResultForTurboWithSetsAndInterruptShouldReturnPlannedCount() async throws {
             let viewModel = WorkoutScreenViewModel()
             let trainings = [
@@ -627,7 +613,6 @@ extension WorkoutScreenViewModelTests {
         @Test(
             "Для executionType = .turbo с кругами и interrupt = true должен возвращать WorkoutResult с count равным количеству завершенных этапов"
         )
-        @MainActor
         func getWorkoutResultForTurboWithCyclesAndInterruptShouldReturnCompletedSteps() throws {
             let viewModel = WorkoutScreenViewModel()
             let trainings = [
