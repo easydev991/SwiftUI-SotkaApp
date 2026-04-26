@@ -1359,3 +1359,54 @@ img.bbcode_img {
 .post-body-text{
 	font-size: 30px;
 }
+/* External video link block */
+.video-external-container[data-video-kind="youtube"] {
+    margin: 20px auto;
+    padding: 16px;
+    border-radius: 12px;
+    border: 1px solid rgba(0, 0, 0, 0.15);
+    background-color: rgba(0, 0, 0, 0.04);
+    text-align: center;
+}
+
+.video-external-title {
+    margin-bottom: 10px;
+    font-weight: 700;
+    line-height: 1.4;
+}
+
+.video-external-link {
+    display: inline-block;
+    padding: 10px 18px;
+    border-radius: 8px;
+    text-decoration: none;
+    font-weight: 700;
+    color: #fff !important;
+    background-color: #d50000;
+}
+
+.video-external-link:hover {
+    opacity: 0.9;
+}
+
+.video-external-hint {
+    margin-top: 10px;
+    font-size: 0.9em;
+    opacity: 0.75;
+}
+
+@media (prefers-color-scheme: dark) {
+    .video-external-container[data-video-kind="youtube"] {
+        border-color: rgba(255, 255, 255, 0.2);
+        background-color: rgba(255, 255, 255, 0.08);
+    }
+
+    .video-external-link {
+        color: #fff !important;
+        background-color: #ff2e2e;
+    }
+
+    .video-external-hint {
+        opacity: 0.85;
+    }
+}

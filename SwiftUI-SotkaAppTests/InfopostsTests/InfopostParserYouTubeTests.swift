@@ -7,7 +7,7 @@ extension AllInfopostsTests {
         private let youtubeService = YouTubeVideoService(analytics: AnalyticsService(providers: [NoopAnalyticsProvider()]))
 
         @Test
-        func prepareHTMLForDisplayWithYouTubeVideo() {
+        func prepareHTMLForDisplayWithDayVideoUsesExternalBlock() {
             // Given
             let htmlContent = """
             <html>
@@ -39,15 +39,17 @@ extension AllInfopostsTests {
             )
 
             // Then
-            #expect(modifiedHTML.contains("youtube.com"))
-            #expect(modifiedHTML.contains("iframe"))
+            #expect(!modifiedHTML.contains("<iframe"))
+            #expect(modifiedHTML.contains("video-external-container"))
+            #expect(modifiedHTML.contains("data-video-kind=\"youtube\""))
+            #expect(modifiedHTML.contains("sotka://youtube?url="))
+            #expect(modifiedHTML.contains("Смотреть видео"))
+            #expect(modifiedHTML.contains("Откроется в браузере"))
             #expect(modifiedHTML.contains("#моястодневка от Антона Кучумова"))
-            #expect(modifiedHTML.contains("video-container"))
-            #expect(modifiedHTML.contains("script"))
         }
 
         @Test
-        func prepareHTMLForDisplayWithoutYouTubeVideo() {
+        func prepareHTMLForDisplayWithoutDayVideoKeepsContentWithoutInjectedYouTubeBlock() {
             // Given
             let htmlContent = """
             <html>
@@ -79,13 +81,12 @@ extension AllInfopostsTests {
             )
 
             // Then
-            #expect(!modifiedHTML.contains("youtube.com"))
-            #expect(!modifiedHTML.contains("iframe"))
-            #expect(!modifiedHTML.contains("#моястодневка от Антона Кучумова"))
+            #expect(!modifiedHTML.contains("sotka://youtube?url="))
+            #expect(!modifiedHTML.contains("video-external-container"))
         }
 
         @Test
-        func prepareHTMLForDisplayWithZeroDayNumber() {
+        func prepareHTMLForDisplayWithZeroDayNumberDoesNotInjectVideo() {
             // Given
             let htmlContent = """
             <html>
@@ -117,19 +118,20 @@ extension AllInfopostsTests {
             )
 
             // Then
-            #expect(!modifiedHTML.contains("youtube.com"))
+            #expect(!modifiedHTML.contains("sotka://youtube?url="))
+            #expect(!modifiedHTML.contains("video-external-container"))
         }
 
         @Test
-        func youTubeVideoBlockStructure() {
+        func prepareHTMLForDisplayAddsScriptsWithoutLegacyVideoHandler() {
             // Given
             let htmlContent = """
             <html>
+            <head></head>
             <body>
             <div class="text post-body-text">
             <p>Контент инфопоста</p>
             </div>
-            <footer></footer>
             </body>
             </html>
             """
@@ -153,55 +155,14 @@ extension AllInfopostsTests {
             )
 
             // Then
-            // Проверяем структуру YouTube блока
-            #expect(modifiedHTML.contains("<h2 class=\"video-title\">&nbsp;&nbsp;&nbsp;&nbsp;#моястодневка от Антона Кучумова</h2>"))
-            #expect(modifiedHTML.contains("video-container"))
-            #expect(modifiedHTML.contains("frameborder=\"0\""))
-            #expect(modifiedHTML.contains("allowfullscreen"))
-            #expect(modifiedHTML.contains("iframe"))
-        }
-
-        @Test
-        func javaScriptErrorHandling() {
-            // Given
-            let htmlContent = """
-            <html>
-            <body>
-            <div class="text post-body-text">
-            <p>Контент инфопоста</p>
-            </div>
-            <footer></footer>
-            </body>
-            </html>
-            """
-
-            let infopost = Infopost(
-                id: "d1",
-                title: "День 1",
-                content: htmlContent,
-                section: .base,
-                dayNumber: 1,
-                language: "ru"
-            )
-
-            // When
-            let parser = InfopostParser(filename: "d1", language: "ru")
-            let modifiedHTML = parser.prepareHTMLForDisplay(
-                htmlContent,
-                fontSize: .medium,
-                infopost: infopost,
-                youtubeService: youtubeService
-            )
-
-            // Then
-            // Проверяем, что добавлены скрипты для обработки видео
-            #expect(modifiedHTML.contains("video_handler.js"))
             #expect(modifiedHTML.contains("console_interceptor.js"))
-            #expect(modifiedHTML.contains("script"))
+            #expect(modifiedHTML.contains("scroll_tracker.js"))
+            #expect(modifiedHTML.contains("font_size_handler.js"))
+            #expect(!modifiedHTML.contains("video_handler.js"))
         }
 
         @Test
-        func multipleYouTubeVideosInHTML() {
+        func dayVideoBlockIsAddedAtBottomOfArticle() throws {
             // Given
             let htmlContent = """
             <html>
@@ -209,7 +170,6 @@ extension AllInfopostsTests {
             <div class="text post-body-text">
             <p>Контент инфопоста</p>
             </div>
-            <footer></footer>
             </body>
             </html>
             """
@@ -233,10 +193,45 @@ extension AllInfopostsTests {
             )
 
             // Then
-            // Проверяем, что добавлен YouTube блок для дня 5
-            #expect(modifiedHTML.contains("youtube.com"))
-            #expect(modifiedHTML.contains("iframe"))
-            #expect(modifiedHTML.contains("video-container"))
+            let contentIndex = try #require(modifiedHTML.range(of: "Контент инфопоста")?.lowerBound)
+            let blockIndex = try #require(modifiedHTML.range(of: "video-external-container")?.lowerBound)
+            #expect(blockIndex > contentIndex)
+        }
+
+        @Test
+        func externalBlockUsesEnglishLocalizationForEnglishParserLanguage() {
+            // Given
+            let htmlContent = """
+            <html>
+            <body>
+            <div class="text post-body-text">
+            <iframe src="https://www.youtube.com/embed/OM0m9CEjq2Y"></iframe>
+            </div>
+            </body>
+            </html>
+            """
+
+            let infopost = Infopost(
+                id: "d1",
+                title: "Day 1",
+                content: htmlContent,
+                section: .base,
+                dayNumber: nil,
+                language: "en"
+            )
+
+            // When
+            let parser = InfopostParser(filename: "d1", language: "en")
+            let modifiedHTML = parser.prepareHTMLForDisplay(
+                htmlContent,
+                fontSize: .medium,
+                infopost: infopost,
+                youtubeService: youtubeService
+            )
+
+            // Then
+            #expect(modifiedHTML.contains("Watch video"))
+            #expect(modifiedHTML.contains("Opens in browser"))
         }
     }
 }
