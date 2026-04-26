@@ -5,9 +5,9 @@ import UserNotifications
 
 extension WorkoutScreenViewModelTests {
     @Suite("Тесты для checkAndHandleExpiredRestTimer")
+    @MainActor
     struct ExpiredTimerTests {
         @Test("Должен ничего не делать, если таймер не показывается")
-        @MainActor
         func checkAndHandleExpiredRestTimerWhenTimerNotShowing() throws {
             let viewModel = WorkoutScreenViewModel()
             let trainings = [
@@ -38,7 +38,6 @@ extension WorkoutScreenViewModelTests {
         }
 
         @Test("Должен ничего не делать, если время начала отдыха не установлено")
-        @MainActor
         func checkAndHandleExpiredRestTimerWhenRestStartTimeIsNil() throws {
             let viewModel = WorkoutScreenViewModel()
             let trainings = [
@@ -72,7 +71,6 @@ extension WorkoutScreenViewModelTests {
         }
 
         @Test("Должен ничего не делать, если таймер еще не истек")
-        @MainActor
         func checkAndHandleExpiredRestTimerWhenTimerNotExpired() throws {
             let viewModel = WorkoutScreenViewModel()
             let trainings = [
@@ -106,7 +104,6 @@ extension WorkoutScreenViewModelTests {
         }
 
         @Test("Должен закрыть таймер и обновить состояние, если таймер истек")
-        @MainActor
         func checkAndHandleExpiredRestTimerWhenTimerExpired() async throws {
             let viewModel = WorkoutScreenViewModel()
             let trainings = [
@@ -148,7 +145,6 @@ extension WorkoutScreenViewModelTests {
         }
 
         @Test("Должен закрыть таймер точно в момент истечения")
-        @MainActor
         func checkAndHandleExpiredRestTimerExactlyAtExpiration() throws {
             let viewModel = WorkoutScreenViewModel()
             let trainings = [
@@ -183,7 +179,6 @@ extension WorkoutScreenViewModelTests {
         }
 
         @Test("Должен предотвращать двойное добавление времени отдыха при повторном вызове handleTimerFinish после программного закрытия")
-        @MainActor
         func handleTimerFinishShouldNotAddRestTimeTwiceAfterProgrammaticDismiss() throws {
             let viewModel = WorkoutScreenViewModel()
             let trainings = [
@@ -228,7 +223,6 @@ extension WorkoutScreenViewModelTests {
         }
 
         @Test("Должен игнорировать повторный вызов handleTimerFinish когда currentRestStartTime == nil")
-        @MainActor
         func handleTimerFinishShouldIgnoreWhenRestStartTimeIsNil() throws {
             let viewModel = WorkoutScreenViewModel()
             let trainings = [
@@ -265,7 +259,6 @@ extension WorkoutScreenViewModelTests {
         }
 
         @Test("Должен вызываться только один раз при открытии приложения после истечения таймера")
-        @MainActor
         func handleTimerFinishShouldBeCalledOnlyOnceWhenAppOpensAfterTimerExpired() throws {
             let viewModel = WorkoutScreenViewModel()
             let trainings = [

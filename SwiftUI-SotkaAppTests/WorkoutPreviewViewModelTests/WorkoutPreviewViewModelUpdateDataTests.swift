@@ -5,9 +5,9 @@ import Testing
 
 extension WorkoutPreviewViewModelTests {
     @Suite("Тесты для updateData")
+    @MainActor
     struct UpdateDataTests {
         @Test("Должен загружать существующую активность из базы данных в простые модели")
-        @MainActor
         func loadsExistingActivityFromDatabase() throws {
             let container = try ModelContainer(
                 for: DayActivity.self,
@@ -69,7 +69,6 @@ extension WorkoutPreviewViewModelTests {
         }
 
         @Test("Должен инициализировать пустые значения если активность не существует")
-        @MainActor
         func initializesEmptyValuesIfActivityDoesNotExist() throws {
             let container = try ModelContainer(
                 for: DayActivity.self,
@@ -98,7 +97,6 @@ extension WorkoutPreviewViewModelTests {
         }
 
         @Test("Должен игнорировать активность с типом отличным от workout")
-        @MainActor
         func ignoresActivityWithNonWorkoutType() throws {
             let container = try ModelContainer(
                 for: DayActivity.self,
@@ -136,7 +134,6 @@ extension WorkoutPreviewViewModelTests {
         }
 
         @Test("Должен определять доступные типы выполнения для дня 50-91")
-        @MainActor
         func determinesAvailableExecutionTypesForDays50To91() throws {
             let container = try ModelContainer(
                 for: DayActivity.self,
@@ -164,7 +161,6 @@ extension WorkoutPreviewViewModelTests {
         }
 
         @Test("Должен определять доступные типы выполнения для дня 92-98")
-        @MainActor
         func determinesAvailableExecutionTypesForDays92To98() throws {
             let container = try ModelContainer(
                 for: DayActivity.self,
@@ -193,7 +189,6 @@ extension WorkoutPreviewViewModelTests {
         }
 
         @Test("Должен устанавливать тип выполнения по умолчанию для дня 50")
-        @MainActor
         func setsDefaultExecutionTypeForDay50() throws {
             let container = try ModelContainer(
                 for: DayActivity.self,
@@ -220,7 +215,6 @@ extension WorkoutPreviewViewModelTests {
         }
 
         @Test("Должен устанавливать тип выполнения по умолчанию для дня 92")
-        @MainActor
         func setsDefaultExecutionTypeForDay92() throws {
             let container = try ModelContainer(
                 for: DayActivity.self,
@@ -247,7 +241,6 @@ extension WorkoutPreviewViewModelTests {
         }
 
         @Test("Должен устанавливать wasOriginallyPassed в true для существующей тренировки")
-        @MainActor
         func setsWasOriginallyPassedToTrueForExistingTraining() throws {
             let container = try ModelContainer(
                 for: DayActivity.self,
@@ -286,7 +279,6 @@ extension WorkoutPreviewViewModelTests {
         }
 
         @Test("Должен устанавливать wasOriginallyPassed в false для новой тренировки")
-        @MainActor
         func setsWasOriginallyPassedToFalseForNewTraining() throws {
             let container = try ModelContainer(
                 for: DayActivity.self,
@@ -312,7 +304,6 @@ extension WorkoutPreviewViewModelTests {
         }
 
         @Test("Должен сохранять count неизменным при смене типа для новой тренировки")
-        @MainActor
         func preservesCountWhenChangingTypeForNewTraining() throws {
             let container = try ModelContainer(
                 for: DayActivity.self,
@@ -341,7 +332,6 @@ extension WorkoutPreviewViewModelTests {
         }
 
         @Test("Должен сохранять count неизменным при смене типа для существующей тренировки")
-        @MainActor
         func preservesCountWhenChangingTypeForExistingTraining() throws {
             let container = try ModelContainer(
                 for: DayActivity.self,
@@ -385,7 +375,6 @@ extension WorkoutPreviewViewModelTests {
         }
 
         @Test("Должен преобразовывать DayActivityTraining в WorkoutPreviewTraining")
-        @MainActor
         func convertsDayActivityTrainingToWorkoutPreviewTraining() throws {
             let container = try ModelContainer(
                 for: DayActivity.self,
@@ -440,7 +429,6 @@ extension WorkoutPreviewViewModelTests {
         }
 
         @Test("Должен обновлять данные если dayNumber не совпадает с day")
-        @MainActor
         func updatesDataIfDayNumberDoesNotMatch() throws {
             let container = try ModelContainer(
                 for: DayActivity.self,
@@ -470,7 +458,6 @@ extension WorkoutPreviewViewModelTests {
         }
 
         @Test("Должен обновлять данные если trainings пустой")
-        @MainActor
         func updatesDataIfTrainingsIsEmpty() throws {
             let container = try ModelContainer(
                 for: DayActivity.self,
@@ -498,7 +485,6 @@ extension WorkoutPreviewViewModelTests {
         }
 
         @Test("Не должен обновлять данные если dayNumber совпадает и trainings не пустой")
-        @MainActor
         func doesNotUpdateDataIfDayNumberMatchesAndTrainingsNotEmpty() throws {
             let container = try ModelContainer(
                 for: DayActivity.self,
@@ -537,7 +523,6 @@ extension WorkoutPreviewViewModelTests {
         }
 
         @Test("Для новой тренировки использует предыдущую по day, а не по modifyDate")
-        @MainActor
         func usesPreviousWorkoutByDayNotModifyDate() throws {
             let container = try ModelContainer(
                 for: DayActivity.self,
@@ -594,7 +579,6 @@ extension WorkoutPreviewViewModelTests {
         }
 
         @Test("Для новой тренировки не использует записи из будущих дней")
-        @MainActor
         func ignoresFutureDaysWhenPrefillingWorkout() throws {
             let container = try ModelContainer(
                 for: DayActivity.self,

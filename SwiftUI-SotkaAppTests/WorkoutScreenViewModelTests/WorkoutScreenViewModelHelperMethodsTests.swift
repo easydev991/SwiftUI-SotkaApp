@@ -5,9 +5,9 @@ import Testing
 
 extension WorkoutScreenViewModelTests {
     @Suite("Тесты для вспомогательных методов")
+    @MainActor
     struct HelperMethodsTests {
         @Test("Должен возвращать состояние для конкретного этапа")
-        @MainActor
         func getStepState() throws {
             let viewModel = WorkoutScreenViewModel()
             let trainings = [
@@ -37,7 +37,6 @@ extension WorkoutScreenViewModelTests {
         }
 
         @Test("Должен возвращать текущий активный этап")
-        @MainActor
         func currentStep() throws {
             let viewModel = WorkoutScreenViewModel()
             let trainings = [
@@ -71,7 +70,6 @@ extension WorkoutScreenViewModelTests {
         }
 
         @Test("Должен возвращать только этапы с типом .cycles")
-        @MainActor
         func getCycleSteps() {
             let viewModel = WorkoutScreenViewModel()
             let trainings = [
@@ -122,7 +120,6 @@ extension WorkoutScreenViewModelTests {
         }
 
         @Test("Должен возвращать этапы подходов для конкретного упражнения")
-        @MainActor
         func getExerciseSteps() throws {
             let viewModel = WorkoutScreenViewModel()
             let trainings = [
@@ -195,7 +192,6 @@ extension WorkoutScreenViewModelTests {
         }
 
         @Test("Должен возвращать название упражнения с количеством в правильном формате")
-        @MainActor
         func getExerciseTitleWithCount() throws {
             let viewModel = WorkoutScreenViewModel()
             let modelConfiguration = ModelConfiguration(isStoredInMemoryOnly: true)
@@ -245,7 +241,6 @@ extension WorkoutScreenViewModelTests {
         }
 
         @Test("Должен возвращать только название упражнения без количества")
-        @MainActor
         func getExerciseTitle() throws {
             let viewModel = WorkoutScreenViewModel()
             let modelConfiguration = ModelConfiguration(isStoredInMemoryOnly: true)

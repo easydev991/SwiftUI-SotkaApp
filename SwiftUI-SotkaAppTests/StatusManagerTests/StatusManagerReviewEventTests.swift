@@ -5,6 +5,7 @@ import Testing
 
 extension StatusManagerTests {
     @Suite("Тесты отправки review-события при сохранении тренировки с часов", .serialized)
+    @MainActor
     struct ReviewEventTests {
         private func makeSaveWorkoutMessage(
             day: Int = 42,
@@ -27,7 +28,6 @@ extension StatusManagerTests {
         }
 
         @Test("После успешного сохранения с часов вызывает reviewEventReporter")
-        @MainActor
         func callsReviewReporterAfterWatchSave() async throws {
             let mockSession = MockWCSession(isReachable: true)
             let reporter = MockReviewEventReporter()
@@ -57,7 +57,6 @@ extension StatusManagerTests {
         }
 
         @Test("При ошибке декодирования не вызывает reviewEventReporter")
-        @MainActor
         func doesNotCallReporterWhenDecodingFails() throws {
             let mockSession = MockWCSession(isReachable: true)
             let reporter = MockReviewEventReporter()
@@ -77,7 +76,6 @@ extension StatusManagerTests {
         }
 
         @Test("Без reporter сохранение с часов работает корректно")
-        @MainActor
         func watchSaveWorksCorrectlyWithoutReporter() throws {
             let mockSession = MockWCSession(isReachable: true)
             let statusManager = try MockStatusManager.create(
@@ -104,7 +102,6 @@ extension StatusManagerTests {
         }
 
         @Test("Повторное сохранение с часов не создает дубликат и отправляет событие")
-        @MainActor
         func repeatedWatchSaveDoesNotDuplicateActivityAndSendsEvent() async throws {
             let mockSession = MockWCSession(isReachable: true)
             let reporter = MockReviewEventReporter()

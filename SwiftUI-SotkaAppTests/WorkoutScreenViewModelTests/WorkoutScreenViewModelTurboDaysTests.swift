@@ -4,9 +4,9 @@ import Testing
 
 extension WorkoutScreenViewModelTests {
     @Suite("Тесты для турбо-дней")
+    @MainActor
     struct TurboDaysTests {
         @Test("Должен возвращать cycles для турбо-дня 92")
-        @MainActor
         func getEffectiveExecutionTypeForTurboDay92() {
             let viewModel = WorkoutScreenViewModel()
             viewModel.dayNumber = 92
@@ -16,7 +16,6 @@ extension WorkoutScreenViewModelTests {
         }
 
         @Test("Должен возвращать sets для турбо-дня 93")
-        @MainActor
         func getEffectiveExecutionTypeForTurboDay93() {
             let viewModel = WorkoutScreenViewModel()
             viewModel.dayNumber = 93
@@ -26,7 +25,6 @@ extension WorkoutScreenViewModelTests {
         }
 
         @Test("Должен возвращать cycles для турбо-дня 94")
-        @MainActor
         func getEffectiveExecutionTypeForTurboDay94() {
             let viewModel = WorkoutScreenViewModel()
             viewModel.dayNumber = 94
@@ -36,7 +34,6 @@ extension WorkoutScreenViewModelTests {
         }
 
         @Test("Должен возвращать sets для турбо-дня 95")
-        @MainActor
         func getEffectiveExecutionTypeForTurboDay95() {
             let viewModel = WorkoutScreenViewModel()
             viewModel.dayNumber = 95
@@ -46,7 +43,6 @@ extension WorkoutScreenViewModelTests {
         }
 
         @Test("Должен возвращать cycles для турбо-дня 96")
-        @MainActor
         func getEffectiveExecutionTypeForTurboDay96() {
             let viewModel = WorkoutScreenViewModel()
             viewModel.dayNumber = 96
@@ -56,7 +52,6 @@ extension WorkoutScreenViewModelTests {
         }
 
         @Test("Должен возвращать cycles для турбо-дня 97")
-        @MainActor
         func getEffectiveExecutionTypeForTurboDay97() {
             let viewModel = WorkoutScreenViewModel()
             viewModel.dayNumber = 97
@@ -66,7 +61,6 @@ extension WorkoutScreenViewModelTests {
         }
 
         @Test("Должен возвращать sets для турбо-дня 98")
-        @MainActor
         func getEffectiveExecutionTypeForTurboDay98() {
             let viewModel = WorkoutScreenViewModel()
             viewModel.dayNumber = 98
@@ -76,7 +70,6 @@ extension WorkoutScreenViewModelTests {
         }
 
         @Test("Должен возвращать исходный тип для cycles")
-        @MainActor
         func getEffectiveExecutionTypeForNonTurboCycles() {
             let viewModel = WorkoutScreenViewModel()
             viewModel.dayNumber = 1
@@ -86,7 +79,6 @@ extension WorkoutScreenViewModelTests {
         }
 
         @Test("Должен возвращать исходный тип для sets")
-        @MainActor
         func getEffectiveExecutionTypeForNonTurboSets() {
             let viewModel = WorkoutScreenViewModel()
             viewModel.dayNumber = 50
@@ -96,7 +88,6 @@ extension WorkoutScreenViewModelTests {
         }
 
         @Test("Должен инициализировать этапы для турбо-дня 92 с кругами")
-        @MainActor
         func initializeStepStatesForTurboDay92() {
             let viewModel = WorkoutScreenViewModel()
             let creator = WorkoutProgramCreator(day: 92, executionType: .turbo)
@@ -118,7 +109,6 @@ extension WorkoutScreenViewModelTests {
         }
 
         @Test("Должен инициализировать этапы для турбо-дня 93 с подходами")
-        @MainActor
         func initializeStepStatesForTurboDay93() {
             let viewModel = WorkoutScreenViewModel()
             let creator = WorkoutProgramCreator(day: 93, executionType: .turbo)
@@ -140,7 +130,6 @@ extension WorkoutScreenViewModelTests {
         }
 
         @Test("Должен инициализировать этапы для турбо-дня 94 с кругами")
-        @MainActor
         func initializeStepStatesForTurboDay94() {
             let viewModel = WorkoutScreenViewModel()
             let creator = WorkoutProgramCreator(day: 94, executionType: .turbo)
@@ -162,7 +151,6 @@ extension WorkoutScreenViewModelTests {
         }
 
         @Test("Должен инициализировать этапы для турбо-дня 95 с подходами")
-        @MainActor
         func initializeStepStatesForTurboDay95() {
             let viewModel = WorkoutScreenViewModel()
             let creator = WorkoutProgramCreator(day: 95, executionType: .turbo)
@@ -184,7 +172,6 @@ extension WorkoutScreenViewModelTests {
         }
 
         @Test("Должен инициализировать этапы для турбо-дня 96 с кругами")
-        @MainActor
         func initializeStepStatesForTurboDay96() {
             let viewModel = WorkoutScreenViewModel()
             let creator = WorkoutProgramCreator(day: 96, executionType: .turbo)
@@ -206,7 +193,6 @@ extension WorkoutScreenViewModelTests {
         }
 
         @Test("Должен инициализировать этапы для турбо-дня 97 с кругами")
-        @MainActor
         func initializeStepStatesForTurboDay97() {
             let viewModel = WorkoutScreenViewModel()
             let creator = WorkoutProgramCreator(day: 97, executionType: .turbo)
@@ -228,7 +214,6 @@ extension WorkoutScreenViewModelTests {
         }
 
         @Test("Должен инициализировать этапы для турбо-дня 98 с подходами")
-        @MainActor
         func initializeStepStatesForTurboDay98() {
             let viewModel = WorkoutScreenViewModel()
             let creator = WorkoutProgramCreator(day: 98, executionType: .turbo)
@@ -250,7 +235,6 @@ extension WorkoutScreenViewModelTests {
         }
 
         @Test("Должен возвращать круги для турбо-дня 92")
-        @MainActor
         func getCycleStepsForTurboDay92() {
             let viewModel = WorkoutScreenViewModel()
             let creator = WorkoutProgramCreator(day: 92, executionType: .turbo)
@@ -266,7 +250,6 @@ extension WorkoutScreenViewModelTests {
         }
 
         @Test("Должен возвращать пустой массив для турбо-дня 93")
-        @MainActor
         func getCycleStepsForTurboDay93() {
             let viewModel = WorkoutScreenViewModel()
             let creator = WorkoutProgramCreator(day: 93, executionType: .turbo)
@@ -282,7 +265,6 @@ extension WorkoutScreenViewModelTests {
         }
 
         @Test("Должен возвращать круги для турбо-дня 94")
-        @MainActor
         func getCycleStepsForTurboDay94() {
             let viewModel = WorkoutScreenViewModel()
             let creator = WorkoutProgramCreator(day: 94, executionType: .turbo)
@@ -298,7 +280,6 @@ extension WorkoutScreenViewModelTests {
         }
 
         @Test("Должен возвращать пустой массив для турбо-дня 95")
-        @MainActor
         func getCycleStepsForTurboDay95() {
             let viewModel = WorkoutScreenViewModel()
             let creator = WorkoutProgramCreator(day: 95, executionType: .turbo)
@@ -314,7 +295,6 @@ extension WorkoutScreenViewModelTests {
         }
 
         @Test("Должен возвращать круги для турбо-дня 96")
-        @MainActor
         func getCycleStepsForTurboDay96() {
             let viewModel = WorkoutScreenViewModel()
             let creator = WorkoutProgramCreator(day: 96, executionType: .turbo)
@@ -330,7 +310,6 @@ extension WorkoutScreenViewModelTests {
         }
 
         @Test("Должен возвращать круги для турбо-дня 97")
-        @MainActor
         func getCycleStepsForTurboDay97() {
             let viewModel = WorkoutScreenViewModel()
             let creator = WorkoutProgramCreator(day: 97, executionType: .turbo)
@@ -346,7 +325,6 @@ extension WorkoutScreenViewModelTests {
         }
 
         @Test("Должен возвращать пустой массив для турбо-дня 98")
-        @MainActor
         func getCycleStepsForTurboDay98() {
             let viewModel = WorkoutScreenViewModel()
             let creator = WorkoutProgramCreator(day: 98, executionType: .turbo)
@@ -362,7 +340,6 @@ extension WorkoutScreenViewModelTests {
         }
 
         @Test("Должен возвращать пустой массив для getExerciseSteps турбо-дня 92")
-        @MainActor
         func getExerciseStepsForTurboDay92() throws {
             let viewModel = WorkoutScreenViewModel()
             let creator = WorkoutProgramCreator(day: 92, executionType: .turbo)
@@ -379,7 +356,6 @@ extension WorkoutScreenViewModelTests {
         }
 
         @Test("Должен возвращать подходы для getExerciseSteps турбо-дня 93")
-        @MainActor
         func getExerciseStepsForTurboDay93() throws {
             let viewModel = WorkoutScreenViewModel()
             let creator = WorkoutProgramCreator(day: 93, executionType: .turbo)
@@ -396,7 +372,6 @@ extension WorkoutScreenViewModelTests {
         }
 
         @Test("Должен возвращать пустой массив для getExerciseSteps турбо-дня 94")
-        @MainActor
         func getExerciseStepsForTurboDay94() throws {
             let viewModel = WorkoutScreenViewModel()
             let creator = WorkoutProgramCreator(day: 94, executionType: .turbo)
@@ -413,7 +388,6 @@ extension WorkoutScreenViewModelTests {
         }
 
         @Test("Должен возвращать подходы для getExerciseSteps турбо-дня 95")
-        @MainActor
         func getExerciseStepsForTurboDay95() throws {
             let viewModel = WorkoutScreenViewModel()
             let creator = WorkoutProgramCreator(day: 95, executionType: .turbo)
@@ -430,7 +404,6 @@ extension WorkoutScreenViewModelTests {
         }
 
         @Test("Должен возвращать пустой массив для getExerciseSteps турбо-дня 96")
-        @MainActor
         func getExerciseStepsForTurboDay96() throws {
             let viewModel = WorkoutScreenViewModel()
             let creator = WorkoutProgramCreator(day: 96, executionType: .turbo)
@@ -447,7 +420,6 @@ extension WorkoutScreenViewModelTests {
         }
 
         @Test("Должен возвращать пустой массив для getExerciseSteps турбо-дня 97")
-        @MainActor
         func getExerciseStepsForTurboDay97() throws {
             let viewModel = WorkoutScreenViewModel()
             let creator = WorkoutProgramCreator(day: 97, executionType: .turbo)
@@ -464,7 +436,6 @@ extension WorkoutScreenViewModelTests {
         }
 
         @Test("Должен возвращать подходы для getExerciseSteps турбо-дня 98")
-        @MainActor
         func getExerciseStepsForTurboDay98() throws {
             let viewModel = WorkoutScreenViewModel()
             let creator = WorkoutProgramCreator(day: 98, executionType: .turbo)
@@ -481,7 +452,6 @@ extension WorkoutScreenViewModelTests {
         }
 
         @Test("Должен возвращать true для shouldShowExercisesReminder при cycles")
-        @MainActor
         func shouldShowExercisesReminderForCycles() {
             let viewModel = WorkoutScreenViewModel()
             viewModel.executionType = .cycles
@@ -489,7 +459,6 @@ extension WorkoutScreenViewModelTests {
         }
 
         @Test("Должен возвращать false для shouldShowExercisesReminder при sets")
-        @MainActor
         func shouldShowExercisesReminderForSets() {
             let viewModel = WorkoutScreenViewModel()
             viewModel.executionType = .sets
@@ -497,7 +466,6 @@ extension WorkoutScreenViewModelTests {
         }
 
         @Test("Должен возвращать true для shouldShowExercisesReminder при турбо-дне 92")
-        @MainActor
         func shouldShowExercisesReminderForTurboDay92() {
             let viewModel = WorkoutScreenViewModel()
             viewModel.dayNumber = 92
@@ -506,7 +474,6 @@ extension WorkoutScreenViewModelTests {
         }
 
         @Test("Должен возвращать false для shouldShowExercisesReminder при турбо-дне 93")
-        @MainActor
         func shouldShowExercisesReminderForTurboDay93() {
             let viewModel = WorkoutScreenViewModel()
             viewModel.dayNumber = 93
@@ -515,7 +482,6 @@ extension WorkoutScreenViewModelTests {
         }
 
         @Test("Должен возвращать true для shouldShowExercisesReminder при турбо-дне 94")
-        @MainActor
         func shouldShowExercisesReminderForTurboDay94() {
             let viewModel = WorkoutScreenViewModel()
             viewModel.dayNumber = 94
@@ -524,7 +490,6 @@ extension WorkoutScreenViewModelTests {
         }
 
         @Test("Должен возвращать false для shouldShowExercisesReminder при турбо-дне 95")
-        @MainActor
         func shouldShowExercisesReminderForTurboDay95() {
             let viewModel = WorkoutScreenViewModel()
             viewModel.dayNumber = 95
@@ -533,7 +498,6 @@ extension WorkoutScreenViewModelTests {
         }
 
         @Test("Должен возвращать true для shouldShowExercisesReminder при турбо-дне 96")
-        @MainActor
         func shouldShowExercisesReminderForTurboDay96() {
             let viewModel = WorkoutScreenViewModel()
             viewModel.dayNumber = 96
@@ -542,7 +506,6 @@ extension WorkoutScreenViewModelTests {
         }
 
         @Test("Должен возвращать true для shouldShowExercisesReminder при турбо-дне 97")
-        @MainActor
         func shouldShowExercisesReminderForTurboDay97() {
             let viewModel = WorkoutScreenViewModel()
             viewModel.dayNumber = 97
@@ -551,7 +514,6 @@ extension WorkoutScreenViewModelTests {
         }
 
         @Test("Должен возвращать false для shouldShowExercisesReminder при турбо-дне 98")
-        @MainActor
         func shouldShowExercisesReminderForTurboDay98() {
             let viewModel = WorkoutScreenViewModel()
             viewModel.dayNumber = 98

@@ -5,8 +5,8 @@ import Testing
 
 extension WorkoutPreviewViewModelTests {
     @Suite("Тесты отправки review-события при сохранении тренировки", .serialized)
+    @MainActor
     struct ReviewEventTests {
-        @MainActor
         private func makeViewModel() -> WorkoutPreviewViewModel {
             let viewModel = WorkoutPreviewViewModel()
             viewModel.dayNumber = 5
@@ -18,7 +18,6 @@ extension WorkoutPreviewViewModelTests {
             return viewModel
         }
 
-        @MainActor
         private func makeContext() throws -> (ModelContainer, ModelContext) {
             let container = try ModelContainer(
                 for: DayActivity.self,
@@ -34,7 +33,6 @@ extension WorkoutPreviewViewModelTests {
         }
 
         @Test("После успешного сохранения вызывает reviewEventReporter")
-        @MainActor
         func callsReviewReporterAfterSuccessfulSave() async throws {
             let testContext = try makeContext()
             let context = testContext.1
@@ -55,7 +53,6 @@ extension WorkoutPreviewViewModelTests {
         }
 
         @Test("При ошибке валидации не вызывает reviewEventReporter")
-        @MainActor
         func doesNotCallReporterWhenValidationFails() throws {
             let testContext = try makeContext()
             let context = testContext.1
@@ -76,7 +73,6 @@ extension WorkoutPreviewViewModelTests {
         }
 
         @Test("Передаёт hadRecentError = true если есть ошибка в viewModel")
-        @MainActor
         func passesHadRecentErrorWhenViewModelHasError() async throws {
             let testContext = try makeContext()
             let context = testContext.1
@@ -102,7 +98,6 @@ extension WorkoutPreviewViewModelTests {
         }
 
         @Test("Без reporter сохранение работает корректно")
-        @MainActor
         func saveWorksCorrectlyWithoutReporter() throws {
             let testContext = try makeContext()
             let context = testContext.1
@@ -119,7 +114,6 @@ extension WorkoutPreviewViewModelTests {
         }
 
         @Test("Повторное сохранение дня не создает дубликат активности и отправляет событие")
-        @MainActor
         func repeatedSaveDoesNotDuplicateActivityAndSendsEvent() async throws {
             let testContext = try makeContext()
             let context = testContext.1

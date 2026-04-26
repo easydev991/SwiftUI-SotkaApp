@@ -5,9 +5,9 @@ import Testing
 
 extension WorkoutPreviewViewModelTests {
     @Suite("Тесты для hasChanges и isPlannedCountDisabled")
+    @MainActor
     struct HasChangesTests {
         @Test("Должен возвращать true для isPlannedCountDisabled когда selectedExecutionType = turbo")
-        @MainActor
         func returnsTrueForIsPlannedCountDisabledWhenTurbo() {
             let viewModel = WorkoutPreviewViewModel()
             viewModel.selectedExecutionType = .turbo
@@ -16,7 +16,6 @@ extension WorkoutPreviewViewModelTests {
         }
 
         @Test("Должен возвращать false для isPlannedCountDisabled когда selectedExecutionType = cycles")
-        @MainActor
         func returnsFalseForIsPlannedCountDisabledWhenCycles() {
             let viewModel = WorkoutPreviewViewModel()
             viewModel.selectedExecutionType = .cycles
@@ -25,7 +24,6 @@ extension WorkoutPreviewViewModelTests {
         }
 
         @Test("Должен возвращать false для isPlannedCountDisabled когда selectedExecutionType = sets")
-        @MainActor
         func returnsFalseForIsPlannedCountDisabledWhenSets() {
             let viewModel = WorkoutPreviewViewModel()
             viewModel.selectedExecutionType = .sets
@@ -34,7 +32,6 @@ extension WorkoutPreviewViewModelTests {
         }
 
         @Test("Должен возвращать false для isPlannedCountDisabled когда selectedExecutionType = nil")
-        @MainActor
         func returnsFalseForIsPlannedCountDisabledWhenNil() {
             let viewModel = WorkoutPreviewViewModel()
             viewModel.selectedExecutionType = nil
@@ -43,7 +40,6 @@ extension WorkoutPreviewViewModelTests {
         }
 
         @Test("Должен возвращать false для hasChanges при загрузке существующей пройденной активности")
-        @MainActor
         func returnsFalseForHasChangesWhenLoadingExistingPassedActivity() throws {
             let container = try ModelContainer(
                 for: DayActivity.self,
@@ -82,7 +78,6 @@ extension WorkoutPreviewViewModelTests {
         }
 
         @Test("Должен возвращать true для hasChanges после изменения количества повторений")
-        @MainActor
         func returnsTrueForHasChangesAfterChangingTrainingCount() throws {
             let container = try ModelContainer(
                 for: DayActivity.self,
@@ -131,7 +126,6 @@ extension WorkoutPreviewViewModelTests {
         }
 
         @Test("Должен возвращать true для hasChanges после изменения plannedCount")
-        @MainActor
         func returnsTrueForHasChangesAfterChangingPlannedCount() throws {
             let container = try ModelContainer(
                 for: DayActivity.self,
@@ -171,7 +165,6 @@ extension WorkoutPreviewViewModelTests {
         }
 
         @Test("Должен возвращать true для hasChanges после изменения типа выполнения")
-        @MainActor
         func returnsTrueForHasChangesAfterChangingExecutionType() throws {
             let container = try ModelContainer(
                 for: DayActivity.self,
@@ -211,7 +204,6 @@ extension WorkoutPreviewViewModelTests {
         }
 
         @Test("Должен возвращать true для hasChanges после изменения комментария")
-        @MainActor
         func returnsTrueForHasChangesAfterChangingComment() throws {
             let container = try ModelContainer(
                 for: DayActivity.self,
@@ -252,7 +244,6 @@ extension WorkoutPreviewViewModelTests {
         }
 
         @Test("Должен возвращать false для hasChanges после возврата всех значений к исходным")
-        @MainActor
         func returnsFalseForHasChangesAfterRevertingAllValuesToOriginal() throws {
             let container = try ModelContainer(
                 for: DayActivity.self,
@@ -295,7 +286,6 @@ extension WorkoutPreviewViewModelTests {
         }
 
         @Test("Должен возвращать false для hasChanges при загрузке новой активности")
-        @MainActor
         func returnsFalseForHasChangesWhenLoadingNewActivity() throws {
             let container = try ModelContainer(
                 for: DayActivity.self,

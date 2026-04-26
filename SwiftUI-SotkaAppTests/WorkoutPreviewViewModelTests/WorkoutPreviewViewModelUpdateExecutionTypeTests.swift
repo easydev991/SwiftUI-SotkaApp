@@ -5,9 +5,9 @@ import Testing
 
 extension WorkoutPreviewViewModelTests {
     @Suite("Тесты для updateExecutionType")
+    @MainActor
     struct UpdateExecutionTypeTests {
         @Test("Должен использовать метод withExecutionType для обновления")
-        @MainActor
         func usesWithExecutionTypeMethodForUpdate() throws {
             let container = try ModelContainer(
                 for: DayActivity.self,
@@ -36,7 +36,6 @@ extension WorkoutPreviewViewModelTests {
         }
 
         @Test("Должен создавать новый экземпляр WorkoutProgramCreator при изменении типа")
-        @MainActor
         func createsNewWorkoutProgramCreatorInstanceWhenChangingType() throws {
             let container = try ModelContainer(
                 for: DayActivity.self,
@@ -71,7 +70,6 @@ extension WorkoutPreviewViewModelTests {
         }
 
         @Test("Должен обновлять упражнения при изменении типа выполнения")
-        @MainActor
         func updatesExercisesWhenChangingExecutionType() throws {
             let container = try ModelContainer(
                 for: DayActivity.self,
@@ -103,7 +101,6 @@ extension WorkoutPreviewViewModelTests {
         }
 
         @Test("Должен пересчитывать количество кругов при изменении типа")
-        @MainActor
         func recalculatesCircleCountWhenChangingType() throws {
             let container = try ModelContainer(
                 for: DayActivity.self,
@@ -138,7 +135,6 @@ extension WorkoutPreviewViewModelTests {
         }
 
         @Test("Должен сохранять plannedCount установленный пользователем при смене типа выполнения")
-        @MainActor
         func preservesUserSetPlannedCountWhenChangingExecutionType() throws {
             let container = try ModelContainer(
                 for: DayActivity.self,
@@ -167,7 +163,6 @@ extension WorkoutPreviewViewModelTests {
         }
 
         @Test("Должен сохранять count упражнений установленный пользователем при смене типа выполнения")
-        @MainActor
         func preservesUserSetTrainingCountWhenChangingExecutionType() throws {
             let container = try ModelContainer(
                 for: DayActivity.self,
@@ -211,7 +206,6 @@ extension WorkoutPreviewViewModelTests {
         }
 
         @Test("Должен сохранять разные значения для двух приседаний при переключении между кругами и подходами")
-        @MainActor
         func preservesDifferentSquatsCountsWhenChangingExecutionType() throws {
             let container = try ModelContainer(
                 for: DayActivity.self,
@@ -264,7 +258,6 @@ extension WorkoutPreviewViewModelTests {
         }
 
         @Test("Должен сохранять plannedCount и count упражнений при смене типа выполнения")
-        @MainActor
         func preservesPlannedCountAndTrainingCountWhenChangingExecutionType() throws {
             let container = try ModelContainer(
                 for: DayActivity.self,
@@ -333,7 +326,6 @@ extension WorkoutPreviewViewModelTests {
         }
 
         @Test("Должен сохранять добавленные в редакторе упражнения при переключении способа выполнения")
-        @MainActor
         func preservesEditorAddedExercisesWhenChangingExecutionType() throws {
             let container = try ModelContainer(
                 for: DayActivity.self,

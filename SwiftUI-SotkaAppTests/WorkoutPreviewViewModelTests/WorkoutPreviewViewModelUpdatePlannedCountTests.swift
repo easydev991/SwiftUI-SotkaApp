@@ -4,9 +4,9 @@ import Testing
 
 extension WorkoutPreviewViewModelTests {
     @Suite("Тесты для updatePlannedCount")
+    @MainActor
     struct UpdatePlannedCountTests {
         @Test("Должен увеличивать count для упражнения при increment")
-        @MainActor
         func incrementsCountForTraining() throws {
             let viewModel = WorkoutPreviewViewModel()
             let training = WorkoutPreviewTraining(
@@ -24,7 +24,6 @@ extension WorkoutPreviewViewModelTests {
         }
 
         @Test("Должен уменьшать count для упражнения при decrement")
-        @MainActor
         func decrementsCountForTraining() throws {
             let viewModel = WorkoutPreviewViewModel()
             let training = WorkoutPreviewTraining(
@@ -42,7 +41,6 @@ extension WorkoutPreviewViewModelTests {
         }
 
         @Test("Должен устанавливать count в 0 при decrement с count = 0")
-        @MainActor
         func setsCountToZeroWhenDecrementingFromZero() throws {
             let viewModel = WorkoutPreviewViewModel()
             let training = WorkoutPreviewTraining(
@@ -60,7 +58,6 @@ extension WorkoutPreviewViewModelTests {
         }
 
         @Test("Должен устанавливать count в 1 при increment с count = nil")
-        @MainActor
         func setsCountToOneWhenIncrementingFromNil() throws {
             let viewModel = WorkoutPreviewViewModel()
             let training = WorkoutPreviewTraining(
@@ -78,7 +75,6 @@ extension WorkoutPreviewViewModelTests {
         }
 
         @Test("Должен находить правильное упражнение по id")
-        @MainActor
         func findsCorrectTrainingById() throws {
             let viewModel = WorkoutPreviewViewModel()
             let training1 = WorkoutPreviewTraining(
@@ -117,7 +113,6 @@ extension WorkoutPreviewViewModelTests {
         }
 
         @Test("Должен увеличивать count при increment для id plannedCount когда тренировка сохранена")
-        @MainActor
         func incrementsCountWhenTrainingIsSaved() throws {
             let viewModel = WorkoutPreviewViewModel()
             viewModel.count = 5
@@ -132,7 +127,6 @@ extension WorkoutPreviewViewModelTests {
         }
 
         @Test("Должен уменьшать count при decrement для id plannedCount когда тренировка сохранена")
-        @MainActor
         func decrementsCountWhenTrainingIsSaved() throws {
             let viewModel = WorkoutPreviewViewModel()
             viewModel.count = 5
@@ -147,7 +141,6 @@ extension WorkoutPreviewViewModelTests {
         }
 
         @Test("Должен увеличивать plannedCount при increment для id plannedCount когда тренировка не сохранена")
-        @MainActor
         func incrementsPlannedCountWhenTrainingNotSaved() throws {
             let viewModel = WorkoutPreviewViewModel()
             viewModel.count = nil
@@ -161,7 +154,6 @@ extension WorkoutPreviewViewModelTests {
         }
 
         @Test("Должен уменьшать plannedCount при decrement для id plannedCount когда тренировка не сохранена")
-        @MainActor
         func decrementsPlannedCountWhenTrainingNotSaved() throws {
             let viewModel = WorkoutPreviewViewModel()
             viewModel.count = nil
@@ -175,7 +167,6 @@ extension WorkoutPreviewViewModelTests {
         }
 
         @Test("Должен устанавливать count в 0 при decrement с count = 0 для сохраненной тренировки")
-        @MainActor
         func setsCountToZeroWhenDecrementingFromZeroForSavedTraining() throws {
             let viewModel = WorkoutPreviewViewModel()
             viewModel.count = 0
@@ -188,7 +179,6 @@ extension WorkoutPreviewViewModelTests {
         }
 
         @Test("Должен устанавливать plannedCount в 0 при decrement с plannedCount = 0 для непройденной тренировки")
-        @MainActor
         func setsPlannedCountToZeroWhenDecrementingFromZero() throws {
             let viewModel = WorkoutPreviewViewModel()
             viewModel.count = nil
@@ -201,7 +191,6 @@ extension WorkoutPreviewViewModelTests {
         }
 
         @Test("Должен устанавливать plannedCount в 1 при increment с plannedCount = nil для непройденной тренировки")
-        @MainActor
         func setsPlannedCountToOneWhenIncrementingFromNil() throws {
             let viewModel = WorkoutPreviewViewModel()
             viewModel.count = nil
@@ -214,7 +203,6 @@ extension WorkoutPreviewViewModelTests {
         }
 
         @Test("Должен сохранять plannedCount в buildDayActivity")
-        @MainActor
         func savesPlannedCountInBuildDayActivity() throws {
             let viewModel = WorkoutPreviewViewModel()
             viewModel.dayNumber = 5

@@ -5,9 +5,9 @@ import Testing
 
 extension WorkoutPreviewViewModelTests {
     @Suite("Тесты для restTime")
+    @MainActor
     struct RestTimeTests {
         @Test("Должен инициализировать restTime из AppSettings при создании новой тренировки")
-        @MainActor
         func initializesFromAppSettings() throws {
             let userDefaults = try MockUserDefaults.create()
             let appSettings = AppSettings(userDefaults: userDefaults)
@@ -36,7 +36,6 @@ extension WorkoutPreviewViewModelTests {
         }
 
         @Test("Должен устанавливать restTime для всех тренировок, включая пройденные")
-        @MainActor
         func setsRestTimeForAllWorkouts() throws {
             let userDefaults = try MockUserDefaults.create()
             let appSettings = AppSettings(userDefaults: userDefaults)
@@ -78,7 +77,6 @@ extension WorkoutPreviewViewModelTests {
         }
 
         @Test("Должен сохранять restTime в ViewModel")
-        @MainActor
         func savesRestTimeInViewModel() throws {
             let userDefaults = try MockUserDefaults.create()
             let appSettings = AppSettings(userDefaults: userDefaults)
@@ -107,7 +105,6 @@ extension WorkoutPreviewViewModelTests {
         }
 
         @Test("Должен включать restTime в DataSnapshot")
-        @MainActor
         func includesInDataSnapshot() throws {
             let userDefaults = try MockUserDefaults.create()
             let appSettings = AppSettings(userDefaults: userDefaults)
@@ -137,7 +134,6 @@ extension WorkoutPreviewViewModelTests {
         }
 
         @Test("Должен обновлять restTime через updaterestTime")
-        @MainActor
         func updatesRestTime() throws {
             let userDefaults = try MockUserDefaults.create()
             let appSettings = AppSettings(userDefaults: userDefaults)

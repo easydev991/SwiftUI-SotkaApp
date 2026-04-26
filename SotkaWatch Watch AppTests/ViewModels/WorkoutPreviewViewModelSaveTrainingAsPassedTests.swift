@@ -4,9 +4,9 @@ import Testing
 
 extension WorkoutPreviewViewModelTests {
     @Suite("Тесты для saveTrainingAsPassed")
+    @MainActor
     struct SaveTrainingAsPassedTests {
         @Test("Должен отправлять результат тренировки через connectivityService")
-        @MainActor
         func sendsWorkoutResultThroughConnectivityService() async throws {
             let connectivityService = MockWatchConnectivityService()
             let viewModel = WorkoutPreviewViewModel(
@@ -37,7 +37,6 @@ extension WorkoutPreviewViewModelTests {
         }
 
         @Test("Должен устанавливать count = plannedCount если count == nil")
-        @MainActor
         func setsCountToPlannedCountWhenCountIsNil() async throws {
             let connectivityService = MockWatchConnectivityService()
             let viewModel = WorkoutPreviewViewModel(
@@ -64,7 +63,6 @@ extension WorkoutPreviewViewModelTests {
         }
 
         @Test("Должен устанавливать error если selectedExecutionType == nil")
-        @MainActor
         func setsErrorWhenSelectedExecutionTypeIsNil() async {
             let connectivityService = MockWatchConnectivityService()
             let viewModel = WorkoutPreviewViewModel(
@@ -83,7 +81,6 @@ extension WorkoutPreviewViewModelTests {
         }
 
         @Test("Должен устанавливать error если trainings пустой")
-        @MainActor
         func setsErrorWhenTrainingsIsEmpty() async {
             let connectivityService = MockWatchConnectivityService()
             let viewModel = WorkoutPreviewViewModel(
@@ -100,7 +97,6 @@ extension WorkoutPreviewViewModelTests {
         }
 
         @Test("Должен не устанавливать error при сетевой ошибке отправки (error только для валидации)")
-        @MainActor
         func doesNotSetErrorOnNetworkSendFailure() async {
             let connectivityService = MockWatchConnectivityService()
             let viewModel = WorkoutPreviewViewModel(
@@ -128,7 +124,6 @@ extension WorkoutPreviewViewModelTests {
         }
 
         @Test("Должен включать workoutDuration в результат если установлен")
-        @MainActor
         func includesWorkoutDurationInResultWhenSet() async throws {
             let connectivityService = MockWatchConnectivityService()
             let viewModel = WorkoutPreviewViewModel(
@@ -157,7 +152,6 @@ extension WorkoutPreviewViewModelTests {
         }
 
         @Test("Должен передавать комментарий при сохранении тренировки")
-        @MainActor
         func passesCommentWhenSavingWorkout() async throws {
             let connectivityService = MockWatchConnectivityService()
             let viewModel = WorkoutPreviewViewModel(
@@ -186,7 +180,6 @@ extension WorkoutPreviewViewModelTests {
         }
 
         @Test("Должен передавать nil для комментария если комментарий не установлен")
-        @MainActor
         func passesNilForCommentWhenCommentNotSet() async throws {
             let connectivityService = MockWatchConnectivityService()
             let viewModel = WorkoutPreviewViewModel(
@@ -213,7 +206,6 @@ extension WorkoutPreviewViewModelTests {
         }
 
         @Test("Должен передавать nil для duration если тренировка не была пройдена")
-        @MainActor
         func passesNilForDurationWhenWorkoutNotCompleted() async throws {
             let connectivityService = MockWatchConnectivityService()
             let viewModel = WorkoutPreviewViewModel(
@@ -241,7 +233,6 @@ extension WorkoutPreviewViewModelTests {
         }
 
         @Test("Должен вызывать callback onSaveCompleted после успешного сохранения")
-        @MainActor
         func callsOnSaveCompletedCallbackAfterSuccessfulSave() async {
             let connectivityService = MockWatchConnectivityService()
             let viewModel = WorkoutPreviewViewModel(
@@ -271,7 +262,6 @@ extension WorkoutPreviewViewModelTests {
         }
 
         @Test("Не должен вызывать callback onSaveCompleted при ошибке сохранения")
-        @MainActor
         func doesNotCallOnSaveCompletedCallbackOnError() async {
             let connectivityService = MockWatchConnectivityService()
             let viewModel = WorkoutPreviewViewModel(
@@ -304,7 +294,6 @@ extension WorkoutPreviewViewModelTests {
         }
 
         @Test("Должен передавать trainings при сохранении тренировки")
-        @MainActor
         func passesTrainingsWhenSavingWorkout() async throws {
             let connectivityService = MockWatchConnectivityService()
             let viewModel = WorkoutPreviewViewModel(
@@ -338,7 +327,6 @@ extension WorkoutPreviewViewModelTests {
         }
 
         @Test("Должен обновлять локальные данные после успешного сохранения")
-        @MainActor
         func updatesLocalDataAfterSuccessfulSave() async throws {
             let connectivityService = MockWatchConnectivityService()
             let viewModel = WorkoutPreviewViewModel(
@@ -368,7 +356,6 @@ extension WorkoutPreviewViewModelTests {
         }
 
         @Test("Должен обновлять локальные данные trainings после успешного сохранения")
-        @MainActor
         func updatesLocalTrainingsAfterSuccessfulSave() async throws {
             let connectivityService = MockWatchConnectivityService()
             let viewModel = WorkoutPreviewViewModel(
@@ -402,7 +389,6 @@ extension WorkoutPreviewViewModelTests {
         }
 
         @Test("Должен обновлять локальные данные с workoutDuration после успешного сохранения")
-        @MainActor
         func updatesLocalDataWithWorkoutDurationAfterSuccessfulSave() async throws {
             let connectivityService = MockWatchConnectivityService()
             let viewModel = WorkoutPreviewViewModel(

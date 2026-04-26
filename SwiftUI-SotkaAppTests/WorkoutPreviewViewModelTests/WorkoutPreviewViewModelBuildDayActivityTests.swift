@@ -4,9 +4,9 @@ import Testing
 
 extension WorkoutPreviewViewModelTests {
     @Suite("Тесты для buildDayActivity")
+    @MainActor
     struct BuildDayActivityTests {
         @Test("Должен создавать WorkoutProgramCreator с полными данными из ViewModel")
-        @MainActor
         func createsWorkoutProgramCreatorWithFullDataFromViewModel() throws {
             let viewModel = WorkoutPreviewViewModel()
             viewModel.dayNumber = 5
@@ -30,7 +30,6 @@ extension WorkoutPreviewViewModelTests {
         }
 
         @Test("Должен получать DayActivity через computed property dayActivity")
-        @MainActor
         func getsDayActivityThroughComputedProperty() {
             let viewModel = WorkoutPreviewViewModel()
             viewModel.dayNumber = 1
@@ -46,7 +45,6 @@ extension WorkoutPreviewViewModelTests {
         }
 
         @Test("Должен создавать DayActivity с правильными параметрами")
-        @MainActor
         func createsDayActivityWithCorrectParameters() throws {
             let viewModel = WorkoutPreviewViewModel()
             viewModel.dayNumber = 5
@@ -72,7 +70,6 @@ extension WorkoutPreviewViewModelTests {
         }
 
         @Test("Должен преобразовывать WorkoutPreviewTraining в DayActivityTraining")
-        @MainActor
         func convertsWorkoutPreviewTrainingToDayActivityTraining() throws {
             let viewModel = WorkoutPreviewViewModel()
             viewModel.dayNumber = 1
@@ -96,7 +93,6 @@ extension WorkoutPreviewViewModelTests {
         }
 
         @Test("Должен устанавливать правильные связи между DayActivity и DayActivityTraining")
-        @MainActor
         func setsCorrectRelationshipsBetweenDayActivityAndDayActivityTraining() throws {
             let viewModel = WorkoutPreviewViewModel()
             viewModel.dayNumber = 1

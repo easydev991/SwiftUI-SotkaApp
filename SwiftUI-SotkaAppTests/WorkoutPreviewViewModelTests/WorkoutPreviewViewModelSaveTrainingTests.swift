@@ -5,9 +5,9 @@ import Testing
 
 extension WorkoutPreviewViewModelTests {
     @Suite("Тесты для saveTrainingAsPassed")
+    @MainActor
     struct SaveTrainingTests {
         @Test("Должен вызывать createDailyActivity с правильной моделью")
-        @MainActor
         func callsCreateDailyActivityWithCorrectModel() throws {
             let container = try ModelContainer(
                 for: DayActivity.self,
@@ -46,7 +46,6 @@ extension WorkoutPreviewViewModelTests {
         }
 
         @Test("Должен обрабатывать ошибку если тип выполнения не выбран")
-        @MainActor
         func handlesErrorIfExecutionTypeNotSelected() throws {
             let container = try ModelContainer(
                 for: DayActivity.self,
@@ -74,7 +73,6 @@ extension WorkoutPreviewViewModelTests {
         }
 
         @Test("Должен обрабатывать ошибку если список упражнений пуст")
-        @MainActor
         func handlesErrorIfTrainingsListIsEmpty() throws {
             let container = try ModelContainer(
                 for: DayActivity.self,
@@ -102,7 +100,6 @@ extension WorkoutPreviewViewModelTests {
         }
 
         @Test("Должен устанавливать count = plannedCount при сохранении с count == nil")
-        @MainActor
         func setsCountToPlannedCountWhenCountIsNil() throws {
             let container = try ModelContainer(
                 for: DayActivity.self,
@@ -135,7 +132,6 @@ extension WorkoutPreviewViewModelTests {
         }
 
         @Test("Должен сохранять существующий count при сохранении с count != nil")
-        @MainActor
         func preservesExistingCountWhenCountIsNotNil() throws {
             let container = try ModelContainer(
                 for: DayActivity.self,
@@ -168,7 +164,6 @@ extension WorkoutPreviewViewModelTests {
         }
 
         @Test("Должен устанавливать wasOriginallyPassed = true после сохранения и перезагрузки")
-        @MainActor
         func setsWasOriginallyPassedToTrueAfterSaveAndReload() throws {
             let container = try ModelContainer(
                 for: DayActivity.self,

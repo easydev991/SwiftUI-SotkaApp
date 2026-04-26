@@ -4,13 +4,13 @@ import SwiftData
 import Testing
 
 extension AllInfopostsTests {
+    @MainActor
     struct InfopostsServiceTests {
         // MARK: - Private Methods
 
         /// Создает InfopostsService с MockInfopostsClient для тестирования
         /// - Parameter language: Язык для сервиса
         /// - Returns: Настроенный сервис для тестов
-        @MainActor
         private func createService(language: String) -> InfopostsService {
             let mockClient = MockInfopostsClient()
             return InfopostsService(
@@ -23,7 +23,6 @@ extension AllInfopostsTests {
         // MARK: - Тесты загрузки инфопостов
 
         @Test
-        @MainActor
         func loadAvailableInfopostsSuccess() throws {
             // Arrange
             let service = createService(language: "ru")
@@ -45,7 +44,6 @@ extension AllInfopostsTests {
         }
 
         @Test
-        @MainActor
         func loadAvailableInfopostsWithEnglishLanguage() throws {
             // Arrange
             let service = createService(language: "en")
@@ -65,7 +63,6 @@ extension AllInfopostsTests {
         }
 
         @Test
-        @MainActor
         func loadAvailableInfopostsWithRussianLanguage() throws {
             // Arrange
             let service = createService(language: "ru")
@@ -87,7 +84,6 @@ extension AllInfopostsTests {
         // MARK: - Тесты загрузки конкретного инфопоста
 
         @Test
-        @MainActor
         func loadAboutInfopostSuccess() throws {
             // Arrange
             let service = createService(language: "ru")
@@ -106,7 +102,6 @@ extension AllInfopostsTests {
         // MARK: - Тесты работы с избранным
 
         @Test
-        @MainActor
         func isInfopostFavoriteWhenUserExists() throws {
             // Arrange
             let service = createService(language: "ru")
@@ -139,7 +134,6 @@ extension AllInfopostsTests {
         }
 
         @Test
-        @MainActor
         func isInfopostFavoriteWhenUserNotExists() throws {
             // Arrange
             let service = createService(language: "ru")
@@ -156,7 +150,6 @@ extension AllInfopostsTests {
         }
 
         @Test
-        @MainActor
         func isInfopostFavoriteWhenFavoriteNotAvailable() throws {
             // Arrange
             let service = createService(language: "ru")
@@ -186,7 +179,6 @@ extension AllInfopostsTests {
         }
 
         @Test
-        @MainActor
         func loadFavoriteIdsWhenUserExists() throws {
             // Arrange
             let service = createService(language: "ru")
@@ -207,7 +199,6 @@ extension AllInfopostsTests {
         }
 
         @Test
-        @MainActor
         func loadFavoriteIdsWhenUserNotExists() throws {
             // Arrange
             let service = createService(language: "ru")
@@ -222,7 +213,6 @@ extension AllInfopostsTests {
         }
 
         @Test
-        @MainActor
         func changeFavoriteAddToFavorites() throws {
             // Arrange
             let service = createService(language: "ru")
@@ -243,7 +233,6 @@ extension AllInfopostsTests {
         }
 
         @Test
-        @MainActor
         func changeFavoriteRemoveFromFavorites() throws {
             // Arrange
             let service = createService(language: "ru")
@@ -266,7 +255,6 @@ extension AllInfopostsTests {
         }
 
         @Test
-        @MainActor
         func changeFavoriteWhenUserNotExists() throws {
             // Arrange
             let service = createService(language: "ru")
@@ -282,7 +270,6 @@ extension AllInfopostsTests {
         // MARK: - Тесты структуры инфопостов
 
         @Test
-        @MainActor
         func infopostsHaveCorrectStructure() throws {
             // Arrange
             let service = createService(language: "ru")
@@ -311,7 +298,6 @@ extension AllInfopostsTests {
         }
 
         @Test
-        @MainActor
         func infopostsHaveCorrectSections() throws {
             // Arrange
             let service = createService(language: "ru")
@@ -340,7 +326,6 @@ extension AllInfopostsTests {
         // MARK: - Тесты кэширования
 
         @Test
-        @MainActor
         func loadAvailableInfopostsCaching() throws {
             // Arrange
             let service = createService(language: "ru")
@@ -366,7 +351,6 @@ extension AllInfopostsTests {
         // MARK: - Тесты обработки ошибок
 
         @Test
-        @MainActor
         func loadAvailableInfopostsWithInvalidLanguage() throws {
             // Arrange
             let service = createService(language: "invalid")
@@ -380,7 +364,6 @@ extension AllInfopostsTests {
         // MARK: - Тесты фильтрации по полу
 
         @Test
-        @MainActor
         func infopostFromFilenameWithWomenSuffix() {
             // Arrange
             let filename = "d0-women"
@@ -400,7 +383,6 @@ extension AllInfopostsTests {
         }
 
         @Test
-        @MainActor
         func infopostFromFilenameWithoutGenderSuffix() {
             // Arrange
             let filename = "d1"
@@ -420,7 +402,6 @@ extension AllInfopostsTests {
         }
 
         @Test
-        @MainActor
         func infopostFromFilenameWithSpecialId() {
             // Arrange
             let filename = "about"
@@ -442,7 +423,6 @@ extension AllInfopostsTests {
         // MARK: - Тесты управления секциями
 
         @Test
-        @MainActor
         func sectionsForDisplayReturnsCorrectSections() throws {
             // Arrange
             let service = createService(language: "ru")
@@ -463,7 +443,6 @@ extension AllInfopostsTests {
         }
 
         @Test
-        @MainActor
         func sectionsForDisplayFiltersEmptySections() throws {
             // Arrange
             let service = createService(language: "ru")
@@ -480,7 +459,6 @@ extension AllInfopostsTests {
         }
 
         @Test
-        @MainActor
         func didTapSectionTogglesCollapsedState() throws {
             // Arrange
             let service = createService(language: "ru")
@@ -506,7 +484,6 @@ extension AllInfopostsTests {
         }
 
         @Test
-        @MainActor
         func didTapSectionMultipleTimes() throws {
             // Arrange
             let service = createService(language: "ru")
@@ -527,7 +504,6 @@ extension AllInfopostsTests {
         }
 
         @Test
-        @MainActor
         func didTapSectionDifferentSections() throws {
             // Arrange
             let service = createService(language: "ru")
@@ -550,7 +526,6 @@ extension AllInfopostsTests {
         }
 
         @Test
-        @MainActor
         func didLogoutResetsSectionsState() throws {
             // Arrange
             let service = createService(language: "ru")
