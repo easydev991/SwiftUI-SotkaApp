@@ -51,7 +51,8 @@ struct AnalyticsServiceTests {
             (.selectInfopostFontSize(size: "large", infopostId: "post_1"), "select_infopost_font_size"),
             (.selectExerciseIcon(iconName: "3", exerciseId: "ex_1"), "select_exercise_icon"),
             (.confirmResetProgram, "confirm_reset_program"),
-            (.beginOfflineLogin, "begin_offline_login")
+            (.beginOfflineLogin, "begin_offline_login"),
+            (.extendCalendar(targetTotalDays: 200), "extend_calendar")
         ]
 
         for (action, expectedName) in values {

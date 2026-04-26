@@ -1,4 +1,4 @@
-.PHONY: help setup setup_hook setup_snapshot setup_fastlane setup_ssh setup_markdownlint update update_fastlane update_swiftformat update_readme_versions test_readme_versions format screenshots upload_screenshots testflight fastlane increment_build build test test_watch
+.PHONY: help setup setup_hook setup_snapshot setup_fastlane setup_ssh setup_markdownlint update update_fastlane update_swiftformat update_readme_versions test_readme_versions test_ui_preflight_script format screenshots ui_preflight_test_ui ui_preflight_screenshots upload_screenshots testflight fastlane increment_build build test test_ui test_watch
 
 # Цвета и шрифт
 YELLOW=\033[1;33m
@@ -17,7 +17,14 @@ SWIFT_VERSION=6.3.0
 SHELL := /bin/bash
 .ONESHELL:
 BUNDLE_EXEC := RBENV_VERSION=$(RUBY_VERSION) bundle exec
-IOS_SIM_DEST ?= platform=iOS Simulator,name=iPhone 13 Pro,OS=18.6
+UI_PREFLIGHT_SCRIPT := ./scripts/simulator_ui_preflight.sh
+IOS_SIM_DEST ?= platform=iOS Simulator,name=iPhone 17
+WATCH_SIM_DEST ?= platform=watchOS Simulator,name=Apple Watch Ultra 3 (49mm)
+TEST_DERIVED_DATA_PATH ?= /tmp/SwiftUI-SotkaApp-test-derived-data
+APP_BUNDLE_ID ?= com.oleg991.SwiftUI-SotkaApp
+UI_PREFLIGHT_PERMISSIONS ?= photos,microphone,media-library,motion
+SNAPSHOT_IOS_DEVICE_1 ?= iPhone 15 Pro Max
+SNAPSHOT_IOS_DEVICE_2 ?= iPad Pro (12.9-inch) (6th generation)
 
 ## help: Показать это справочное сообщение
 help:
@@ -237,6 +244,10 @@ update_readme_versions:
 test_readme_versions:
 	@python3 -m unittest scripts.tests.test_update_readme_versions
 
+## test_ui_preflight_script: Запустить unit-тесты скрипта simulator_ui_preflight.sh
+test_ui_preflight_script:
+	@python3 -m unittest scripts.tests.test_simulator_ui_preflight
+
 ## update_fastlane: Обновить только fastlane и его зависимости
 update_fastlane:
 	@bash -c '\
@@ -304,9 +315,28 @@ screenshots:
 			exit 1; \
 		fi; \
 	fi; \
+	$(MAKE) ui_preflight_screenshots; \
 	printf "$(YELLOW)Запуск fastlane snapshot...$(RESET)\n"; \
 	$(BUNDLE_EXEC) fastlane screenshots; \
 	'
+
+## ui_preflight_test_ui: Преднастройка iOS-симулятора для стабильного запуска UI-тестов
+ui_preflight_test_ui:
+	@$(UI_PREFLIGHT_SCRIPT) \
+		--destination '$(IOS_SIM_DEST)' \
+		--bundle-id '$(APP_BUNDLE_ID)' \
+		--permissions '$(UI_PREFLIGHT_PERMISSIONS)'
+
+## ui_preflight_screenshots: Преднастройка iOS-симуляторов для fastlane screenshots
+ui_preflight_screenshots:
+	@$(UI_PREFLIGHT_SCRIPT) \
+		--device '$(SNAPSHOT_IOS_DEVICE_1)' \
+		--bundle-id '$(APP_BUNDLE_ID)' \
+		--permissions '$(UI_PREFLIGHT_PERMISSIONS)'
+	@$(UI_PREFLIGHT_SCRIPT) \
+		--device '$(SNAPSHOT_IOS_DEVICE_2)' \
+		--bundle-id '$(APP_BUNDLE_ID)' \
+		--permissions '$(UI_PREFLIGHT_PERMISSIONS)'
 
 ## watch_screenshots: Запустить fastlane snapshot для генерации скриншотов Apple Watch
 watch_screenshots:
@@ -328,16 +358,59 @@ build:
 test:
 	xcodebuild -project SwiftUI-SotkaApp.xcodeproj \
 		-scheme SwiftUI-SotkaAppTests \
-		-resolvePackageDependencies && \
+		-resolvePackageDependencies
 	xcodebuild -project SwiftUI-SotkaApp.xcodeproj \
 		-scheme SwiftUI-SotkaAppTests \
 		-sdk iphonesimulator \
 		-destination '$(IOS_SIM_DEST)' \
-		test -testPlan SwiftUI-SotkaAppTests
+		-derivedDataPath '$(TEST_DERIVED_DATA_PATH)' \
+		build-for-testing -testPlan SwiftUI-SotkaAppTests
+	@WATCH_INFO_PLIST="$(TEST_DERIVED_DATA_PATH)/Build/Products/Debug-iphonesimulator/SwiftUI-SotkaApp.app/Watch/SotkaWatch Watch App.app/Info.plist"; \
+	if [ -f "$$WATCH_INFO_PLIST" ]; then \
+		/usr/libexec/PlistBuddy -c "Delete :UIDeviceFamily" "$$WATCH_INFO_PLIST" >/dev/null 2>&1 || true; \
+		/usr/libexec/PlistBuddy -c "Add :UIDeviceFamily array" "$$WATCH_INFO_PLIST"; \
+		/usr/libexec/PlistBuddy -c "Add :UIDeviceFamily:0 integer 4" "$$WATCH_INFO_PLIST"; \
+		/usr/libexec/PlistBuddy -c "Set :WKApplication true" "$$WATCH_INFO_PLIST" >/dev/null 2>&1 || \
+		/usr/libexec/PlistBuddy -c "Add :WKApplication bool true" "$$WATCH_INFO_PLIST"; \
+	fi
+	xcodebuild -project SwiftUI-SotkaApp.xcodeproj \
+		-scheme SwiftUI-SotkaAppTests \
+		-sdk iphonesimulator \
+		-destination '$(IOS_SIM_DEST)' \
+		-derivedDataPath '$(TEST_DERIVED_DATA_PATH)' \
+		test-without-building -testPlan SwiftUI-SotkaAppTests
 
 ## test_watch: Запускает unit-тесты для Apple Watch в терминале
 test_watch:
-	xcodebuild -project SwiftUI-SotkaApp.xcodeproj -scheme "SotkaWatch Watch AppTests" -sdk watchsimulator -destination 'platform=watchOS Simulator,name=Apple Watch Series 8 (45mm)' test -testPlan "SotkaWatch-UnitTests"
+	xcodebuild -project SwiftUI-SotkaApp.xcodeproj -scheme "SotkaWatch Watch AppTests" -sdk watchsimulator -destination '$(WATCH_SIM_DEST)' test -testPlan "SotkaWatch-UnitTests"
+
+## test_ui: Запускает UI-тесты iOS-приложения в терминале
+test_ui:
+	$(MAKE) ui_preflight_test_ui
+	xcodebuild -project SwiftUI-SotkaApp.xcodeproj \
+		-scheme SwiftUI-SotkaAppUITests \
+		-resolvePackageDependencies
+	xcodebuild -project SwiftUI-SotkaApp.xcodeproj \
+		-scheme SwiftUI-SotkaAppUITests \
+		-sdk iphonesimulator \
+		-destination '$(IOS_SIM_DEST)' \
+		-derivedDataPath '$(TEST_DERIVED_DATA_PATH)' \
+		build-for-testing -testPlan SwiftUI-SotkaAppUITests
+	@WATCH_INFO_PLIST="$(TEST_DERIVED_DATA_PATH)/Build/Products/Debug-iphonesimulator/SwiftUI-SotkaApp.app/Watch/SotkaWatch Watch App.app/Info.plist"; \
+	if [ -f "$$WATCH_INFO_PLIST" ]; then \
+		/usr/libexec/PlistBuddy -c "Delete :UIDeviceFamily" "$$WATCH_INFO_PLIST" >/dev/null 2>&1 || true; \
+		/usr/libexec/PlistBuddy -c "Add :UIDeviceFamily array" "$$WATCH_INFO_PLIST"; \
+		/usr/libexec/PlistBuddy -c "Add :UIDeviceFamily:0 integer 4" "$$WATCH_INFO_PLIST"; \
+		/usr/libexec/PlistBuddy -c "Set :WKApplication true" "$$WATCH_INFO_PLIST" >/dev/null 2>&1 || \
+		/usr/libexec/PlistBuddy -c "Add :WKApplication bool true" "$$WATCH_INFO_PLIST"; \
+	fi
+	xcodebuild -project SwiftUI-SotkaApp.xcodeproj \
+		-scheme SwiftUI-SotkaAppUITests \
+		-sdk iphonesimulator \
+		-destination '$(IOS_SIM_DEST)' \
+		-derivedDataPath '$(TEST_DERIVED_DATA_PATH)' \
+		test-without-building -testPlan SwiftUI-SotkaAppUITests \
+		-test-timeouts-enabled NO
 
 ## setup_ssh: Настраивает SSH-доступ к GitHub (интерактивно: создаст ключ при необходимости, добавит в агент, опционально добавит ключ в аккаунт GitHub)
 setup_ssh:

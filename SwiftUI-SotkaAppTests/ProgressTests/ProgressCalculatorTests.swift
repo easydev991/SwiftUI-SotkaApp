@@ -95,4 +95,102 @@ struct ProgressCalculatorTests {
 
         #expect(statuses[0] == .skipped)
     }
+
+    @Test("При currentDay 101 прогресс совпадает с 100-дневным расчетом")
+    func progressDoesNotGrowOnDay101() {
+        let readDays = Array(1 ... 50)
+        let activityDays = Array(1 ... 75)
+        let user = makeUserWithActivities(
+            readDays: readDays,
+            activityDays: activityDays
+        )
+
+        let calculatorDay100 = ProgressCalculator(user: user, currentDay: 100)
+        let calculatorDay101 = ProgressCalculator(user: user, currentDay: 101)
+
+        let fullProgressDay100 = calculatorDay100.fullProgressPercent
+        let fullProgressDay101 = calculatorDay101.fullProgressPercent
+        let infoPercentDay100 = calculatorDay100.infoPostsPercent
+        let infoPercentDay101 = calculatorDay101.infoPostsPercent
+        let activityPercentDay100 = calculatorDay100.activityPercent
+        let activityPercentDay101 = calculatorDay101.activityPercent
+        let dayStatusesDay101 = calculatorDay101.dayStatuses
+        let currentDayMarkersCount = dayStatusesDay101.count(where: { $0 == .currentDay })
+        let notStartedMarkersCount = dayStatusesDay101.count(where: { $0 == .notStarted })
+        let statusesCount = dayStatusesDay101.count
+        let lastDayStatus = dayStatusesDay101[99]
+
+        #expect(fullProgressDay100 == fullProgressDay101)
+        #expect(infoPercentDay100 == infoPercentDay101)
+        #expect(activityPercentDay100 == activityPercentDay101)
+        #expect(statusesCount == 100)
+        #expect(currentDayMarkersCount == 0)
+        #expect(notStartedMarkersCount == 0)
+        #expect(lastDayStatus == .skipped)
+    }
+
+    @Test("При currentDay 200 прогресс совпадает с 100-дневным расчетом")
+    func progressDoesNotGrowOnDay200() {
+        let readDays = Array(1 ... 80)
+        let activityDays = Array(1 ... 90)
+        let user = makeUserWithActivities(
+            readDays: readDays,
+            activityDays: activityDays
+        )
+
+        let calculatorDay100 = ProgressCalculator(user: user, currentDay: 100)
+        let calculatorDay200 = ProgressCalculator(user: user, currentDay: 200)
+
+        let fullProgressDay100 = calculatorDay100.fullProgressPercent
+        let fullProgressDay200 = calculatorDay200.fullProgressPercent
+        let infoPercentDay100 = calculatorDay100.infoPostsPercent
+        let infoPercentDay200 = calculatorDay200.infoPostsPercent
+        let activityPercentDay100 = calculatorDay100.activityPercent
+        let activityPercentDay200 = calculatorDay200.activityPercent
+        let dayStatusesDay200 = calculatorDay200.dayStatuses
+        let currentDayMarkersCount = dayStatusesDay200.count(where: { $0 == .currentDay })
+        let notStartedMarkersCount = dayStatusesDay200.count(where: { $0 == .notStarted })
+        let statusesCount = dayStatusesDay200.count
+        let lastDayStatus = dayStatusesDay200[99]
+
+        #expect(fullProgressDay100 == fullProgressDay200)
+        #expect(infoPercentDay100 == infoPercentDay200)
+        #expect(activityPercentDay100 == activityPercentDay200)
+        #expect(statusesCount == 100)
+        #expect(currentDayMarkersCount == 0)
+        #expect(notStartedMarkersCount == 0)
+        #expect(lastDayStatus == .skipped)
+    }
+
+    @Test("После полного сброса прогресс начинается заново")
+    func progressResetsAfterFullReset() {
+        let user = makeUserWithActivities(
+            readDays: Array(1 ... 20),
+            activityDays: Array(1 ... 30)
+        )
+        let calculatorBeforeReset = ProgressCalculator(user: user, currentDay: 100)
+
+        let fullProgressBeforeReset = calculatorBeforeReset.fullProgressPercent
+        let infoPercentBeforeReset = calculatorBeforeReset.infoPostsPercent
+        let activityPercentBeforeReset = calculatorBeforeReset.activityPercent
+
+        user.setReadInfopostDays([])
+        user.dayActivities.removeAll()
+
+        let calculatorAfterReset = ProgressCalculator(user: user, currentDay: 1)
+        let fullProgressAfterReset = calculatorAfterReset.fullProgressPercent
+        let infoPercentAfterReset = calculatorAfterReset.infoPostsPercent
+        let activityPercentAfterReset = calculatorAfterReset.activityPercent
+        let dayStatusesAfterReset = calculatorAfterReset.dayStatuses
+
+        #expect(fullProgressBeforeReset > 0)
+        #expect(infoPercentBeforeReset > 0)
+        #expect(activityPercentBeforeReset > 0)
+
+        #expect(fullProgressAfterReset == 0)
+        #expect(infoPercentAfterReset == 0)
+        #expect(activityPercentAfterReset == 0)
+        #expect(dayStatusesAfterReset[0] == .currentDay)
+        #expect(dayStatusesAfterReset[1] == .notStarted)
+    }
 }

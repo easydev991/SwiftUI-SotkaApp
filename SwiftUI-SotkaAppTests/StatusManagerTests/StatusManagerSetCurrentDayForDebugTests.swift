@@ -26,8 +26,8 @@ extension StatusManagerTests {
             #expect(calculator.startDate.isTheSameDayIgnoringTime(initialStartDateValue))
         }
 
-        @Test("Отклоняет день больше 100")
-        func rejectsDayGreaterThan100() async throws {
+        @Test("Отклоняет день больше 10100")
+        func rejectsDayGreaterThan10100() async throws {
             let now = Date.now
             let initialStartDate = try #require(Calendar.current.date(byAdding: .day, value: -30, to: now))
             let mockStatusClient = MockStatusClient(
@@ -39,7 +39,7 @@ extension StatusManagerTests {
             let initialCalculator = try #require(statusManager.currentDayCalculator)
             let initialStartDateValue = initialCalculator.startDate
 
-            statusManager.setCurrentDayForDebug(101)
+            statusManager.setCurrentDayForDebug(10101)
 
             let calculator = try #require(statusManager.currentDayCalculator)
             #expect(calculator.startDate.isTheSameDayIgnoringTime(initialStartDateValue))
@@ -64,7 +64,7 @@ extension StatusManagerTests {
             #expect(calculator.startDate.isTheSameDayIgnoringTime(initialStartDateValue))
         }
 
-        @Test("Устанавливает валидный день и обновляет startDate", arguments: [1, 25, 50, 75, 100])
+        @Test("Устанавливает валидный день и обновляет startDate", arguments: [1, 25, 50, 75, 100, 150, 1000])
         func setsValidDayAndUpdatesStartDate(day: Int) throws {
             let now = Date.now
             let daysToSubtract = day - 1
@@ -74,7 +74,8 @@ extension StatusManagerTests {
             statusManager.setCurrentDayForDebug(day)
 
             let calculator = try #require(statusManager.currentDayCalculator)
-            #expect(calculator.currentDay == day)
+            let expectedCurrentDay = min(day, calculator.totalDays)
+            #expect(calculator.currentDay == expectedCurrentDay)
             #expect(calculator.startDate.isTheSameDayIgnoringTime(expectedStartDate))
         }
 
@@ -124,6 +125,42 @@ extension StatusManagerTests {
             let updatedCalculator = try #require(statusManager.currentDayCalculator)
             #expect(updatedCalculator.currentDay == newDay)
             #expect(updatedCalculator.startDate.isTheSameDayIgnoringTime(expectedNewStartDate))
+        }
+
+        @Test("Автоматически вычисляет extensionCount для дня 150")
+        func computesExtensionCountForDay150() throws {
+            let statusManager = try MockStatusManager.create()
+
+            statusManager.setCurrentDayForDebug(150)
+
+            let calculator = try #require(statusManager.currentDayCalculator)
+            #expect(calculator.totalDays == 200)
+            #expect(calculator.currentDay == 150)
+            #expect(calculator.daysLeft == 50)
+        }
+
+        @Test("Использует переданный extensionCount для edge-case")
+        func usesExplicitExtensionCountForEdgeCase() throws {
+            let statusManager = try MockStatusManager.create()
+
+            statusManager.setCurrentDayForDebug(150, extensionCount: 0)
+
+            let calculator = try #require(statusManager.currentDayCalculator)
+            #expect(calculator.totalDays == 100)
+            #expect(calculator.currentDay == 100)
+            #expect(calculator.daysLeft == 0)
+        }
+
+        @Test("Автоматически вычисляет extensionCount для дня 1000")
+        func computesExtensionCountForDay1000() throws {
+            let statusManager = try MockStatusManager.create()
+
+            statusManager.setCurrentDayForDebug(1000)
+
+            let calculator = try #require(statusManager.currentDayCalculator)
+            #expect(calculator.totalDays == 1000)
+            #expect(calculator.currentDay == 1000)
+            #expect(calculator.daysLeft == 0)
         }
     }
 }

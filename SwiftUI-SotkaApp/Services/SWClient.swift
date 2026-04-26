@@ -1,5 +1,6 @@
 import Foundation
 import SWNetwork
+import SWUtils
 
 /// Сервис для обращений к серверу
 struct SWClient {
@@ -63,6 +64,20 @@ extension SWClient: StatusClient {
 
     func current() async throws -> CurrentRunResponse {
         let endpoint = Endpoint.current
+        return try await makeResult(for: endpoint)
+    }
+}
+
+extension SWClient: PurchasesClient {
+    func getPurchases() async throws -> CalendarPurchasesResponse {
+        let endpoint = Endpoint.getPurchases
+        return try await makeResult(for: endpoint)
+    }
+
+    func postCalendarPurchase(date: Date) async throws -> CalendarPurchasesResponse {
+        let isoDate = DateFormatterService.stringFromFullDate(date, format: .isoDateTimeSec)
+        let request = CalendarPurchaseRequest(date: isoDate)
+        let endpoint = Endpoint.postCalendarPurchase(request)
         return try await makeResult(for: endpoint)
     }
 }
@@ -209,6 +224,12 @@ enum Endpoint {
     /// **GET** ${API}/100/current_run
     case current
 
+    // MARK: Покупки/продления календаря
+    /// **GET** ${API}/100/purchases
+    case getPurchases
+    /// **POST** ${API}/100/purchases/calendars
+    case postCalendarPurchase(CalendarPurchaseRequest)
+
     // MARK: Получить список пользовательских упражнений
     /// **GET** ${API}/100/custom_exercises
     case getCustomExercises
@@ -277,6 +298,8 @@ enum Endpoint {
         case .changePassword: "/auth/changepass"
         case .start: "/100/start"
         case .current: "/100/current_run"
+        case .getPurchases: "/100/purchases"
+        case .postCalendarPurchase: "/100/purchases/calendars"
         case .getCustomExercises: "/100/custom_exercises"
         case let .saveCustomExercise(id, _): "/100/custom_exercises/\(id)"
         case let .deleteCustomExercise(id): "/100/custom_exercises/\(id)"
@@ -297,10 +320,11 @@ enum Endpoint {
 
     var method: HTTPMethod {
         switch self {
-        case .login, .resetPassword, .editUser, .changePassword, .start, .saveCustomExercise, .setPostRead, .createProgress,
+        case .login, .resetPassword, .editUser, .changePassword, .start, .postCalendarPurchase, .saveCustomExercise, .setPostRead,
+             .createProgress,
              .updateProgress, .createDay, .updateDay: .post
         case .getProgressDay: .get
-        case .getUser, .getCountries, .current, .getCustomExercises, .getReadPosts, .getProgress, .getDays: .get
+        case .getUser, .getCountries, .current, .getPurchases, .getCustomExercises, .getReadPosts, .getProgress, .getDays: .get
         case .deleteCustomExercise, .deleteAllReadPosts, .deleteProgress, .deleteProgressPhoto, .deleteDay: .delete
         }
     }
@@ -309,25 +333,26 @@ enum Endpoint {
         switch self {
         case .editUser, .createProgress, .updateProgress: true
         case .getProgressDay: false
-        case .login, .getUser, .resetPassword, .getCountries, .changePassword, .start, .current, .getCustomExercises, .saveCustomExercise,
-             .deleteCustomExercise, .getReadPosts, .setPostRead, .deleteAllReadPosts, .getProgress, .deleteProgress,
-             .deleteProgressPhoto, .getDays, .createDay, .updateDay, .deleteDay: false
+        case .login, .getUser, .resetPassword, .getCountries, .changePassword, .start, .current, .getPurchases, .postCalendarPurchase,
+             .getCustomExercises, .saveCustomExercise, .deleteCustomExercise, .getReadPosts, .setPostRead, .deleteAllReadPosts,
+             .getProgress,
+             .deleteProgress, .deleteProgressPhoto, .getDays, .createDay, .updateDay, .deleteDay: false
         }
     }
 
     var queryItems: [URLQueryItem] {
         switch self {
-        case .login, .getUser, .resetPassword, .getCountries, .editUser, .changePassword, .start, .current, .getCustomExercises,
-             .saveCustomExercise, .deleteCustomExercise, .getReadPosts, .setPostRead, .deleteAllReadPosts, .getProgress, .getProgressDay,
-             .createProgress,
-             .updateProgress, .deleteProgress, .deleteProgressPhoto, .getDays, .createDay, .updateDay, .deleteDay: []
+        case .login, .getUser, .resetPassword, .getCountries, .editUser, .changePassword, .start, .current, .getPurchases,
+             .postCalendarPurchase, .getCustomExercises, .saveCustomExercise, .deleteCustomExercise, .getReadPosts, .setPostRead,
+             .deleteAllReadPosts, .getProgress, .getProgressDay, .createProgress, .updateProgress, .deleteProgress, .deleteProgressPhoto,
+             .getDays, .createDay, .updateDay, .deleteDay: []
         }
     }
 
     var bodyParts: BodyMaker.Parts? {
         switch self {
-        case .login, .getUser, .getCountries, .current, .getCustomExercises, .deleteCustomExercise, .getReadPosts, .setPostRead,
-             .deleteAllReadPosts, .getProgress, .getProgressDay, .deleteProgress, .deleteProgressPhoto, .getDays, .deleteDay:
+        case .login, .getUser, .getCountries, .current, .getPurchases, .getCustomExercises, .deleteCustomExercise, .getReadPosts,
+             .setPostRead, .deleteAllReadPosts, .getProgress, .getProgressDay, .deleteProgress, .deleteProgressPhoto, .getDays, .deleteDay:
             return nil
         case let .editUser(_, form):
             let parameters = form.requestParameters
@@ -350,6 +375,8 @@ enum Endpoint {
             return .init(["username_or_email": login], nil)
         case let .start(date):
             return .init(["date": date], nil)
+        case let .postCalendarPurchase(request):
+            return .init(["date": request.date], nil)
         case let .saveCustomExercise(_, exercise):
             return .init(exercise.formParameters, nil)
         case let .createProgress(progress), let .updateProgress(_, progress):

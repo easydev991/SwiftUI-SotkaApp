@@ -13,7 +13,8 @@ enum PreviewModelContainer {
                 UserProgress.self,
                 DayActivity.self,
                 DayActivityTraining.self,
-                SyncJournalEntry.self
+                SyncJournalEntry.self,
+                CalendarExtensionRecord.self
             ]
         )
         let config = ModelConfiguration(schema: schema, isStoredInMemoryOnly: true)

@@ -38,37 +38,10 @@ make testflight
 
 ## Скриншоты
 
-1. Генерируем скриншоты при помощи `Fastlane` ([документация](https://docs.fastlane.tools/getting-started/ios/setup/))
-2. Настройки для генерации скриншотов для iPhone/iPad находятся в [Snapfile](../fastlane/Snapfile) ([документация](https://docs.fastlane.tools/actions/snapshot/))
-3. Для Apple Watch отдельный `Snapfile` не поддерживается, поэтому при генерации скриншотов часов `Snapfile` временно переименовывается, чтобы `fastlane` брал настройки напрямую из `lane` в [Fastfile](../fastlane/Fastfile)
-4. Для генерации скриншотов нужно предварительно [настроить проект](setup-guide.md)
-5. Генерация скриншотов для iPhone и iPad выполняется командой:
+[UI-тесты и скриншоты](ui-tests-and-screenshots.md)
 
-```shell
-make screenshots
-```
-
-6. Генерация скриншотов для Apple Watch выполняется командой:
-
-```shell
-make watch_screenshots
-```
-
-7. Для генерации скриншотов **необходимо наличие в Xcode симуляторов с нужной версией iOS/watchOS** в соответствие с настройками в [Snapfile](../fastlane/Snapfile) и [Fastfile](../fastlane/Fastfile)
-8. Если тесты падают с ошибкой при запуске через `fastlane`, нужно убедиться, что при ручном запуске тестов из `Xcode` они успешно проходят во всех локализациях, используемых для создания скриншотов
-9. Готовые скриншоты сохраняются в папке [screenshots](../fastlane/screenshots) в соответствующих подпапках (`iphone/`, `watch/`)
-10. Отправить скриншоты в appstoreconnect можно командой:
+Отправить готовые скриншоты в App Store Connect можно командой:
 
 ```shell
 make upload_screenshots
 ```
-
-### Модели девайсов, используемые для скриншотов
-
-По состоянию на 2025 год Apple берет за основу скриншоты для диагонали 6.9 (или 6.7) дюймов для айфона (13 дюймов для айпада) и масштабирует их под все остальные размеры экранов, то есть можно использовать для скриншотов по одному девайсу на платформу:
-
-- iPhone 15 Pro Max
-- iPad Pro (12.9-inch) (6th generation)
-- Apple Watch Series 8 (45mm)
-
-Список всех существующих девайсов есть [тут](https://iosref.com/res).

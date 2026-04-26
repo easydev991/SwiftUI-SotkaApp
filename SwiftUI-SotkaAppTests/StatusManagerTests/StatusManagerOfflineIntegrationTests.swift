@@ -70,8 +70,9 @@ extension StatusManagerTests {
 
             let savedActivities = try context.fetch(FetchDescriptor<DayActivity>())
             #expect(savedActivities.count == 1)
-            #expect(savedActivities.first?.day == 1)
-            #expect(savedActivities.first?.activityTypeRaw == DayActivityType.workout.rawValue)
+            let firstActivity = try #require(savedActivities.first)
+            #expect(firstActivity.day == 1)
+            #expect(firstActivity.activityTypeRaw == DayActivityType.workout.rawValue)
 
             let userWithActivities = try #require(context.fetch(FetchDescriptor<User>()).first)
             #expect(userWithActivities.dayActivities.count == 1)
@@ -247,7 +248,8 @@ extension StatusManagerTests {
 
             let usersAfterRelogin = try context.fetch(FetchDescriptor<User>())
             #expect(usersAfterRelogin.count == 1)
-            #expect(usersAfterRelogin.first?.genderCode == 2)
+            let reLoginUser = try #require(usersAfterRelogin.first)
+            #expect(reLoginUser.genderCode == 2)
         }
 
         @Test("Офлайн: несколько DayActivity сохраняются и удаляются при logout")
@@ -259,11 +261,6 @@ extension StatusManagerTests {
             let offlineUser = User(offlineWithGenderCode: 1)
             context.insert(offlineUser)
             try context.save()
-
-            let statusManager = try MockStatusManager.create(
-                statusClient: mockStatusClient,
-                modelContainer: container
-            )
 
             let fiveDaysAgo = try #require(Calendar.current.date(byAdding: .day, value: -5, to: .now))
 

@@ -27,7 +27,8 @@ struct SwiftUI_SotkaAppApp: App {
                 UserProgress.self,
                 DayActivity.self,
                 DayActivityTraining.self,
-                SyncJournalEntry.self
+                SyncJournalEntry.self,
+                CalendarExtensionRecord.self
             ]
         )
         let modelConfiguration = ModelConfiguration(schema: schema, isStoredInMemoryOnly: false)
@@ -77,6 +78,7 @@ struct SwiftUI_SotkaAppApp: App {
                 progressSyncService: .init(client: client),
                 dailyActivitiesService: .init(client: client),
                 statusClient: client,
+                purchasesClient: client,
                 modelContainer: modelContainer,
                 reviewEventReporter: reviewManager
             )
@@ -104,6 +106,7 @@ struct SwiftUI_SotkaAppApp: App {
             progressSyncService: .init(client: client),
             dailyActivitiesService: .init(client: client),
             statusClient: client,
+            purchasesClient: client,
             modelContainer: modelContainer,
             reviewEventReporter: reviewManager
         )
@@ -213,6 +216,7 @@ private extension SwiftUI_SotkaAppApp {
             progressSyncService: .init(client: mockClient),
             dailyActivitiesService: .init(client: mockClient),
             statusClient: mockClient,
+            purchasesClient: mockClient,
             modelContainer: modelContainer
         )
 

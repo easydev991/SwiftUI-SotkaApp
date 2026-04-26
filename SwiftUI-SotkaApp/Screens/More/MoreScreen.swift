@@ -147,7 +147,7 @@ private extension MoreScreen {
             get: { statusManager.currentDayCalculator?.currentDay ?? 1 },
             set: { statusManager.setCurrentDayForDebug($0) }
         )) {
-            ForEach(1 ... 100, id: \.self) { day in
+            ForEach(1 ... statusManager.debugPickerMaxDay, id: \.self) { day in
                 Text(.day(number: day)).tag(day)
             }
         }

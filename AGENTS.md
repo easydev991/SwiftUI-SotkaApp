@@ -25,9 +25,9 @@ Follow these repo-specific conventions and commands.
 - Fallback path: use Makefile commands only when MCP/plugin tools are unavailable.
 - `make setup` - Install all tools (Homebrew, rbenv, Ruby, bundler, fastlane, swiftformat).
 - `make format` - Format Swift code with swiftformat + markdown files with markdownlint.
-- `make build` - Build iOS project for iPhone 17 Simulator (fallback).
+- `make build` - Build iOS project for simulator from `IOS_SIM_DEST` (default: iPhone 17, latest installed iOS runtime) (fallback).
 - `make test` - Run all iOS unit tests (fallback).
-- `make test_watch` - Run all watchOS unit tests (fallback).
+- `make test_watch` - Run all watchOS unit tests on simulator from `WATCH_SIM_DEST` (default: Apple Watch Ultra 3 (49mm), latest installed watchOS runtime) (fallback).
 
 ### Single Test Execution
 
@@ -53,7 +53,7 @@ xcodebuild -project SwiftUI-SotkaApp.xcodeproj \
   -only-testing:SwiftUI-SotkaAppTests/WorkoutViewModelTests/testLoadData
 ```
 
-For watch tests, replace scheme with `SotkaWatch Watch AppTests` and use `-sdk watchsimulator`.
+For watch tests, replace scheme with `SotkaWatch Watch AppTests`, use `-sdk watchsimulator`, and destination from `WATCH_SIM_DEST` (default: `platform=watchOS Simulator,name=Apple Watch Ultra 3 (49mm)`).
 
 ## Test Strategy and Framework Conventions
 

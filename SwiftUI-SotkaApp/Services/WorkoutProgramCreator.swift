@@ -122,6 +122,8 @@ struct WorkoutProgramCreator {
             return generateTurboExercises(for: day)
         }
 
+        // Для дней > 100 используем тот же fallback-профиль, что и для поздних обычных дней:
+        // базовый набор + lunges (без циклического повтора логики 1...100).
         var exercises: [WorkoutPreviewTraining] = [
             WorkoutPreviewTraining(count: 1, typeId: ExerciseType.pullups.rawValue, sortOrder: 0),
             WorkoutPreviewTraining(count: 2, typeId: ExerciseType.squats.rawValue, sortOrder: 1),
@@ -253,6 +255,7 @@ struct WorkoutProgramCreator {
                 result += 1
             }
         }
+        // После 43-го дня рост останавливается на plateau; для дней > 100 значение стабильно.
         return result
     }
 

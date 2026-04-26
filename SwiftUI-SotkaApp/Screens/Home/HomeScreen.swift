@@ -88,8 +88,8 @@ extension HomeScreen {
         ) {
             guard let dayCalculator else { return nil }
             self.calculator = dayCalculator
-            self.todayInfopost = todayInfopost
-            self.showActivitySection = currentDay <= 100
+            self.todayInfopost = dayCalculator.shouldShowInfopost ? todayInfopost : nil
+            self.showActivitySection = currentDay >= 1
             self.showProgressSection = !isMaximumsFilled
         }
     }
@@ -115,6 +115,7 @@ private extension HomeScreen {
                     .insideCardBackground()
                 HomeInfopostSectionView(infopost: model.todayInfopost)
             }
+            HomeCalendarExtensionView(calculator: model.calculator)
             if model.showActivitySection {
                 HomeActivitySectionView { sheetItem = $0 }
             }
@@ -128,6 +129,7 @@ private extension HomeScreen {
         VStack(spacing: 12) {
             HomeDayCountView(calculator: model.calculator)
                 .insideCardBackground()
+            HomeCalendarExtensionView(calculator: model.calculator)
             HomeInfopostSectionView(infopost: model.todayInfopost)
             if model.showActivitySection {
                 HomeActivitySectionView { sheetItem = $0 }
@@ -160,9 +162,20 @@ private extension HomeScreen {
 }
 
 #if DEBUG
-#Preview {
-    HomeScreen()
-        .environment(StatusManager.preview)
+#Preview("Без продления") {
+    let statusManager = StatusManager.preview
+    return HomeScreen()
+        .environment(statusManager)
+        .environment(statusManager.dailyActivitiesService)
+        .modelContainer(PreviewModelContainer.make(with: User(id: 1)))
+}
+
+#Preview("С продлением, день 130") {
+    let statusManager = StatusManager.previewWithCalendarExtensionDay130
+    return HomeScreen()
+        .environment(statusManager)
+        .environment(statusManager.dailyActivitiesService)
+        .currentDay(statusManager.currentDayCalculator?.currentDay)
         .modelContainer(PreviewModelContainer.make(with: User(id: 1)))
 }
 #endif

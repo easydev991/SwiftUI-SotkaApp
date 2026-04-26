@@ -186,6 +186,45 @@ extension AllWorkoutProgramCreatorTests {
         #expect(plannedCount97 == 5)
     }
 
+    @Test("День 101 использует cycles и lunges")
+    func usesCyclesAndLungesForDay101() {
+        let creator = WorkoutProgramCreator(day: 101)
+
+        #expect(creator.defaultExecutionType == .cycles)
+        let hasLunges = creator.trainings.contains {
+            $0.typeId == ExerciseType.lunges.rawValue
+        }
+        #expect(hasLunges)
+    }
+
+    @Test("Дни 101, 150 и 1000 используют единый fallback-профиль")
+    func usesSameFallbackProfileForDaysOver100() throws {
+        let creator101 = WorkoutProgramCreator(day: 101)
+        let creator150 = WorkoutProgramCreator(day: 150)
+        let creator1000 = WorkoutProgramCreator(day: 1000)
+
+        let normalized101 = try normalizedTrainings(creator101.trainings)
+        let normalized150 = try normalizedTrainings(creator150.trainings)
+        let normalized1000 = try normalizedTrainings(creator1000.trainings)
+
+        #expect(normalized101 == normalized150)
+        #expect(normalized150 == normalized1000)
+    }
+
+    @Test("Дни 101, 150 и 1000 имеют одинаковый plannedCircles")
+    func hasSamePlannedCirclesForDaysOver100() throws {
+        let creator101 = WorkoutProgramCreator(day: 101)
+        let creator150 = WorkoutProgramCreator(day: 150)
+        let creator1000 = WorkoutProgramCreator(day: 1000)
+
+        let planned101 = try #require(creator101.plannedCount)
+        let planned150 = try #require(creator150.plannedCount)
+        let planned1000 = try #require(creator1000.plannedCount)
+
+        #expect(planned101 == planned150)
+        #expect(planned150 == planned1000)
+    }
+
     @Test("Должен генерировать правильные количества упражнений для дня 93 в турбо-режиме")
     func generatesCorrectCountsForDay93InTurboMode() throws {
         let creator = WorkoutProgramCreator(day: 93, executionType: .turbo)
@@ -410,5 +449,18 @@ extension AllWorkoutProgramCreatorTests {
     func returnsCyclesAndSetsForDays99To100() {
         let creator = WorkoutProgramCreator(day: 99)
         #expect(creator.availableExecutionTypes == [.cycles, .sets])
+    }
+
+    private func normalizedTrainings(_ trainings: [WorkoutPreviewTraining]) throws -> [String] {
+        try trainings
+            .map {
+                let typeId = try #require($0.typeId)
+                let count = try #require($0.count)
+                let sortOrder = try #require($0.sortOrder)
+                return "\(sortOrder):\(typeId):\(count)"
+            }
+            .sorted {
+                $0 < $1
+            }
     }
 }

@@ -10,17 +10,26 @@ private struct ReviewRequestModifier: ViewModifier {
     @Environment(ReviewManager.self) private var reviewManager
     @Environment(\.requestReview) private var requestReview
     @Environment(\.scenePhase) private var scenePhase
+    private let launchArguments = ProcessInfo.processInfo.arguments
+    private var isReviewRequestSuppressed: Bool {
+        launchArguments.contains("-FASTLANE_SNAPSHOT") || launchArguments.contains("UITest")
+    }
+
     let requestDelay: TimeInterval
 
     func body(content: Content) -> some View {
-        content
-            .task(id: ReviewRequestTriggerID(
-                pendingRequest: reviewManager.pendingRequest,
-                scenePhase: scenePhase
-            )) {
-                guard reviewManager.pendingRequest != nil else { return }
-                await scheduleReviewRequest()
-            }
+        if isReviewRequestSuppressed {
+            content
+        } else {
+            content
+                .task(id: ReviewRequestTriggerID(
+                    pendingRequest: reviewManager.pendingRequest,
+                    scenePhase: scenePhase
+                )) {
+                    guard reviewManager.pendingRequest != nil else { return }
+                    await scheduleReviewRequest()
+                }
+        }
     }
 
     @MainActor
