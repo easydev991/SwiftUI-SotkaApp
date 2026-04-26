@@ -59,7 +59,11 @@ struct HTMLContentView: UIViewRepresentable, @preconcurrency Equatable {
         return webView
     }
 
-    func updateUIView(_ webView: WKWebView, context _: Context) {
+    func updateUIView(_ webView: WKWebView, context: Context) {
+        let reloadKey = "\(infopost.id)-\(filename)-\(fontSize.rawValue)"
+        guard context.coordinator.shouldReloadContent(for: reloadKey, currentURL: webView.url) else {
+            return
+        }
         loadContent(in: webView)
     }
 
@@ -75,6 +79,7 @@ struct HTMLContentView: UIViewRepresentable, @preconcurrency Equatable {
         private let externalURLRouter: InfopostExternalURLRouter
         private let openExternalURL: (URL) -> Void
         private let onReachedEnd: () -> Void
+        private var lastReloadKey: String?
 
         init(
             onReachedEnd: @escaping () -> Void,
@@ -167,6 +172,20 @@ struct HTMLContentView: UIViewRepresentable, @preconcurrency Equatable {
                 logger.info("🌐 Открываем ссылку во внешнем браузере: \(externalURL.absoluteString)")
                 return .cancel
             }
+        }
+
+        func shouldReloadContent(for key: String, currentURL: URL?) -> Bool {
+            if currentURL == nil {
+                lastReloadKey = key
+                return true
+            }
+
+            if lastReloadKey == key {
+                return false
+            }
+
+            lastReloadKey = key
+            return true
         }
     }
 }
