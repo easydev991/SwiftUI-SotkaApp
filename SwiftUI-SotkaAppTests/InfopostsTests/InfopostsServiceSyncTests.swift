@@ -145,6 +145,37 @@ extension AllInfopostsTests {
             }
         }
 
+        @Test
+        @MainActor
+        func syncReadPostsOfflineUserSkipsNetwork() async throws {
+            // Arrange
+            let recorder = MockInfopostsClientRecorder()
+            let mockClient = MockInfopostsClient(
+                getReadPostsResult: .success([1, 2, 3]),
+                setPostReadResult: .success(()),
+                recorder: recorder
+            )
+            let service = createService(mockClient: mockClient)
+
+            let modelContainer = try ModelContainer(for: User.self, configurations: ModelConfiguration(isStoredInMemoryOnly: true))
+            let modelContext = modelContainer.mainContext
+
+            let user = User(id: -1, userName: "offline-user")
+            user.setReadInfopostDays([10])
+            user.setUnsyncedReadInfopostDays([11, 12])
+            modelContext.insert(user)
+            try modelContext.save()
+
+            // Act
+            try await service.syncReadPosts(context: modelContext)
+
+            // Assert
+            #expect(user.readInfopostDays == [10])
+            #expect(user.unsyncedReadInfopostDays == [11, 12])
+            #expect(await recorder.getReadPostsCallCount == 0)
+            #expect(await recorder.setPostReadCallCount == 0)
+        }
+
         // MARK: - Тесты отметки поста как прочитанного
 
         @Test
@@ -549,6 +580,33 @@ extension AllInfopostsTests {
             // Assert
             #expect(user.readInfopostDays.contains(-1))
             #expect(!user.unsyncedReadInfopostDays.contains(-1))
+        }
+
+        @Test
+        @MainActor
+        func markPostAsReadOfflineUserDoesNotCallSetPostRead() async throws {
+            // Arrange
+            let recorder = MockInfopostsClientRecorder()
+            let mockClient = MockInfopostsClient(
+                setPostReadResult: .success(()),
+                recorder: recorder
+            )
+            let service = createService(mockClient: mockClient)
+
+            let modelContainer = try ModelContainer(for: User.self, configurations: ModelConfiguration(isStoredInMemoryOnly: true))
+            let modelContext = modelContainer.mainContext
+
+            let user = User(id: -1, userName: "offline-user")
+            modelContext.insert(user)
+            try modelContext.save()
+
+            // Act
+            try await service.markPostAsRead(day: 7, modelContext: modelContext)
+
+            // Assert
+            #expect(!user.readInfopostDays.contains(7))
+            #expect(user.unsyncedReadInfopostDays.contains(7))
+            #expect(await recorder.setPostReadCallCount == 0)
         }
     }
 }

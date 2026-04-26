@@ -29,6 +29,21 @@ final class ProgressSyncService {
     /// Основной метод синхронизации
     func syncProgress(context: ModelContext) async throws -> SyncResult {
         logger.info("🔄 [TRACE] syncProgress() - начало синхронизации")
+
+        if let user = try? context.fetch(FetchDescriptor<User>()).first, user.isOfflineOnly {
+            let emptyStats = SyncStats(created: 0, updated: 0, deleted: 0)
+            logger.info("⏭️ [TRACE] syncProgress() - офлайн-пользователь, сетевой sync пропущен")
+            return SyncResult(
+                type: SyncResultType(errors: nil, stats: emptyStats),
+                details: SyncResultDetails(
+                    progress: emptyStats,
+                    exercises: nil,
+                    activities: nil,
+                    errors: nil
+                )
+            )
+        }
+
         guard !isSyncing else {
             logger.info("⏭️ [TRACE] syncProgress() - синхронизация уже выполняется, выход")
             throw AlreadySyncingError()
