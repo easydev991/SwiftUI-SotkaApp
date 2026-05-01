@@ -64,20 +64,6 @@ struct WorkoutProgramCreator {
         )
     }
 
-    /// Метод для обновления планового количества повторений
-    /// - Parameter newPlannedCount: Новое плановое количество
-    /// - Returns: Новый экземпляр WorkoutProgramCreator с обновленным plannedCount
-    func withPlannedCount(_ newPlannedCount: Int) -> WorkoutProgramCreator {
-        Self(
-            day: day,
-            executionType: executionType,
-            count: count,
-            plannedCount: newPlannedCount,
-            trainings: trainings,
-            comment: comment
-        )
-    }
-
     /// Метод для обновления типа выполнения
     /// Сохраняет пользовательские изменения: plannedCount и count упражнений
     func withExecutionType(_ newType: ExerciseExecutionType) -> WorkoutProgramCreator {

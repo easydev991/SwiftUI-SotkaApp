@@ -3,7 +3,6 @@ import SwiftUI
 
 struct ProgressScreen: View {
     @Environment(\.analyticsService) private var analytics
-    @Environment(StatusManager.self) private var statusManager
     @State private var navigationDestination: ProgressDestination?
     let user: User
 

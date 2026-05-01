@@ -27,38 +27,4 @@ struct SyncJournalRowView: View {
         formatter.dateFormat = "HH:mm:ss.SSS"
         return formatter.string(from: date)
     }
-
-    private func formatTime(_ date: Date) -> String {
-        let formatter = DateFormatter()
-        formatter.dateStyle = .none
-        formatter.timeStyle = .short
-        return formatter.string(from: date)
-    }
 }
-
-#if DEBUG
-#Preview("Успешная синхронизация с деталями") {
-    SyncJournalRowView(entry: .previewSuccessWithDetails)
-        .padding()
-}
-
-#Preview("Частичная синхронизация с ошибками") {
-    SyncJournalRowView(entry: .previewPartialWithErrors)
-        .padding()
-}
-
-#Preview("Ошибка синхронизации") {
-    SyncJournalRowView(entry: .previewError)
-        .padding()
-}
-
-#Preview("В процессе синхронизации") {
-    SyncJournalRowView(entry: .previewInProgress)
-        .padding()
-}
-
-#Preview("Без деталей") {
-    SyncJournalRowView(entry: .previewWithoutDetails)
-        .padding()
-}
-#endif

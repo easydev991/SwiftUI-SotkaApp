@@ -1,8 +1,6 @@
-import SwiftData
 import SwiftUI
 
 struct DayActivityContentView: View {
-    @Environment(\.modelContext) private var modelContext
     let activity: DayActivity
 
     var body: some View {

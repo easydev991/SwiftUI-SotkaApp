@@ -76,11 +76,3 @@ private extension SotkaWatch_Watch_AppUITests {
         return ruButton.exists ? ruButton : enButton
     }
 }
-
-private extension XCUIElementQuery {
-    func element(for localizationKey: String) -> XCUIElement {
-        let bundle = Bundle(for: SotkaWatch_Watch_AppUITests.self)
-        let localizedString = NSLocalizedString(localizationKey, bundle: bundle, comment: "")
-        return self[localizedString]
-    }
-}

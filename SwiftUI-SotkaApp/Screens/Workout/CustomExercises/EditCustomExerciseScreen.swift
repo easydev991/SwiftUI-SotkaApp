@@ -136,10 +136,6 @@ struct EditCustomExerciseScreen: View {
         }
     }
 
-    private var canSaveExercise: Bool {
-        !exerciseName.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty && selectedImageId != -1
-    }
-
     private func save() {
         isSaving = true
         if let oldItem {

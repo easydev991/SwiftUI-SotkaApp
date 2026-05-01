@@ -13,7 +13,6 @@ final class MockWCSession: WCSessionProtocol {
     var mockReply: [String: Any]?
 
     private(set) var sentMessages: [[String: Any]] = []
-    private(set) var receivedMessages: [[String: Any]] = []
     private(set) var activateCallCount = 0
     private(set) var applicationContexts: [[String: Any]] = []
 
@@ -46,24 +45,6 @@ final class MockWCSession: WCSessionProtocol {
 
     func updateApplicationContextOnWatch(_ applicationContext: [String: Any]) {
         applicationContexts.append(applicationContext)
-    }
-
-    func simulateReceivedMessage(_ message: [String: Any]) {
-        receivedMessages.append(message)
-        // В новых тестах мы вызываем методы обработки напрямую через очередь
-        // Этот метод оставлен для обратной совместимости, но не используется
-        // в обновленных тестах, которые работают через pendingRequests
-    }
-
-    func simulateReceivedMessageWithReply(
-        _ message: [String: Any],
-        replyHandler _: @escaping ([String: Any]) -> Void
-    ) {
-        receivedMessages.append(message)
-        // В новых тестах мы вызываем методы обработки напрямую через очередь
-        // Этот метод оставлен для обратной совместимости, но не используется
-        // в обновленных тестах, которые работают через pendingRequests
-        // replyHandler будет вызван после обработки запроса из очереди
     }
 }
 

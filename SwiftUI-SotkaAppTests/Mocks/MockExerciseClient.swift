@@ -6,9 +6,6 @@ import SWUtils
 final class MockExerciseClient: ExerciseClient, @unchecked Sendable {
     // MARK: - Properties
 
-    /// Список моковых упражнений
-    var mockedCustomExercises: [CustomExerciseResponse] = []
-
     /// Флаг для имитации ошибок
     var shouldThrowError = false
 
@@ -30,7 +27,6 @@ final class MockExerciseClient: ExerciseClient, @unchecked Sendable {
     // MARK: - Initialization
 
     init(mockedCustomExercises: [CustomExerciseResponse] = []) {
-        self.mockedCustomExercises = mockedCustomExercises
         for exercise in mockedCustomExercises {
             serverExercises[exercise.id] = exercise
         }
@@ -84,22 +80,6 @@ final class MockExerciseClient: ExerciseClient, @unchecked Sendable {
 
         // Удаляем из словаря
         serverExercises.removeValue(forKey: id)
-    }
-
-    // MARK: - Helper Methods
-
-    /// Сброс всех счетчиков и состояний
-    func reset() {
-        getCustomExercisesCallCount = 0
-        saveCustomExerciseCallCount = 0
-        deleteCustomExerciseCallCount = 0
-        shouldThrowError = false
-        saveCustomExerciseCalls.removeAll()
-        deleteCustomExerciseCalls.removeAll()
-        serverExercises.removeAll()
-        for exercise in mockedCustomExercises {
-            serverExercises[exercise.id] = exercise
-        }
     }
 }
 

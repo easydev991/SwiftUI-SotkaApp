@@ -285,18 +285,3 @@ extension User {
         .init(id: 0)
     }
 }
-
-extension MainUserForm {
-    static var emptyValue: Self {
-        .init(
-            userName: "",
-            fullName: "",
-            email: "",
-            password: "",
-            birthDate: .now,
-            gender: Gender.unspecified.code,
-            country: .defaultCountry,
-            city: .defaultCity
-        )
-    }
-}

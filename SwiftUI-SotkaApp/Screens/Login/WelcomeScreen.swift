@@ -1,11 +1,9 @@
 import SWDesignSystem
 import SwiftData
 import SwiftUI
-import SWKeychain
 import SWUtils
 
 struct WelcomeScreen: View {
-    @Environment(\.modelContext) private var modelContext
     @State private var destination = NavigationDestination.welcome
     let client: LoginClient & StatusClient
 

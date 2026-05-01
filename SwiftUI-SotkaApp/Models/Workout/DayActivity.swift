@@ -148,27 +148,8 @@ extension DayActivity {
             comment: comment,
             createDate: createDate,
             modifyDate: modifyDate,
-            isSynced: isSynced,
             shouldDelete: shouldDelete,
-            userId: user?.id,
             trainings: trainings.isEmpty ? nil : trainings.map(\.trainingSnapshot)
-        )
-    }
-
-    /// Преобразование в DayRequest для отправки на сервер
-    var dayRequest: DayRequest {
-        DayRequest(
-            id: day,
-            activityType: activityTypeRaw,
-            count: count,
-            plannedCount: plannedCount,
-            executeType: executeTypeRaw,
-            trainingType: trainingTypeRaw,
-            createDate: DateFormatterService.stringFromFullDate(createDate, format: .isoDateTimeSec),
-            modifyDate: DateFormatterService.stringFromFullDate(modifyDate, format: .isoDateTimeSec),
-            duration: duration,
-            comment: comment,
-            trainings: trainings.isEmpty ? nil : trainings.map(\.dayRequestTraining)
         )
     }
 

@@ -38,14 +38,6 @@ public enum DateFormatterService {
         return string
     }
 
-    public static var fiveMinutesAgoDateString: String {
-        let dateFormatter = DateFormatter()
-        dateFormatter.locale = Locale(identifier: "en_US_POSIX")
-        dateFormatter.dateFormat = DateFormat.serverDateTimeSec.rawValue
-        let fiveMinutesAgo = Calendar.current.date(byAdding: .minute, value: -5, to: .now) ?? .now
-        return dateFormatter.string(from: fiveMinutesAgo)
-    }
-
     public static func dateFromIsoString(_ string: String?) -> Date {
         ISO8601DateFormatter().date(from: string ?? "") ?? .now
     }

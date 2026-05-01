@@ -1,5 +1,4 @@
 import Foundation
-@testable import SwiftUI_SotkaApp
 @testable import SWNetwork
 import Testing
 

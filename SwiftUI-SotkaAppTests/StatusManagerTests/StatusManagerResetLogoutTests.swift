@@ -114,7 +114,7 @@ extension StatusManagerTests {
                 DateFormatterService.stringFromFullDate(serverDate2, format: .isoDateTimeSec)
             ]
             mockPurchasesClient.getPurchasesResult = .success(
-                CalendarPurchasesResponse(customEditor: false, calendars: serverCalendarDates)
+                CalendarPurchasesResponse(calendars: serverCalendarDates)
             )
 
             let container = try makeContainer()

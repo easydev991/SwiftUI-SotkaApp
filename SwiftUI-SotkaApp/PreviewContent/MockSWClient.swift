@@ -68,23 +68,11 @@ extension MockSWClient: InfopostsClient {
     func setPostRead(day: Int) async throws {
         try await infopostsClient.setPostRead(day: day)
     }
-
-    func deleteAllReadPosts() async throws {
-        try await infopostsClient.deleteAllReadPosts()
-    }
 }
 
 extension MockSWClient: ProgressClient {
     func getProgress() async throws -> [ProgressResponse] {
         try await progressClient.getProgress()
-    }
-
-    func getProgress(day: Int) async throws -> ProgressResponse {
-        try await progressClient.getProgress(day: day)
-    }
-
-    func createProgress(progress: ProgressRequest) async throws -> ProgressResponse {
-        try await progressClient.createProgress(progress: progress)
     }
 
     func updateProgress(day: Int, progress: ProgressRequest) async throws -> ProgressResponse {
@@ -103,10 +91,6 @@ extension MockSWClient: ProgressClient {
 extension MockSWClient: DaysClient {
     func getDays() async throws -> [DayResponse] {
         try await daysClient.getDays()
-    }
-
-    func createDay(_ day: DayRequest) async throws -> DayResponse {
-        try await daysClient.createDay(day)
     }
 
     func updateDay(model: DayRequest) async throws -> DayResponse {
@@ -136,11 +120,11 @@ extension MockSWClient: CountriesClient {
 
 extension MockSWClient: PurchasesClient {
     func getPurchases() async throws -> CalendarPurchasesResponse {
-        CalendarPurchasesResponse(customEditor: false, calendars: [])
+        CalendarPurchasesResponse(calendars: [])
     }
 
     func postCalendarPurchase(date _: Date) async throws -> CalendarPurchasesResponse {
-        CalendarPurchasesResponse(customEditor: false, calendars: [])
+        CalendarPurchasesResponse(calendars: [])
     }
 }
 #endif

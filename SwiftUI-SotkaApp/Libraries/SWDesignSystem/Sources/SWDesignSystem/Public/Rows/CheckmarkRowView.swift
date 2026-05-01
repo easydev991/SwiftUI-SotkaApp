@@ -1,15 +1,15 @@
 import SwiftUI
 
-public struct TextWithCheckmarkRowView: View {
+struct TextWithCheckmarkRowView: View {
     private let text: String
     private let isChecked: Bool
 
-    public init(text: String, isChecked: Bool) {
+    init(text: String, isChecked: Bool) {
         self.text = text
         self.isChecked = isChecked
     }
 
-    public var body: some View {
+    var body: some View {
         HStack(spacing: 10) {
             Text(.init(text))
                 .lineLimit(1)

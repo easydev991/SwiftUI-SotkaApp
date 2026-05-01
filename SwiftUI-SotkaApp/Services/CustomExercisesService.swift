@@ -16,13 +16,6 @@ final class CustomExercisesService {
     private(set) var isLoading = false
     private(set) var isSyncing = false
 
-    /// Максимальное количество попыток синхронизации при ошибке
-    /// Стандартная практика для предотвращения бесконечных циклов
-    private let maxRetryAttempts = 3
-    /// Задержка между попытками (в секундах)
-    /// Используется фиксированная задержка для простоты (можно заменить на экспоненциальную)
-    private let retryDelay: TimeInterval = 2.0
-
     /// Клиент для работы с API
     private let client: ExerciseClient
 
@@ -186,75 +179,6 @@ private extension CustomExercisesService {
         case createdOrUpdated(id: String, server: CustomExerciseResponse)
         case deleted(id: String)
         case failed(id: String, errorDescription: String)
-    }
-
-    /// Синхронизирует одно упражнение с повторными попытками
-    /// - Parameters:
-    ///   - exercise: Упражнение для синхронизации
-    ///   - context: Контекст Swift Data
-    ///   - attempt: Номер текущей попытки
-    func syncSingleExerciseWithRetry(
-        _ exercise: CustomExercise,
-        context: ModelContext,
-        attempt: Int
-    ) async {
-        do {
-            if exercise.shouldDelete {
-                // Удаляем на сервере
-                try await client.deleteCustomExercise(id: exercise.id)
-                context.delete(exercise)
-                try context.save()
-                logger.info("Упражнение '\(exercise.name)' удалено с сервера")
-            } else {
-                // Создаем или обновляем на сервере
-                let request: CustomExerciseRequest
-
-                // Всегда отправляем как обновление, если упражнение существует на сервере
-                // (определяем по наличию числового ID, который был получен с сервера)
-                request = CustomExerciseRequest(
-                    id: exercise.id,
-                    name: exercise.name,
-                    imageId: exercise.imageId,
-                    createDate: DateFormatterService.stringFromFullDate(exercise.createDate, format: .isoDateTimeSec),
-                    modifyDate: DateFormatterService.stringFromFullDate(exercise.modifyDate, format: .isoDateTimeSec),
-                    isHidden: false
-                )
-
-                let response = try await client.saveCustomExercise(id: exercise.id, exercise: request)
-
-                // Обновляем локальные данные из ответа сервера
-                exercise.name = response.name
-                exercise.imageId = response.imageId
-                exercise.createDate = response.createDate
-                exercise.modifyDate = response.modifyDate ?? response.createDate
-                exercise.isSynced = true
-                exercise.shouldDelete = false
-
-                try context.save()
-                logger.info("Упражнение '\(exercise.name)' синхронизировано с сервером")
-            }
-        } catch {
-            logger.error("Ошибка синхронизации упражнения '\(exercise.name)': \(error)")
-            logger.error("Детали ошибки: \(error.localizedDescription)")
-            if let apiError = error as? APIError {
-                logger.error("API Error: \(apiError)")
-            }
-            let limit = maxRetryAttempts
-            let delay = retryDelay
-            if attempt < limit {
-                logger
-                    .warning(
-                        "Ошибка синхронизации упражнения '\(exercise.name)' (попытка \(attempt)/\(limit)): \(error.localizedDescription). Повтор через \(delay)с"
-                    )
-                try? await Task.sleep(nanoseconds: UInt64(retryDelay * 1_000_000_000))
-                await syncSingleExerciseWithRetry(exercise, context: context, attempt: attempt + 1)
-            } else {
-                logger
-                    .error(
-                        "Ошибка синхронизации упражнения '\(exercise.name)' после \(limit) попыток: \(error.localizedDescription). Продолжаем работу локально"
-                    )
-            }
-        }
     }
 
     /// Загружает упражнения с сервера и обрабатывает конфликты

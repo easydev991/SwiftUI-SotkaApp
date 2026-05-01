@@ -25,16 +25,8 @@ public extension Color {
     static let swTintedButton = Color(.swTintedButton)
     /// Нажатые `tinted`-кнопки
     static let swTintedButtonPressed = Color(.swTintedButtonPressed)
-    /// Цвет кнопки добавления фото
-    static let swAddPhotoButton = Color(.swAddPhotoButton)
-    /// Цвет текста и иконок в поле для поиска
-    static let swSearchForeground = Color(.swSearchForeground)
-    /// Цвет фона в поле для поиска
-    static let swSearchBackground = Color(.swSearchBackground)
     /// Ошибки
     static let swError = Color(.swError)
-    /// Цвет таббара
-    static let swTabBar = Color(.swTabBar)
 }
 
 #if DEBUG
@@ -43,7 +35,7 @@ public extension Color {
         .swBackground, .swCardBackground, .swSmallElements, .swSeparators,
         .swMainText, .swAccent, .swFilledButtonText, .swFilledButtonPressed,
         .swDisabledButton, .swDisabledButtonText, .swTintedButton,
-        .swTintedButtonPressed, .swAddPhotoButton, .swError, .swTabBar
+        .swTintedButtonPressed, .swError
     ]
     return ScrollView {
         VStack(spacing: 4) {

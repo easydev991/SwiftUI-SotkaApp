@@ -54,18 +54,3 @@ struct PhotoDownloadService: PhotoDownloadServiceProtocol {
         }
     }
 }
-
-/// Ошибки загрузки фотографий
-enum PhotoError: LocalizedError, Equatable {
-    case invalidURL
-    case invalidImageData
-
-    var errorDescription: String? {
-        switch self {
-        case .invalidURL:
-            "Некорректный URL изображения"
-        case .invalidImageData:
-            "Некорректные данные изображения"
-        }
-    }
-}

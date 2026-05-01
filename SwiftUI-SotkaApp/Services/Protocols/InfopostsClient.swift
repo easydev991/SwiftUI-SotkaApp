@@ -8,9 +8,4 @@ protocol InfopostsClient: Sendable {
     /// Отметить инфопост как прочитанный
     /// - Parameter day: День инфопоста
     func setPostRead(day: Int) async throws
-
-    /// Удалить все прочитанные инфопосты
-    ///
-    /// Только для отладки и тестирования
-    func deleteAllReadPosts() async throws
 }

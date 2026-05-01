@@ -188,9 +188,7 @@ struct DayRequestTests {
             comment: nil,
             createDate: Date(),
             modifyDate: Date(),
-            isSynced: false,
             shouldDelete: false,
-            userId: nil,
             trainings: [
                 ActivitySnapshot.TrainingSnapshot(
                     count: 10,
@@ -231,9 +229,7 @@ struct DayRequestTests {
             comment: nil,
             createDate: createDate,
             modifyDate: modifyDate,
-            isSynced: false,
             shouldDelete: false,
-            userId: 1,
             trainings: nil
         )
 

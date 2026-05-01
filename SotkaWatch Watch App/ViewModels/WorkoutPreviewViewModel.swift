@@ -352,28 +352,6 @@ final class WorkoutPreviewViewModel {
         return WorkoutResult(count: resultCount, duration: workoutDuration)
     }
 
-    /// Получение обновленных данных тренировки
-    /// - Returns: WorkoutData для передачи в WorkoutView
-    func buildWorkoutData() -> WorkoutData {
-        guard let executionType = selectedExecutionType else {
-            // Если executionType не установлен, возвращаем дефолтные данные
-            let creator = WorkoutProgramCreator(day: dayNumber)
-            return WorkoutData(
-                day: dayNumber,
-                executionType: creator.executionType.rawValue,
-                trainings: creator.trainings,
-                plannedCount: creator.plannedCount
-            )
-        }
-
-        return WorkoutData(
-            day: dayNumber,
-            executionType: executionType.rawValue,
-            trainings: trainings,
-            plannedCount: plannedCount
-        )
-    }
-
     /// Добавляет стандартное упражнение в список тренировок
     /// - Parameter exerciseType: Тип упражнения для добавления
     func addStandardExercise(_ exerciseType: ExerciseType) {

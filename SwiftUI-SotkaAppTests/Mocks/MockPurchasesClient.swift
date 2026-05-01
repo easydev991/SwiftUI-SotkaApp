@@ -12,7 +12,7 @@ final class MockPurchasesClient: PurchasesClient, @unchecked Sendable {
     }
 
     var getPurchasesResult: Result<CalendarPurchasesResponse, Error> = .success(
-        CalendarPurchasesResponse(customEditor: false, calendars: [])
+        CalendarPurchasesResponse(calendars: [])
     )
     var postResultsQueue: [Result<CalendarPurchasesResponse, Error>] = []
 

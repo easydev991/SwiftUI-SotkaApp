@@ -47,18 +47,6 @@ extension DayRequest {
     }
 }
 
-extension DayRequest.Training {
-    /// Инициализатор из снимка тренировки
-    init(from snapshot: ActivitySnapshot.TrainingSnapshot) {
-        self.init(
-            count: snapshot.count,
-            typeId: snapshot.typeId,
-            customTypeId: snapshot.customTypeId,
-            sortOrder: snapshot.sortOrder
-        )
-    }
-}
-
 extension DayRequest {
     /// Параметры формы для отправки на сервер (application/x-www-form-urlencoded)
     var formParameters: [String: String] {

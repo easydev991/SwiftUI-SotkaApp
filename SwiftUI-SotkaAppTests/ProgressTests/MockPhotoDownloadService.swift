@@ -3,11 +3,9 @@ import Foundation
 
 final class MockPhotoDownloadService: PhotoDownloadServiceProtocol {
     var downloadAllPhotosCallCount = 0
-    var lastProgress: UserProgress?
 
     @MainActor
-    func downloadAllPhotos(for progress: UserProgress) async {
+    func downloadAllPhotos(for _: UserProgress) async {
         downloadAllPhotosCallCount += 1
-        lastProgress = progress
     }
 }

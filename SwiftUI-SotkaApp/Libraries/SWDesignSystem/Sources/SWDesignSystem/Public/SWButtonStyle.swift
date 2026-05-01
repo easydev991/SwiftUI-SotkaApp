@@ -86,27 +86,11 @@ public extension SWButtonStyle {
         case filled
         /// Прозрачная
         case tinted
-
-        /// Описание для превью
-        var description: String {
-            switch self {
-            case .filled: "Filled"
-            case .tinted: "Tinted"
-            }
-        }
     }
 
     /// Размер кнопки
     enum Size: CaseIterable {
         case large, small
-
-        /// Описание для превью
-        var description: String {
-            switch self {
-            case .large: "Large"
-            case .small: "Small"
-            }
-        }
     }
 }
 
@@ -133,46 +117,30 @@ extension SWButtonStyle.Size {
 #Preview {
     List {
         Section("Large") {
-            Section("Текст без иконки") {
-                ForEach(SWButtonStyle.Mode.allCases, id: \.self) { mode in
-                    Button(mode.description + ", only text (enabled)") {}
-                        .buttonStyle(SWButtonStyle(mode: mode, size: .large))
-                    Button(mode.description + ", only text (disabled)") {}
-                        .buttonStyle(SWButtonStyle(mode: mode, size: .large))
-                        .disabled(true)
-                }
-            }
-            Section("Иконка с текстом") {
-                ForEach(SWButtonStyle.Mode.allCases, id: \.self) { mode in
-                    Button(mode.description + ", icon with text (enabled)") {}
-                        .buttonStyle(SWButtonStyle(icon: .message, mode: mode, size: .large))
-                    Button(mode.description + ", icon with text (disabled)") {}
-                        .buttonStyle(SWButtonStyle(icon: .message, mode: mode, size: .large))
-                        .disabled(true)
-                }
-            }
+            Button("Filled, only text (enabled)") {}
+                .buttonStyle(SWButtonStyle(mode: .filled, size: .large))
+            Button("Filled, only text (disabled)") {}
+                .buttonStyle(SWButtonStyle(mode: .filled, size: .large))
+                .disabled(true)
+            Button("Tinted, only text (enabled)") {}
+                .buttonStyle(SWButtonStyle(mode: .tinted, size: .large))
+            Button("Tinted, only text (disabled)") {}
+                .buttonStyle(SWButtonStyle(mode: .tinted, size: .large))
+                .disabled(true)
         }
         .listRowSeparator(.hidden)
         .listRowBackground(Color.clear)
         Section("Small") {
-            Section("Текст без иконки") {
-                ForEach(SWButtonStyle.Mode.allCases, id: \.self) { mode in
-                    Button(mode.description + ", only text (enabled)") {}
-                        .buttonStyle(SWButtonStyle(mode: mode, size: .small))
-                    Button(mode.description + ", only text (disabled)") {}
-                        .buttonStyle(SWButtonStyle(mode: mode, size: .small))
-                        .disabled(true)
-                }
-            }
-            Section("Иконка с текстом") {
-                ForEach(SWButtonStyle.Mode.allCases, id: \.self) { mode in
-                    Button(mode.description + ", icon with text (enabled)") {}
-                        .buttonStyle(SWButtonStyle(icon: .message, mode: mode, size: .small))
-                    Button(mode.description + ", icon with text (disabled)") {}
-                        .buttonStyle(SWButtonStyle(icon: .message, mode: mode, size: .small))
-                        .disabled(true)
-                }
-            }
+            Button("Filled, only text (enabled)") {}
+                .buttonStyle(SWButtonStyle(mode: .filled, size: .small))
+            Button("Filled, only text (disabled)") {}
+                .buttonStyle(SWButtonStyle(mode: .filled, size: .small))
+                .disabled(true)
+            Button("Tinted, only text (enabled)") {}
+                .buttonStyle(SWButtonStyle(mode: .tinted, size: .small))
+            Button("Tinted, only text (disabled)") {}
+                .buttonStyle(SWButtonStyle(mode: .tinted, size: .small))
+                .disabled(true)
         }
         .listRowSeparator(.hidden)
         .listRowBackground(Color.clear)

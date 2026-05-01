@@ -166,11 +166,11 @@ extension StatusManagerTests {
             let mockStatusClient = MockStatusClient()
             let mockPurchasesClient = MockPurchasesClient()
             mockPurchasesClient.getPurchasesResult = .success(
-                CalendarPurchasesResponse(customEditor: false, calendars: [])
+                CalendarPurchasesResponse(calendars: [])
             )
             mockPurchasesClient.postResultsQueue = [
                 .failure(MockPurchasesClient.MockError.demoError),
-                .success(CalendarPurchasesResponse(customEditor: false, calendars: []))
+                .success(CalendarPurchasesResponse(calendars: []))
             ]
             let container = try makeContainer()
             let context = container.mainContext
@@ -213,7 +213,6 @@ extension StatusManagerTests {
             let date2 = Date(timeIntervalSince1970: 1_700_000_101)
             mockPurchasesClient.getPurchasesResult = .success(
                 CalendarPurchasesResponse(
-                    customEditor: false,
                     calendars: [
                         DateFormatterService.stringFromFullDate(date1, format: .isoDateTimeSec),
                         DateFormatterService.stringFromFullDate(date2, format: .isoDateTimeSec)
@@ -254,7 +253,6 @@ extension StatusManagerTests {
             let sharedDate = Date(timeIntervalSince1970: 1_700_010_001)
             mockPurchasesClient.getPurchasesResult = .success(
                 CalendarPurchasesResponse(
-                    customEditor: false,
                     calendars: [DateFormatterService.stringFromFullDate(sharedDate, format: .isoDateTimeSec)]
                 )
             )
@@ -291,7 +289,6 @@ extension StatusManagerTests {
             let extensionDate = Date(timeIntervalSince1970: 1_700_020_001)
             mockPurchasesClient.getPurchasesResult = .success(
                 CalendarPurchasesResponse(
-                    customEditor: false,
                     calendars: [DateFormatterService.stringFromFullDate(extensionDate, format: .isoDateTimeSec)]
                 )
             )

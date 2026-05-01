@@ -2,9 +2,6 @@ import Foundation
 import OSLog
 import SwiftData
 import SwiftUI
-import SWUtils
-
-private let logger = Logger(subsystem: Bundle.sotkaAppBundleId, category: String(describing: UserProgress.self))
 
 /// Прогресс пользователя
 @Model

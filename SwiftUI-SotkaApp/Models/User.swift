@@ -221,13 +221,6 @@ extension User {
         }
     }
 
-    /// Удаляет день из списка прочитанных дней
-    func removeReadInfopostDay(_ day: Int) {
-        var days = readInfopostDays
-        days.removeAll { $0 == day }
-        readInfopostDays = days
-    }
-
     /// Добавляет день в список несинхронизированных прочитанных дней
     func addUnsyncedReadInfopostDay(_ day: Int) {
         var days = unsyncedReadInfopostDays

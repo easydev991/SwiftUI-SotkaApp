@@ -5,9 +5,6 @@ import SWUtils
 final class MockDaysClient: DaysClient, @unchecked Sendable {
     // MARK: - Properties
 
-    /// Список моковых ответов сервера для getDays()
-    var mockedDayResponses: [DayResponse] = []
-
     /// Флаг для имитации ошибок
     var shouldThrowError = false
 
@@ -16,12 +13,10 @@ final class MockDaysClient: DaysClient, @unchecked Sendable {
 
     /// Счетчики вызовов методов
     var getDaysCallCount = 0
-    var createDayCallCount = 0
     var updateDayCallCount = 0
     var deleteDayCallCount = 0
 
     /// Массивы для отслеживания всех вызовов
-    var createDayCalls: [DayRequest] = []
     var updateDayCalls: [DayRequest] = []
     var deleteDayCalls: [Int] = []
 
@@ -34,7 +29,6 @@ final class MockDaysClient: DaysClient, @unchecked Sendable {
     // MARK: - Initialization
 
     init(mockedDayResponses: [DayResponse] = []) {
-        self.mockedDayResponses = mockedDayResponses
         for response in mockedDayResponses {
             serverActivities[response.id] = response
         }
@@ -50,75 +44,23 @@ final class MockDaysClient: DaysClient, @unchecked Sendable {
         return Array(serverActivities.values)
     }
 
-    func createDay(_ day: DayRequest) async throws -> DayResponse {
-        createDayCallCount += 1
-        createDayCalls.append(day)
-
-        if shouldThrowError {
-            throw errorToThrow
-        }
-
-        // Создаем ответ на основе запроса
-        let response = DayResponse(
-            id: day.id,
-            activityType: day.activityType,
-            count: day.count,
-            plannedCount: day.plannedCount,
-            executeType: day.executeType,
-            trainType: day.trainingType,
-            trainings: day.trainings?.map { training in
-                DayResponse.Training(
-                    typeId: training.typeId,
-                    customTypeId: training.customTypeId,
-                    count: training.count,
-                    sortOrder: nil
-                )
-            },
-            createDate: day.createDate.flatMap { DateFormatterService.dateFromString($0, format: .serverDateTimeSec) } ?? Date(),
-            modifyDate: day.modifyDate.flatMap { DateFormatterService.dateFromString($0, format: .serverDateTimeSec) } ?? Date(),
-            duration: day.duration,
-            comment: day.comment
-        )
-
-        // Сохраняем в словаре для последующих вызовов getDays()
-        serverActivities[day.id] = response
-
-        return response
-    }
-
     func updateDay(model: DayRequest) async throws -> DayResponse {
         updateDayCallCount += 1
         updateDayCalls.append(model)
-
-        if shouldThrowError {
-            throw errorToThrow
-        }
-
-        // Создаем ответ на основе запроса
+        if shouldThrowError { throw errorToThrow }
         let response = DayResponse(
-            id: model.id,
-            activityType: model.activityType,
-            count: model.count,
-            plannedCount: model.plannedCount,
-            executeType: model.executeType,
+            id: model.id, activityType: model.activityType, count: model.count,
+            plannedCount: model.plannedCount, executeType: model.executeType,
             trainType: model.trainingType,
-            trainings: model.trainings?.map { training in
-                DayResponse.Training(
-                    typeId: training.typeId,
-                    customTypeId: training.customTypeId,
-                    count: training.count,
-                    sortOrder: nil
-                )
-            },
-            createDate: model.createDate.flatMap { DateFormatterService.dateFromString($0, format: .serverDateTimeSec) } ?? Date(),
-            modifyDate: model.modifyDate.flatMap { DateFormatterService.dateFromString($0, format: .serverDateTimeSec) } ?? Date(),
-            duration: model.duration,
-            comment: model.comment
+            trainings: model.trainings?.map { DayResponse.Training(
+                typeId: $0.typeId,
+                customTypeId: $0.customTypeId,
+                count: $0.count,
+                sortOrder: nil
+            ) },
+            createDate: Date(), modifyDate: nil, duration: model.duration, comment: model.comment
         )
-
-        // Обновляем в словаре
         serverActivities[model.id] = response
-
         return response
     }
 
@@ -143,27 +85,6 @@ final class MockDaysClient: DaysClient, @unchecked Sendable {
     func setServerActivity(_ response: DayResponse) {
         serverActivities[response.id] = response
         preservedDays.insert(response.id)
-    }
-
-    /// Удаляет активность с сервера напрямую (для тестирования)
-    func removeServerActivity(day: Int) {
-        serverActivities.removeValue(forKey: day)
-    }
-
-    /// Сброс всех счетчиков и состояний
-    func reset() {
-        getDaysCallCount = 0
-        createDayCallCount = 0
-        updateDayCallCount = 0
-        deleteDayCallCount = 0
-        shouldThrowError = false
-        createDayCalls.removeAll()
-        updateDayCalls.removeAll()
-        deleteDayCalls.removeAll()
-        serverActivities.removeAll()
-        for response in mockedDayResponses {
-            serverActivities[response.id] = response
-        }
     }
 }
 

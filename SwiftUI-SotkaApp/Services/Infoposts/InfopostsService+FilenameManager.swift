@@ -70,40 +70,5 @@ extension InfopostsService {
                 return filenames
             }
         }
-
-        /// Проверяет, должен ли файл быть включен для настроенного языка
-        /// - Parameter filename: Имя файла
-        /// - Returns: true, если файл должен быть включен
-        private func shouldIncludeFile(_ filename: String) -> Bool {
-            // Женская статья только для русского языка
-            if filename == "d0-women" {
-                return language == "ru"
-            }
-
-            // Все остальные файлы включаем для всех языков
-            return true
-        }
-
-        /// Возвращает секцию инфопоста на основе имени файла
-        /// - Parameter filename: Имя файла
-        /// - Returns: Секция инфопоста
-        private func getSection(for filename: String) -> InfopostSection {
-            // Используем существующий метод из InfopostSection
-            InfopostSection.section(for: filename)
-        }
-
-        /// Возвращает номер дня для файлов дней программы
-        /// - Parameter filename: Имя файла (например, "d1", "d25")
-        /// - Returns: Номер дня или nil, если файл не является файлом дня
-        private func getDayNumber(from filename: String) -> Int? {
-            // Проверяем, что файл начинается с "d" и имеет правильный формат
-            guard filename.hasPrefix("d"), filename.count <= 4 else {
-                return nil
-            }
-
-            // Извлекаем номер дня
-            let dayString = String(filename.dropFirst())
-            return Int(dayString)
-        }
     }
 }

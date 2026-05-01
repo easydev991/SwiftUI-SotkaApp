@@ -409,28 +409,6 @@ private extension WatchConnectivityService {
         }
     }
 
-    /// Проверяет, изменился ли статус по сравнению с последними обработанными данными
-    /// - Parameters:
-    ///   - isAuthorized: Статус авторизации
-    ///   - currentDay: Номер текущего дня (опционально)
-    ///   - currentActivity: Текущая активность (опционально)
-    /// - Returns: `true` если статус изменился, `false` если идентичен
-    func hasStatusChanged(
-        isAuthorized: Bool,
-        currentDay: Int?,
-        currentActivity: DayActivityType?
-    ) -> Bool {
-        guard let lastProcessed = lastProcessedStatus else {
-            // Если это первая обработка, считаем что статус изменился
-            return true
-        }
-
-        // Сравниваем все поля
-        return lastProcessed.isAuthorized != isAuthorized ||
-            lastProcessed.currentDay != currentDay ||
-            lastProcessed.currentActivity != currentActivity
-    }
-
     func handleApplicationContext(_ context: [String: Any]) {
         // Извлекаем данные из контекста
         let isAuthorized = context["isAuthorized"] as? Bool

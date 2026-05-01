@@ -47,11 +47,3 @@ private extension HomeInfopostSectionView {
         .padding([.bottom, .horizontal], 12)
     }
 }
-
-#if DEBUG
-#Preview("День 2", traits: .sizeThatFitsLayout) {
-    HomeInfopostSectionView(infopost: .preview)
-        .padding()
-        .currentDay(2)
-}
-#endif

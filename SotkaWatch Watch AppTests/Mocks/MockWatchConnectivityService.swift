@@ -17,9 +17,9 @@ final class MockWatchConnectivityService: WatchConnectivityServiceProtocol {
     var mockWorkoutComment: String?
 
     private(set) var sentActivityType: (day: Int, activityType: DayActivityType)?
+    var requestCurrentActivityDelay: UInt64 = 0
     private(set) var requestedCurrentActivityDay: Int?
     private(set) var requestedCurrentActivityCallCount = 0
-    var requestCurrentActivityDelay: UInt64 = 0
     private(set) var requestedWorkoutDataDay: Int?
     private(set) var sentWorkoutResult: (
         day: Int,

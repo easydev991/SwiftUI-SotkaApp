@@ -23,7 +23,6 @@ final class MockProgressClient: ProgressClient, @unchecked Sendable {
     /// Счетчики вызовов методов
     var updateProgressCallCount = 0
     var deletePhotoCallCount = 0
-    var createProgressCallCount = 0
     var getProgressCallCount = 0
 
     /// Последние параметры deletePhoto
@@ -33,9 +32,6 @@ final class MockProgressClient: ProgressClient, @unchecked Sendable {
     /// Массивы для отслеживания всех вызовов
     var deletePhotoCalls: [(day: Int, type: String)] = []
     var updateProgressCalls: [(day: Int, progress: ProgressRequest)] = []
-
-    /// Индекс для последовательного возврата ответов
-    private var responseIndex = 0
 
     // MARK: - Initialization
 
@@ -53,50 +49,6 @@ final class MockProgressClient: ProgressClient, @unchecked Sendable {
         return mockedProgressResponses
     }
 
-    func getProgress(day: Int) async throws -> ProgressResponse {
-        getProgressCallCount += 1
-        if shouldThrowError {
-            throw errorToThrow
-        }
-        if responseIndex < mockedProgressResponses.count {
-            let response = mockedProgressResponses[responseIndex]
-            responseIndex += 1
-            return response
-        }
-        // Возвращаем дефолтный ответ для дня
-        return ProgressResponse(
-            id: day,
-            pullups: nil,
-            pushups: nil,
-            squats: nil,
-            weight: nil,
-            createDate: Date(),
-            modifyDate: nil
-        )
-    }
-
-    func createProgress(progress: ProgressRequest) async throws -> ProgressResponse {
-        createProgressCallCount += 1
-        if shouldThrowError {
-            throw errorToThrow
-        }
-        if responseIndex < mockedProgressResponses.count {
-            let response = mockedProgressResponses[responseIndex]
-            responseIndex += 1
-            return response
-        }
-        // Возвращаем ответ на основе переданного прогресса
-        return ProgressResponse(
-            id: progress.id,
-            pullups: progress.pullups,
-            pushups: progress.pushups,
-            squats: progress.squats,
-            weight: progress.weight,
-            createDate: Date(),
-            modifyDate: DateFormatterService.dateFromString(progress.modifyDate, format: .serverDateTimeSec)
-        )
-    }
-
     func updateProgress(day: Int, progress: ProgressRequest) async throws -> ProgressResponse {
         updateProgressCallCount += 1
         updateProgressCalls.append((day: day, progress: progress))
@@ -110,7 +62,7 @@ final class MockProgressClient: ProgressClient, @unchecked Sendable {
             return matching
         }
 
-        return ProgressResponse(
+        let response = ProgressResponse(
             id: progress.id,
             pullups: progress.pullups,
             pushups: progress.pushups,
@@ -122,6 +74,8 @@ final class MockProgressClient: ProgressClient, @unchecked Sendable {
             photoBack: progress.photos?["photo_back"] != nil ? "https://example.com/back.jpg" : nil,
             photoSide: progress.photos?["photo_side"] != nil ? "https://example.com/side.jpg" : nil
         )
+        mockedProgressResponses.append(response)
+        return response
     }
 
     func deleteProgress(day _: Int) async throws {
@@ -143,24 +97,6 @@ final class MockProgressClient: ProgressClient, @unchecked Sendable {
             throw error
         }
         // Имитируем успешное удаление фотографии
-    }
-
-    // MARK: - Helper Methods
-
-    /// Сброс всех счетчиков и состояний
-    func reset() {
-        updateProgressCallCount = 0
-        deletePhotoCallCount = 0
-        createProgressCallCount = 0
-        getProgressCallCount = 0
-        responseIndex = 0
-        lastDeletePhotoDay = nil
-        lastDeletePhotoType = nil
-        shouldThrowError = false
-        shouldThrowErrorOnGetProgress = false
-        deletePhotoError = nil
-        deletePhotoCalls.removeAll()
-        updateProgressCalls.removeAll()
     }
 }
 

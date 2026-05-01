@@ -13,9 +13,7 @@ struct ActivitySnapshot: Hashable {
     let comment: String?
     let createDate: Date
     let modifyDate: Date
-    let isSynced: Bool
     let shouldDelete: Bool
-    let userId: Int?
     let trainings: [TrainingSnapshot]?
 }
 

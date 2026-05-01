@@ -10,10 +10,6 @@ struct ProgressSnapshot: Hashable {
     let lastModified: Date
     let isSynced: Bool
     let shouldDelete: Bool
-    let userId: Int?
-    let photoFront: String?
-    let photoBack: String?
-    let photoSide: String?
     let dataPhotoFront: Data?
     let dataPhotoBack: Data?
     let dataPhotoSide: Data?
@@ -61,10 +57,6 @@ struct ProgressSnapshot: Hashable {
         self.lastModified = progress.lastModified
         self.isSynced = progress.isSynced
         self.shouldDelete = progress.shouldDelete
-        self.userId = progress.user?.id
-        self.photoFront = progress.urlPhotoFront
-        self.photoBack = progress.urlPhotoBack
-        self.photoSide = progress.urlPhotoSide
         self.dataPhotoFront = progress.dataPhotoFront
         self.dataPhotoBack = progress.dataPhotoBack
         self.dataPhotoSide = progress.dataPhotoSide

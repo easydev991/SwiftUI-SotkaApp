@@ -6,23 +6,7 @@ public extension Image {
 }
 
 public enum Icons {
-    /// Названия системных иконок для таббара
-    public enum Tabbar: String, CaseIterable {
-        case events = "person.3"
-        case messages = "message"
-        case profile = "person"
-        case settings = "gearshape"
-
-        public var view: some View {
-            Image(systemName: rawValue)
-        }
-
-        public var imageView: Image {
-            Image(systemName: rawValue)
-        }
-    }
-
-    /// Названия остальных иконок
+    /// Названия иконок
     public enum Regular: String, CaseIterable {
         case ellipsis
         case plus
@@ -57,27 +41,13 @@ public enum Icons {
         public var view: some View {
             Image(systemName: rawValue)
         }
-
-        public var imageView: Image {
-            Image(systemName: rawValue)
-        }
     }
 }
 
 #if DEBUG
 #Preview {
     List {
-        Section("Tabbar icons") {
-            VStack(alignment: .leading, spacing: 16) {
-                ForEach(Icons.Tabbar.allCases, id: \.rawValue) { icon in
-                    HStack(spacing: 16) {
-                        icon.view
-                        Text(icon.rawValue)
-                    }
-                }
-            }
-        }
-        Section("Regular icons") {
+        Section("Icons") {
             VStack(alignment: .leading, spacing: 16) {
                 ForEach(Icons.Regular.allCases, id: \.rawValue) { icon in
                     HStack(spacing: 16) {

@@ -2,7 +2,6 @@ import SwiftUI
 
 struct DayActivityView: View {
     @Environment(\.currentDay) private var currentDay
-    private let activities = DayActivityType.allCases
     let onSelect: (DayActivityType) -> Void
     let onDelete: (Int) -> Void
     let selectedActivity: DayActivityType?

@@ -33,16 +33,3 @@ final class CalendarExtensionRecord {
         self.user = user
     }
 }
-
-/// DTO локальной записи продления для безопасной передачи между слоями
-struct CalendarExtensionRecordDTO: Codable, Hashable {
-    var date: Date
-
-    init(date: Date) {
-        self.date = date
-    }
-
-    init(record: CalendarExtensionRecord) {
-        self.date = record.date
-    }
-}

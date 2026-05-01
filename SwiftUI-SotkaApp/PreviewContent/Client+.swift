@@ -216,59 +216,6 @@ struct MockProgressClient: ProgressClient {
         }
     }
 
-    func getProgress(day: Int) async throws -> ProgressResponse {
-        print("Имитируем запрос getProgress для дня \(day)")
-        if !instantResponse {
-            try await Task.sleep(for: .seconds(0.5))
-        }
-        switch result {
-        case .success:
-            print("Успешно получили прогресс для дня \(day)")
-            // Имитируем случай, когда день найден
-            if day == 1 || day == 49 || day == 100 {
-                let calendar = Calendar.current
-                let now = Date()
-                let progressDate = calendar.date(byAdding: .day, value: -11, to: now) ?? now
-                return .init(
-                    id: day,
-                    pullups: day == 1 ? 7 : 10,
-                    pushups: day == 1 ? 15 : 20,
-                    squats: day == 1 ? 30 : 30,
-                    weight: 70.0,
-                    createDate: progressDate,
-                    modifyDate: progressDate
-                )
-            } else {
-                // День не найден - имитируем ошибку прогресса не найден
-                throw MockProgressClient.MockError.progressNotFound(day: day)
-            }
-        case let .failure(error):
-            throw error
-        }
-    }
-
-    func createProgress(progress: ProgressRequest) async throws -> ProgressResponse {
-        print("Имитируем запрос createProgress (day=\(progress.id))")
-        if !instantResponse {
-            try await Task.sleep(for: .seconds(1))
-        }
-        switch result {
-        case .success:
-            print("Успешно создали прогресс")
-            return .init(
-                id: progress.id,
-                pullups: progress.pullups,
-                pushups: progress.pushups,
-                squats: progress.squats,
-                weight: progress.weight,
-                createDate: Date(),
-                modifyDate: DateFormatterService.dateFromString(progress.modifyDate, format: .serverDateTimeSec)
-            )
-        case let .failure(error):
-            throw error
-        }
-    }
-
     func updateProgress(day: Int, progress: ProgressRequest) async throws -> ProgressResponse {
         print("Имитируем запрос updateProgress (day=\(day))")
         if !instantResponse {
@@ -318,13 +265,6 @@ struct MockProgressClient: ProgressClient {
     }
 }
 
-extension MockProgressClient {
-    /// Ошибка для тестирования
-    enum MockError: Error {
-        case progressNotFound(day: Int)
-    }
-}
-
 struct MockInfopostsClient: InfopostsClient {
     let result: MockResult
     let instantResponse: Bool
@@ -356,19 +296,6 @@ struct MockInfopostsClient: InfopostsClient {
         switch result {
         case .success:
             print("Успешно отметили инфопост \(day) как прочитанный")
-        case let .failure(error):
-            throw error
-        }
-    }
-
-    func deleteAllReadPosts() async throws {
-        print("Имитируем запрос deleteAllReadPosts")
-        if !instantResponse {
-            try await Task.sleep(for: .seconds(1))
-        }
-        switch result {
-        case .success:
-            print("Успешно удалили все прочитанные инфопосты")
         case let .failure(error):
             throw error
         }
@@ -610,20 +537,6 @@ struct MockDaysClient: DaysClient {
         }
     }
 
-    func createDay(_ day: DayRequest) async throws -> DayResponse {
-        print("Имитируем запрос createDay (day=\(day.id))")
-        if !instantResponse {
-            try await Task.sleep(for: .seconds(1))
-        }
-        switch result {
-        case .success:
-            print("Успешно создали день тренировки")
-            return makeResponse(from: day, isUpdate: false)
-        case let .failure(error):
-            throw error
-        }
-    }
-
     func updateDay(model: DayRequest) async throws -> DayResponse {
         print("Имитируем запрос updateDay (day=\(model.id))")
         if !instantResponse {
@@ -706,20 +619,6 @@ struct MockProfileClient: ProfileClient {
     init(result: MockResult, instantResponse: Bool = false) {
         self.result = result
         self.instantResponse = instantResponse
-    }
-
-    func getUserByID(_: Int) async throws -> UserResponse {
-        print("Имитируем запрос getUserByID")
-        if !instantResponse {
-            try await Task.sleep(for: .seconds(1))
-        }
-        switch result {
-        case .success:
-            print("Успешно получили данные пользователя")
-            return .preview
-        case let .failure(error):
-            throw error
-        }
     }
 
     func editUser(_ id: Int, model: MainUserForm) async throws -> UserResponse {

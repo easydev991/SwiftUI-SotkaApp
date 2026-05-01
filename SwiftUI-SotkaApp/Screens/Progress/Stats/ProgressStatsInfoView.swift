@@ -41,12 +41,9 @@ extension ProgressStatsInfoView {
         let id = UUID().uuidString
         let title: String
         let subtitle: String
-        let hasDivider: Bool
-
         init(value: Int, option: Option) {
             self.title = option.localizedTitle
             self.subtitle = "\(value)%"
-            self.hasDivider = option.hasDivider
         }
 
         enum Option {
@@ -60,10 +57,6 @@ extension ProgressStatsInfoView {
                 case .infoposts: String(localized: .progressInfoPostsTitle)
                 case .activities: String(localized: .progressActivityTitle)
                 }
-            }
-
-            var hasDivider: Bool {
-                self != .activities
             }
         }
     }

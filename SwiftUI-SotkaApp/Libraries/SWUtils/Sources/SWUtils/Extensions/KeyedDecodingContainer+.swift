@@ -44,22 +44,4 @@ public extension KeyedDecodingContainer {
         }
         return nil
     }
-
-    /// Декодирует обязательное значение Float из строки или числа
-    /// - Parameter key: Ключ для декодирования
-    /// - Returns: Значение Float
-    /// - Throws: DecodingError если значение отсутствует или не может быть конвертировано
-    func decodeFloatOrString(_ key: Key) throws -> Float {
-        if let stringValue = try? decodeIfPresent(String.self, forKey: key),
-           let floatValue = Float(stringValue) {
-            return floatValue
-        } else if let floatValue = try? decodeIfPresent(Float.self, forKey: key) {
-            return floatValue
-        } else {
-            throw DecodingError.typeMismatch(Float.self, DecodingError.Context(
-                codingPath: codingPath + [key],
-                debugDescription: "Ожидали Float или String для конвертации в Float"
-            ))
-        }
-    }
 }

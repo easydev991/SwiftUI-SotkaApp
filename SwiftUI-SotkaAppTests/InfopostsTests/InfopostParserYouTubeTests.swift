@@ -236,7 +236,7 @@ extension AllInfopostsTests {
 
             // Then
             #expect(modifiedHTML.contains("Watch video"))
-            #expect(modifiedHTML.contains("Opens in browser"))
+            #expect(modifiedHTML.contains("YouTube"))
         }
     }
 }

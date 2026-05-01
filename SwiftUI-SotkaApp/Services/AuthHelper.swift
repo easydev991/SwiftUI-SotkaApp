@@ -20,10 +20,6 @@ protocol AuthHelper: AnyObject, Sendable {
 @MainActor
 @Observable
 final class AuthHelperImp: AuthHelper {
-    @ObservationIgnored private let logger = Logger(
-        subsystem: Bundle.main.bundleIdentifier ?? "SotkaApp",
-        category: String(describing: AuthHelperImp.self)
-    )
     @ObservationIgnored private let defaults: UserDefaults
 
     @ObservationIgnored

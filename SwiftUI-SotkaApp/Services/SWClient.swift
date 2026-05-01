@@ -109,32 +109,11 @@ extension SWClient: InfopostsClient {
         let endpoint = Endpoint.setPostRead(day: day)
         try await makeStatus(for: endpoint)
     }
-
-    func deleteAllReadPosts() async throws {
-        let endpoint = Endpoint.deleteAllReadPosts
-        try await makeStatus(for: endpoint)
-    }
 }
 
 extension SWClient: ProgressClient {
     func getProgress() async throws -> [ProgressResponse] {
         let endpoint = Endpoint.getProgress
-        return try await makeResult(for: endpoint)
-    }
-
-    func getProgress(day: Int) async throws -> ProgressResponse {
-        let endpoint = Endpoint.getProgressDay(day: day)
-        do {
-            return try await makeResult(for: endpoint)
-        } catch APIError.notFound {
-            throw ClientError.progressNotFound(day: day)
-        } catch {
-            throw error
-        }
-    }
-
-    func createProgress(progress: ProgressRequest) async throws -> ProgressResponse {
-        let endpoint = Endpoint.createProgress(progress)
         return try await makeResult(for: endpoint)
     }
 
@@ -157,11 +136,6 @@ extension SWClient: ProgressClient {
 extension SWClient: DaysClient {
     func getDays() async throws -> [DayResponse] {
         let endpoint = Endpoint.getDays
-        return try await makeResult(for: endpoint)
-    }
-
-    func createDay(_ day: DayRequest) async throws -> DayResponse {
-        let endpoint = Endpoint.createDay(day)
         return try await makeResult(for: endpoint)
     }
 
@@ -250,21 +224,9 @@ enum Endpoint {
     /// **POST** ${API}/100/posts/read/<day>
     case setPostRead(day: Int)
 
-    // MARK: Удалить все прочитанные инфопосты
-    /// **DELETE** ${API}/100/posts/read
-    case deleteAllReadPosts
-
     // MARK: Получить список прогресса пользователя
     /// **GET** ${API}/100/progress
     case getProgress
-
-    // MARK: Получить прогресс для конкретного дня
-    /// **GET** ${API}/100/progress/<day>
-    case getProgressDay(day: Int)
-
-    // MARK: Создать новый прогресс
-    /// **POST** ${API}/100/progress
-    case createProgress(_ progress: ProgressRequest)
 
     // MARK: Обновить существующий прогресс для конкретного дня
     /// **POST** ${API}/100/progress/<day>
@@ -281,8 +243,6 @@ enum Endpoint {
     // MARK: Дни тренировок (дневник)
     /// **GET** ${API}/100/days
     case getDays
-    /// **POST** ${API}/100/days
-    case createDay(_ day: DayRequest)
     /// **POST** ${API}/100/days/<day>
     case updateDay(dayModel: DayRequest)
     /// **DELETE** ${API}/100/days/<day>
@@ -305,14 +265,11 @@ enum Endpoint {
         case let .deleteCustomExercise(id): "/100/custom_exercises/\(id)"
         case .getReadPosts: "/100/posts/read"
         case let .setPostRead(day): "/100/posts/read/\(day)"
-        case .deleteAllReadPosts: "/100/posts/read"
         case .getProgress: "/100/progress"
-        case let .getProgressDay(day): "/100/progress/\(day)"
-        case .createProgress: "/100/progress"
         case let .updateProgress(day, _): "/100/progress/\(day)"
         case let .deleteProgress(day): "/100/progress/\(day)"
         case let .deleteProgressPhoto(day, type): "/100/progress/\(day)/photos/\(type)"
-        case .getDays, .createDay: "/100/days"
+        case .getDays: "/100/days"
         case let .updateDay(dayModel): "/100/days/\(dayModel.id)"
         case let .deleteDay(day): "/100/days/\(day)"
         }
@@ -321,22 +278,19 @@ enum Endpoint {
     var method: HTTPMethod {
         switch self {
         case .login, .resetPassword, .editUser, .changePassword, .start, .postCalendarPurchase, .saveCustomExercise, .setPostRead,
-             .createProgress,
-             .updateProgress, .createDay, .updateDay: .post
-        case .getProgressDay: .get
+             .updateProgress, .updateDay: .post
         case .getUser, .getCountries, .current, .getPurchases, .getCustomExercises, .getReadPosts, .getProgress, .getDays: .get
-        case .deleteCustomExercise, .deleteAllReadPosts, .deleteProgress, .deleteProgressPhoto, .deleteDay: .delete
+        case .deleteCustomExercise, .deleteProgress, .deleteProgressPhoto, .deleteDay: .delete
         }
     }
 
     var hasMultipartFormData: Bool {
         switch self {
-        case .editUser, .createProgress, .updateProgress: true
-        case .getProgressDay: false
+        case .editUser, .updateProgress: true
         case .login, .getUser, .resetPassword, .getCountries, .changePassword, .start, .current, .getPurchases, .postCalendarPurchase,
-             .getCustomExercises, .saveCustomExercise, .deleteCustomExercise, .getReadPosts, .setPostRead, .deleteAllReadPosts,
+             .getCustomExercises, .saveCustomExercise, .deleteCustomExercise, .getReadPosts, .setPostRead,
              .getProgress,
-             .deleteProgress, .deleteProgressPhoto, .getDays, .createDay, .updateDay, .deleteDay: false
+             .deleteProgress, .deleteProgressPhoto, .getDays, .updateDay, .deleteDay: false
         }
     }
 
@@ -344,15 +298,15 @@ enum Endpoint {
         switch self {
         case .login, .getUser, .resetPassword, .getCountries, .editUser, .changePassword, .start, .current, .getPurchases,
              .postCalendarPurchase, .getCustomExercises, .saveCustomExercise, .deleteCustomExercise, .getReadPosts, .setPostRead,
-             .deleteAllReadPosts, .getProgress, .getProgressDay, .createProgress, .updateProgress, .deleteProgress, .deleteProgressPhoto,
-             .getDays, .createDay, .updateDay, .deleteDay: []
+             .getProgress, .updateProgress, .deleteProgress, .deleteProgressPhoto,
+             .getDays, .updateDay, .deleteDay: []
         }
     }
 
     var bodyParts: BodyMaker.Parts? {
         switch self {
         case .login, .getUser, .getCountries, .current, .getPurchases, .getCustomExercises, .deleteCustomExercise, .getReadPosts,
-             .setPostRead, .deleteAllReadPosts, .getProgress, .getProgressDay, .deleteProgress, .deleteProgressPhoto, .getDays, .deleteDay:
+             .setPostRead, .getProgress, .deleteProgress, .deleteProgressPhoto, .getDays, .deleteDay:
             return nil
         case let .editUser(_, form):
             let parameters = form.requestParameters
@@ -379,7 +333,7 @@ enum Endpoint {
             return .init(["date": request.date], nil)
         case let .saveCustomExercise(_, exercise):
             return .init(exercise.formParameters, nil)
-        case let .createProgress(progress), let .updateProgress(_, progress):
+        case let .updateProgress(_, progress):
             let parameters = progress.requestParameters
 
             // Пустые медиа-файлы для удаления фото добавляются ниже
@@ -411,7 +365,7 @@ enum Endpoint {
             }
 
             return .init(parameters, mediaFiles)
-        case let .createDay(dayModel), let .updateDay(dayModel):
+        case let .updateDay(dayModel):
             return .init(dayModel.formParameters, nil)
         }
     }

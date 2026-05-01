@@ -65,16 +65,6 @@ extension DayActivityTraining {
         )
     }
 
-    /// Преобразование в DayRequest.Training для отправки на сервер
-    var dayRequestTraining: DayRequest.Training {
-        .init(
-            count: count,
-            typeId: typeId,
-            customTypeId: customTypeId,
-            sortOrder: sortOrder
-        )
-    }
-
     /// Преобразование в ActivitySnapshot.TrainingSnapshot для снимков синхронизации
     var trainingSnapshot: ActivitySnapshot.TrainingSnapshot {
         .init(

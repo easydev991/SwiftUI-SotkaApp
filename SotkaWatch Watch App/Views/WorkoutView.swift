@@ -2,7 +2,6 @@ import SwiftUI
 
 struct WorkoutView: View {
     @Environment(\.currentDay) private var currentDay
-    @Environment(\.dismiss) private var dismiss
     @Environment(\.scenePhase) private var scenePhase
 
     @State private var viewModel: WorkoutViewModel

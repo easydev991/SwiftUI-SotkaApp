@@ -8,7 +8,6 @@ struct MoreScreen: View {
     @Environment(\.currentDay) private var currentDay
     @Environment(AppSettings.self) private var appSettings
     @Environment(StatusManager.self) private var statusManager
-    @Environment(\.modelContext) private var modelContext
     @Environment(\.analyticsService) private var analytics
     @Environment(AuthHelperImp.self) private var authHelper
     @AppStorage(Key.isWorkoutGroupExpanded.rawValue) private var isWorkoutGroupExpanded = true

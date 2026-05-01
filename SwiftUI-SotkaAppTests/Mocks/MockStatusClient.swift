@@ -111,18 +111,6 @@ final class MockStatusClient: StatusClient, @unchecked Sendable {
             throw error
         }
     }
-
-    /// Сброс всех счетчиков и состояний
-    func reset() {
-        startCallCount = 0
-        currentCallCount = 0
-        lastStartDate = nil
-        startCalls.removeAll()
-        startResult = .success(CurrentRunResponse(date: Date.now, maxForAllRunsDay: nil))
-        currentResult = .success(CurrentRunResponse(date: Date.now, maxForAllRunsDay: nil))
-        startGate = nil
-        currentGate = nil
-    }
 }
 
 extension MockStatusClient {

@@ -22,20 +22,17 @@ actor MockInfopostsClientRecorder {
 struct MockInfopostsClient: InfopostsClient {
     let getReadPostsResult: Result<[Int], Error>
     let setPostReadResult: Result<Void, Error>
-    let deleteAllReadPostsResult: Result<Void, Error>
     let setPostReadResultsByDay: [Int: Result<Void, Error>]
     let recorder: MockInfopostsClientRecorder?
 
     init(
         getReadPostsResult: Result<[Int], Error> = .success([]),
         setPostReadResult: Result<Void, Error> = .success(()),
-        deleteAllReadPostsResult: Result<Void, Error> = .success(()),
         setPostReadResultsByDay: [Int: Result<Void, Error>] = [:],
         recorder: MockInfopostsClientRecorder? = nil
     ) {
         self.getReadPostsResult = getReadPostsResult
         self.setPostReadResult = setPostReadResult
-        self.deleteAllReadPostsResult = deleteAllReadPostsResult
         self.setPostReadResultsByDay = setPostReadResultsByDay
         self.recorder = recorder
     }
@@ -70,15 +67,6 @@ struct MockInfopostsClient: InfopostsClient {
 
         // Иначе используем общий результат
         switch setPostReadResult {
-        case .success:
-            return
-        case let .failure(error):
-            throw error
-        }
-    }
-
-    func deleteAllReadPosts() async throws {
-        switch deleteAllReadPostsResult {
         case .success:
             return
         case let .failure(error):

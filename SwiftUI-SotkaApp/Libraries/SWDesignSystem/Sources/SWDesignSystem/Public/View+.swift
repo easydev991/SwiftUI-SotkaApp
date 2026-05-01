@@ -1,19 +1,6 @@
 import SwiftUI
-#if canImport(UIKit)
-import UIKit
-#endif
 
 public extension View {
-    /// Придает вьюшке форму `circle` с бордюром цвета `swAccent`
-    func borderedCircleClipShape() -> some View {
-        modifier(BorderedClipShapeModifier(clipShape: .circle))
-    }
-
-    /// Придает вьюшке форму `roundedRectangle` с бордюром цвета `swAccent`
-    func borderedRoundedRectClipShape() -> some View {
-        modifier(BorderedClipShapeModifier(clipShape: .roundedRect))
-    }
-
     /// Добавляет фон для карточки
     ///
     /// `padding` - отступы вокруг контента, по умолчанию 12
@@ -35,11 +22,4 @@ public extension View {
     func withShadow() -> some View {
         modifier(ShadowIfNeededModifier())
     }
-
-    // Вызывает habtic feedback
-    #if !os(watchOS)
-    func hapticFeedback(_ style: UIImpactFeedbackGenerator.FeedbackStyle) {
-        UIImpactFeedbackGenerator(style: style).impactOccurred()
-    }
-    #endif
 }

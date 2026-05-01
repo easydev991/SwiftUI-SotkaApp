@@ -1,10 +1,7 @@
 import Foundation
-import OSLog
 
 /// Менеджер для управления доступностью инфопостов в зависимости от текущего дня программы
 struct InfopostAvailabilityManager {
-    private let logger = Logger(subsystem: Bundle.sotkaAppBundleId, category: String(describing: InfopostAvailabilityManager.self))
-
     private let currentDay: Int
     private let maxReadInfoPostDay: Int
 
