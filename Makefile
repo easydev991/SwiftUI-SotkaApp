@@ -1,4 +1,4 @@
-.PHONY: help setup setup_hook setup_snapshot setup_fastlane setup_ssh setup_markdownlint update update_fastlane update_swiftformat update_readme_versions test_readme_versions test_ui_preflight_script test_get_video_titles_script get_video_titles format screenshots ui_preflight_test_ui ui_preflight_screenshots upload_screenshots testflight fastlane increment_build build test test_ui test_watch
+.PHONY: help setup setup_hook setup_snapshot setup_fastlane setup_ssh setup_markdownlint setup_periphery update update_fastlane update_swiftformat update_readme_versions test_readme_versions test_ui_preflight_script test_get_video_titles_script get_video_titles format screenshots ui_preflight_test_ui ui_preflight_screenshots upload_screenshots testflight fastlane increment_build build test test_ui test_watch scan_unused_code
 
 # Цвета и шрифт
 YELLOW=\033[1;33m
@@ -135,6 +135,7 @@ setup:
 	@$(MAKE) setup_snapshot
 	@$(MAKE) setup_ssh
 	@$(MAKE) setup_markdownlint
+	@$(MAKE) setup_periphery
 	
 ## setup_hook: Установить git-хуки (pre-commit для синхронизации README и pre-push для swiftformat)
 setup_hook:
@@ -230,6 +231,18 @@ setup_markdownlint:
 	else \
 		printf "$(GREEN)markdownlint-cli уже установлен$(RESET)\\n"; \
 	fi
+
+## setup_periphery: Установить Periphery через Mint для поиска неиспользуемого кода
+setup_periphery:
+	@printf "$(YELLOW)Проверка наличия Mint...$(RESET)\\n"
+	@if ! command -v mint >/dev/null 2>&1; then \
+		printf "$(YELLOW)Mint не установлен. Устанавливаю через Homebrew...$(RESET)\\n"; \
+		brew install mint; \
+		printf "$(GREEN)Mint установлен$(RESET)\\n"; \
+	fi
+	@printf "$(YELLOW)Установка Periphery через Mint...$(RESET)\\n"
+	@mint install peripheryapp/periphery
+	@printf "$(GREEN)Periphery установлен$(RESET)\\n"
 
 ## update: Обновить fastlane, swiftformat и версии Xcode/Swift/iOS в README
 update: update_fastlane update_swiftformat update_readme_versions
@@ -366,6 +379,27 @@ watch_screenshots:
 ## build: Сборка проекта в терминале
 build:
 	xcodebuild -project SwiftUI-SotkaApp.xcodeproj -scheme SwiftUI-SotkaApp -sdk iphonesimulator -destination '$(IOS_SIM_DEST)' build
+
+## scan_unused_code: Запустить поиск неиспользуемого кода через Periphery (предварительно собери проект: make build или xcodebuild-mcp build_sim)
+scan_unused_code:
+	@PERIPHERY=$$(command -v periphery 2>/dev/null || echo "$$HOME/.mint/bin/periphery"); \
+	if [ ! -x "$$PERIPHERY" ]; then \
+		printf "$(RED)periphery не найден. Установи: make setup_periphery$(RESET)\n"; \
+		exit 1; \
+	fi; \
+	printf "$(YELLOW)Поиск неиспользуемого кода через Periphery...$(RESET)\n"; \
+	BUILD_DIR=$$(xcodebuild -project SwiftUI-SotkaApp.xcodeproj -scheme SwiftUI-SotkaApp -showBuildSettings 2>/dev/null | grep -m1 "^    BUILD_DIR = " | sed 's/^    BUILD_DIR = //'); \
+	if [ -z "$$BUILD_DIR" ]; then \
+		printf "$(RED)Не удалось определить BUILD_DIR. Собери проект: make build$(RESET)\n"; \
+		exit 1; \
+	fi; \
+	INDEX_STORE="$$(dirname "$$(dirname "$$BUILD_DIR")")/Index.noindex/DataStore"; \
+	if [ ! -d "$$INDEX_STORE" ]; then \
+		printf "$(YELLOW)IndexStore не найден: $$INDEX_STORE$(RESET)\n"; \
+		printf "$(YELLOW)Собери проект: make build$(RESET)\n"; \
+		exit 1; \
+	fi; \
+	"$$PERIPHERY" scan --config .periphery.yml --skip-build --index-store-path "$$INDEX_STORE"
 
 ## test: Запускает unit-тесты в терминале
 test:

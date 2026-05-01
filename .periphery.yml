@@ -1,0 +1,4 @@
+project: SwiftUI-SotkaApp.xcodeproj
+schemes:
+- SwiftUI-SotkaApp
+- SotkaWatch Watch App
