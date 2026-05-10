@@ -22,6 +22,9 @@ build/
 
 # Fastlane
 fastlane/report.xml
+*.ipa
+*.dSYM.zip
+*.dSYM
 # HTML отчеты по скриншотам (iPhone и Watch)
 fastlane/screenshots/**/screenshots.html
 SwiftUI-SotkaApp/GoogleService-Info.plist

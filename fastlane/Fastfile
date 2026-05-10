@@ -31,8 +31,10 @@ def load_common_module
   if File.directory?(File.join(cache, ".git"))
     begin
       sh("git -C #{Shellwords.escape(cache)} pull --ff-only")
-    rescue => e
-      UI.important("Не удалось обновить ios-fastlane-secrets: #{e.message}. Используется кэш.")
+    rescue
+      UI.important("git pull failed, re-cloning ios-fastlane-secrets...")
+      FileUtils.rm_rf(cache)
+      sh("git clone --depth 1 #{SECRETS_REPO} #{Shellwords.escape(cache)}")
     end
   else
     FileUtils.rm_rf(cache) if File.exist?(cache)
@@ -192,13 +194,16 @@ platform :ios do
 
   desc "Собрать и отправить сборку в TestFlight"
   lane :build_and_upload do
+    # Сначала синхронизируем профиль для Watch-расширения
+    run_match(app_identifier: "com.oleg991.SwiftUI-SotkaApp.watchkitapp")
+
     build_and_upload_app(
       app_identifier: "com.oleg991.SwiftUI-SotkaApp",
       scheme: "SwiftUI-SotkaApp",
       xcodeproj: "SwiftUI-SotkaApp.xcodeproj",
       xcodeproj_for_version: "SwiftUI-SotkaApp.xcodeproj",
       target_for_version: "SwiftUI-SotkaApp",
-      gsp_path: "SwiftUI-SotkaApp/GoogleService-Info.plist",
+      gsp_path: File.expand_path("../SwiftUI-SotkaApp/GoogleService-Info.plist", __dir__),
       output_name: "SwiftUI-SotkaApp"
     )
   end
