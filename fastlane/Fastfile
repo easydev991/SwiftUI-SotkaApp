@@ -10,59 +10,41 @@
 #     https://docs.fastlane.tools/plugins/available-plugins
 #
 
-# Uncomment the line if you want fastlane to automatically update itself
-#update_fastlane
-
 default_platform(:ios)
 
 require 'shellwords'
 require 'fileutils'
 
 # Проектные константы
-APP_SCHEME_FOR_BUILD                  = "SwiftUI-SotkaApp"
-APP_TARGET_FOR_VERSION_LOOKUP         = "SwiftUI-SotkaApp"
-ARTIFACT_OUTPUT_NAME                  = "SwiftUI-SotkaApp"
-XCODEPROJECT_FILE_FOR_VERSION_LOOKUP  = "SwiftUI-SotkaApp.xcodeproj"
-UITESTS_SCHEME_FOR_SCREENSHOTS        = "SwiftUI-SotkaAppUITests"
-APP_IDENTIFIER_FOR_BUILD_NUMBER       = "com.oleg991.SwiftUI-SotkaApp"
+UITESTS_SCHEME_FOR_SCREENSHOTS = "SwiftUI-SotkaAppUITests"
 
 SECRETS_REPO = "git@github.com:easydev991/ios-fastlane-secrets.git"
-SECRETS_DIR  = "appstoreconnect"
 
-def load_app_store_connect_api_key
-  Dir.mktmpdir("asc-secrets") do |tmp|
-    sh("git clone --depth 1 #{SECRETS_REPO} #{Shellwords.escape(tmp)}")
-    secrets_path = File.join(tmp, SECRETS_DIR)
+# Кеш-директория: хранение в постоянном месте, чтобы __FILE__ и autoload
+# в fastlane_common.rb работали корректно.
+SHARED_CACHE_DIR = File.expand_path("~/.cache/ios-fastlane-secrets")
 
-    key_id    = File.read(File.join(secrets_path, "KEY_ID")).strip
-    issuer_id = File.read(File.join(secrets_path, "ISSUER_ID")).strip
-    p8_path   = Dir[File.join(secrets_path, "AuthKey_*.p8")].first
-    if p8_path.nil?
-      UI.user_error!("Не найден файл приватного ключа AuthKey_*.p8 в #{secrets_path}")
+def load_common_module
+  cache = SHARED_CACHE_DIR
+  FileUtils.mkdir_p(cache)
+
+  if File.directory?(File.join(cache, ".git"))
+    begin
+      sh("git -C #{Shellwords.escape(cache)} pull --ff-only")
+    rescue => e
+      UI.important("Не удалось обновить ios-fastlane-secrets: #{e.message}. Используется кэш.")
     end
-    key_p8 = File.read(p8_path)
-
-    return app_store_connect_api_key(
-      key_id: key_id,
-      issuer_id: issuer_id,
-      key_content: key_p8,
-      duration: 1200,
-      in_house: false
-    )
+  else
+    FileUtils.rm_rf(cache) if File.exist?(cache)
+    sh("git clone --depth 1 #{SECRETS_REPO} #{Shellwords.escape(cache)}")
   end
+
+  common_path = File.join(cache, "fastlane_common.rb")
+  UI.user_error!("fastlane_common.rb не найден в ios-fastlane-secrets") unless File.exist?(common_path)
+  require common_path
 end
 
-# Кэшируем ключ ASC один раз за запуск команды fastlane
-def asc_key
-  @asc_key ||= load_app_store_connect_api_key
-end
-
-def latest_crashlytics_upload_symbols_binary
-  candidates = Dir["#{Dir.home}/Library/Developer/Xcode/DerivedData/**/SourcePackages/checkouts/firebase-ios-sdk/Crashlytics/upload-symbols"]
-  return nil if candidates.empty?
-
-  candidates.max_by { |path| File.mtime(path) }
-end
+load_common_module
 
 platform :ios do
   desc "Сгенерировать новые локализованные скриншоты"
@@ -76,23 +58,19 @@ platform :ios do
 
   desc "Сгенерировать скриншоты для Apple Watch"
   lane :watch_screenshots do
-    # Получаем путь к проекту (__dir__ указывает на fastlane/, поэтому поднимаемся на уровень выше)
     project_path = File.expand_path(File.dirname(__FILE__) + "/..")
     snapfile_path = File.join(project_path, "fastlane", "Snapfile")
     snapfile_backup_path = File.join(project_path, "fastlane", "Snapfile.backup")
-    
-    # Временно переименовываем Snapfile, чтобы snapshot не использовал его
+
     snapfile_backup = nil
     snapfile_exists = File.exist?(snapfile_path)
     if snapfile_exists
       File.rename(snapfile_path, snapfile_backup_path)
     end
-    
-    # Создаем временный пустой Snapfile для Watch, чтобы snapshot не искал основной
+
     File.write(snapfile_path, "# Temporary Snapfile for Watch screenshots\n")
-    
+
     begin
-      # Используем отдельный симулятор часов, созданный специально для скриншотов
       snapshot(
         scheme: "SotkaWatch Watch AppUITests",
         devices: ["Apple Watch Series 8 (45mm)"],
@@ -109,10 +87,8 @@ platform :ios do
         disable_package_automatic_updates: true
       )
     ensure
-      # Удаляем временный Snapfile
       File.delete(snapfile_path) if File.exist?(snapfile_path)
-      
-      # Восстанавливаем оригинальный Snapfile обратно
+
       if snapfile_exists && File.exist?(snapfile_backup_path)
         File.rename(snapfile_backup_path, snapfile_path)
       end
@@ -123,45 +99,38 @@ platform :ios do
   lane :upload_screenshots do
     project_path = File.expand_path(File.dirname(__FILE__) + "/..")
     screenshots_base = File.join(project_path, "fastlane", "screenshots")
-    
-    # Временно перемещаем папки iphone и watch, чтобы upload_to_app_store их не видел
+
     iphone_dir = File.join(screenshots_base, "iphone")
     watch_dir = File.join(screenshots_base, "watch")
     temp_backup_dir = File.join(project_path, "fastlane", ".screenshots_backup")
-    
+
     iphone_moved = false
     watch_moved = false
     temp_lang_dirs = []
-    
+
     begin
-      # Создаем временную папку для бэкапа
       FileUtils.mkdir_p(temp_backup_dir) unless File.exist?(temp_backup_dir)
-      
-      # Перемещаем папки iphone и watch во временную папку
+
       if File.exist?(iphone_dir)
         FileUtils.mv(iphone_dir, File.join(temp_backup_dir, "iphone"))
         iphone_moved = true
       end
-      
+
       if File.exist?(watch_dir)
         FileUtils.mv(watch_dir, File.join(temp_backup_dir, "watch"))
         watch_moved = true
       end
-      
-      # Создаем временные папки для языков
+
       ["en-US", "ru"].each do |lang|
         lang_dir = File.join(screenshots_base, lang)
         temp_lang_dirs << lang_dir
-        
-        # Удаляем папку, если она существует (от предыдущего запуска)
+
         FileUtils.rm_rf(lang_dir) if File.exist?(lang_dir)
-        
-        # Создаем новую папку для языка
+
         FileUtils.mkdir_p(lang_dir)
-        
+
         copied_count = 0
-        
-        # Копируем скриншоты из iphone (из временной папки бэкапа)
+
         iphone_lang_dir = File.join(temp_backup_dir, "iphone", lang)
         if File.exist?(iphone_lang_dir)
           Dir.glob(File.join(iphone_lang_dir, "*.png")).each do |file|
@@ -169,8 +138,7 @@ platform :ios do
             copied_count += 1
           end
         end
-        
-        # Копируем скриншоты из watch (из временной папки бэкапа)
+
         watch_lang_dir = File.join(temp_backup_dir, "watch", lang)
         if File.exist?(watch_lang_dir)
           Dir.glob(File.join(watch_lang_dir, "*.png")).each do |file|
@@ -178,11 +146,10 @@ platform :ios do
             copied_count += 1
           end
         end
-        
+
         UI.success("Собрано #{copied_count} скриншотов для языка #{lang}")
       end
-      
-      # Загружаем скриншоты
+
       upload_to_app_store(
         api_key: asc_key,
         skip_metadata: true,
@@ -196,23 +163,18 @@ platform :ios do
         automatic_release: false
       )
     ensure
-      # Удаляем временные языковые папки
       temp_lang_dirs.each do |lang_dir|
-        if File.exist?(lang_dir)
-          FileUtils.rm_rf(lang_dir)
-        end
+        FileUtils.rm_rf(lang_dir) if File.exist?(lang_dir)
       end
-      
-      # Возвращаем папки iphone и watch обратно
+
       if iphone_moved && File.exist?(File.join(temp_backup_dir, "iphone"))
         FileUtils.mv(File.join(temp_backup_dir, "iphone"), iphone_dir)
       end
-      
+
       if watch_moved && File.exist?(File.join(temp_backup_dir, "watch"))
         FileUtils.mv(File.join(temp_backup_dir, "watch"), watch_dir)
       end
-      
-      # Удаляем временную папку бэкапа, если она пустая
+
       if File.exist?(temp_backup_dir) && Dir.empty?(temp_backup_dir)
         FileUtils.rmdir(temp_backup_dir)
       end
@@ -221,70 +183,23 @@ platform :ios do
 
   desc "Получить следующий номер сборки для отправки"
   lane :get_next_build_number do
-    project_version = get_version_number(
-      xcodeproj: XCODEPROJECT_FILE_FOR_VERSION_LOOKUP,
-      target: APP_TARGET_FOR_VERSION_LOOKUP
+    compute_next_build_number(
+      app_identifier: "com.oleg991.SwiftUI-SotkaApp",
+      xcodeproj: "SwiftUI-SotkaApp.xcodeproj",
+      target: "SwiftUI-SotkaApp"
     )
-    latest_build_any = latest_testflight_build_number(
-      api_key: asc_key,
-      app_identifier: APP_IDENTIFIER_FOR_BUILD_NUMBER
-    )
-    latest_tf_version = lane_context[SharedValues::LATEST_TESTFLIGHT_VERSION]
-    if latest_tf_version.to_s == project_version.to_s
-      (latest_build_any.to_i + 1).to_s
-    else
-      "1"
-    end
   end
 
   desc "Собрать и отправить сборку в TestFlight"
   lane :build_and_upload do
-    # Обновляем номер сборки
-    increment_build_number(
-      build_number: get_next_build_number,
-      xcodeproj: XCODEPROJECT_FILE_FOR_VERSION_LOOKUP,
-      skip_info_plist: true
-    )
-
-    # Собираем приложение
-    build_app(
-      scheme: APP_SCHEME_FOR_BUILD,
-      export_method: "app-store",
-      clean: true,
-      output_directory: "fastlane/builds",
-      output_name: ARTIFACT_OUTPUT_NAME,
-      xcargs: "-allowProvisioningUpdates"
-    )
-
-    dsym_output_path = lane_context[SharedValues::DSYM_OUTPUT_PATH]
-    UI.user_error!("Не найден путь к dSYM после build_app") if dsym_output_path.to_s.empty?
-    UI.user_error!("Файл dSYM не найден: #{dsym_output_path}") unless File.exist?(dsym_output_path)
-
-    upload_symbols_binary = latest_crashlytics_upload_symbols_binary
-    UI.user_error!("Не найден Crashlytics upload-symbols binary в DerivedData") if upload_symbols_binary.nil?
-
-    upload_symbols_to_crashlytics(
-      dsym_path: dsym_output_path,
+    build_and_upload_app(
+      app_identifier: "com.oleg991.SwiftUI-SotkaApp",
+      scheme: "SwiftUI-SotkaApp",
+      xcodeproj: "SwiftUI-SotkaApp.xcodeproj",
+      xcodeproj_for_version: "SwiftUI-SotkaApp.xcodeproj",
+      target_for_version: "SwiftUI-SotkaApp",
       gsp_path: "SwiftUI-SotkaApp/GoogleService-Info.plist",
-      binary_path: upload_symbols_binary
+      output_name: "SwiftUI-SotkaApp"
     )
-
-    # Загружаем в TestFlight
-    upload_to_testflight(
-      skip_waiting_for_build_processing: true,
-      distribute_external: false,
-      notify_external_testers: false,
-      api_key: asc_key
-    )
-    
-    # После успешной загрузки сбрасываем номер сборки до 1
-    increment_build_number(
-      build_number: "1",
-      xcodeproj: XCODEPROJECT_FILE_FOR_VERSION_LOOKUP,
-      skip_info_plist: true
-    )
-    
-    # Удаляем файлы сборки после успешной публикации
-    clean_build_artifacts
   end
 end
