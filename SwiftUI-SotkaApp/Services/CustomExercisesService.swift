@@ -18,11 +18,15 @@ final class CustomExercisesService {
 
     /// Клиент для работы с API
     private let client: ExerciseClient
+    private let isReadOnlyMode: Bool
 
     /// Инициализатор сервиса
-    /// - Parameter client: Клиент для работы с API
-    init(client: ExerciseClient) {
+    /// - Parameters:
+    ///   - client: Клиент для работы с API
+    ///   - isReadOnlyMode: Флаг read-only режима (по умолчанию из AppConfiguration)
+    init(client: ExerciseClient, isReadOnlyMode: Bool = AppConfiguration.isReadOnlyMode) {
         self.client = client
+        self.isReadOnlyMode = isReadOnlyMode
     }
 
     // MARK: - Snapshot & Sync Events (для конкурентной синхронизации без ModelContext)
@@ -110,7 +114,7 @@ final class CustomExercisesService {
     /// - Parameter context: Контекст Swift Data
     /// - Returns: Результат синхронизации с детальной информацией
     func syncCustomExercises(context: ModelContext) async throws -> SyncResult {
-        if let user = try? context.fetch(FetchDescriptor<User>()).first, user.isOfflineOnly {
+        if let user = try? context.fetch(FetchDescriptor<User>()).first, user.isOfflineOnly || isReadOnlyMode {
             let emptyStats = SyncStats(created: 0, updated: 0, deleted: 0)
             logger.info("Офлайн-пользователь: syncCustomExercises выполняется только локально, сетевой sync пропущен")
             return SyncResult(

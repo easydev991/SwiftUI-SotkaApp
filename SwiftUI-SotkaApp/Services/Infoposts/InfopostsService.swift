@@ -14,6 +14,7 @@ final class InfopostsService {
     private let currentLanguage: String
     private let infopostsClient: InfopostsClient
     private let analytics: AnalyticsService
+    private let isReadOnlyMode: Bool
     @ObservationIgnored private var userGender: Gender?
     @ObservationIgnored private var cachedInfoposts: [Infopost]?
     /// Доступные инфопосты для текущего дня
@@ -67,10 +68,16 @@ final class InfopostsService {
         }
     }
 
-    init(language: String, infopostsClient: InfopostsClient, analytics: AnalyticsService) {
+    init(
+        language: String,
+        infopostsClient: InfopostsClient,
+        analytics: AnalyticsService,
+        isReadOnlyMode: Bool = AppConfiguration.isReadOnlyMode
+    ) {
         self.currentLanguage = language
         self.infopostsClient = infopostsClient
         self.analytics = analytics
+        self.isReadOnlyMode = isReadOnlyMode
         logger.info("Инициализирован InfopostsService для языка: \(language)")
     }
 
@@ -298,7 +305,7 @@ extension InfopostsService {
     func syncReadPosts(context: ModelContext) async throws {
         let user = try getCurrentUser(modelContext: context)
 
-        if user.isOfflineOnly {
+        if user.isOfflineOnly || isReadOnlyMode {
             logger.debug("Пропуск syncReadPosts для офлайн-пользователя")
             return
         }
@@ -390,7 +397,7 @@ extension InfopostsService {
 
         // Для офлайн-пользователя оставляем день в локальной очереди синхронизации
         // и не пытаемся отправлять mark-as-read на сервер.
-        if user.isOfflineOnly {
+        if user.isOfflineOnly || isReadOnlyMode {
             logger.debug("Пропуск setPostRead для офлайн-пользователя (day: \(day))")
             return
         }

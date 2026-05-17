@@ -10,7 +10,7 @@ extension DailyActivitiesServiceTests {
     @Test("Создает активность локально с isSynced = false")
     func createDailyActivityOffline() throws {
         let mockClient = MockDaysClient()
-        let service = DailyActivitiesService(client: mockClient)
+        let service = DailyActivitiesService(client: mockClient, isReadOnlyMode: false)
         let container = try ModelContainer(
             for: DayActivity.self,
             DayActivityTraining.self,
@@ -44,7 +44,7 @@ extension DailyActivitiesServiceTests {
     @Test("Создает активность с последующей синхронизацией")
     func createDailyActivityWithSync() async throws {
         let mockClient = MockDaysClient()
-        let service = DailyActivitiesService(client: mockClient)
+        let service = DailyActivitiesService(client: mockClient, isReadOnlyMode: false)
         let container = try ModelContainer(
             for: DayActivity.self,
             DayActivityTraining.self,
@@ -77,7 +77,7 @@ extension DailyActivitiesServiceTests {
     @Test("Изменяет активность и синхронизирует")
     func markDailyActivityAsModifiedAndSync() async throws {
         let mockClient = MockDaysClient()
-        let service = DailyActivitiesService(client: mockClient)
+        let service = DailyActivitiesService(client: mockClient, isReadOnlyMode: false)
         let container = try ModelContainer(
             for: DayActivity.self,
             DayActivityTraining.self,
@@ -115,7 +115,7 @@ extension DailyActivitiesServiceTests {
     @Test("Мягко удаляет активность")
     func deleteDailyActivitySoftDelete() throws {
         let mockClient = MockDaysClient()
-        let service = DailyActivitiesService(client: mockClient)
+        let service = DailyActivitiesService(client: mockClient, isReadOnlyMode: false)
         let container = try ModelContainer(
             for: DayActivity.self,
             DayActivityTraining.self,
@@ -149,7 +149,7 @@ extension DailyActivitiesServiceTests {
     @Test("Удаляет активность и синхронизирует удаление")
     func deleteDailyActivityWithSync() async throws {
         let mockClient = MockDaysClient()
-        let service = DailyActivitiesService(client: mockClient)
+        let service = DailyActivitiesService(client: mockClient, isReadOnlyMode: false)
         let container = try ModelContainer(
             for: DayActivity.self,
             DayActivityTraining.self,

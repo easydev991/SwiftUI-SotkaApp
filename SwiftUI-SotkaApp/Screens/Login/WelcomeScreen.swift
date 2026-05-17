@@ -4,6 +4,7 @@ import SwiftUI
 import SWUtils
 
 struct WelcomeScreen: View {
+    @Environment(\.isReadOnlyMode) private var isReadOnlyMode
     @State private var destination = NavigationDestination.welcome
     let client: LoginClient & StatusClient
 
@@ -52,10 +53,15 @@ private extension WelcomeScreen {
                 destination = .online
             }
             .buttonStyle(SWButtonStyle(mode: .filled, size: .large))
-            Text(.loginScreenRegistrationInfoText)
-                .font(.footnote.weight(.medium))
-                .multilineTextAlignment(.center)
-                .foregroundStyle(Color.swMainText)
+            .disabled(isReadOnlyMode)
+            Text(
+                isReadOnlyMode
+                    ? .loginScreenAuthNotAvailableText
+                    : .loginScreenRegistrationInfoText
+            )
+            .font(.footnote.weight(.medium))
+            .multilineTextAlignment(.center)
+            .foregroundStyle(Color.swMainText)
         }
     }
 

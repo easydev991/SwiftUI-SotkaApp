@@ -23,6 +23,7 @@ final class StatusManager: NSObject {
     @ObservationIgnored private(set) var syncReadPostsTask: Task<Void, Error>?
     @ObservationIgnored private let sessionProtocol: WCSessionProtocol?
     @ObservationIgnored let modelContainer: ModelContainer
+    private let isReadOnlyMode: Bool
     private let statusClient: StatusClient
     private let purchasesClient: PurchasesClient?
     @ObservationIgnored private var extensionDateKeysSnapshot: Set<Int64> = []
@@ -102,7 +103,8 @@ final class StatusManager: NSObject {
         modelContainer: ModelContainer,
         userDefaults: UserDefaults? = nil,
         watchConnectivitySessionProtocol: WCSessionProtocol? = nil,
-        reviewEventReporter: (any ReviewEventReporting)? = nil
+        reviewEventReporter: (any ReviewEventReporting)? = nil,
+        isReadOnlyMode: Bool = AppConfiguration.isReadOnlyMode
     ) {
         self.customExercisesService = customExercisesService
         self.infopostsService = infopostsService
@@ -112,6 +114,7 @@ final class StatusManager: NSObject {
         self.purchasesClient = purchasesClient
         self.modelContainer = modelContainer
         self.reviewEventReporter = reviewEventReporter
+        self.isReadOnlyMode = isReadOnlyMode
         if let userDefaults {
             self.defaults = userDefaults
         } else {
@@ -147,7 +150,7 @@ final class StatusManager: NSObject {
         let user = try? context.fetch(FetchDescriptor<User>()).first
         refreshExtensionSnapshot(for: user, context: context)
 
-        if let user, user.isOfflineOnly {
+        if let user, user.isOfflineOnly || isReadOnlyMode {
             if startDate == nil {
                 startDate = now
             }
@@ -215,7 +218,7 @@ final class StatusManager: NSObject {
         let user = try? context.fetch(FetchDescriptor<User>()).first
         refreshExtensionSnapshot(for: user, context: context)
 
-        if let user, user.isOfflineOnly {
+        if let user, user.isOfflineOnly || isReadOnlyMode {
             startDate = newStartDate
             rebuildCurrentDayCalculator(now: .now)
             return
@@ -253,7 +256,7 @@ final class StatusManager: NSObject {
                 force: true
             )
 
-            if let user, user.isOfflineOnly {
+            if let user, user.isOfflineOnly || isReadOnlyMode {
                 logger.debug("Пропуск syncReadPosts для офлайн-пользователя")
                 return
             }
@@ -987,7 +990,7 @@ final class StatusManager: NSObject {
             return
         }
 
-        addExtensionDate(.now, isSynced: user.isOfflineOnly)
+        addExtensionDate(.now, isSynced: user.isOfflineOnly || isReadOnlyMode)
 
         let updatedCurrentDay = currentDayCalculator?.currentDay
         let updatedCurrentActivity = updatedCurrentDay.map {
@@ -999,7 +1002,7 @@ final class StatusManager: NSObject {
             currentActivity: updatedCurrentActivity
         )
 
-        guard !user.isOfflineOnly else {
+        guard !(user.isOfflineOnly || isReadOnlyMode) else {
             return
         }
 

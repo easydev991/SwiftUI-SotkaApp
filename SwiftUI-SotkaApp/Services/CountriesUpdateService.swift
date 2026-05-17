@@ -13,6 +13,7 @@ final class CountriesUpdateService {
     )
     @ObservationIgnored private let defaults: UserDefaults
     private let client: CountriesClient
+    private let isReadOnlyMode: Bool
 
     /// Нужно ли обновлять справочник
     ///
@@ -51,9 +52,10 @@ final class CountriesUpdateService {
     private(set) var isLoading = false
     private(set) var updateTask: Task<Void, Never>?
 
-    init(defaults: UserDefaults = UserDefaults.standard, client: CountriesClient) {
+    init(defaults: UserDefaults = UserDefaults.standard, client: CountriesClient, isReadOnlyMode: Bool = AppConfiguration.isReadOnlyMode) {
         self.defaults = defaults
         self.client = client
+        self.isReadOnlyMode = isReadOnlyMode
     }
 
     /// Обновляет справочник стран и городов при необходимости
@@ -61,7 +63,7 @@ final class CountriesUpdateService {
     ///   - context: Контекст `Swift Data`
     func update(_ context: ModelContext) {
         let user = try? context.fetch(FetchDescriptor<User>()).first
-        if let user, user.isOfflineOnly {
+        if let user, user.isOfflineOnly || isReadOnlyMode {
             logger.debug("Пропуск обновления стран для офлайн-пользователя")
             return
         }

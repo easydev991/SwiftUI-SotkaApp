@@ -10,7 +10,7 @@ extension DailyActivitiesServiceTests {
     @Test("Пропускает обновление если данные не изменились и активность синхронизирована")
     func skipUpdateWhenDataNotChangedAndSynced() async throws {
         let mockClient = MockDaysClient()
-        let service = DailyActivitiesService(client: mockClient)
+        let service = DailyActivitiesService(client: mockClient, isReadOnlyMode: false)
         let container = try ModelContainer(
             for: DayActivity.self,
             DayActivityTraining.self,
@@ -62,7 +62,7 @@ extension DailyActivitiesServiceTests {
     @Test("Обновляет локальную версию когда данные изменились и серверная версия новее или равна")
     func updateWhenDataChangedAndServerNewer() async throws {
         let mockClient = MockDaysClient()
-        let service = DailyActivitiesService(client: mockClient)
+        let service = DailyActivitiesService(client: mockClient, isReadOnlyMode: false)
         let container = try ModelContainer(
             for: DayActivity.self,
             DayActivityTraining.self,
@@ -114,7 +114,7 @@ extension DailyActivitiesServiceTests {
     @Test("Пропускает обновление когда данные изменились но локальная версия новее серверной")
     func skipUpdateWhenDataChangedButLocalNewer() async throws {
         let mockClient = MockDaysClient()
-        let service = DailyActivitiesService(client: mockClient)
+        let service = DailyActivitiesService(client: mockClient, isReadOnlyMode: false)
         let container = try ModelContainer(
             for: DayActivity.self,
             DayActivityTraining.self,
@@ -191,7 +191,7 @@ extension DailyActivitiesServiceTests {
     func keepsLocalActivityWhenServerTimezoneLessDateMatchesSameInstant() async throws {
         let utc = try #require(TimeZone(secondsFromGMT: 0))
         let mockClient = MockDaysClient()
-        let service = DailyActivitiesService(client: mockClient)
+        let service = DailyActivitiesService(client: mockClient, isReadOnlyMode: false)
         let container = try ModelContainer(
             for: DayActivity.self,
             DayActivityTraining.self,
@@ -242,7 +242,7 @@ extension DailyActivitiesServiceTests {
     func unsyncedLocalChangesNotOverwritten() async throws {
         let mockClient = MockDaysClient()
         mockClient.shouldThrowError = true
-        let service = DailyActivitiesService(client: mockClient)
+        let service = DailyActivitiesService(client: mockClient, isReadOnlyMode: false)
         let container = try ModelContainer(
             for: DayActivity.self,
             DayActivityTraining.self,
@@ -350,7 +350,7 @@ extension DailyActivitiesServiceTests {
     @Test("Загружает новые активности с сервера")
     func downloadNewActivitiesFromServer() async throws {
         let mockClient = MockDaysClient()
-        let service = DailyActivitiesService(client: mockClient)
+        let service = DailyActivitiesService(client: mockClient, isReadOnlyMode: false)
         let container = try ModelContainer(
             for: DayActivity.self,
             DayActivityTraining.self,
@@ -391,7 +391,7 @@ extension DailyActivitiesServiceTests {
     @Test("Физически удаляет синхронизированные активности отсутствующие на сервере")
     func physicallyDeleteSyncedActivitiesMissingOnServer() async throws {
         let mockClient = MockDaysClient()
-        let service = DailyActivitiesService(client: mockClient)
+        let service = DailyActivitiesService(client: mockClient, isReadOnlyMode: false)
         let container = try ModelContainer(
             for: DayActivity.self,
             DayActivityTraining.self,
@@ -425,7 +425,7 @@ extension DailyActivitiesServiceTests {
     @Test("Обновляет существующую активность при конфликте дня")
     func updateExistingActivityOnDayConflict() throws {
         let mockClient = MockDaysClient()
-        let service = DailyActivitiesService(client: mockClient)
+        let service = DailyActivitiesService(client: mockClient, isReadOnlyMode: false)
         let container = try ModelContainer(
             for: DayActivity.self,
             DayActivityTraining.self,

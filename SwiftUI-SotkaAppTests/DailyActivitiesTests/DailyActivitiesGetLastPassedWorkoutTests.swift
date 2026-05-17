@@ -7,7 +7,7 @@ extension DailyActivitiesServiceTests {
     @MainActor
     struct GetLastPassedNonTurboWorkoutTests {
         private func createService() -> DailyActivitiesService {
-            DailyActivitiesService(client: MockDaysClient())
+            DailyActivitiesService(client: MockDaysClient(), isReadOnlyMode: false)
         }
 
         private func createContainer() throws -> ModelContainer {

@@ -10,7 +10,7 @@ struct CustomExercisesServiceTests {
     func conflictResolutionServerNewer() async throws {
         // Arrange
         let mockClient = MockSWClient()
-        let service = CustomExercisesService(client: mockClient)
+        let service = CustomExercisesService(client: mockClient, isReadOnlyMode: false)
         let container = try ModelContainer(
             for: CustomExercise.self,
             User.self,
@@ -61,7 +61,7 @@ struct CustomExercisesServiceTests {
     func conflictResolutionLocalNewer() async throws {
         // Arrange
         let mockClient = MockSWClient()
-        let service = CustomExercisesService(client: mockClient)
+        let service = CustomExercisesService(client: mockClient, isReadOnlyMode: false)
         let container = try ModelContainer(
             for: CustomExercise.self,
             User.self,
@@ -99,7 +99,7 @@ struct CustomExercisesServiceTests {
     func deletedElementRestoration() async throws {
         // Arrange
         let mockClient = MockSWClient()
-        let service = CustomExercisesService(client: mockClient)
+        let service = CustomExercisesService(client: mockClient, isReadOnlyMode: false)
         let container = try ModelContainer(
             for: CustomExercise.self,
             User.self,
@@ -137,7 +137,7 @@ struct CustomExercisesServiceTests {
     func newExerciseFromServer() async throws {
         // Arrange
         let mockClient = MockSWClient()
-        let service = CustomExercisesService(client: mockClient)
+        let service = CustomExercisesService(client: mockClient, isReadOnlyMode: false)
         let container = try ModelContainer(
             for: CustomExercise.self,
             User.self,
@@ -176,7 +176,7 @@ struct CustomExercisesServiceTests {
     func nameConflictResolution() throws {
         // Arrange
         let mockClient = MockSWClient()
-        let service = CustomExercisesService(client: mockClient)
+        let service = CustomExercisesService(client: mockClient, isReadOnlyMode: false)
         let container = try ModelContainer(
             for: CustomExercise.self,
             User.self,
@@ -221,7 +221,7 @@ struct CustomExercisesServiceTests {
     func unsyncedLocalChangesNotOverwritten() async throws {
         // Arrange
         let mockClient = MockSWClient()
-        let service = CustomExercisesService(client: mockClient)
+        let service = CustomExercisesService(client: mockClient, isReadOnlyMode: false)
         let container = try ModelContainer(
             for: CustomExercise.self,
             User.self,
@@ -275,7 +275,7 @@ struct CustomExercisesServiceTests {
     func localSoftDeleteMarksFlags() throws {
         // Arrange
         let mockClient = MockSWClient()
-        let service = CustomExercisesService(client: mockClient)
+        let service = CustomExercisesService(client: mockClient, isReadOnlyMode: false)
         let container = try ModelContainer(
             for: CustomExercise.self,
             User.self,
@@ -302,7 +302,7 @@ struct CustomExercisesServiceTests {
     @Test("Пропускает обновление если данные не изменились и упражнение синхронизировано")
     func skipUpdateWhenDataNotChangedAndSynced() async throws {
         let mockClient = MockSWClient()
-        let service = CustomExercisesService(client: mockClient)
+        let service = CustomExercisesService(client: mockClient, isReadOnlyMode: false)
         let container = try ModelContainer(
             for: CustomExercise.self,
             User.self,
@@ -348,7 +348,7 @@ struct CustomExercisesServiceTests {
     @Test("Пропускает обновление при одинаковых датах")
     func skipUpdateWhenDatesAreEqual() async throws {
         let mockClient = MockSWClient()
-        let service = CustomExercisesService(client: mockClient)
+        let service = CustomExercisesService(client: mockClient, isReadOnlyMode: false)
         let container = try ModelContainer(
             for: CustomExercise.self,
             User.self,
@@ -393,7 +393,7 @@ struct CustomExercisesServiceTests {
     func keepsLocalExerciseWhenServerTimezoneLessDateMatchesSameInstant() async throws {
         let utc = try #require(TimeZone(secondsFromGMT: 0))
         let mockClient = MockSWClient()
-        let service = CustomExercisesService(client: mockClient)
+        let service = CustomExercisesService(client: mockClient, isReadOnlyMode: false)
         let container = try ModelContainer(
             for: CustomExercise.self,
             User.self,
@@ -446,7 +446,7 @@ struct CustomExercisesServiceTests {
     @Test("Возвращает результат успешной синхронизации с подсчетом созданных записей")
     func returnsSuccessResultWithCreatedCount() async throws {
         let mockClient = MockSWClient()
-        let service = CustomExercisesService(client: mockClient)
+        let service = CustomExercisesService(client: mockClient, isReadOnlyMode: false)
         let container = try ModelContainer(
             for: CustomExercise.self,
             User.self,
@@ -491,7 +491,7 @@ struct CustomExercisesServiceTests {
     @Test("Возвращает результат с ошибками при сетевой ошибке")
     func returnsResultWithErrorsOnNetworkError() async throws {
         let mockClient = MockSWClient()
-        let service = CustomExercisesService(client: mockClient)
+        let service = CustomExercisesService(client: mockClient, isReadOnlyMode: false)
         let container = try ModelContainer(
             for: CustomExercise.self,
             User.self,
@@ -527,7 +527,7 @@ struct CustomExercisesServiceTests {
     @Test("Возвращает результат с подсчетом обновленных записей")
     func returnsResultWithUpdatedCount() async throws {
         let mockClient = MockSWClient()
-        let service = CustomExercisesService(client: mockClient)
+        let service = CustomExercisesService(client: mockClient, isReadOnlyMode: false)
         let container = try ModelContainer(
             for: CustomExercise.self,
             User.self,
@@ -570,7 +570,7 @@ struct CustomExercisesServiceTests {
     @Test("Возвращает результат с подсчетом удаленных записей")
     func returnsResultWithDeletedCount() async throws {
         let mockClient = MockSWClient()
-        let service = CustomExercisesService(client: mockClient)
+        let service = CustomExercisesService(client: mockClient, isReadOnlyMode: false)
         let container = try ModelContainer(
             for: CustomExercise.self,
             User.self,

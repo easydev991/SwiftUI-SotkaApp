@@ -71,7 +71,7 @@ extension WorkoutScreenViewModelTests {
                 modelContext: context,
                 day: 1,
                 restTime: 60,
-                activitiesService: DailyActivitiesService(client: MockDaysClient())
+                activitiesService: DailyActivitiesService(client: MockDaysClient(), isReadOnlyMode: false)
             )
             previewViewModel.plannedCount = 6
 
@@ -142,7 +142,7 @@ extension WorkoutScreenViewModelTests {
                 modelContext: context,
                 day: 1,
                 restTime: 60,
-                activitiesService: DailyActivitiesService(client: MockDaysClient())
+                activitiesService: DailyActivitiesService(client: MockDaysClient(), isReadOnlyMode: false)
             )
             previewViewModel.plannedCount = 6
 
@@ -211,7 +211,7 @@ extension WorkoutScreenViewModelTests {
                 modelContext: context,
                 day: 1,
                 restTime: 60,
-                activitiesService: DailyActivitiesService(client: MockDaysClient())
+                activitiesService: DailyActivitiesService(client: MockDaysClient(), isReadOnlyMode: false)
             )
             previewViewModel.plannedCount = 4
 

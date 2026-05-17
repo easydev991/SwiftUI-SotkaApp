@@ -112,6 +112,6 @@ extension ProgressSyncService {
         client: ProgressClient = MockProgressClient(),
         photoDownloadService: PhotoDownloadServiceProtocol = MockPhotoDownloadService()
     ) -> ProgressSyncService {
-        ProgressSyncService(client: client, photoDownloadService: photoDownloadService)
+        ProgressSyncService(client: client, photoDownloadService: photoDownloadService, isReadOnlyMode: false)
     }
 }

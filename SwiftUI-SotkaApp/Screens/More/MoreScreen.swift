@@ -10,6 +10,7 @@ struct MoreScreen: View {
     @Environment(StatusManager.self) private var statusManager
     @Environment(\.analyticsService) private var analytics
     @Environment(AuthHelperImp.self) private var authHelper
+    @Environment(\.isReadOnlyMode) private var isReadOnlyMode
     @AppStorage(Key.isWorkoutGroupExpanded.rawValue) private var isWorkoutGroupExpanded = true
     @AppStorage(Key.isWorkoutRestGroupExpanded.rawValue) private var isWorkoutRestGroupExpanded = true
     let user: User
@@ -17,7 +18,7 @@ struct MoreScreen: View {
     @State private var showResetDialog = false
     @State private var showLogoutDialog = false
     private var isOfflineUser: Bool {
-        user.isOfflineOnly
+        user.isOfflineOnly || isReadOnlyMode
     }
 
     var body: some View {

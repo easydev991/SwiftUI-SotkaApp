@@ -10,7 +10,7 @@ extension DailyActivitiesServiceTests {
     @Test("Создает новую активность для дня без существующей активности (stretch)")
     func setCreatesNewActivityForStretch() throws {
         let mockClient = MockDaysClient()
-        let service = DailyActivitiesService(client: mockClient)
+        let service = DailyActivitiesService(client: mockClient, isReadOnlyMode: false)
         let container = try ModelContainer(
             for: DayActivity.self,
             DayActivityTraining.self,
@@ -39,7 +39,7 @@ extension DailyActivitiesServiceTests {
     @Test("Создает новую активность для дня без существующей активности (rest)")
     func setCreatesNewActivityForRest() throws {
         let mockClient = MockDaysClient()
-        let service = DailyActivitiesService(client: mockClient)
+        let service = DailyActivitiesService(client: mockClient, isReadOnlyMode: false)
         let container = try ModelContainer(
             for: DayActivity.self,
             DayActivityTraining.self,
@@ -64,7 +64,7 @@ extension DailyActivitiesServiceTests {
     @Test("Создает новую активность для дня без существующей активности (sick)")
     func setCreatesNewActivityForSick() throws {
         let mockClient = MockDaysClient()
-        let service = DailyActivitiesService(client: mockClient)
+        let service = DailyActivitiesService(client: mockClient, isReadOnlyMode: false)
         let container = try ModelContainer(
             for: DayActivity.self,
             DayActivityTraining.self,
@@ -89,7 +89,7 @@ extension DailyActivitiesServiceTests {
     @Test("Не обрабатывает тип workout")
     func setIgnoresWorkoutType() throws {
         let mockClient = MockDaysClient()
-        let service = DailyActivitiesService(client: mockClient)
+        let service = DailyActivitiesService(client: mockClient, isReadOnlyMode: false)
         let container = try ModelContainer(
             for: DayActivity.self,
             DayActivityTraining.self,
@@ -111,7 +111,7 @@ extension DailyActivitiesServiceTests {
     @Test("Обновляет существующую активность с другим типом")
     func setUpdatesExistingActivityWithDifferentType() throws {
         let mockClient = MockDaysClient()
-        let service = DailyActivitiesService(client: mockClient)
+        let service = DailyActivitiesService(client: mockClient, isReadOnlyMode: false)
         let container = try ModelContainer(
             for: DayActivity.self,
             DayActivityTraining.self,
@@ -155,7 +155,7 @@ extension DailyActivitiesServiceTests {
     @Test("Не изменяет активность при повторном выборе того же типа")
     func setDoesNotChangeActivityOnSameType() throws {
         let mockClient = MockDaysClient()
-        let service = DailyActivitiesService(client: mockClient)
+        let service = DailyActivitiesService(client: mockClient, isReadOnlyMode: false)
         let container = try ModelContainer(
             for: DayActivity.self,
             DayActivityTraining.self,
@@ -193,7 +193,7 @@ extension DailyActivitiesServiceTests {
     @Test("Создает активность только с типом (без тренировочных данных) для stretch/rest/sick")
     func setCreatesActivityOnlyWithTypeForStretchRestSick() throws {
         let mockClient = MockDaysClient()
-        let service = DailyActivitiesService(client: mockClient)
+        let service = DailyActivitiesService(client: mockClient, isReadOnlyMode: false)
         let container = try ModelContainer(
             for: DayActivity.self,
             DayActivityTraining.self,
@@ -219,7 +219,7 @@ extension DailyActivitiesServiceTests {
     @Test("Очищает тренировочные данные при обновлении на stretch/rest/sick")
     func setClearsTrainingDataWhenUpdatingToStretchRestSick() throws {
         let mockClient = MockDaysClient()
-        let service = DailyActivitiesService(client: mockClient)
+        let service = DailyActivitiesService(client: mockClient, isReadOnlyMode: false)
         let container = try ModelContainer(
             for: DayActivity.self,
             DayActivityTraining.self,
@@ -262,7 +262,7 @@ extension DailyActivitiesServiceTests {
     @Test("Не создает активность если пользователь не найден")
     func setDoesNotCreateActivityIfUserNotFound() throws {
         let mockClient = MockDaysClient()
-        let service = DailyActivitiesService(client: mockClient)
+        let service = DailyActivitiesService(client: mockClient, isReadOnlyMode: false)
         let container = try ModelContainer(
             for: DayActivity.self,
             DayActivityTraining.self,
@@ -280,7 +280,7 @@ extension DailyActivitiesServiceTests {
     @Test("Корректно работает с активностью помеченной на удаление")
     func setWorksWithActivityMarkedForDeletion() throws {
         let mockClient = MockDaysClient()
-        let service = DailyActivitiesService(client: mockClient)
+        let service = DailyActivitiesService(client: mockClient, isReadOnlyMode: false)
         let container = try ModelContainer(
             for: DayActivity.self,
             DayActivityTraining.self,
@@ -317,7 +317,7 @@ extension DailyActivitiesServiceTests {
     @Test("Очищает дополнительные данные при обновлении типа (comment, duration)")
     func setClearsAdditionalDataWhenUpdatingType() throws {
         let mockClient = MockDaysClient()
-        let service = DailyActivitiesService(client: mockClient)
+        let service = DailyActivitiesService(client: mockClient, isReadOnlyMode: false)
         let container = try ModelContainer(
             for: DayActivity.self,
             DayActivityTraining.self,
@@ -354,7 +354,7 @@ extension DailyActivitiesServiceTests {
     @Test("Корректно обрабатывает множественные вызовы для одного дня")
     func setHandlesMultipleCallsForSameDay() throws {
         let mockClient = MockDaysClient()
-        let service = DailyActivitiesService(client: mockClient)
+        let service = DailyActivitiesService(client: mockClient, isReadOnlyMode: false)
         let container = try ModelContainer(
             for: DayActivity.self,
             DayActivityTraining.self,

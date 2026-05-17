@@ -10,7 +10,7 @@ extension DailyActivitiesServiceTests {
     @Test("Синхронизирует активности с trainings")
     func syncActivitiesWithTrainings() async throws {
         let mockClient = MockDaysClient()
-        let service = DailyActivitiesService(client: mockClient)
+        let service = DailyActivitiesService(client: mockClient, isReadOnlyMode: false)
         let container = try ModelContainer(
             for: DayActivity.self,
             DayActivityTraining.self,
@@ -49,7 +49,7 @@ extension DailyActivitiesServiceTests {
     @Test("Обновляет trainings при синхронизации с сервера")
     func updateTrainingsFromServer() async throws {
         let mockClient = MockDaysClient()
-        let service = DailyActivitiesService(client: mockClient)
+        let service = DailyActivitiesService(client: mockClient, isReadOnlyMode: false)
         let container = try ModelContainer(
             for: DayActivity.self,
             DayActivityTraining.self,

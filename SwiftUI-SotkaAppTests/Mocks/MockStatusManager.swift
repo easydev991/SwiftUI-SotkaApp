@@ -51,20 +51,22 @@ enum MockStatusManager {
             )
         }
         return StatusManager(
-            customExercisesService: CustomExercisesService(client: exerciseClient),
+            customExercisesService: CustomExercisesService(client: exerciseClient, isReadOnlyMode: false),
             infopostsService: InfopostsService(
                 language: language,
                 infopostsClient: infopostsClient,
-                analytics: AnalyticsService(providers: [NoopAnalyticsProvider()])
+                analytics: AnalyticsService(providers: [NoopAnalyticsProvider()]),
+                isReadOnlyMode: false
             ),
-            progressSyncService: ProgressSyncService(client: progressClient),
-            dailyActivitiesService: DailyActivitiesService(client: daysClient),
+            progressSyncService: ProgressSyncService(client: progressClient, isReadOnlyMode: false),
+            dailyActivitiesService: DailyActivitiesService(client: daysClient, isReadOnlyMode: false),
             statusClient: statusClient,
             purchasesClient: purchasesClient,
             modelContainer: container,
             userDefaults: defaults,
             watchConnectivitySessionProtocol: watchConnectivitySessionProtocol,
-            reviewEventReporter: reviewEventReporter
+            reviewEventReporter: reviewEventReporter,
+            isReadOnlyMode: false
         )
     }
 }

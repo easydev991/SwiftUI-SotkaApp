@@ -279,7 +279,8 @@ extension AllInfopostsTests {
             let service = InfopostsService(
                 language: language,
                 infopostsClient: MockInfopostsClient(),
-                analytics: AnalyticsService(providers: [NoopAnalyticsProvider()])
+                analytics: AnalyticsService(providers: [NoopAnalyticsProvider()]),
+                isReadOnlyMode: false
             )
 
             // Act

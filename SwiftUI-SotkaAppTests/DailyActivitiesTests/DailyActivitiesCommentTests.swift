@@ -10,7 +10,7 @@ extension DailyActivitiesServiceTests {
     @Test("Создает комментарий для существующей активности")
     func updateCommentForExistingActivity() throws {
         let mockClient = MockDaysClient()
-        let service = DailyActivitiesService(client: mockClient)
+        let service = DailyActivitiesService(client: mockClient, isReadOnlyMode: false)
         let container = try ModelContainer(
             for: DayActivity.self,
             DayActivityTraining.self,
@@ -46,7 +46,7 @@ extension DailyActivitiesServiceTests {
     @Test("Обновляет существующий комментарий")
     func updateExistingComment() throws {
         let mockClient = MockDaysClient()
-        let service = DailyActivitiesService(client: mockClient)
+        let service = DailyActivitiesService(client: mockClient, isReadOnlyMode: false)
         let container = try ModelContainer(
             for: DayActivity.self,
             DayActivityTraining.self,
@@ -83,7 +83,7 @@ extension DailyActivitiesServiceTests {
     @Test("Удаляет комментарий при установке nil")
     func deleteCommentWithNil() throws {
         let mockClient = MockDaysClient()
-        let service = DailyActivitiesService(client: mockClient)
+        let service = DailyActivitiesService(client: mockClient, isReadOnlyMode: false)
         let container = try ModelContainer(
             for: DayActivity.self,
             DayActivityTraining.self,
@@ -118,7 +118,7 @@ extension DailyActivitiesServiceTests {
     @Test("Устанавливает isSynced = false при обновлении комментария")
     func updateCommentSetsIsSyncedFalse() throws {
         let mockClient = MockDaysClient()
-        let service = DailyActivitiesService(client: mockClient)
+        let service = DailyActivitiesService(client: mockClient, isReadOnlyMode: false)
         let container = try ModelContainer(
             for: DayActivity.self,
             DayActivityTraining.self,
@@ -152,7 +152,7 @@ extension DailyActivitiesServiceTests {
     @Test("Обновляет modifyDate при изменении комментария")
     func updateCommentUpdatesModifyDate() async throws {
         let mockClient = MockDaysClient()
-        let service = DailyActivitiesService(client: mockClient)
+        let service = DailyActivitiesService(client: mockClient, isReadOnlyMode: false)
         let container = try ModelContainer(
             for: DayActivity.self,
             DayActivityTraining.self,
@@ -189,7 +189,7 @@ extension DailyActivitiesServiceTests {
     @Test("Создает активность для несуществующего дня при обновлении комментария")
     func updateCommentCreatesActivityForNonExistentDay() throws {
         let mockClient = MockDaysClient()
-        let service = DailyActivitiesService(client: mockClient)
+        let service = DailyActivitiesService(client: mockClient, isReadOnlyMode: false)
         let container = try ModelContainer(
             for: DayActivity.self,
             DayActivityTraining.self,

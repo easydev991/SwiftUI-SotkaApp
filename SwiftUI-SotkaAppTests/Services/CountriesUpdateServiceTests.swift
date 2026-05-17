@@ -36,7 +36,7 @@ struct CountriesUpdateServiceTests {
         )
         let mockClient = MockCountriesClient(mockedCountries: [testCountry1])
         let defaults = try MockUserDefaults.create()
-        let service = CountriesUpdateService(defaults: defaults, client: mockClient)
+        let service = CountriesUpdateService(defaults: defaults, client: mockClient, isReadOnlyMode: false)
         let container = try ModelContainer(
             for: Country.self,
             configurations: ModelConfiguration(isStoredInMemoryOnly: true)
@@ -82,7 +82,7 @@ struct CountriesUpdateServiceTests {
         )
         let mockClient = MockCountriesClient(mockedCountries: [newCountry])
         let defaults = try MockUserDefaults.create()
-        let service = CountriesUpdateService(defaults: defaults, client: mockClient)
+        let service = CountriesUpdateService(defaults: defaults, client: mockClient, isReadOnlyMode: false)
 
         service.update(context)
         await Self.waitForTaskCompletion(service)
@@ -99,7 +99,7 @@ struct CountriesUpdateServiceTests {
     func noUpdateWhenLessThanDayPassed() async throws {
         let mockClient = MockCountriesClient()
         let defaults = try MockUserDefaults.create()
-        let service = CountriesUpdateService(defaults: defaults, client: mockClient)
+        let service = CountriesUpdateService(defaults: defaults, client: mockClient, isReadOnlyMode: false)
         Self.setLastUpdateDate(defaults, date: .now)
 
         let oldCountry = Country(id: "old", name: "Старая страна")
@@ -129,7 +129,7 @@ struct CountriesUpdateServiceTests {
         )
         let mockClient = MockCountriesClient(mockedCountries: [testCountry])
         let defaults = try MockUserDefaults.create()
-        let service = CountriesUpdateService(defaults: defaults, client: mockClient)
+        let service = CountriesUpdateService(defaults: defaults, client: mockClient, isReadOnlyMode: false)
         let twoDaysAgo = Date().addingTimeInterval(-2 * 24 * 60 * 60)
         Self.setLastUpdateDate(defaults, date: twoDaysAgo)
 
@@ -159,7 +159,7 @@ struct CountriesUpdateServiceTests {
         let mockClient = MockCountriesClient()
         mockClient.delay = 0.1
         let defaults = try MockUserDefaults.create()
-        let service = CountriesUpdateService(defaults: defaults, client: mockClient)
+        let service = CountriesUpdateService(defaults: defaults, client: mockClient, isReadOnlyMode: false)
         let container = try ModelContainer(
             for: Country.self,
             configurations: ModelConfiguration(isStoredInMemoryOnly: true)
@@ -178,7 +178,7 @@ struct CountriesUpdateServiceTests {
         let mockClient = MockCountriesClient()
         mockClient.shouldThrowError = true
         let defaults = try MockUserDefaults.create()
-        let service = CountriesUpdateService(defaults: defaults, client: mockClient)
+        let service = CountriesUpdateService(defaults: defaults, client: mockClient, isReadOnlyMode: false)
         let container = try ModelContainer(
             for: Country.self,
             configurations: ModelConfiguration(isStoredInMemoryOnly: true)
@@ -198,7 +198,7 @@ struct CountriesUpdateServiceTests {
         let mockClient = MockCountriesClient()
         mockClient.shouldThrowError = true
         let defaults = try MockUserDefaults.create()
-        let service = CountriesUpdateService(defaults: defaults, client: mockClient)
+        let service = CountriesUpdateService(defaults: defaults, client: mockClient, isReadOnlyMode: false)
         let pastDate = Date().addingTimeInterval(-3600)
         Self.setLastUpdateDate(defaults, date: pastDate)
         let container = try ModelContainer(
@@ -224,7 +224,7 @@ struct CountriesUpdateServiceTests {
         let mockClient = MockCountriesClient(mockedCountries: [testCountry])
         mockClient.delay = 0.2
         let defaults = try MockUserDefaults.create()
-        let service = CountriesUpdateService(defaults: defaults, client: mockClient)
+        let service = CountriesUpdateService(defaults: defaults, client: mockClient, isReadOnlyMode: false)
         let container = try ModelContainer(
             for: Country.self,
             configurations: ModelConfiguration(isStoredInMemoryOnly: true)
@@ -253,7 +253,7 @@ struct CountriesUpdateServiceTests {
         )
         let mockClient = MockCountriesClient(mockedCountries: [testCountry])
         let defaults = try MockUserDefaults.create()
-        let service = CountriesUpdateService(defaults: defaults, client: mockClient)
+        let service = CountriesUpdateService(defaults: defaults, client: mockClient, isReadOnlyMode: false)
         let container = try ModelContainer(
             for: Country.self,
             configurations: ModelConfiguration(isStoredInMemoryOnly: true)
@@ -283,7 +283,7 @@ struct CountriesUpdateServiceTests {
         let testCountry = CountryResponse(cities: [], id: "1", name: "Страна")
         let mockClient = MockCountriesClient(mockedCountries: [testCountry])
         let defaults = try MockUserDefaults.create()
-        let service = CountriesUpdateService(defaults: defaults, client: mockClient)
+        let service = CountriesUpdateService(defaults: defaults, client: mockClient, isReadOnlyMode: false)
 
         let oldCountry = Country(id: "old", name: "Старая страна")
         let container = try ModelContainer(
@@ -310,7 +310,7 @@ struct CountriesUpdateServiceTests {
     func updateWithEmptyCountriesList() async throws {
         let mockClient = MockCountriesClient(mockedCountries: [])
         let defaults = try MockUserDefaults.create()
-        let service = CountriesUpdateService(defaults: defaults, client: mockClient)
+        let service = CountriesUpdateService(defaults: defaults, client: mockClient, isReadOnlyMode: false)
 
         let oldCountry = Country(id: "old", name: "Старая страна")
         let container = try ModelContainer(
@@ -335,7 +335,7 @@ struct CountriesUpdateServiceTests {
         let testCountry = CountryResponse(cities: [], id: "1", name: "Страна")
         let mockClient = MockCountriesClient(mockedCountries: [testCountry])
         let defaults = try MockUserDefaults.create()
-        let service = CountriesUpdateService(defaults: defaults, client: mockClient)
+        let service = CountriesUpdateService(defaults: defaults, client: mockClient, isReadOnlyMode: false)
         let container = try ModelContainer(
             for: Country.self,
             configurations: ModelConfiguration(isStoredInMemoryOnly: true)
@@ -356,7 +356,7 @@ struct CountriesUpdateServiceTests {
     func noUpdateForOfflineUser() async throws {
         let mockClient = MockCountriesClient()
         let defaults = try MockUserDefaults.create()
-        let service = CountriesUpdateService(defaults: defaults, client: mockClient)
+        let service = CountriesUpdateService(defaults: defaults, client: mockClient, isReadOnlyMode: false)
 
         let container = try ModelContainer(
             for: Country.self, User.self,
