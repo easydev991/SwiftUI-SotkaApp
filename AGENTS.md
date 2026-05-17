@@ -21,7 +21,7 @@ Follow these repo-specific conventions and commands.
 
 ## Build/Lint/Format Commands
 
-- Primary path (preferred): use `xcodebuild-mcp` / `Build iOS Apps` tools for build/test/run in Codex.
+- Primary path (preferred): use `xcodebuild-mcp` tools for build/test/run.
 - Fallback path: use Makefile commands only when MCP/plugin tools are unavailable.
 - `make setup` - Install all tools (Homebrew, rbenv, Ruby, bundler, fastlane, swiftformat).
 - `make format` - Format Swift code with swiftformat + markdown files with markdownlint.
@@ -29,31 +29,12 @@ Follow these repo-specific conventions and commands.
 - `make test` - Run all iOS unit tests (fallback).
 - `make test_watch` - Run all watchOS unit tests on simulator from `WATCH_SIM_DEST` (default: Apple Watch Ultra 3 (49mm), latest installed watchOS runtime) (fallback).
 
-### Single Test Execution
+## Read-Only Mode
 
-Run a single test class:
-
-```bash
-xcodebuild -project SwiftUI-SotkaApp.xcodeproj \
-  -scheme SwiftUI-SotkaAppTests \
-  -sdk iphonesimulator \
-  -destination 'platform=iOS Simulator,name=iPhone 17' \
-  test -testPlan SwiftUI-SotkaAppTests \
-  -only-testing:SwiftUI-SotkaAppTests/WorkoutViewModelTests
-```
-
-Run a single test method:
-
-```bash
-xcodebuild -project SwiftUI-SotkaApp.xcodeproj \
-  -scheme SwiftUI-SotkaAppTests \
-  -sdk iphonesimulator \
-  -destination 'platform=iOS Simulator,name=iPhone 17' \
-  test -testPlan SwiftUI-SotkaAppTests \
-  -only-testing:SwiftUI-SotkaAppTests/WorkoutViewModelTests/testLoadData
-```
-
-For watch tests, replace scheme with `SotkaWatch Watch AppTests`, use `-sdk watchsimulator`, and destination from `WATCH_SIM_DEST` (default: `platform=watchOS Simulator,name=Apple Watch Ultra 3 (49mm)`).
+- The app is permanently in read-only mode: `AppConfiguration.isReadOnlyMode = true`.
+- The server (`100.workout.su`) closed all social APIs. Auth, sync, and network requests are unavailable.
+- All users behave as offline-only. UI tests and mock bootstrapping still pass `isReadOnlyMode: false` to simulate normal behavior.
+- Do not re-enable network features or auth flows without explicit request.
 
 ## Test Strategy and Framework Conventions
 
