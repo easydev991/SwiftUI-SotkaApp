@@ -11,7 +11,6 @@ struct MoreScreen: View {
     @Environment(AuthHelperImp.self) private var authHelper
     @Environment(\.isReadOnlyMode) private var isReadOnlyMode
     let user: User
-    @State private var aboutInfopost: Infopost?
     @State private var showResetDialog = false
     @State private var showLogoutDialog = false
     private var isOfflineUser: Bool {
@@ -48,7 +47,6 @@ struct MoreScreen: View {
                     feedbackButton
                     officialSiteButton
                     shareAppButton
-                    aboutProgramButton
                     appVersionText
                 }
                 Section(.otherApps) {
@@ -62,11 +60,6 @@ struct MoreScreen: View {
             .navigationTitle(.more)
             .navigationBarTitleDisplayMode(.inline)
             .trackScreen(.more)
-            .onAppear {
-                if aboutInfopost == nil {
-                    aboutInfopost = statusManager.infopostsService.loadAboutInfopost()
-                }
-            }
         }
     }
 }
@@ -234,16 +227,6 @@ private extension MoreScreen {
         if let githubLink = Constants.githubPageURL {
             Link(.gitHub, destination: githubLink)
                 .accessibilityIdentifier("githubButton")
-        }
-    }
-
-    @ViewBuilder
-    var aboutProgramButton: some View {
-        if let aboutInfopost {
-            NavigationLink(destination: InfopostDetailScreen(infopost: aboutInfopost)) {
-                Text(.infopostAbout)
-            }
-            .accessibilityIdentifier("aboutProgramButton")
         }
     }
 

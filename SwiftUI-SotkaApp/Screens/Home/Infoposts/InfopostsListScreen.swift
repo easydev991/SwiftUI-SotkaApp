@@ -7,6 +7,7 @@ struct InfopostsListScreen: View {
     @Environment(\.analyticsService) private var analytics
     @Environment(InfopostsService.self) private var infopostsService
     @Environment(\.modelContext) private var modelContext
+    @State private var aboutInfopost: Infopost?
 
     var body: some View {
         VStack(spacing: 12) {
@@ -24,8 +25,16 @@ struct InfopostsListScreen: View {
         .listStyle(.plain)
         .navigationTitle(.infoposts)
         .trackScreen(.infopostsList)
+        .toolbar {
+            ToolbarItem(placement: .topBarTrailing) {
+                aboutProgramButton
+            }
+        }
         .onAppear {
             try? infopostsService.loadFavoriteIds(modelContext: modelContext)
+            if aboutInfopost == nil {
+                aboutInfopost = infopostsService.loadAboutInfopost()
+            }
         }
         .onChange(of: infopostsService.displayMode) { _, _ in
             analytics.log(
@@ -131,6 +140,16 @@ private extension InfopostsListScreen {
             } label: {
                 Image(systemName: isFavorite ? "star.slash.fill" : "star.fill")
             }
+        }
+    }
+
+    @ViewBuilder
+    var aboutProgramButton: some View {
+        if let aboutInfopost {
+            NavigationLink(destination: InfopostDetailScreen(infopost: aboutInfopost)) {
+                Image(systemName: "info.circle")
+            }
+            .accessibilityIdentifier("aboutProgramButton")
         }
     }
 }
