@@ -8,7 +8,7 @@ extension DailyActivitiesServiceTests {
     @Test("updateExistingActivity не падает при замене trainings (краш-регрессия)")
     func updateExistingActivityDoesNotCrashWhenReplacingTrainings() throws {
         let mockClient = MockDaysClient()
-        let service = DailyActivitiesService(client: mockClient)
+        let service = DailyActivitiesService(client: mockClient, isReadOnlyMode: false)
         let container = try ModelContainer(
             for: DayActivity.self,
             DayActivityTraining.self,
@@ -87,7 +87,7 @@ extension DailyActivitiesServiceTests {
         try context.save()
 
         let mockClient = MockDaysClient()
-        let activitiesService = DailyActivitiesService(client: mockClient)
+        let activitiesService = DailyActivitiesService(client: mockClient, isReadOnlyMode: false)
 
         let viewModel = WorkoutPreviewViewModel()
         viewModel.dayNumber = 5
@@ -125,7 +125,7 @@ extension DailyActivitiesServiceTests {
     @Test("После обновления старые trainings заменены, новые имеют корректный sortOrder")
     func trainingsReplacedWithCorrectSortOrderAfterUpdate() throws {
         let mockClient = MockDaysClient()
-        let service = DailyActivitiesService(client: mockClient)
+        let service = DailyActivitiesService(client: mockClient, isReadOnlyMode: false)
         let container = try ModelContainer(
             for: DayActivity.self,
             DayActivityTraining.self,
@@ -204,7 +204,7 @@ extension DailyActivitiesServiceTests {
     @Test("После обновления старые trainings удалены из контекста, не orphan'ены")
     func oldTrainingsRemovedFromContextAfterUpdate() throws {
         let mockClient = MockDaysClient()
-        let service = DailyActivitiesService(client: mockClient)
+        let service = DailyActivitiesService(client: mockClient, isReadOnlyMode: false)
         let container = try ModelContainer(
             for: DayActivity.self,
             DayActivityTraining.self,
@@ -273,7 +273,7 @@ extension DailyActivitiesServiceTests {
     @Test("Идемпотентность: 3+ последовательных сохранения одного дня без краша и дублирования")
     func threeSequentialSavesAreIdempotent() throws {
         let mockClient = MockDaysClient()
-        let service = DailyActivitiesService(client: mockClient)
+        let service = DailyActivitiesService(client: mockClient, isReadOnlyMode: false)
         let container = try ModelContainer(
             for: DayActivity.self,
             DayActivityTraining.self,
@@ -338,7 +338,7 @@ extension DailyActivitiesServiceTests {
     @Test("Стабильная повторная выборка: после context.save() повторный fetch безопасен")
     func stableReFetchAfterContextSave() throws {
         let mockClient = MockDaysClient()
-        let service = DailyActivitiesService(client: mockClient)
+        let service = DailyActivitiesService(client: mockClient, isReadOnlyMode: false)
         let container = try ModelContainer(
             for: DayActivity.self,
             DayActivityTraining.self,

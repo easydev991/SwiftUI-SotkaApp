@@ -2608,6 +2608,23 @@
         }
       }
     },
+    "LoginScreen.AuthNotAvailable.text" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Authorization is not available"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Вход с аккаунтом недоступен"
+          }
+        }
+      }
+    },
     "LoginScreen.AuthorizeButton.Title" : {
       "comment" : "The text of a button that allows a user to log in.",
       "extractionState" : "manual",

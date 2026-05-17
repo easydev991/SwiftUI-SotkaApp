@@ -11,7 +11,7 @@ extension DailyActivitiesServiceTests {
     func localWorkContinuesOnNetworkError() async throws {
         let mockClient = MockDaysClient()
         mockClient.shouldThrowError = true
-        let service = DailyActivitiesService(client: mockClient)
+        let service = DailyActivitiesService(client: mockClient, isReadOnlyMode: false)
         let container = try ModelContainer(
             for: DayActivity.self,
             DayActivityTraining.self,
@@ -44,7 +44,7 @@ extension DailyActivitiesServiceTests {
     @Test("Предотвращает параллельную синхронизацию")
     func preventsConcurrentSync() async throws {
         let mockClient = MockDaysClient()
-        let service = DailyActivitiesService(client: mockClient)
+        let service = DailyActivitiesService(client: mockClient, isReadOnlyMode: false)
         let container = try ModelContainer(
             for: DayActivity.self,
             DayActivityTraining.self,
@@ -80,7 +80,7 @@ extension DailyActivitiesServiceTests {
     @Test("Элемент помечен на удаление но присутствует на сервере - не восстанавливается")
     func deletedItemPresentOnServerNotRestored() async throws {
         let mockClient = MockDaysClient()
-        let service = DailyActivitiesService(client: mockClient)
+        let service = DailyActivitiesService(client: mockClient, isReadOnlyMode: false)
         let container = try ModelContainer(
             for: DayActivity.self,
             DayActivityTraining.self,
@@ -132,7 +132,7 @@ extension DailyActivitiesServiceTests {
     @Test("Физически удаляет активность после синхронизации удаления")
     func physicallyDeleteAfterSyncDeletion() async throws {
         let mockClient = MockDaysClient()
-        let service = DailyActivitiesService(client: mockClient)
+        let service = DailyActivitiesService(client: mockClient, isReadOnlyMode: false)
         let container = try ModelContainer(
             for: DayActivity.self,
             DayActivityTraining.self,
@@ -165,7 +165,7 @@ extension DailyActivitiesServiceTests {
     @Test("Пропускает обновление при повторной синхронизации без изменений данных")
     func skipUpdateOnRepeatedSyncWithoutDataChanges() async throws {
         let mockClient = MockDaysClient()
-        let service = DailyActivitiesService(client: mockClient)
+        let service = DailyActivitiesService(client: mockClient, isReadOnlyMode: false)
         let container = try ModelContainer(
             for: DayActivity.self,
             DayActivityTraining.self,

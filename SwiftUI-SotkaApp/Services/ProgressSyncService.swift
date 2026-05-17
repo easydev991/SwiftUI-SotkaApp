@@ -10,6 +10,7 @@ import SWUtils
 final class ProgressSyncService {
     private let client: ProgressClient
     private let photoDownloadService: PhotoDownloadServiceProtocol
+    private let isReadOnlyMode: Bool
     @ObservationIgnored private let logger = Logger(
         subsystem: "SotkaApp",
         category: String(describing: ProgressSyncService.self)
@@ -20,17 +21,19 @@ final class ProgressSyncService {
 
     init(
         client: ProgressClient,
-        photoDownloadService: PhotoDownloadServiceProtocol = PhotoDownloadService()
+        photoDownloadService: PhotoDownloadServiceProtocol = PhotoDownloadService(),
+        isReadOnlyMode: Bool = AppConfiguration.isReadOnlyMode
     ) {
         self.client = client
         self.photoDownloadService = photoDownloadService
+        self.isReadOnlyMode = isReadOnlyMode
     }
 
     /// Основной метод синхронизации
     func syncProgress(context: ModelContext) async throws -> SyncResult {
         logger.info("🔄 [TRACE] syncProgress() - начало синхронизации")
 
-        if let user = try? context.fetch(FetchDescriptor<User>()).first, user.isOfflineOnly {
+        if let user = try? context.fetch(FetchDescriptor<User>()).first, user.isOfflineOnly || isReadOnlyMode {
             let emptyStats = SyncStats(created: 0, updated: 0, deleted: 0)
             logger.info("⏭️ [TRACE] syncProgress() - офлайн-пользователь, сетевой sync пропущен")
             return SyncResult(

@@ -16,11 +16,15 @@ final class DailyActivitiesService {
 
     /// Клиент для работы с API
     private let client: DaysClient
+    private let isReadOnlyMode: Bool
 
     /// Инициализатор сервиса
-    /// - Parameter client: Клиент для работы с API
-    init(client: DaysClient) {
+    /// - Parameters:
+    ///   - client: Клиент для работы с API
+    ///   - isReadOnlyMode: Флаг read-only режима (по умолчанию из AppConfiguration)
+    init(client: DaysClient, isReadOnlyMode: Bool = AppConfiguration.isReadOnlyMode) {
         self.client = client
+        self.isReadOnlyMode = isReadOnlyMode
     }
 
     // MARK: - Публичные методы (офлайн-приоритет)
@@ -345,7 +349,7 @@ final class DailyActivitiesService {
     func syncDailyActivities(context: ModelContext) async throws -> SyncResult {
         logger.info("[sync] Начинаем синхронизацию активностей")
 
-        if let user = try? context.fetch(FetchDescriptor<User>()).first, user.isOfflineOnly {
+        if let user = try? context.fetch(FetchDescriptor<User>()).first, user.isOfflineOnly || isReadOnlyMode {
             let emptyStats = SyncStats(created: 0, updated: 0, deleted: 0)
             logger.info("[sync] Офлайн-пользователь: сетевой sync активностей пропущен")
             return SyncResult(

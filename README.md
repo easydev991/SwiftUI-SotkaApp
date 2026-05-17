@@ -1,11 +1,13 @@
 # Street Workout Тренировки
 
 <!-- BEGIN_VERSIONS -->
-[<img alt="Xcode Version" src="https://img.shields.io/badge/Xcode_Version-26.4-blue">](https://developer.apple.com/xcode/)
+[<img alt="Xcode Version" src="https://img.shields.io/badge/Xcode_Version-26.5-blue">](https://developer.apple.com/xcode/)
 [<img alt="Swift Version" src="https://img.shields.io/badge/Swift_Version-6.3.0-orange">](https://swift.org)
 [<img alt="iOS Version" src="https://img.shields.io/badge/iOS_Version-17.0-4F9153">](https://www.apple.com/ios/)
 <!-- END_VERSIONS -->
 [![GitMCP](https://img.shields.io/endpoint?url=https://gitmcp.io/badge/easydev991/SwiftUI-SotkaApp)](https://gitmcp.io/easydev991/SwiftUI-SotkaApp)
+
+> **ℹ️ Сервер `100.workout.su` закрыл все социальные API.** Авторизация через сайт, синхронизация данных и любые другие сетевые запросы недоступны. Приложение работает полностью локально. Доступен только офлайн-вход без аккаунта.
 
 ## Реализованный функционал
 

@@ -9,7 +9,7 @@ struct DailyActivitiesServiceTests {
     @Test("Возвращает результат успешной синхронизации с подсчетом созданных записей")
     func returnsSuccessResultWithCreatedCount() async throws {
         let mockClient = MockDaysClient()
-        let service = DailyActivitiesService(client: mockClient)
+        let service = DailyActivitiesService(client: mockClient, isReadOnlyMode: false)
         let container = try ModelContainer(
             for: DayActivity.self,
             User.self,
@@ -65,7 +65,7 @@ struct DailyActivitiesServiceTests {
     @Test("Возвращает результат с ошибками при сетевой ошибке")
     func returnsResultWithErrorsOnNetworkError() async throws {
         let mockClient = MockDaysClient()
-        let service = DailyActivitiesService(client: mockClient)
+        let service = DailyActivitiesService(client: mockClient, isReadOnlyMode: false)
         let container = try ModelContainer(
             for: DayActivity.self,
             User.self,
@@ -106,7 +106,7 @@ struct DailyActivitiesServiceTests {
     @Test("Возвращает результат с подсчетом обновленных записей")
     func returnsResultWithUpdatedCount() async throws {
         let mockClient = MockDaysClient()
-        let service = DailyActivitiesService(client: mockClient)
+        let service = DailyActivitiesService(client: mockClient, isReadOnlyMode: false)
         let container = try ModelContainer(
             for: DayActivity.self,
             User.self,
@@ -161,7 +161,7 @@ struct DailyActivitiesServiceTests {
     @Test("Возвращает результат с подсчетом удаленных записей")
     func returnsResultWithDeletedCount() async throws {
         let mockClient = MockDaysClient()
-        let service = DailyActivitiesService(client: mockClient)
+        let service = DailyActivitiesService(client: mockClient, isReadOnlyMode: false)
         let container = try ModelContainer(
             for: DayActivity.self,
             User.self,
@@ -215,7 +215,7 @@ struct DailyActivitiesServiceTests {
     @Test("Возвращает частичный результат при ошибке загрузки с сервера")
     func returnsPartialResultOnDownloadError() async throws {
         let mockClient = MockDaysClient()
-        let service = DailyActivitiesService(client: mockClient)
+        let service = DailyActivitiesService(client: mockClient, isReadOnlyMode: false)
         let container = try ModelContainer(
             for: DayActivity.self,
             User.self,
@@ -271,7 +271,7 @@ struct DailyActivitiesServiceTests {
     @Test("Возвращает активность для существующего дня")
     func returnsActivityForExistingDay() throws {
         let mockClient = MockDaysClient()
-        let service = DailyActivitiesService(client: mockClient)
+        let service = DailyActivitiesService(client: mockClient, isReadOnlyMode: false)
         let container = try ModelContainer(
             for: DayActivity.self,
             User.self,
@@ -309,7 +309,7 @@ struct DailyActivitiesServiceTests {
     @Test("Возвращает nil для несуществующего дня")
     func returnsNilForNonExistentDay() throws {
         let mockClient = MockDaysClient()
-        let service = DailyActivitiesService(client: mockClient)
+        let service = DailyActivitiesService(client: mockClient, isReadOnlyMode: false)
         let container = try ModelContainer(
             for: DayActivity.self,
             User.self,
@@ -329,7 +329,7 @@ struct DailyActivitiesServiceTests {
     @Test("Возвращает nil для активности помеченной на удаление")
     func returnsNilForDeletedActivity() throws {
         let mockClient = MockDaysClient()
-        let service = DailyActivitiesService(client: mockClient)
+        let service = DailyActivitiesService(client: mockClient, isReadOnlyMode: false)
         let container = try ModelContainer(
             for: DayActivity.self,
             User.self,
@@ -366,7 +366,7 @@ struct DailyActivitiesServiceTests {
     @Test("Возвращает активность только для текущего пользователя")
     func returnsActivityOnlyForCurrentUser() throws {
         let mockClient = MockDaysClient()
-        let service = DailyActivitiesService(client: mockClient)
+        let service = DailyActivitiesService(client: mockClient, isReadOnlyMode: false)
         let container = try ModelContainer(
             for: DayActivity.self,
             User.self,

@@ -47,7 +47,7 @@ extension WorkoutPreviewViewModelTests {
                 modelContext: context,
                 day: 5,
                 restTime: 60,
-                activitiesService: DailyActivitiesService(client: MockDaysClient())
+                activitiesService: DailyActivitiesService(client: MockDaysClient(), isReadOnlyMode: false)
             )
 
             #expect(viewModel.canEditComment)

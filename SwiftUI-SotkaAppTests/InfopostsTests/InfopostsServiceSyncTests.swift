@@ -20,7 +20,8 @@ extension AllInfopostsTests {
             InfopostsService(
                 language: language,
                 infopostsClient: mockClient,
-                analytics: AnalyticsService(providers: [NoopAnalyticsProvider()])
+                analytics: AnalyticsService(providers: [NoopAnalyticsProvider()]),
+                isReadOnlyMode: false
             )
         }
 

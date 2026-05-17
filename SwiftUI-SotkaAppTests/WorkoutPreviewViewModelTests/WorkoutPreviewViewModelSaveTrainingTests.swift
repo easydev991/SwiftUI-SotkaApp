@@ -21,7 +21,7 @@ extension WorkoutPreviewViewModelTests {
             try context.save()
 
             let mockClient = MockDaysClient()
-            let activitiesService = DailyActivitiesService(client: mockClient)
+            let activitiesService = DailyActivitiesService(client: mockClient, isReadOnlyMode: false)
             let viewModel = WorkoutPreviewViewModel()
 
             viewModel.dayNumber = 5
@@ -59,7 +59,7 @@ extension WorkoutPreviewViewModelTests {
             try context.save()
 
             let mockClient = MockDaysClient()
-            let activitiesService = DailyActivitiesService(client: mockClient)
+            let activitiesService = DailyActivitiesService(client: mockClient, isReadOnlyMode: false)
             let viewModel = WorkoutPreviewViewModel()
 
             viewModel.dayNumber = 5
@@ -86,7 +86,7 @@ extension WorkoutPreviewViewModelTests {
             try context.save()
 
             let mockClient = MockDaysClient()
-            let activitiesService = DailyActivitiesService(client: mockClient)
+            let activitiesService = DailyActivitiesService(client: mockClient, isReadOnlyMode: false)
             let viewModel = WorkoutPreviewViewModel()
 
             viewModel.dayNumber = 5
@@ -113,7 +113,7 @@ extension WorkoutPreviewViewModelTests {
             try context.save()
 
             let mockClient = MockDaysClient()
-            let activitiesService = DailyActivitiesService(client: mockClient)
+            let activitiesService = DailyActivitiesService(client: mockClient, isReadOnlyMode: false)
             let viewModel = WorkoutPreviewViewModel()
 
             viewModel.dayNumber = 5
@@ -145,7 +145,7 @@ extension WorkoutPreviewViewModelTests {
             try context.save()
 
             let mockClient = MockDaysClient()
-            let activitiesService = DailyActivitiesService(client: mockClient)
+            let activitiesService = DailyActivitiesService(client: mockClient, isReadOnlyMode: false)
             let viewModel = WorkoutPreviewViewModel()
 
             viewModel.dayNumber = 5
@@ -177,7 +177,7 @@ extension WorkoutPreviewViewModelTests {
             try context.save()
 
             let mockClient = MockDaysClient()
-            let activitiesService = DailyActivitiesService(client: mockClient)
+            let activitiesService = DailyActivitiesService(client: mockClient, isReadOnlyMode: false)
             let viewModel = WorkoutPreviewViewModel()
 
             viewModel.dayNumber = 5
@@ -196,7 +196,7 @@ extension WorkoutPreviewViewModelTests {
                 modelContext: context,
                 day: 5,
                 restTime: appSettings.restTime,
-                activitiesService: DailyActivitiesService(client: MockDaysClient())
+                activitiesService: DailyActivitiesService(client: MockDaysClient(), isReadOnlyMode: false)
             )
 
             #expect(reloadedViewModel.wasOriginallyPassed)

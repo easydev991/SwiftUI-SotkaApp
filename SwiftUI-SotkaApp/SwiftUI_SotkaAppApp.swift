@@ -153,6 +153,7 @@ struct SwiftUI_SotkaAppApp: App {
             .networkStatus(networkStatus.isOnline)
             .environment(youtubeVideoService)
             .environment(\.analyticsService, analyticsService)
+            .environment(\.isReadOnlyMode, AppConfiguration.isReadOnlyMode)
             .preferredColorScheme(appSettings.appTheme.colorScheme)
             .onChange(of: statusManager.currentDayCalculator) { _, newCalculator in
                 guard authHelper.isAuthorized else { return }
@@ -185,6 +186,7 @@ struct SwiftUI_SotkaAppApp: App {
 private extension SwiftUI_SotkaAppApp {
     var showLoadingOverlay: Bool {
         guard authHelper.isAuthorized, !authHelper.isOfflineOnly else { return false }
+        guard !AppConfiguration.isReadOnlyMode else { return false }
         return statusManager.state.isLoadingInitialData
             || statusManager.currentDayCalculator == nil
     }
