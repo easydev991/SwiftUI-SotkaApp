@@ -1,4 +1,3 @@
-import OSLog
 import SwiftData
 import SwiftUI
 import SWUtils
@@ -11,10 +10,7 @@ struct MoreScreen: View {
     @Environment(\.analyticsService) private var analytics
     @Environment(AuthHelperImp.self) private var authHelper
     @Environment(\.isReadOnlyMode) private var isReadOnlyMode
-    @AppStorage(Key.isWorkoutGroupExpanded.rawValue) private var isWorkoutGroupExpanded = true
-    @AppStorage(Key.isWorkoutRestGroupExpanded.rawValue) private var isWorkoutRestGroupExpanded = true
     let user: User
-    @State private var aboutInfopost: Infopost?
     @State private var showResetDialog = false
     @State private var showLogoutDialog = false
     private var isOfflineUser: Bool {
@@ -36,7 +32,7 @@ struct MoreScreen: View {
                     #if DEBUG
                     debugCurrentDayPicker
                     #endif
-                    workoutSettingsGroup
+                    workoutSettingsButton
                     if !isOfflineUser {
                         syncJournalButton
                     }
@@ -51,7 +47,6 @@ struct MoreScreen: View {
                     feedbackButton
                     officialSiteButton
                     shareAppButton
-                    aboutProgramButton
                     appVersionText
                 }
                 Section(.otherApps) {
@@ -62,24 +57,9 @@ struct MoreScreen: View {
                     githubButton
                 }
             }
-            .animation(.default, value: appSettings.workoutNotificationsEnabled)
-            .animation(.default, value: appSettings.playTimerSound)
-            .animation(.default, value: isWorkoutGroupExpanded)
-            .animation(.default, value: isWorkoutRestGroupExpanded)
             .navigationTitle(.more)
             .navigationBarTitleDisplayMode(.inline)
             .trackScreen(.more)
-            .onAppear {
-                if aboutInfopost == nil {
-                    aboutInfopost = statusManager.infopostsService.loadAboutInfopost()
-                }
-            }
-            .onChange(of: appSettings.workoutNotificationsEnabled) { _, _ in
-                analytics.log(.userAction(action: .toggleWorkoutNotifications))
-            }
-            .onChange(of: appSettings.restTime) { _, newValue in
-                analytics.log(.userAction(action: .selectRestTime(seconds: newValue)))
-            }
         }
     }
 }
@@ -155,81 +135,11 @@ private extension MoreScreen {
     }
     #endif
 
-    var workoutSettingsGroup: some View {
-        DisclosureGroup(isExpanded: $isWorkoutGroupExpanded) {
-            @Bindable var settings = appSettings
-            NavigationLink(destination: CustomExercisesScreen()) {
-                Text(.customExercises)
-            }
-            .accessibilityIdentifier("customExercisesButton")
-            notificationToggle
-            if settings.workoutNotificationsEnabled {
-                makeNotificationTimePicker(
-                    $settings.workoutNotificationTime
-                )
-            }
-            DisclosureGroup(.moreScreenRestGroup, isExpanded: $isWorkoutRestGroupExpanded) {
-                makeRestTimePicker($settings.restTime)
-                makeTimerSoundToggle($settings.playTimerSound)
-                if settings.playTimerSound {
-                    makeTimerSoundPicker($settings.timerSound)
-                }
-                if UIDevice.current.userInterfaceIdiom == .phone {
-                    makeVibrateToggle($settings.vibrate)
-                }
-            }
-        } label: {
-            Text(.moreScreenWorkoutGroup)
-                .accessibilityIdentifier("moreScreenWorkoutGroup")
+    var workoutSettingsButton: some View {
+        NavigationLink(destination: WorkoutSettingsScreen()) {
+            Text(.workoutSettingsScreen)
         }
-    }
-
-    @ViewBuilder
-    var notificationToggle: some View {
-        @Bindable var settings = appSettings
-        Toggle(
-            .workoutNotifications,
-            isOn: .init(
-                get: { appSettings.workoutNotificationsEnabled },
-                set: {
-                    appSettings.setWorkoutNotificationsEnabled($0)
-                }
-            )
-        )
-    }
-
-    func makeNotificationTimePicker(_ value: Binding<Date>) -> some View {
-        DatePicker(
-            .notificationTime,
-            selection: value,
-            displayedComponents: .hourAndMinute
-        )
-    }
-
-    func makeTimerSoundToggle(_ value: Binding<Bool>) -> some View {
-        Toggle(.timerSoundToggle, isOn: value)
-    }
-
-    func makeVibrateToggle(_ value: Binding<Bool>) -> some View {
-        Toggle(.timerVibrateToggle, isOn: value)
-    }
-
-    func makeTimerSoundPicker(_ value: Binding<TimerSound>) -> some View {
-        Picker(.moreScreenTimerSound, selection: value) {
-            ForEach(TimerSound.allCases, id: \.self) { sound in
-                Text(sound.displayName).tag(sound)
-            }
-        }
-        .pickerStyle(.navigationLink)
-    }
-
-    func makeRestTimePicker(_ value: Binding<Int>) -> some View {
-        Picker(.restTimePicker, selection: value) {
-            ForEach(Constants.restPickerOptions, id: \.self) { seconds in
-                Text(RestTimeComponents(totalSeconds: seconds).localizedString).tag(seconds)
-            }
-        }
-        .pickerStyle(.navigationLink)
+        .accessibilityIdentifier("workoutSettingsButton")
     }
 
     var feedbackButton: some View {
@@ -320,28 +230,11 @@ private extension MoreScreen {
         }
     }
 
-    @ViewBuilder
-    var aboutProgramButton: some View {
-        if let aboutInfopost {
-            NavigationLink(destination: InfopostDetailScreen(infopost: aboutInfopost)) {
-                Text(.infopostAbout)
-            }
-            .accessibilityIdentifier("aboutProgramButton")
-        }
-    }
-
     var syncJournalButton: some View {
         NavigationLink(destination: SyncJournalScreen()) {
             Text(.moreScreenSyncJournalButton)
         }
         .accessibilityIdentifier("syncJournalButton")
-    }
-}
-
-private extension MoreScreen {
-    enum Key: String {
-        case isWorkoutGroupExpanded = "WorkoutSettings.Expanded"
-        case isWorkoutRestGroupExpanded = "WorkoutSettings.Rest.Expanded"
     }
 }
 

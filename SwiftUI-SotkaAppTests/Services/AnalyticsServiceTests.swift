@@ -83,6 +83,7 @@ struct AnalyticsServiceTests {
         #expect(AnalyticsEvent.AppScreen.syncStartDateHelp.rawValue == "sync_start_date_help")
         #expect(AnalyticsEvent.AppScreen.offlineLogin.rawValue == "offline_login")
         #expect(AnalyticsEvent.AppScreen.onlineLogin.rawValue == "online_login")
+        #expect(AnalyticsEvent.AppScreen.workoutSettings.rawValue == "workout_settings")
     }
 
     @Test("AppErrorKind rawValue совпадает с контрактом аналитики")

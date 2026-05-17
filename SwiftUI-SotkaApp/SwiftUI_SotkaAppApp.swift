@@ -153,7 +153,7 @@ struct SwiftUI_SotkaAppApp: App {
             .networkStatus(networkStatus.isOnline)
             .environment(youtubeVideoService)
             .environment(\.analyticsService, analyticsService)
-            .environment(\.isReadOnlyMode, AppConfiguration.isReadOnlyMode)
+            .environment(\.isReadOnlyMode, isReadOnlyMode)
             .preferredColorScheme(appSettings.appTheme.colorScheme)
             .onChange(of: statusManager.currentDayCalculator) { _, newCalculator in
                 guard authHelper.isAuthorized else { return }
@@ -184,9 +184,17 @@ struct SwiftUI_SotkaAppApp: App {
 }
 
 private extension SwiftUI_SotkaAppApp {
+    var isReadOnlyMode: Bool {
+        ProcessInfo.processInfo.arguments.contains("UITest")
+            ? false
+            : AppConfiguration.isReadOnlyMode
+    }
+
     var showLoadingOverlay: Bool {
-        guard authHelper.isAuthorized, !authHelper.isOfflineOnly else { return false }
-        guard !AppConfiguration.isReadOnlyMode else { return false }
+        guard authHelper.isAuthorized,
+              !authHelper.isOfflineOnly,
+              !AppConfiguration.isReadOnlyMode
+        else { return false }
         return statusManager.state.isLoadingInitialData
             || statusManager.currentDayCalculator == nil
     }
@@ -209,20 +217,22 @@ private extension SwiftUI_SotkaAppApp {
         // Настоящий клиент только для для WelcomeScreen, хотя он не показывается
         let clientForProperty = SWClient(with: authHelper)
         let statusManager = StatusManager(
-            customExercisesService: .init(client: mockClient),
+            customExercisesService: .init(client: mockClient, isReadOnlyMode: false),
             infopostsService: .init(
                 language: Self.localeIdentifier,
                 infopostsClient: mockClient,
-                analytics: AnalyticsService(providers: [NoopAnalyticsProvider()])
+                analytics: AnalyticsService(providers: [NoopAnalyticsProvider()]),
+                isReadOnlyMode: false
             ),
-            progressSyncService: .init(client: mockClient),
-            dailyActivitiesService: .init(client: mockClient),
+            progressSyncService: .init(client: mockClient, isReadOnlyMode: false),
+            dailyActivitiesService: .init(client: mockClient, isReadOnlyMode: false),
             statusClient: mockClient,
             purchasesClient: mockClient,
-            modelContainer: modelContainer
+            modelContainer: modelContainer,
+            isReadOnlyMode: false
         )
 
-        let countriesService = CountriesUpdateService(client: mockClient)
+        let countriesService = CountriesUpdateService(client: mockClient, isReadOnlyMode: false)
         authHelper.didAuthorize()
         statusManager.setCurrentDayForDebug(12)
         // Возвращаем настоящий клиент для WelcomeScreen (хотя он не показывается, так как авторизация пропущена)

@@ -40,7 +40,7 @@ final class SwiftUI_SotkaAppUITests: XCTestCase {
         waitAndTapOrFail(element: journalDisplayModeOption)
         snapshot("7-userJournalList")
         waitAndTapOrFail(element: moreTabButton)
-        expandWorkoutSettingsGroup()
+        waitAndTapOrFail(element: workoutSettingsButton)
         waitAndTapOrFail(element: customExercisesButton)
         snapshot("8-userExercises")
     }
@@ -71,6 +71,10 @@ private extension SwiftUI_SotkaAppUITests {
 
     var customExercisesButton: XCUIElement {
         app.buttons["customExercisesButton"].firstMatch
+    }
+
+    var workoutSettingsButton: XCUIElement {
+        app.buttons["workoutSettingsButton"].firstMatch
     }
 
     var closeButton: XCUIElement {
@@ -105,12 +109,5 @@ private extension SwiftUI_SotkaAppUITests {
 
     var journalDisplayModeOption: XCUIElement {
         app.buttons["JournalDisplayModeOption.0"].firstMatch
-    }
-
-    func expandWorkoutSettingsGroup() {
-        let workoutGroup = app.buttons["moreScreenWorkoutGroup"].firstMatch
-        if !customExercisesButton.waitForExistence(timeout: 1), workoutGroup.exists {
-            workoutGroup.tap()
-        }
     }
 }
