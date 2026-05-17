@@ -27,6 +27,7 @@ extension AnalyticsEvent {
         case customExercise = "custom_exercise"
         case editCustomExercise = "edit_custom_exercise"
         case more
+        case workoutSettings = "workout_settings"
         case themeIcon = "theme_icon"
         case syncJournal = "sync_journal"
         case syncJournalEntry = "sync_journal_entry"
