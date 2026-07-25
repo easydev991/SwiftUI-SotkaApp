@@ -53,15 +53,33 @@ extension DayRequest {
         var parameters: [String: String] = [
             "id": String(id)
         ]
-        if let activityType { parameters["activity_type"] = String(activityType) }
-        if let count { parameters["count"] = String(count) }
-        if let plannedCount { parameters["planned_count"] = String(plannedCount) }
-        if let executeType { parameters["execute_type"] = String(executeType) }
-        if let trainingType { parameters["training_type"] = String(trainingType) }
-        if let duration { parameters["duration"] = String(duration) }
-        if let comment { parameters["comment"] = comment }
-        if let createDate { parameters["create_date"] = createDate }
-        if let modifyDate { parameters["modify_date"] = modifyDate }
+        if let activityType {
+            parameters["activity_type"] = String(activityType)
+        }
+        if let count {
+            parameters["count"] = String(count)
+        }
+        if let plannedCount {
+            parameters["planned_count"] = String(plannedCount)
+        }
+        if let executeType {
+            parameters["execute_type"] = String(executeType)
+        }
+        if let trainingType {
+            parameters["training_type"] = String(trainingType)
+        }
+        if let duration {
+            parameters["duration"] = String(duration)
+        }
+        if let comment {
+            parameters["comment"] = comment
+        }
+        if let createDate {
+            parameters["create_date"] = createDate
+        }
+        if let modifyDate {
+            parameters["modify_date"] = modifyDate
+        }
 
         if let trainings, !trainings.isEmpty {
             // Сортируем тренировки по sortOrder, чтобы индекс массива соответствовал sort_order
@@ -72,7 +90,9 @@ extension DayRequest {
             }
             for (index, training) in sortedTrainings.enumerated() {
                 let base = "training[\(index)]"
-                if let cnt = training.count { parameters["\(base)[count]"] = String(cnt) }
+                if let cnt = training.count {
+                    parameters["\(base)[count]"] = String(cnt)
+                }
                 if let customId = training.customTypeId {
                     parameters["\(base)[custom_type_id]"] = customId
                 } else if let typeId = training.typeId {

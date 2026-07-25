@@ -47,7 +47,9 @@ final class MockDaysClient: DaysClient, @unchecked Sendable {
     func updateDay(model: DayRequest) async throws -> DayResponse {
         updateDayCallCount += 1
         updateDayCalls.append(model)
-        if shouldThrowError { throw errorToThrow }
+        if shouldThrowError {
+            throw errorToThrow
+        }
         let response = DayResponse(
             id: model.id, activityType: model.activityType, count: model.count,
             plannedCount: model.plannedCount, executeType: model.executeType,

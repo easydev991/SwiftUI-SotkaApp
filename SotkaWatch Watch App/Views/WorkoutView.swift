@@ -93,7 +93,11 @@ struct WorkoutView: View {
             }
             .alert(.error, isPresented: .init(
                 get: { viewModel.error != nil },
-                set: { if !$0 { viewModel.error = nil } }
+                set: {
+                    if !$0 {
+                        viewModel.error = nil
+                    }
+                }
             )) {
                 Button(.ok, role: .cancel) {
                     viewModel.error = nil

@@ -1096,11 +1096,19 @@ extension StatusManager {
         }
 
         var isLoadingInitialData: Bool {
-            if case .isLoadingInitialData = self { true } else { false }
+            if case .isLoadingInitialData = self {
+                true
+            } else {
+                false
+            }
         }
 
         var isSyncing: Bool {
-            if case .isSynchronizingData = self { true } else { false }
+            if case .isSynchronizingData = self {
+                true
+            } else {
+                false
+            }
         }
 
         init(didLoadInitialData: Bool) {

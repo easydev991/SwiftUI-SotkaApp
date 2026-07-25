@@ -57,7 +57,11 @@ struct WorkoutPreviewView: View {
             .alert(
                 isPresented: .init(
                     get: { viewModel.error != nil },
-                    set: { if !$0 { viewModel.error = nil } }
+                    set: {
+                        if !$0 {
+                            viewModel.error = nil
+                        }
+                    }
                 ),
                 error: viewModel.error
             ) {

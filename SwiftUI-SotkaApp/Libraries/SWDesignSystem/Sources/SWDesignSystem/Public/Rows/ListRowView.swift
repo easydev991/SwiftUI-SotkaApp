@@ -83,13 +83,17 @@ public extension ListRowView {
             case .empty:
                 EmptyView()
             case .chevron:
-                if isEnabled { ChevronView() }
+                if isEnabled {
+                    ChevronView()
+                }
             case let .text(text):
                 makeTextView(with: .init(text))
             case let .textWithChevron(text):
                 HStack(spacing: 12) {
                     makeTextView(with: .init(text))
-                    if isEnabled { ChevronView() }
+                    if isEnabled {
+                        ChevronView()
+                    }
                 }
             }
         }

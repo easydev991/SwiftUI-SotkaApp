@@ -75,7 +75,11 @@ extension SelectedActivityView {
         case nonWorkout(DayActivityType)
 
         var isWorkout: Bool {
-            if case .workout = self { true } else { false }
+            if case .workout = self {
+                true
+            } else {
+                false
+            }
         }
 
         var activity: DayActivityType {

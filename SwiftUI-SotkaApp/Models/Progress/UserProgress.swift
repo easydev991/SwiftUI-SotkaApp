@@ -76,7 +76,11 @@ final class UserProgress {
     /// Проверяет, есть ли в прогрессе хотя бы какие-то данные (больше нуля)
     var hasAnyMetricsData: Bool {
         let intValues = [pullUps, pushUps, squats].compactMap(\.self)
-        let hasWeightInfo = if let weight { weight > 0 } else { false }
+        let hasWeightInfo = if let weight {
+            weight > 0
+        } else {
+            false
+        }
         return intValues.contains(where: { $0 > 0 }) || hasWeightInfo
     }
 

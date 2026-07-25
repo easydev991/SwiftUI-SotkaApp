@@ -11,6 +11,10 @@ struct CommentEditModel {
     func canSave(_ currentComment: String?) -> Bool {
         let current = currentComment ?? ""
         let original = initialComment ?? ""
-        return if original.isEmpty { !current.isEmpty } else { current != original }
+        return if original.isEmpty {
+            !current.isEmpty
+        } else {
+            current != original
+        }
     }
 }

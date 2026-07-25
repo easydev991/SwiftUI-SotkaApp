@@ -584,6 +584,10 @@ extension StatusManagerTests {
 
 extension StatusManager.State {
     var isError: Bool {
-        if case .error = self { true } else { false }
+        if case .error = self {
+            true
+        } else {
+            false
+        }
     }
 }

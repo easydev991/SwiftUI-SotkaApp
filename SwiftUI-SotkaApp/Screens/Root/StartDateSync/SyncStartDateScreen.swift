@@ -148,11 +148,19 @@ extension SyncStartDateView {
         }
 
         var isAppSelected: Bool {
-            if case .app = self { true } else { false }
+            if case .app = self {
+                true
+            } else {
+                false
+            }
         }
 
         var isSiteSelected: Bool {
-            if case .site = self { true } else { false }
+            if case .site = self {
+                true
+            } else {
+                false
+            }
         }
     }
 }

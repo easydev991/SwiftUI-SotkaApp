@@ -39,7 +39,9 @@ struct OnlineLoginView: View {
         .loadingOverlay(if: isLoading)
         .onChange(of: credentials) { _, _ in clearErrorMessages() }
         .onChange(of: isLoading) { _, newValue in
-            if newValue { focus = nil }
+            if newValue {
+                focus = nil
+            }
         }
         .onDisappear {
             [loginTask, restorePasswordTask].forEach { $0?.cancel() }
