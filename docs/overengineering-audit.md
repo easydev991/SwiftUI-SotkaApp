@@ -120,7 +120,7 @@
 - [x] `docs/daily-activities.md` — строки 126, 173: описывал `syncDailyActivities(context:) async throws -> SyncResult` (метод удалён). **Удалено в текущем коммите.**
 - [x] `docs/custom-exercises.md` — строки 86, 106: описывал `syncCustomExercises(context:)` (метод удалён). **Удалено в текущем коммите.**
 - [x] `docs/infoposts.md` — строка 82: описывал `syncReadPosts(context:)` (метод удалён). **Удалено в текущем коммите.**
-- [x] `docs/crash-swiftdata-invalid-future-backing-data.md` — строка 59 и раздел «Почему это особенно важно» (строки 53-60): ссылался на `syncJournalAndProgress()` (метод удалён). **Удалено в текущем коммите** (также выпилены два других несуществующих метода — `updateLocalFromServer`/`downloadServerActivities`; добавлена «Историческая справка»).
+- [x] `docs/crash-swiftdata-invalid-future-backing-data.md` — **весь файл устарел** (sync-механизм, на который ссылался doc, удалён; проблемный UI-паттерн `DayActivityTrainingView` + live-relationship остался, но без sync триггера сценарий краша больше не описан в коде). **Файл удалён целиком в текущем коммите.**
 - [x] `docs/testing-mocks.md` — описывал `MockDaysClient`/`MockProgressClient`/etc. со специфичными полями (`mockedDayResponses`, `errorToThrow`, `getReadPostsResult`). Удалённый `MockSWClient` был единственной реализацией этого API. **Файл удалён в текущем коммите.**
 - [x] `docs/ui-test-mock-client.md` — описывал `MockLoginClient`/`MockExerciseClient`/etc. (структуры удалены). **Файл удалён в текущем коммите.**
 - [x] `docs/sync-journal.md` — **весь файл устарел** (53 стр., модель `SyncJournalEntry` и все связанные экраны/логика удалены). **Файл удалён в текущем коммите.**
@@ -208,7 +208,7 @@
 |---|---|---|
 | Review-слой yagni/shrink | ~237 стр. production + ~646 стр. тестов | Выходит за рамки задачи. Тесты Review (7 файлов, 646 стр.) сохраняются — входят в 903 passed |
 | **`AuthHelper` shrink** | 62 стр. production | Требует переноса `isOfflineOnly` в `User` (UserDefaults-бэкап) + inlining `triggerLogout` в `MoreScreen`. Снижение читаемости. Решение за продуктом |
-| **Устаревшая документация `docs/` + `AGENTS.md`** | 0 файлов: все 8 пунктов обработаны. Удалены целиком в `f10157a`: `testing-mocks.md`, `ui-test-mock-client.md`, **`sync-journal.md`**. Отредактированы в `<NEW>`: `daily-activities.md`, `custom-exercises.md`, `infoposts.md`, `crash-swiftdata-invalid-future-backing-data.md`, `progress-screen.md`, `calendar-extension.md`, `data-migration.md`, `AGENTS.md` строка 75 | Готово |
+| **Устаревшая документация `docs/` + `AGENTS.md`** | 0 файлов: все 8 пунктов обработаны. Удалены целиком в `f10157a` + `<NEW>`: `testing-mocks.md`, `ui-test-mock-client.md`, **`sync-journal.md`**, **`crash-swiftdata-invalid-future-backing-data.md`**. Отредактированы: `daily-activities.md`, `custom-exercises.md`, `infoposts.md`, `progress-screen.md`, `calendar-extension.md`, `data-migration.md`, `AGENTS.md` строка 75 | Готово |
 
 ### Контроль качества после `ed82f6e9` + `22dace92` + `19081bad` + `2555914a` + `c2e906a3` + `56726fe2`
 
