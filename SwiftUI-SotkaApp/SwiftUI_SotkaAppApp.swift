@@ -12,7 +12,6 @@ struct SwiftUI_SotkaAppApp: App {
     private let statusManager: StatusManager
     @State private var appSettings = AppSettings()
     @State private var authHelper: AuthHelperImp
-    @State private var networkStatus = NetworkStatus()
     @State private var reviewManager: ReviewManager
     private let analyticsService: AnalyticsService
 
@@ -132,7 +131,6 @@ struct SwiftUI_SotkaAppApp: App {
             .environment(statusManager.infopostsService)
             .currentDay(statusManager.currentDayCalculator?.currentDay)
             .restTimeBetweenSets(appSettings.restTime)
-            .networkStatus(networkStatus.isOnline)
             .environment(youtubeVideoService)
             .environment(\.analyticsService, analyticsService)
             .environment(\.isReadOnlyMode, isReadOnlyMode)

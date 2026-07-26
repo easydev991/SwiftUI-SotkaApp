@@ -51,6 +51,7 @@
 - [x] delete `SWFileManager` (44 стр.) — ноль использований в проде. Удалён в `19081bad` (+ `SWFileManagerTests.swift` 48 стр.).
 - [x] delete `DateFormatterService.readableDate` + хелпер `makeFormat` + 3 неиспользуемых enum case'a (`dayMonthMediumTime`, `dayMonth`, `mediumTime`) — `readableDate` вызывался только в `SWUtilsTests`. Удалены в `19081bad` (+ тест `readableDate`).
 - [x] delete `String.capitalizingFirstLetter` (3 стр.) — вызывался только в `SWUtilsTests`. Удалён в `19081bad` (+ тест).
+- [x] [NEW] delete `NetworkStatus` + `NetworkStatusEnvironmentKey` (~46 стр. в `Libraries/SWUtils/Sources/SWUtils/NetworkStatus/`) — пропущено оригинальным аудитом. `NetworkStatus` инстанцируется в `SwiftUI_SotkaAppApp.swift:15` и через модификатор `.networkStatus(...)` пишет в `EnvironmentValues.isNetworkConnected`, но **ни один view не читает это значение** (`@Environment(\.isNetworkConnected)` = 0 ссылок в репозитории). Тестов нет. Watch app: 0 ссылок. В read-only mode это write-only цепочка: `NWPathMonitor` запускался впустую на background queue. Удалено в текущем коммите: оба файла, директория `NetworkStatus/`, `@State private var networkStatus` (`:15`) и `.networkStatus(networkStatus.isOnline)` (`:135`) в `SwiftUI_SotkaAppApp.swift`.
 
 ## 3. Review-слой (yagni — избыточная абстракция)
 
