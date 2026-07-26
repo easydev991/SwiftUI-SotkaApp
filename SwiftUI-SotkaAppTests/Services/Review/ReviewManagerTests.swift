@@ -19,16 +19,18 @@ struct ReviewManagerTests {
         let context = container.mainContext
         let user = User(id: 1, genderCode: 1)
         context.insert(user)
-        for day in 1 ... count {
-            let activity = DayActivity(
-                day: day,
-                activityTypeRaw: DayActivityType.workout.rawValue,
-                count: 5,
-                createDate: .now,
-                modifyDate: .now,
-                user: user
-            )
-            context.insert(activity)
+        if count > 0 {
+            for day in 1 ... count {
+                let activity = DayActivity(
+                    day: day,
+                    activityTypeRaw: DayActivityType.workout.rawValue,
+                    count: 5,
+                    createDate: .now,
+                    modifyDate: .now,
+                    user: user
+                )
+                context.insert(activity)
+            }
         }
         try context.save()
     }
@@ -37,16 +39,18 @@ struct ReviewManagerTests {
         let context = container.mainContext
         let user = try #require(context.fetch(FetchDescriptor<User>()).first)
         let existingCount = try context.fetchCount(FetchDescriptor<DayActivity>())
-        for offset in 1 ... additionalCount {
-            let activity = DayActivity(
-                day: existingCount + offset,
-                activityTypeRaw: DayActivityType.workout.rawValue,
-                count: 5,
-                createDate: .now,
-                modifyDate: .now,
-                user: user
-            )
-            context.insert(activity)
+        if additionalCount > 0 {
+            for offset in 1 ... additionalCount {
+                let activity = DayActivity(
+                    day: existingCount + offset,
+                    activityTypeRaw: DayActivityType.workout.rawValue,
+                    count: 5,
+                    createDate: .now,
+                    modifyDate: .now,
+                    user: user
+                )
+                context.insert(activity)
+            }
         }
         try context.save()
     }
