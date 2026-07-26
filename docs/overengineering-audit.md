@@ -133,6 +133,20 @@
 - [ ] [NEW] delete `Models/SWSharedModels/LoginCredentials.swift` (24 стр.) — использовался только `OnlineLoginView` (удалён). 0 ссылок в проде.
 - [ ] [NEW] delete `Models/Progress/ProgressSnapshot.swift` (64 стр.) — использовался только `ProgressSyncService` (удалён). 0 ссылок в проде. Содержит `init(from: UserProgress)`, `photosForUpload` (для сервера) — мёртвые.
 
+### Ошибочно удалённые тесты [restore]
+
+`SwiftDataMigrationTests.swift` (4 теста, ~200 стр.) был в `SwiftUI-SotkaAppTests/Persistence/` (коммит `0810beb`), удалён в `ed82f6e` как «мёртвый», потому что его `makeLegacySchema()`/`makeCurrentSchema()` ссылались на `SyncJournalEntry.self`. **Удаление было ошибкой:** тесты проверяли критичный сценарий — открытие старого SwiftData store и сохранение данных пользователя при изменении схемы. Без них нет регрессионной защиты единственного места, где Apple не даёт гарантий (удаление entity + relationship в lightweight migration).
+
+- [ ] [restore] **Восстановить `SwiftDataMigrationTests.swift`** в `SwiftUI-SotkaAppTests/Persistence/SwiftDataMigrationTests.swift`:
+  - Адаптировать `makeLegacySchema()`/`makeCurrentSchema()` — убрать `SyncJournalEntry.self` (больше не существует).
+  - Сохранить 4 существующих теста:
+    - `opensStoreFromRelease40AndPreservesData` — апгрейд со схемы без `CalendarExtensionRecord` → с ним.
+    - `opensLegacySchemaAndPreservesData` — открытие legacy-БД, проверка `User`+`UserProgress`.
+    - `calendarExtensionEntityIsAvailableAfterLegacyOpen` — вставка `CalendarExtensionRecord` после legacy-открытия.
+    - `legacyUpgradeIsIdempotentOnReopen` — повторное открытие работает.
+  - Добавить **новый тест** `opensStoreAfterRemovingSyncJournalEntryAndPreservesData`: старая схема С `SyncJournalEntry.self` + `User.syncJournalEntries` relationship → новая без них; проверить что `User` (с настоящим id ≠ -1), `UserProgress`, `DayActivity`, `CustomExercise`, `CalendarExtensionRecord` переживают миграцию. Это **наш конкретный сценарий обновления приложения** для пользователей с онлайн-историей.
+  - Покрытие: 5 тестов × ~30 строк = ~150 строк, пишутся за 30-40 минут (80% кода уже есть в `0810beb`).
+
 ## 5. На границе скоупа (не находки, решение за продуктом / оставить сейчас)
 
 - Sync-флаги (`isSynced`, `shouldDelete`, `lastModified`) — оставляем на первой итерации. Без синхронизации они теряют смысл, но удаление их из SwiftData-моделей требует миграции (lightweight для nullable-полей или manual/поэтапная с обработкой существующих данных). Временные затраты и риск ошибки миграции/потери данных не оправданы ради чистоты. Второй итерацией их можно удалить вместе с плановой миграцией SwiftData.
@@ -188,6 +202,7 @@
 | `Client+.swift` финальная зачистка (удалить 7 неиспользуемых struct-стабов, оставить `MockResult`) | ~74 стр. | Выходит за рамки задачи |
 | **Новые мёртвые файлы [NEW]:** `ConflictingStartDate.swift`, `CalendarPurchasesResponse.swift`, `LoginCredentials.swift`, `ProgressSnapshot.swift` | ~136 стр. | Не отмечены в исходном аудите |
 | **Устаревшая документация `docs/`** | 6 файлов | Требует ревью и правки |
+| **Восстановить `SwiftDataMigrationTests.swift`** [restore] | ~150 стр. | Удалён в `ed82f6e` по ошибке как «мёртвый» — единственная регрессионная защита миграции схемы |
 
 ### Контроль качества после `d184f37`
 
