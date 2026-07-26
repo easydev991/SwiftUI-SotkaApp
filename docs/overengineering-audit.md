@@ -55,31 +55,35 @@
 
 ## 3. Review-слой (yagni — избыточная абстракция)
 
-Система «оценить приложение в App Store» реализована через 12 файлов. **Вся зачистка этого раздела не выполнена в `ed82f6e9`** (выходит за рамки delete-этапа — yagni-схлопывание слоёв не сделано, 7 тестовых файлов Review сохранены).
+Система «оценить приложение в App Store» реализована через 12 production-файлов (270 стр.) + 7 тестовых файлов (646 стр.). **Вся зачистка этого раздела не выполнена в `ed82f6e9`** (выходит за рамки delete-этапа).
 
-### yagni — протоколы с одной реализацией
+**Важно (обнаружено 2026-07-26):** утверждение «тесты не ломаются» из исходного аудита — ложное для 2 протоколов. В `SwiftUI-SotkaAppTests/Services/Review/ReviewManagerTests.swift:222/253` определены `private final class MockReviewAttemptStore: ReviewAttemptStoring` и `private final class MockWorkoutCompletionsCounter: WorkoutCompletionsCounting`, оба используются в `makeSUT()` (строки 11-13) во всех тестах `ReviewManager`. Удаление этих двух протоколов = переписывание тестов. `ReviewContext` — **используется вне `Review/`** (внешние caller'ы: `StatusManager.swift:571`, `WorkoutPreviewViewModel.swift:238`), инлайн потребует изменения их вызовов.
 
-- [ ] yagni `ReviewAttemptRules.swift` (10 стр.) — **живой** (вызывается из `ReviewManager.shouldAttemptMilestone()`).
-- [ ] yagni `ReviewAttemptStoring.swift` (8 стр.) — **живой** (реализуется через `ReviewStorage`).
-- [ ] yagni `WorkoutCompletionsCounting.swift` (5 стр.) — **живой**.
-- [ ] yagni `ReviewContext.swift` (5 стр.) — **живой** (используется в `StatusManager:571` и `WorkoutPreviewViewModel:238`).
-- [ ] yagni `ReviewStorageKeys.swift` (8 стр.) — **живой**.
+### Фаза A — безопасная консолидация (net −27, без переписывания тестов)
 
-### keep — протоколы с несколькими потребителями
+Только файлы без fileprivate-моков в `ReviewManagerTests` и без внешних caller'ов:
+
+- [ ] yagni `ReviewAttemptRules.swift` (10 стр.) → static-метод в `ReviewManager`. `ReviewAttemptRulesTests.swift` (26 стр., 2 теста) переименовать/слить.
+- [ ] shrink `ReviewSkipReason.swift` (9 стр.) → enum в `ReviewManager`. Отдельных тестов нет.
+- [ ] yagni `ReviewStorageKeys.swift` (8 стр.) → private-константы в `ReviewStorage`. `ReviewStorageKeysTests.swift` (17 стр., 2 теста) переименовать/слить.
+
+### Фаза B — переписывание тестов (доп. net −18, дополнительный −18 стр.)
+
+- [ ] yagni `ReviewAttemptStoring.swift` (8 стр.) → удалить протокол, использовать `ReviewStorage` напрямую. `MockReviewAttemptStore` в `ReviewManagerTests:222` заменить на `ReviewStorage` + `MockUserDefaults`.
+- [ ] yagni `WorkoutCompletionsCounting.swift` (5 стр.) → удалить протокол, использовать `WorkoutCompletionsCounter` напрямую. `MockWorkoutCompletionsCounter` в `ReviewManagerTests:253` заменить на `WorkoutCompletionsCounter` + in-memory SwiftData container.
+- [ ] yagni `ReviewContext.swift` (5 стр.) → убрать обёртку, передавать `hadRecentError: Bool` напрямую в `workoutCompletedSuccessfully(hadRecentError:)`. Затронуты 2 внешних файла: `StatusManager.swift:571`, `WorkoutPreviewViewModel.swift:238`.
+
+### keep — не трогаем
 
 - [x] keep `ReviewEventReporting.swift` (5 стр.) — **живой, не тронут.**
-
-### shrink — типовые enum/struct
-
-- [ ] shrink `ReviewSkipReason.swift` (9 стр.) — **живой** (поле `lastSkipReason`).
-- [ ] shrink `ReviewMilestone.swift` (17 стр.) — **живой** (метод `milestone(forCompletedWorkoutCount:)`).
+- [x] keep `ReviewMilestone.swift` (17 стр.) — оставить отдельным файлом: `ReviewMilestoneTests.swift` (90 стр., ~10 тестов) тестирует статические методы `milestone(forCompletedWorkoutCount:)` / `isMilestoneWorkoutCount(_:)`. Гнездование в `ReviewManager` не экономит строки (enum должен остаться публичным для тестов), экономия = 0.
 
 ### Итоговая цель Review-слоя (не достигнута)
 
-Одна `ReviewManager` (~50 стр.) с захардкоженным списком milestones и одним вызовом `SKStoreReviewController.requestReview()`. Остальные 9 файлов — удалить.
+После обеих фаз: 270 → 225 стр. production (net −45). `ReviewManager` вырастает с 85 до ~104 стр. (10 + 9 inline из `ReviewAttemptRules` + `ReviewSkipReason`; `ReviewMilestone` остаётся отдельно).
 
-**Подитого Review (production): 287 стр. → ~50 стр. (net −237) — не выполнено.**
-**Подитого Review (tests): 646 стр. сохранены (7 тестовых файлов живы и входят в 903 passed).**
+**Подитого Review (production): 270 стр. → 225 стр. (net −45) — не выполнено.**
+**Подитого Review (tests): 646 стр. сохранены (7 тестовых файлов живы и входят в 903 passed). Фаза B перепишет 2 fileprivate-мока в `ReviewManagerTests.swift` (без изменения числа тестов).**
 
 ## 4. Другие мёртвые/yagni находки в приложении
 
@@ -194,7 +198,7 @@
 
 | Категория | Объём | Причина |
 |---|---|---|
-| Review-слой yagni/shrink | ~237 стр. production + ~646 стр. тестов | Выходит за рамки задачи. Тесты Review (7 файлов, 646 стр.) сохраняются — входят в 903 passed |
+| Review-слой yagni/shrink | −45 стр. production (270 → 225) за 2 фазы. Фаза A (−27) без переписывания тестов; фаза B (−18) перепишет 2 fileprivate-мока в `ReviewManagerTests` + сменит сигнатуру `workoutCompletedSuccessfully` в 2 внешних файлах | Выходит за рамки текущей задачи. Ошибка исходного аудита: `ReviewAttemptStoring`/`WorkoutCompletionsCounting` имеют fileprivate-моки в `ReviewManagerTests:222/253` (нельзя удалить протоколы без переписывания тестов); `ReviewContext` имеет внешних caller'ов в `StatusManager:571` + `WorkoutPreviewViewModel:238` |
 | **`AuthHelper` shrink** | 62 стр. production | Требует переноса `isOfflineOnly` в `User` (UserDefaults-бэкап) + inlining `triggerLogout` в `MoreScreen`. Снижение читаемости. Решение за продуктом |
 | **Устаревшая документация `docs/` + `AGENTS.md`** | 0 файлов: все 11 пунктов обработаны (`f10157a`/`f1065ca`/`65d39dc`/`606f7b2`). Удалены целиком: `testing-mocks.md`, `ui-test-mock-client.md`, `sync-journal.md`, `crash-swiftdata-invalid-future-backing-data.md`. Отредактированы: 6 doc + `AGENTS.md` (строка 75) | Готово |
 
