@@ -1,9 +1,9 @@
 import SwiftUI
 
-public struct SWDivider: View {
-    public init() {}
+struct SWDivider: View {
+    init() {}
 
-    public var body: some View {
+    var body: some View {
         Divider().background(Color.swSeparators)
     }
 }

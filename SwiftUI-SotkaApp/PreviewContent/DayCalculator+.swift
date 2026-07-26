@@ -9,6 +9,5 @@ extension DayCalculator {
         self.extensionCount = normalizedExtensionCount
         self.currentDay = currentDay
         self.daysLeft = max(0, totalDays - currentDay)
-        self.startDate = .now
     }
 }

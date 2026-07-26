@@ -98,25 +98,6 @@ extension MainUserForm {
         DateFormatterService.stringFromFullDate(birthDate)
     }
 
-    /// Готовность формы к регистрации нового пользователя
-    var isReadyToRegister: Bool {
-        !userName.isEmpty
-            && !email.isEmpty
-            && password.count >= Constants.minPasswordSize
-            && genderCode != Gender.unspecified.code
-            && birthDate <= Constants.minUserAge
-    }
-
-    /// Готовность формы к сохранению обновленных данных
-    func isReadyToSave(comparedTo oldForm: MainUserForm) -> Bool {
-        let isNewFormNotEmpty = !userName.isEmpty
-            && !email.isEmpty
-            && !fullName.isEmpty
-            && genderCode != Gender.unspecified.code
-            && birthDate <= Constants.minUserAge
-        return isNewFormNotEmpty && self != oldForm
-    }
-
     /// Нужно ли обновить форму при появлении экрана
     ///
     /// При появлении экрана мы не знаем страну/город пользователя,

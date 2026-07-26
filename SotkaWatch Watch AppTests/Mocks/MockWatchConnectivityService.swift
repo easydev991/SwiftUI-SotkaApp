@@ -18,7 +18,6 @@ final class MockWatchConnectivityService: WatchConnectivityServiceProtocol {
 
     private(set) var sentActivityType: (day: Int, activityType: DayActivityType)?
     var requestCurrentActivityDelay: UInt64 = 0
-    private(set) var requestedCurrentActivityDay: Int?
     private(set) var requestedCurrentActivityCallCount = 0
     private(set) var requestedWorkoutDataDay: Int?
     private(set) var sentWorkoutResult: (
@@ -37,8 +36,7 @@ final class MockWatchConnectivityService: WatchConnectivityServiceProtocol {
         }
     }
 
-    func requestCurrentActivity(day: Int) async throws -> DayActivityType? {
-        requestedCurrentActivityDay = day
+    func requestCurrentActivity(day _: Int) async throws -> DayActivityType? {
         requestedCurrentActivityCallCount += 1
         if requestCurrentActivityDelay > 0 {
             try await Task.sleep(nanoseconds: requestCurrentActivityDelay)

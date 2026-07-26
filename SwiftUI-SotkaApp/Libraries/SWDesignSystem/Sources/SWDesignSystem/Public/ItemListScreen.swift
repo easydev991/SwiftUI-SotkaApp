@@ -4,7 +4,7 @@ import SwiftUI
 ///
 /// Используется для списка стран/городов
 @available(watchOS, unavailable)
-public struct ItemListScreen: View {
+struct ItemListScreen: View {
     @Environment(\.dismiss) private var dismiss
     @State private var searchQuery = ""
     private let mode: Mode
@@ -20,7 +20,7 @@ public struct ItemListScreen: View {
     ///   - didSelectItem: Возвращает выбранный элемент
     ///   - didTapContactUs: Замыкание для перехода в почту,
     ///   чтобы сообщить о стране/городе, который нужно добавить в базу
-    public init(
+    init(
         mode: Mode,
         allItems: [String],
         selectedItem: String,
@@ -34,7 +34,7 @@ public struct ItemListScreen: View {
         self.didTapContactUs = didTapContactUs
     }
 
-    public var body: some View {
+    var body: some View {
         ScrollView {
             SectionView(mode: .card()) {
                 LazyVStack(spacing: 0) {
@@ -71,7 +71,7 @@ public struct ItemListScreen: View {
 }
 
 @available(watchOS, unavailable)
-public extension ItemListScreen {
+extension ItemListScreen {
     enum Mode {
         case country, city
         var localizedTitle: String {

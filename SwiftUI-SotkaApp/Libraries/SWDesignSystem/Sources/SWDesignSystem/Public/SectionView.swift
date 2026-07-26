@@ -1,13 +1,13 @@
 import SwiftUI
 
 /// Аналог стандартного `Section`
-public struct SectionView<Content: View>: View {
+struct SectionView<Content: View>: View {
     private let header: HeaderFooter?
     private let footer: HeaderFooter?
     private let mode: Mode
     private let content: Content
 
-    public init(
+    init(
         mode: Mode,
         @ViewBuilder content: () -> Content
     ) {
@@ -19,7 +19,7 @@ public struct SectionView<Content: View>: View {
         )
     }
 
-    public init(
+    init(
         header: String? = nil,
         footer: String? = nil,
         mode: Mode,
@@ -33,7 +33,7 @@ public struct SectionView<Content: View>: View {
         )
     }
 
-    public init(
+    init(
         headerWithPadding: String? = nil,
         footer: String? = nil,
         mode: Mode,
@@ -47,7 +47,7 @@ public struct SectionView<Content: View>: View {
         )
     }
 
-    public var body: some View {
+    var body: some View {
         VStack(spacing: 0) {
             if let header {
                 SectionSupplementaryView(header.title, mode: header.mode)
@@ -70,7 +70,7 @@ public struct SectionView<Content: View>: View {
     }
 }
 
-public extension SectionView {
+extension SectionView {
     enum Mode {
         /// Добавляет контенту модификатор `insideCardBackground` с указанным паддингом
         case card(padding: CGFloat = 0)

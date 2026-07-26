@@ -83,15 +83,6 @@ final class UserProgress {
         }
         return intValues.contains(where: { $0 > 0 }) || hasWeightInfo
     }
-
-    /// Блок программы на основе номера дня
-    var section: Section {
-        Section(day: id)
-    }
-
-    // Создает UserProgress из ProgressResponse
-
-    // Создает UserProgress из ProgressResponse с маппингом дня
 }
 
 extension UserProgress {
@@ -122,38 +113,6 @@ extension UserProgress {
             case .two: String(localized: .progressSectionMiddle)
             case .three: String(localized: .progressSectionEnd)
             }
-        }
-    }
-
-    /// Маппинг внутренних дней приложения в внешние дни сервера
-    ///
-    /// Соответствует логике Android приложения и серверной архитектуре
-    static func getExternalDayFromProgressId(_ internalId: Int) -> Int {
-        switch internalId {
-        case 1:
-            1 // День 1 соответствует серверному дню 1
-        case 49:
-            49 // День 49 соответствует серверному дню 49 (контрольная точка)
-        case 100:
-            99 // День 100 соответствует серверному дню 99 (контрольная точка)
-        default:
-            internalId
-        }
-    }
-
-    /// Маппинг внешних дней сервера во внутренние дни приложения
-    ///
-    /// Обратная функция для getExternalDayFromProgressId
-    static func getInternalDayFromExternalDay(_ externalDay: Int) -> Int {
-        switch externalDay {
-        case 1:
-            1 // Серверный день 1 соответствует внутреннему дню 1
-        case 49:
-            49 // Серверный день 49 соответствует внутреннему дню 49
-        case 99:
-            100 // Серверный день 99 соответствует внутреннему дню 100
-        default:
-            externalDay
         }
     }
 }
@@ -276,23 +235,6 @@ extension UserProgress {
         return shouldDeletePhoto(type) ? nil : data
     }
 
-    /// Удаляет локальные данные изображения указанного типа
-    func deletePhotoData(_ type: ProgressPhotoType) {
-        switch type {
-        case .front:
-            dataPhotoFront = UserProgress.DELETED_DATA
-            urlPhotoFront = nil
-        case .back:
-            dataPhotoBack = UserProgress.DELETED_DATA
-            urlPhotoBack = nil
-        case .side:
-            dataPhotoSide = UserProgress.DELETED_DATA
-            urlPhotoSide = nil
-        }
-        lastModified = Date()
-        isSynced = false
-    }
-
     /// Проверяет, есть ли локальные данные хотя бы для одной фотографии
     var hasAnyPhotoData: Bool {
         dataPhotoFront != nil || dataPhotoBack != nil || dataPhotoSide != nil
@@ -311,42 +253,6 @@ extension UserProgress {
         case .side: dataPhotoSide
         }
         return data == UserProgress.DELETED_DATA
-    }
-
-    /// Проверяет, есть ли фотографии для удаления
-    func hasPhotosToDelete() -> Bool {
-        shouldDeletePhoto(.front) ||
-            shouldDeletePhoto(.back) ||
-            shouldDeletePhoto(.side)
-    }
-
-    /// Очищает данные фотографии после успешного удаления
-    func clearPhotoData(_ type: ProgressPhotoType) {
-        switch type {
-        case .front:
-            dataPhotoFront = nil
-            urlPhotoFront = nil
-        case .back:
-            dataPhotoBack = nil
-            urlPhotoBack = nil
-        case .side:
-            dataPhotoSide = nil
-            urlPhotoSide = nil
-        }
-        lastModified = Date()
-        // isSynced устанавливается в handlePhotoDeletion после обработки всех фотографий
-    }
-
-    /// Проверяет, есть ли фотография указанного типа (URL или данные)
-    func hasPhoto(_ type: ProgressPhotoType) -> Bool {
-        switch type {
-        case .front:
-            dataPhotoFront != nil || urlPhotoFront != nil
-        case .back:
-            dataPhotoBack != nil || urlPhotoBack != nil
-        case .side:
-            dataPhotoSide != nil || urlPhotoSide != nil
-        }
     }
 
     /// Достает `stringUrl` фотографии указанного типа или `nil`,

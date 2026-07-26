@@ -1,7 +1,7 @@
 import SwiftUI
 
 /// В фигме называется "Элемент списка"
-public struct ListRowView: View {
+struct ListRowView: View {
     @Environment(\.isEnabled) private var isEnabled
     private let leadingContent: LeadingContent
     private let trailingContent: TrailingContent
@@ -10,7 +10,7 @@ public struct ListRowView: View {
     /// - Parameters:
     ///   - leadingContent: Контент слева
     ///   - trailingContent: Контент справа
-    public init(
+    init(
         leadingContent: LeadingContent,
         trailingContent: TrailingContent = .empty
     ) {
@@ -18,7 +18,7 @@ public struct ListRowView: View {
         self.trailingContent = trailingContent
     }
 
-    public var body: some View {
+    var body: some View {
         HStack(spacing: 16) {
             leadingContent.view
                 .frame(maxWidth: .infinity, alignment: .leading)
@@ -29,7 +29,7 @@ public struct ListRowView: View {
     }
 }
 
-public extension ListRowView {
+extension ListRowView {
     /// Контент слева
     enum LeadingContent {
         /// Текст
@@ -50,7 +50,7 @@ public extension ListRowView {
             }
         }
 
-        public static func makeIconView(with name: Icons.Regular) -> some View {
+        static func makeIconView(with name: Icons.Regular) -> some View {
             RoundedRectangle(cornerRadius: 8)
                 .fill(Color.swTintedButton)
                 .frame(width: 34, height: 34)

@@ -15,8 +15,6 @@ struct DayCalculator: Identifiable, Equatable {
         "\(currentDay)-\(daysLeft)"
     }
 
-    /// Дата начала прохождения программы
-    let startDate: Date
     /// Количество продлений календаря
     let extensionCount: Int
     /// Номер текущего дня
@@ -75,7 +73,6 @@ struct DayCalculator: Identifiable, Equatable {
     ///   - startDate: Дата старта сотки (на сайте или в приложении)
     ///   - currentDate: Текущая дата, с которой нужно сравнить дату старта
     init(_ startDate: Date, _ currentDate: Date, extensionCount: Int = 0) {
-        self.startDate = startDate
         self.extensionCount = extensionCount
         let normalizedExtensionCount = min(max(extensionCount, 0), Self.maxExtensionCount)
         let totalDays = Self.baseProgramDays + normalizedExtensionCount * Self.extensionBlockDays
