@@ -55,8 +55,7 @@
 `DayActivityTrainingView` используется не только в дневнике, но и на главном экране через `DayActivityContentView`. При этом синхронизация активностей запускается автоматически при переходе приложения в `active`:
 
 - `SwiftUI_SotkaAppApp.swift` -> `statusManager.getStatus()`
-- `StatusManager.getStatus()` -> `syncJournalAndProgress()`
-- `syncJournalAndProgress()` -> `dailyActivitiesService.syncDailyActivities(context:)`
+- `StatusManager.getStatus()` -> `syncJournalAndProgress()` (удалено в `ed82f6e9`; текущий `getStatus()` sync не запускает)
 
 То есть пользователь вполне может открыть приложение, увидеть тренировку на экране, а параллельно sync обновит или удалит связанные `trainings`.
 

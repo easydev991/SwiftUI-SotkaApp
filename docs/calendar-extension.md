@@ -83,8 +83,7 @@ let shouldShowInfopost = currentDay <= 100
 
 Retry unsynced выполняется детерминированно в:
 
-- `getStatus()`
-- `syncJournalAndProgress()`
+- `getStatus()` (sync-цепочка удалена в `ed82f6e9`; см. `StatusManager.getStatus()` — текущий код)
 
 ---
 

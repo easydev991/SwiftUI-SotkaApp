@@ -25,8 +25,7 @@
            CustomExercise.self,
            UserProgress.self,
            DayActivity.self,
-           DayActivityTraining.self,
-           SyncJournalEntry.self  // Новая модель
+           DayActivityTraining.self
        ]
    )
    ```

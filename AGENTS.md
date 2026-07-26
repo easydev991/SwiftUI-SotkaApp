@@ -72,7 +72,7 @@ Key `.swiftformat` settings applied by `make format`:
 - Client protocols: `...Client` (e.g., `DaysClient`, `StatusClient`)
 - SwiftData models: PascalCase without suffix
 - API DTOs: `...Request`, `...Response`
-- Domain terms: `DayActivity`, `UserProgress`, `SyncJournalEntry`
+- Domain terms: `DayActivity`, `UserProgress`
 - Russian-localized strings: in `.strings`/`.stringsdict` files, NOT hardcoded
 
 ## Architecture and Design
