@@ -1,13 +1,13 @@
 # Аудит over-engineering: весь репозиторий
 
-Дата аудита: 2026-07-25. Дата фактического применения `delete`-этапа: 2026-07-26 (коммит `ed82f6e9`). Дата применения `[FIX]` и `[restore]`-этапа: 2026-07-26 (коммит `22dace92`). Дата применения `delete`-этапа-2 (Этапы 1+2+3+7): 2026-07-26 (коммиты `19081bad`/`2555914a`/`c2e906a3`/`56726fe2`). Дата применения `delete`-этапа-3 (NetworkStatus): 2026-07-26 (коммит `9cb2646`). Дата применения `delete`-этапа-4 (устаревшая документация): 2026-07-26 (коммит `f10157a`). Дата применения `delete`-этапа-5 (правка оставшейся документации): 2026-07-26 (коммит `f1065ca`). Дата применения `delete`-этапа-6 (снос устаревших секций): 2026-07-26 (коммит `65d39dc`). Дата применения `delete`-этапа-7 (снос crash-doc): 2026-07-26 (коммит `606f7b2`). Дата правки плана (Review-этап, net −45): 2026-07-26 (коммит `68e4bca`). Дата inline Review-Фаза A: 2026-07-26 (коммит `bc0a76f`). Дата move `shouldAttemptMilestone` → `ReviewMilestone.isNotYetAttempted(in:)`: 2026-07-26 (текущий коммит, hash см. в `git log -1 --oneline`).
+Дата аудита: 2026-07-25. Применено 14 коммитов 2026-07-25..26: `ed82f6e9` (delete) → `22dace92` (FIX+restore) → `19081bad`/`2555914a`/`c2e906a3`/`56726fe2` (delete-2: 4 [NEW] модели + SWFileManager + DateFormatter + String + ImageProcessor + Infopost + SWNetwork + SWKeychain + SWAlert + ScreenshotDemoData) → `9cb2646` (NetworkStatus) → `f10157a`/`f1065ca`/`65d39dc`/`606f7b2` (4 docs-этапа) → `68e4bca` (правка плана Review) → `bc0a76f` (Review Фаза A) → `095af10` (move shouldAttemptMilestone) → `f7f6a61`/`af3cf6b` (update-plan × 2).
 Скоуп: только избыточная сложность (не корректность, не безопасность, не производительность).
 
 Контекст: `AppConfiguration.isReadOnlyMode = true` на постоянной основе — серверные API закрыты, поэтому весь сетевой слой (синхронизация прогресса, авторизация на сервере, разрешение конфликтов дат, серверный профиль/смена пароля) — мёртвый код и подлежит удалению. UI-тесты и mock-bootstrap по-прежнему передают `isReadOnlyMode: false`, чтобы симулировать нормальное поведение для скриншот-тестов.
 
-**ВАЖНО (обнаружено 2026-07-26, исправлено в `22dace92`):** Изначальный план аудита ошибочно пометил как «мёртвый код» инфраструктуру UI-тестовых fixture-данных. `Client+.swift` содержал реализации мок-клиентов (`MockDaysClient`/`MockProgressClient`/`MockExerciseClient`/`MockInfopostsClient`), которые через `MockSWClient` → `createMockServices()` поставляли в приложение 12 дней тренировок, прогресс пользователя (день 1), 3 демо-упражнения и прочитанные инфопосты. Без них скриншот-тесты `testMakeScreenshots` падали. **Серверные протоколы мертвы для продакшена, но мок-реализации заменены прямым SwiftData-seed'ом в `ScreenshotDemoData.seedDemoData()` (`22dace92`).** Подробности — раздел 7.
+**ВАЖНО (`22dace92`):** моки серверных протоколов в `Client+.swift` (~685 стр.) — UI-тестовая инфраструктура, не мёртвый код. Заменены прямым SwiftData-seed'ом в `ScreenshotDemoData.seedDemoData()`. Подробности — раздел 7.
 
-Предыдущий аудит от 2026-07-21 — большая часть находок остаётся валидной. Изменения с момента прошлого аудита: коммит `1c890e2` (Periphery-чистка от 2026-05-01, ~1937 строк) уже удалил часть мёртвого кода из SWDesignSystem/SWUtils/SWKeychain/PreviewContent; добавлены находки, которых не было в прошлом аудите (`SyncStartDateScreen`, `ChangePasswordScreen`, `EditProfileScreen`, `StatusManagerLogoutTests`, `StatusManagerProcessAuthStatusTests`, sync-методы в `DailyActivitiesService`/`CustomExercisesService`/`InfopostsService` + связанные мёртвые протоколы). Линейные счётчики обновлены. Исправлены обоснования (`StatusManager` — перечислены 5 независимых гейтов вместо «всё после строки 153»; `MockSWClient` помечен warning из-за 14 живых unit-тестов).
+Предыдущий аудит 2026-07-21 валиден. С тех пор: `1c890e2` (Periphery, 2026-05-01, ~1937 строк); добавлены находки (SyncStartDateScreen/ChangePasswordScreen/EditProfileScreen/StatusManagerLogoutTests/sync-методы в 3 сервисах + 4 мёртвых протокола); обновлены счётчики и обоснования (`StatusManager` — 5 независимых гейтов, `MockSWClient` — warning из-за 14 живых unit-тестов).
 
 Теги: `delete` — мёртвый код; `stdlib` — велосипед вместо стандартной библиотеки; `native` — то, что платформа делает сама; `yagni` — абстракция с одной реализацией; `shrink` — та же логика короче.
 
@@ -82,13 +82,9 @@
 - [x] keep `ReviewRequestHost.swift` (55 стр.) — SwiftUI-интеграция StoreKit `requestReview()`: `ReviewRequestTriggerID` (4-7) для `.task(id:)`, `ReviewRequestModifier` (9-49) private, `View.reviewRequestHandling(requestDelay:)` (51-55) public. Подавляет запрос при `-FASTLANE_SNAPSHOT`/`UITest`. **Живой, не тронут.** Тесты: `ReviewRequestTriggerIDTests.swift` (34 стр.).
 - [x] keep `WorkoutCompletionsCounter.swift` (31 стр.) — concrete class для подсчёта завершённых тренировок из SwiftData. **Живой, не тронут** (Фаза B заменит протокол `WorkoutCompletionsCounting` этим конкретным типом, см. ниже). Тесты: `WorkoutCompletionsCounterTests.swift` (134 стр.).
 
-### Итоговая цель Review-слоя (частично достигнута: Фаза A выполнена в `bc0a76f` + move в текущем коммите)
+### Итог Review-слоя (Фаза A выполнена, Фаза B [ ])
 
-После Фазы A: 270 → 256 стр. production (net −14). `ReviewManager` вырос с 85 до 90 стр. (+5), `ReviewStorage` с 31 до 36 (+4), `ReviewMilestone` с 17 до 21 (+4).
-После обеих фаз (план): 270 → 244 стр. production (net −26). `ReviewManager` 85 → ~115 стр. с учётом Фазы B.
-
-**Подитого Review (production) на 2026-07-26: 270 стр. → 256 стр. (net −14) — Фаза A выполнена. Остаток Фазы B: −12 стр. (256 → 244).**
-**Подитого Review (tests): 636 стр. сохранены (7 тестовых файлов живы, 2 теста в `ReviewAttemptRulesTests` стали компактнее: 26 → 16). Фаза B перепишет 2 fileprivate-мока в `ReviewManagerTests.swift` (без изменения числа тестов).**
+`ReviewManager` 85 → 90, `ReviewStorage` 31 → 36, `ReviewMilestone` 17 → 21. Production 270 → 256 (net −14). Tests 636 без изменений (2 теста в `ReviewAttemptRulesTests` 26 → 16). Фаза B (план) доведёт до 256 → 244.
 
 ## 4. Другие мёртвые/yagni находки в приложении
 
@@ -126,25 +122,11 @@
 
 - [x] **Все 11 doc-файлов + `AGENTS.md` обработаны** (`f10157a`/`f1065ca`/`65d39dc`/`606f7b2`): удалены целиком `testing-mocks.md`, `ui-test-mock-client.md`, `sync-journal.md`, `crash-swiftdata-invalid-future-backing-data.md`; отредактированы `daily-activities.md`, `custom-exercises.md`, `infoposts.md`, `progress-screen.md`, `calendar-extension.md`, `data-migration.md`, `AGENTS.md` (строка 75 — убран термин `SyncJournalEntry`).
 
-## 7. UI-тестовая инфраструктура: демо-данные (критическая ошибка аудита) [FIX]
+## 7. UI-тестовая инфраструктура: демо-данные (ошибка аудита) [FIX]
 
-**Обнаружено 2026-07-26, исправлено 2026-07-26 (коммит `22dace92`):** UI-тесты `testMakeScreenshots` падали после `ed82f6e9`, т.к. удалён код, создававший демо-данные. `22dace92` восстановил демо-данные прямым заполнением SwiftData.
+`Client+.swift` (~685 стр.) с мок-клиентами `MockDaysClient`/`MockProgressClient`/`MockExerciseClient`/`MockInfopostsClient` — не мёртвый код, а UI-тестовая инфраструктура (fixture-данные для скриншотов). До `ed82f6e9` `SwiftUI_SotkaAppApp.init()` при `UITest` через `createMockServices()` подставлял 12 дней тренировок / прогресс дня 1 / 3 демо-упражнения / 10 прочитанных инфопостов. После удаления UI-тесты `testMakeScreenshots` падали. Аудит должен был пометить `Client+.swift` как `adapt`, не `delete`.
 
-### Как работало до удаления
-
-`SwiftUI_SotkaAppApp.init()` при `UITest` вызывал `ScreenshotDemoData.setup()` (создавал `User`) и `createMockServices()` (создавал `StatusManager` с `MockSWClient` → мок-клиенты `Client+.swift` (~685 стр.) возвращали: 12 дней тренировок через `MockDaysClient.getDays()`; прогресс дня 1 через `MockProgressClient.getProgress()`; 3 демо-упражнения через `MockExerciseClient.getCustomExercises()`; `[1, 2, 3, 4, 5, 6, 7, 8, 9, 10]` прочитанных инфопостов через `MockInfopostsClient.getReadPosts()`). `setCurrentDayForDebug(12)` устанавливал день 12. Все 8 скриншотов проходили.
-
-### Что сломано после удаления
-
-`Client+.swift` лишился реализаций, `createMockServices()` создавал `StatusManager` без клиентов, `ScreenshotDemoData.setup()` создавал только голого `User`. `setCurrentDayForDebug(12)` работал корректно, но в SwiftData не было ни одной `DayActivity` — экран пуст, UI-тесты падали (`TodayActivityButton.0`, `progressTabButton`, `journalTabButton`, `customExercisesButton`).
-
-### Что сделано в `22dace92` [FIX]
-
-- [x] [FIX] **`ScreenshotDemoData.seedDemoData(context:user:)`** создаёт 11 `DayActivity` (8 тренировок + 2 отдыха + 1 растяжка), `UserProgress` дня 1, 3 `CustomExercise`, `Country`. День 12 намеренно пуст — для кнопок выбора типа в `HomeActivitySectionView` (отступление: 11 вместо 12). **`createMockServices()`** дополнен `authHelper.performOfflineLogin()` + `Tips.resetDatastore()` + `UIView.setAnimationsEnabled(false)`. **`Client+.swift`** удалён (−74 стр.).
-
-### Почему аудит ошибся
-
-Аудит классифицировал все 9 серверных протоколов как «мёртвый код» — верно для продакшена. **Ошибка:** мок-реализации в `Client+.swift` не распознаны как UI-тестовая инфраструктура. Это не «мёртвый код», а тестовые fixture-данные, которые нужно сохранить в другой форме (прямой SwiftData-seed). Аудит должен был пометить их как `adapt`, а не `delete`.
+- [x] [FIX] `22dace92`: `ScreenshotDemoData.seedDemoData(context:user:)` создаёт 11 `DayActivity` (8 тренировок + 2 отдыха + 1 растяжка), `UserProgress` дня 1, 3 `CustomExercise`, `Country`. День 12 пуст — для кнопок выбора типа в `HomeActivitySectionView`. `createMockServices()` дополнен `performOfflineLogin()` + `Tips.resetDatastore()` + `UIView.setAnimationsEnabled(false)`. `Client+.swift` удалён (−74 стр.).
 
 ## Итог
 
@@ -203,9 +185,8 @@
 
 | Категория | Объём | Причина |
 |---|---|---|
-| Review-слой yagni/shrink | −14 стр. production выполнено в `bc0a76f` + move в текущем коммите (Фаза A: 270 → 256, 3 файла удалены + shouldAttemptMilestone перенесён в ReviewMilestone). Остаток Фазы B: −12 стр. (256 → 244). Фаза B перепишет 2 fileprivate-мока в `ReviewManagerTests` + сменит сигнатуру `workoutCompletedSuccessfully` в 2 внешних файлах | Фаза A выполнена. Фаза B — на следующую итерацию. Ошибка исходного аудита: `ReviewAttemptStoring`/`WorkoutCompletionsCounting` имеют fileprivate-моки в `ReviewManagerTests:222/253` (нельзя удалить протоколы без переписывания тестов); `ReviewContext` имеет внешних caller'ов в `StatusManager:571` + `WorkoutPreviewViewModel:238`. Реальный net Фазы A оказался −14, а не −27: inline требует места в файле-хозяине + move добавил 4 стр. в `ReviewMilestone` |
-| **`AuthHelper` shrink** | 62 стр. production | Требует переноса `isOfflineOnly` в `User` (UserDefaults-бэкап) + inlining `triggerLogout` в `MoreScreen`. Снижение читаемости. Решение за продуктом |
-| **Устаревшая документация `docs/` + `AGENTS.md`** | 0 файлов: все 11 пунктов обработаны (`f10157a`/`f1065ca`/`65d39dc`/`606f7b2`). Удалены целиком: `testing-mocks.md`, `ui-test-mock-client.md`, `sync-journal.md`, `crash-swiftdata-invalid-future-backing-data.md`. Отредактированы: 6 doc + `AGENTS.md` (строка 75) | Готово |
+| Review Фаза B ([ ]) | −12 стр. production (256 → 244) | Фаза A выполнена (`bc0a76f`+move, −14 стр.). Phase B blocked: 2 fileprivate-мока в `ReviewManagerTests:222/253` + 2 внешних caller'а `StatusManager:571` + `WorkoutPreviewViewModel:238`. Реальный net Фазы A = −14 (не −27): inline + move добавляют 13 стр. в файлы-хозяева |
+| `AuthHelper` shrink ([ ]) | 62 стр. production | Требует переноса `isOfflineOnly` в `User` (UserDefaults-бэкап) + inlining `triggerLogout` в `MoreScreen`. Снижение читаемости. Решение за продуктом |
 
 ### Контроль качества после `ed82f6e9` + `22dace92` + `19081bad` + `2555914a` + `c2e906a3` + `56726fe2`
 
@@ -218,9 +199,9 @@
 
 Добавлены `SyncStartDateScreen`/`HelpScreen`/`ChangePasswordScreen`/`EditProfileScreen`/`SyncResultBadge`/`SyncDateComparisonPolicy` + соответствующие тесты (~+2000 строк); добавлены sync-методы в активных сервисах (DailyActivities/CustomExercises/Infoposts) + 4 мёртвых протокола (+~1100 строк production, +136 строк тестов); удалены в `1c890e2` Periphery-чистки (учтены в новых счётчиках). `MockSWClient` помечен как **warning** — использовался в 14 unit-тестах `CustomExercisesServiceTests`. В `ed82f6e9` выбран **вариант (b)**: `MockSWClient` + тесты удалены целиком. `ProgressServiceTests` перенесён в keep (тестирует живой локальный `ProgressService`).
 
-### Ошибки аудита (обе исправлены в `22dace92`)
+### Ошибки аудита (исправлены в `22dace92`)
 
-1. **`MockSWClient` = UI-инфраструктура, а не мёртвый код.** Аудит классифицировал мок-реализации протоколов в `Client+.swift` как мёртвый код, не распознав их как UI-тестовые fixture-данные. Исправлено: SwiftData-seed в `ScreenshotDemoData` (11 `DayActivity` + `UserProgress` + 3 `CustomExercise` + `Country`); `Client+.swift` удалён; `createMockServices()` дополнен `performOfflineLogin()` + `Tips.resetDatastore()` + `UIView.setAnimationsEnabled(false)`.
-2. **`SwiftDataMigrationTests` = критичный регресс.** Тест ошибочно удалён как «мёртвый» (ссылался на `SyncJournalEntry.self`). Исправлено: 5 тестов восстановлены (269 стр.), схемы адаптированы, добавлен `opensStoreAfterRemovingSyncJournalEntryAndPreservesData`.
+1. `Client+.swift` = UI-инфра, не мёртвый код — см. раздел 7.
+2. `SwiftDataMigrationTests` = критичный регресс — 5 тестов восстановлены (269 стр.), см. раздел 4 [restore].
 
 CachedAsyncImage остаётся: `AsyncImage` + `URLCache` не решает мерцание при перерисовках ячеек, а кастомный `ImageLoader`/`ImageCache` даёт стабильное изображение без фаз загрузки. Удаление sync-флагов и Firebase в эту цифму не входят: флаги — вторая итерация с миграцией, Firebase — оставляем 100%.
