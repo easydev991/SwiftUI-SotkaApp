@@ -1,17 +1,17 @@
 # Аудит over-engineering: весь репозиторий
 
-Дата аудита: 2026-07-25. Применено 18 коммитов 2026-07-25..26: `ed82f6e9` (delete) → `22dace92` (FIX+restore) → `19081bad`/`2555914a`/`c2e906a3`/`56726fe2` (delete-2: 4 [NEW] модели + SWFileManager + DateFormatter + String + ImageProcessor + Infopost + SWNetwork + SWKeychain + SWAlert + ScreenshotDemoData) → `9cb2646` (NetworkStatus) → `f10157a`/`f1065ca`/`65d39dc`/`606f7b2` (4 docs-этапа) → `68e4bca` (правка плана Review) → `bc0a76f` (Review Фаза A) → `095af10` (move shouldAttemptMilestone) → `f7f6a61`/`af3cf6b` (update-plan × 2) → `d7f7682c` (delete-3: ponytail audit — KeyedDecodingContainer+/MediaFile/InfopostHTMLProcessor/FilenameManager/HomeDayCountModel/AppLanguage, −647 LOC) → `21608712` (fix: ProgressServiceTests ModelContext crash) → `c6f9d9e7` (compress-plan: 229 → 220 строк) → `6753c89` (Tier 1 ponytail: VibrationService + Date+ + ContentInSheet, −119 LOC).
+Дата аудита: 2026-07-25. Применено 19 коммитов 2026-07-25..26: `ed82f6e9` (delete) → `22dace92` (FIX+restore) → `19081bad`/`2555914a`/`c2e906a3`/`56726fe2` (delete-2: 4 [NEW] модели + SWFileManager + DateFormatter + String + ImageProcessor + Infopost + SWNetwork + SWKeychain + SWAlert + ScreenshotDemoData) → `9cb2646` (NetworkStatus) → `f10157a`/`f1065ca`/`65d39dc`/`606f7b2` (4 docs-этапа) → `68e4bca` (правка плана Review) → `bc0a76f` (Review Фаза A) → `095af10` (move shouldAttemptMilestone) → `f7f6a61`/`af3cf6b` (update-plan × 2) → `d7f7682c` (delete-3: ponytail audit — KeyedDecodingContainer+/MediaFile/InfopostHTMLProcessor/FilenameManager/HomeDayCountModel/AppLanguage, −647 LOC) → `21608712` (fix: ProgressServiceTests ModelContext crash) → `c6f9d9e7` (compress-plan: 229 → 220 строк) → `6753c89` (Tier 1 ponytail: VibrationService + Date+ + ContentInSheet, −119 LOC) → `e75e49db` (compress-plan: 234 → 167 строк).
 Скоуп: только избыточная сложность (не корректность, не безопасность, не производительность).
 
 Контекст: `AppConfiguration.isReadOnlyMode = true` на постоянной основе — серверные API закрыты, поэтому весь сетевой слой (синхронизация прогресса, авторизация на сервере, разрешение конфликтов дат, серверный профиль/смена пароля) — мёртвый код и подлежит удалению. UI-тесты и mock-bootstrap по-прежнему передают `isReadOnlyMode: false`, чтобы симулировать нормальное поведение для скриншот-тестов.
 
 **ВАЖНО (`22dace92`):** моки серверных протоколов в `Client+.swift` (~685 стр.) — UI-тестовая инфраструктура, не мёртвый код. Заменены прямым SwiftData-seed'ом в `ScreenshotDemoData.seedDemoData()`. Подробности — раздел 7.
 
-Предыдущий аудит 2026-07-21 валиден. С тех пор: `1c890e2` (Periphery, 2026-05-01, ~1937 строк); добавлены находки (SyncStartDateScreen/ChangePasswordScreen/EditProfileScreen/StatusManagerLogoutTests/sync-методы в 3 сервисах + 4 мёртвых протокола); обновлены счётчики и обоснования (`StatusManager` — 5 независимых гейтов, `MockSWClient` — warning из-за 14 живых unit-тестов).
+Предыдущий аудит 2026-07-21 валиден. С тех пор: `1c890e2` (Periphery, 2026-05-01, ~1937 строк); добавлены находки (SyncStartDateScreen/ChangePasswordScreen/EditProfileScreen/StatusManagerLogoutTests/sync-методы в 3 сервисах + 4 мёртвых протокола); обновлены счётчики и обоснования (`StatusManager` — 5 независимых гейтов, `MockSWClient` — warning из-за 14 живых unit-тестов). **Periphery re-run 2026-07-26** (после `e75e49db`): 46 warnings в 17 файлах, 18 false-positives отфильтрованы ручной верификацией (DataSnapshot struct Equatable, protocol-required properties, `Package.swift` build metadata). Подтверждённый dead code ≈122 LOC — раздел 4.
 
 Теги: `delete` — мёртвый код; `stdlib` — велосипед вместо стандартной библиотеки; `native` — то, что платформа делает сама; `yagni` — абстракция с одной реализацией; `shrink` — та же логика короче.
 
-Статусы: `[x]` выполнено в коммитах `ed82f6e9`/`22dace92`/`19081bad`/`2555914a`/`c2e906a3`/`56726fe2`/`9cb2646`/`f10157a`/`f1065ca`/`65d39dc`/`606f7b2`/`bc0a76f`/`095af10`/`f7f6a61`/`d7f7682c`/`21608712`/`c6f9d9e7`/`6753c89`, `[ ]` не выполнено (см. причину), `[NEW]` — новая находка, появившаяся после удаления мёртвого кода, `[FIX]`/`[restore]` — исправление критических побочных эффектов (коммит `22dace92`).
+Статусы: `[x]` выполнено в коммитах `ed82f6e9`/`22dace92`/`19081bad`/`2555914a`/`c2e906a3`/`56726fe2`/`9cb2646`/`f10157a`/`f1065ca`/`65d39dc`/`606f7b2`/`bc0a76f`/`095af10`/`f7f6a61`/`d7f7682c`/`21608712`/`c6f9d9e7`/`6753c89`/`e75e49db`, `[ ]` не выполнено (см. причину), `[NEW]` — новая находка, появившаяся после удаления мёртвого кода, `[FIX]`/`[restore]` — исправление критических побочных эффектов (коммит `22dace92`).
 
 ## 1. Сетевой слой / синхронизация / авторизация (read-only mode)
 
@@ -88,6 +88,31 @@
 
 - [x] [NEW] **Удалены 4 модели, ставшие мёртвыми после удаления sync/DTO:** `ConflictingStartDate`, `CalendarPurchasesResponse`, `LoginCredentials`, `ProgressSnapshot`. Все 0 ссылок в проде.
 
+### Находки Periphery 2026-07-26 (после `e75e49db`) [NEW]
+
+Periphery re-run дал 46 warnings в 17 файлах. После ручной верификации (grep по call-сайтам, проверка `@Observable` struct + `Equatable`, protocol-required properties) подтверждено **dead code ≈122 LOC** в 6 production-файлах + 1 тест-моке + 4 `public`→`internal` в `SWDesignSystem`:
+
+| Файл | Находка | Объём | Обоснование |
+|---|---|---|---|
+| `Models/Progress/UserProgress.swift:88` | `var section: Section` (computed) | 4 стр. | 0 caller'ов, enum `Section` жив (используется в `ProgressGridView`/`User`) |
+| `Models/Progress/UserProgress.swift:131` | `static func getExternalDayFromProgressId` | 12 стр. | server-day mapping, мёртв с `ed82f6e9` (0 caller'ов) |
+| `Models/Progress/UserProgress.swift:147` | `static func getInternalDayFromExternalDay` | 12 стр. | обратная функция, мёртв (0 caller'ов) |
+| `Models/Progress/UserProgress.swift:280` | `func deletePhotoData` | 15 стр. | 0 caller'ов (флаг `DELETED_DATA` пишется, но обработчика нет) |
+| `Models/Progress/UserProgress.swift:317` | `func hasPhotosToDelete` | 5 стр. | 0 caller'ов |
+| `Models/Progress/UserProgress.swift:324` | `func clearPhotoData` | 15 стр. | 0 caller'ов (фото не отправляются на сервер в read-only) |
+| `Models/Progress/UserProgress.swift:341` | `func hasPhoto` | 10 стр. | 0 caller'ов |
+| `Models/SWSharedModels/MainUserForm.swift:111` | `func isReadyToSave` | 25 стр. | 0 caller'ов (форма только для previews + `User.init(fromMainUserForm:)`) |
+| `Models/SWSharedModels/Constants.swift:5,9` | `minPasswordSize`, `minUserAge` | 2 стр. | transitively dead (только из `isReadyToSave`) |
+| `Models/DayCalculator.swift:17` | `let startDate: Date` | 1 стр. | 0 reader'ов, struct жив через static methods |
+| `Models/City.swift` + `Country.cities: [City]` | `City` struct целиком + `cities` data | 25 стр. | `cities` пишется в `makeDefaultCountry()`, не читается; `City.id`/`name`/`lat`/`lon` — 0 reader'ов в app коде |
+| `SotkaWatchTests/Mocks/MockWatchConnectivityService.swift:21` | `requestedCurrentActivityDay` | 1 стр. | assign-only (`private(set) var`), 0 reader'ов в тестах |
+| `Libraries/SWDesignSystem/.../SectionView.swift` | `public struct` + `public init` × 3 + `public extension` | 0 LOC | redundant public (используется только в `ItemListScreen.swift:39` + previews внутри пакета) |
+| `Libraries/SWDesignSystem/.../SWDivider.swift` | `public struct` + `public init` + `public body` | 0 LOC | redundant public (используется только в `DividerIfNeededModifier.swift:15` + preview) |
+| `Libraries/SWDesignSystem/.../Rows/ListRowView.swift` | `public struct` + `public extension` | 0 LOC | unused outside file (только previews) |
+| `Libraries/SWDesignSystem/.../ItemListScreen.swift:23` | `init(mode:allItems:...)` | 12 стр. | 0 caller'ов вне previews |
+
+**False positives (отброшены):** 6 `WorkoutPreviewViewModel` assign-only — это `let`-свойства `private struct DataSnapshot` (`Equatable` comparison в `hasChanges`); `PreviewWatchAuthService.init(isAuthorized:)` — используется в `HomeView.swift:67,78`; `WatchAuthServiceProtocol.updateAuthStatus` — production call в `WatchConnectivityService.swift:366`; `MockWCSession.delegate` / `MockWatchSession.delegate` — `WatchSessionProtocol` requires `var delegate: WCSessionDelegate? { get set }`; `Libraries/SWDesignSystem/Package.swift:6:5 package` — build metadata.
+
 ### Ошибочно удалённые тесты [restore]
 
 `SwiftDataMigrationTests.swift` был удалён в `ed82f6e9` как «мёртвый», потому что ссылался на `SyncJournalEntry.self`. **Удаление было ошибкой** — тесты проверяли критичный сценарий (открытие старого SwiftData store + сохранение данных при изменении схемы).
@@ -146,7 +171,8 @@
 |---|---|---|
 | Review Фаза B ([ ]) | −12 стр. production (256 → 244) | Фаза A выполнена (`bc0a76f`+move, −14 стр.). Phase B blocked: 2 fileprivate-мока в `ReviewManagerTests:222/253` + 2 внешних caller'а `StatusManager:571` + `WorkoutPreviewViewModel:238`. Реальный net Фазы A = −14 (не −27): inline + move добавляют 13 стр. в файлы-хозяева |
 | `AuthHelper` shrink ([ ]) | 62 стр. production | Требует переноса `isOfflineOnly` в `User` (UserDefaults-бэкап) + inlining `triggerLogout` в `MoreScreen`. Снижение читаемости. Решение за продуктом |
-| Tier 2 ponytail (потенциально) | −103 стр. production | `DateFormatterService` shrink (−48, 4 caller'а на `dateWithWeekday`/`stringFromFullDate`), `CloseButton` inline (−25, 4 caller'а), `ImageProcessor` (−22, 3 caller'а в `ProgressService` — после `d7f7682c` остался метод `imageJPEGData`), `ChevronView`+`SWDivider` (−9, 5+1 caller). Без переписывания тестов, 1-in-1-out инлайны. Решение за продуктом |
+| Tier 2 ponytail (потенциально) | −82 стр. production | `DateFormatterService` shrink (−48, 2 caller'а: `DayActivityHeaderView:27` `dateWithWeekday`, `MainUserForm:98` `stringFromFullDate`; +4 теста удаляются), `CloseButton` inline (−25, 4 caller'а в `OfflineLoginView`/`WorkoutPreviewScreen`/`WorkoutExerciseEditorScreen`/`EditCommentSheet`), `ChevronView`+`SWDivider` (−9, 5+1 caller). Без переписывания тестов, 1-in-1-out инлайны. `ImageProcessor` убран из кандидатов — alive через `ProgressService.pickTempPhoto` (хотя output не уходит на сервер в read-only, валидация локально полезна). Решение за продуктом |
+| Tier 2 Periphery cleanup (потенциально) | −122 стр. production + 4 `public`→`internal` | `UserProgress` 7 dead (~75 стр.), `MainUserForm.isReadyToSave` + `Constants` 2 мёртвых (≈27), `City` + `Country.cities` (≈25), `DayCalculator.startDate` (1), `MockWatchConnectivityService.requestedCurrentActivityDay` (1), `ItemListScreen.init(mode:allItems:...)` (12), `SWDesignSystem` `public`→`internal` (`SectionView`/`SWDivider`/`ListRowView`/`ItemListScreen` — 0 LOC). Подробности + false-positives в разделе 4 «Находки Periphery 2026-07-26». Без переписывания тестов (кроме удаления). Решение за продуктом |
 
 ### Контроль качества после `ed82f6e9` + `22dace92` + `19081bad` + `2555914a` + `c2e906a3` + `56726fe2` + `d7f7682c` + `21608712` + `c6f9d9e7` + `6753c89`
 
@@ -158,6 +184,8 @@
 ### Супротив прошлого аудита (2026-07-21)
 
 Добавлены `SyncStartDateScreen`/`HelpScreen`/`ChangePasswordScreen`/`EditProfileScreen`/`SyncResultBadge`/`SyncDateComparisonPolicy` + соответствующие тесты (~+2000 строк); добавлены sync-методы в активных сервисах (DailyActivities/CustomExercises/Infoposts) + 4 мёртвых протокола (+~1100 строк production, +136 строк тестов); удалены в `1c890e2` Periphery-чистки (учтены в новых счётчиках). `MockSWClient` помечен как **warning** — использовался в 14 unit-тестах `CustomExercisesServiceTests`. В `ed82f6e9` выбран **вариант (b)**: `MockSWClient` + тесты удалены целиком. `ProgressServiceTests` перенесён в keep (тестирует живой локальный `ProgressService`).
+
+**Periphery 2026-07-26 (re-run после `e75e49db`):** 46 warnings → 18 false-positives (см. раздел 4) → 18 подтверждённых dead code в 6 production-файлах + 1 тест-мок + 4 `public`→`internal` (`SWDesignSystem`). `1c890e2` (2026-05-01) удалил ~1937 строк — новая волна ≈122 LOC + 4 keyword'а.
 
 ### Ошибки аудита (исправлены в `22dace92`)
 
