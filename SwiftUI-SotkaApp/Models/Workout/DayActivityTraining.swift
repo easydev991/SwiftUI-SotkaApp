@@ -56,16 +56,6 @@ extension DayActivityTraining {
         )
     }
 
-    /// Преобразование в ActivitySnapshot.TrainingSnapshot для снимков синхронизации
-    var trainingSnapshot: ActivitySnapshot.TrainingSnapshot {
-        .init(
-            count: count,
-            typeId: typeId,
-            customTypeId: customTypeId,
-            sortOrder: sortOrder
-        )
-    }
-
     /// Преобразование в WorkoutPreviewTraining для использования в UI
     var workoutPreviewTraining: WorkoutPreviewTraining {
         .init(

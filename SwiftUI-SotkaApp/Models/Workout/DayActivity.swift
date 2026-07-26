@@ -106,24 +106,6 @@ extension DayActivity {
         count != nil
     }
 
-    /// Преобразование в ActivitySnapshot для конкурентной синхронизации
-    var activitySnapshot: ActivitySnapshot {
-        ActivitySnapshot(
-            day: day,
-            activityTypeRaw: activityTypeRaw,
-            count: count,
-            plannedCount: plannedCount,
-            executeTypeRaw: executeTypeRaw,
-            trainingTypeRaw: trainingTypeRaw,
-            duration: duration,
-            comment: comment,
-            createDate: createDate,
-            modifyDate: modifyDate,
-            shouldDelete: shouldDelete,
-            trainings: trainings.isEmpty ? nil : trainings.map(\.trainingSnapshot)
-        )
-    }
-
     /// Устанавливает тип активности для stretch/rest/sick и очищает тренировочные данные
     ///
     /// Используется для установки активности дня через главный экран
