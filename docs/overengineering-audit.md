@@ -121,9 +121,9 @@
 - [ ] `docs/custom-exercises.md` — строки 86, 106: описывают `syncCustomExercises(context:)` (метод удалён).
 - [ ] `docs/infoposts.md` — строка 82: описывает `syncReadPosts(context:)` (метод удалён).
 - [ ] `docs/crash-swiftdata-invalid-future-backing-data.md` — строка 59: ссылается на `syncJournalAndProgress()` (метод удалён).
-- [ ] `docs/testing-mocks.md` — описывает `MockDaysClient`/`MockProgressClient`/etc. со специфичными полями (`mockedDayResponses`, `errorToThrow`, `getReadPostsResult`). Удалённый `MockSWClient` был единственной реализацией этого API. Файл должен быть удалён или переписан под `MockStatusManager`/`MockWCSession`.
-- [ ] `docs/ui-test-mock-client.md` — описывает `MockLoginClient`/`MockExerciseClient`/etc. (структуры удалены). Файл должен быть удалён.
-- [ ] `docs/sync-journal.md` — **весь файл устарел** (53 стр., модель `SyncJournalEntry` и все связанные экраны/логика удалены). Должен быть удалён.
+- [x] `docs/testing-mocks.md` — описывал `MockDaysClient`/`MockProgressClient`/etc. со специфичными полями (`mockedDayResponses`, `errorToThrow`, `getReadPostsResult`). Удалённый `MockSWClient` был единственной реализацией этого API. **Файл удалён в текущем коммите.**
+- [x] `docs/ui-test-mock-client.md` — описывал `MockLoginClient`/`MockExerciseClient`/etc. (структуры удалены). **Файл удалён в текущем коммите.**
+- [x] `docs/sync-journal.md` — **весь файл устарел** (53 стр., модель `SyncJournalEntry` и все связанные экраны/логика удалены). **Файл удалён в текущем коммите.**
 - [ ] `docs/data-migration.md` — строка 29: пример схемы содержит `SyncJournalEntry.self` (больше не существует). Список моделей в примере должен быть актуализирован или пример убран.
 - [ ] `AGENTS.md` — строка 75: `Domain terms: ... SyncJournalEntry` — термин больше не существует, убрать из списка.
 
@@ -206,7 +206,7 @@
 |---|---|---|
 | Review-слой yagni/shrink | ~237 стр. production + ~646 стр. тестов | Выходит за рамки задачи. Тесты Review (7 файлов, 646 стр.) сохраняются — входят в 903 passed |
 | **`AuthHelper` shrink** | 62 стр. production | Требует переноса `isOfflineOnly` в `User` (UserDefaults-бэкап) + inlining `triggerLogout` в `MoreScreen`. Снижение читаемости. Решение за продуктом |
-| **Устаревшая документация `docs/` + `AGENTS.md`** | 8 файлов: `daily-activities.md`, `custom-exercises.md`, `infoposts.md`, `crash-swiftdata-invalid-future-backing-data.md`, `testing-mocks.md`, `ui-test-mock-client.md`, **`sync-journal.md`** (весь файл устарел), **`data-migration.md`** (пример содержит `SyncJournalEntry.self`); + `AGENTS.md` строка 75 | Требует ревью и правки/удаления |
+| **Устаревшая документация `docs/` + `AGENTS.md`** | 5 файлов: `daily-activities.md`, `custom-exercises.md`, `infoposts.md`, `crash-swiftdata-invalid-future-backing-data.md`, **`data-migration.md`** (пример содержит `SyncJournalEntry.self`); + `AGENTS.md` строка 75. Удалены в коммите `<NEW>`: `testing-mocks.md`, `ui-test-mock-client.md`, **`sync-journal.md`** | Требует ревью и правки |
 
 ### Контроль качества после `ed82f6e9` + `22dace92` + `19081bad` + `2555914a` + `c2e906a3` + `56726fe2`
 
