@@ -47,17 +47,8 @@
   - `setNonWorkoutType(_:, user:)` делает `trainings.removeAll()`
 - `Services/DailyActivitiesService.swift`
   - `updateExistingActivity(_:with:user:)` делает `existing.trainings.removeAll()` и затем добавляет новые
-  - `updateLocalFromServer(_:_:)` делает `local.trainings.removeAll()` и затем заменяет массив новыми объектами
-  - `downloadServerActivities(context:excludeDeletedDays:)` местами физически удаляет `DayActivity`
 
-### Почему это особенно важно
-
-`DayActivityTrainingView` используется не только в дневнике, но и на главном экране через `DayActivityContentView`. При этом синхронизация активностей запускается автоматически при переходе приложения в `active`:
-
-- `SwiftUI_SotkaAppApp.swift` -> `statusManager.getStatus()`
-- `StatusManager.getStatus()` -> `syncJournalAndProgress()` (удалено в `ed82f6e9`; текущий `getStatus()` sync не запускает)
-
-То есть пользователь вполне может открыть приложение, увидеть тренировку на экране, а параллельно sync обновит или удалит связанные `trainings`.
+> **Историческая справка (sync-слой удалён в `ed82f6e9`):** ранее здесь дополнительно мутировали `updateLocalFromServer(_:_:)`/`downloadServerActivities(context:excludeDeletedDays:)` (оба удалены вместе с `syncJournalAndProgress()`). Раздел «Почему это особенно важно» про автоматический sync на `active` утратил актуальность и удалён.
 
 ## Как, вероятнее всего, воспроизводится
 

@@ -120,13 +120,13 @@
 - [x] `docs/daily-activities.md` — строки 126, 173: описывал `syncDailyActivities(context:) async throws -> SyncResult` (метод удалён). **Удалено в текущем коммите.**
 - [x] `docs/custom-exercises.md` — строки 86, 106: описывал `syncCustomExercises(context:)` (метод удалён). **Удалено в текущем коммите.**
 - [x] `docs/infoposts.md` — строка 82: описывал `syncReadPosts(context:)` (метод удалён). **Удалено в текущем коммите.**
-- [x] `docs/crash-swiftdata-invalid-future-backing-data.md` — строка 59: ссылался на `syncJournalAndProgress()` (метод удалён). **Удалено в текущем коммите** (оставлено пояснение «(удалено в `ed82f6e9`; текущий `getStatus()` sync не запускает)»).
+- [x] `docs/crash-swiftdata-invalid-future-backing-data.md` — строка 59 и раздел «Почему это особенно важно» (строки 53-60): ссылался на `syncJournalAndProgress()` (метод удалён). **Удалено в текущем коммите** (также выпилены два других несуществующих метода — `updateLocalFromServer`/`downloadServerActivities`; добавлена «Историческая справка»).
 - [x] `docs/testing-mocks.md` — описывал `MockDaysClient`/`MockProgressClient`/etc. со специфичными полями (`mockedDayResponses`, `errorToThrow`, `getReadPostsResult`). Удалённый `MockSWClient` был единственной реализацией этого API. **Файл удалён в текущем коммите.**
 - [x] `docs/ui-test-mock-client.md` — описывал `MockLoginClient`/`MockExerciseClient`/etc. (структуры удалены). **Файл удалён в текущем коммите.**
 - [x] `docs/sync-journal.md` — **весь файл устарел** (53 стр., модель `SyncJournalEntry` и все связанные экраны/логика удалены). **Файл удалён в текущем коммите.**
 - [x] `docs/data-migration.md` — строка 29: пример схемы содержал `SyncJournalEntry.self` (больше не существует). **Удалено в текущем коммите.**
 - [x] `docs/progress-screen.md` — строка 174: описывал `syncProgress(context:) async throws -> SyncResult` (метод удалён). **Удалено в текущем коммите** (не было в исходном ТЗ, обнаружено по той же проблеме).
-- [x] `docs/calendar-extension.md` — строка 87: ссылается на `syncJournalAndProgress()` (метод удалён). **Удалено в текущем коммите** (не было в исходном ТЗ, обнаружено по той же проблеме; оставлено пояснение «sync-цепочка удалена в `ed82f6e9`»).
+- [x] `docs/calendar-extension.md` — строка 87 и секция «Retry» (строки 82-86): ссылается на `syncJournalAndProgress()` (метод удалён). **Удалено в текущем коммите** (не было в исходном ТЗ, обнаружено по той же проблеме; добавлена «Историческая справка»).
 - [x] `AGENTS.md` — строка 75: `Domain terms: ... SyncJournalEntry` — термин больше не существует, убран из списка.
 
 ## 7. UI-тестовая инфраструктура: демо-данные (критическая ошибка аудита) [FIX]

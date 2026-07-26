@@ -79,11 +79,7 @@ let shouldShowInfopost = currentDay <= 100
 - дедуп по нормализованной UTC-дате (точность до секунд);
 - unsynced локальная запись, уже присутствующая на сервере, не дублируется и переводится в `isSynced=true`.
 
-### Retry
-
-Retry unsynced выполняется детерминированно в:
-
-- `getStatus()` (sync-цепочка удалена в `ed82f6e9`; см. `StatusManager.getStatus()` — текущий код)
+> **Историческая справка (sync-слой удалён в `ed82f6e9`):** ранее здесь была секция «Retry» — `getStatus()` детерминированно вызывал `syncJournalAndProgress()`, что инициировало retry unsynced. Раздел утратил актуальность и удалён.
 
 ---
 
