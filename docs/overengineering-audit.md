@@ -1,6 +1,6 @@
 # Аудит over-engineering: весь репозиторий
 
-Дата аудита: 2026-07-25. Дата фактического применения `delete`-этапа: 2026-07-26 (коммит `ed82f6e9`). Дата применения `[FIX]` и `[restore]`-этапа: 2026-07-26 (коммит `22dace92`). Дата применения `delete`-этапа-2 (Этапы 1+2+3+7): 2026-07-26 (коммиты `19081bad`/`2555914a`/`c2e906a3`/`56726fe2`). Дата применения `delete`-этапа-3 (NetworkStatus): 2026-07-26 (коммит `9cb2646`). Дата применения `delete`-этапа-4 (устаревшая документация): 2026-07-26 (коммит `f10157a`). Дата применения `delete`-этапа-5 (правка оставшейся документации): 2026-07-26 (коммит `f1065ca`). Дата применения `delete`-этапа-6 (снос устаревших секций): 2026-07-26 (коммит `65d39dc`). Дата применения `delete`-этапа-7 (снос crash-doc): 2026-07-26 (коммит `606f7b2`). Дата правки плана (Review-этап, net −45): 2026-07-26 (коммит `68e4bca`). Дата inline Review-Фаза A: 2026-07-26 (коммит `bc0a76f`).
+Дата аудита: 2026-07-25. Дата фактического применения `delete`-этапа: 2026-07-26 (коммит `ed82f6e9`). Дата применения `[FIX]` и `[restore]`-этапа: 2026-07-26 (коммит `22dace92`). Дата применения `delete`-этапа-2 (Этапы 1+2+3+7): 2026-07-26 (коммиты `19081bad`/`2555914a`/`c2e906a3`/`56726fe2`). Дата применения `delete`-этапа-3 (NetworkStatus): 2026-07-26 (коммит `9cb2646`). Дата применения `delete`-этапа-4 (устаревшая документация): 2026-07-26 (коммит `f10157a`). Дата применения `delete`-этапа-5 (правка оставшейся документации): 2026-07-26 (коммит `f1065ca`). Дата применения `delete`-этапа-6 (снос устаревших секций): 2026-07-26 (коммит `65d39dc`). Дата применения `delete`-этапа-7 (снос crash-doc): 2026-07-26 (коммит `606f7b2`). Дата правки плана (Review-этап, net −45): 2026-07-26 (коммит `68e4bca`). Дата inline Review-Фаза A: 2026-07-26 (коммит `bc0a76f`). Дата move `shouldAttemptMilestone` → `ReviewMilestone.isNotYetAttempted(in:)`: 2026-07-26 (текущий коммит, hash см. в `git log -1 --oneline`).
 Скоуп: только избыточная сложность (не корректность, не безопасность, не производительность).
 
 Контекст: `AppConfiguration.isReadOnlyMode = true` на постоянной основе — серверные API закрыты, поэтому весь сетевой слой (синхронизация прогресса, авторизация на сервере, разрешение конфликтов дат, серверный профиль/смена пароля) — мёртвый код и подлежит удалению. UI-тесты и mock-bootstrap по-прежнему передают `isReadOnlyMode: false`, чтобы симулировать нормальное поведение для скриншот-тестов.
@@ -11,7 +11,7 @@
 
 Теги: `delete` — мёртвый код; `stdlib` — велосипед вместо стандартной библиотеки; `native` — то, что платформа делает сама; `yagni` — абстракция с одной реализацией; `shrink` — та же логика короче.
 
-Статусы: `[x]` выполнено в коммитах `ed82f6e9`/`22dace92`/`19081bad`/`2555914a`/`c2e906a3`/`56726fe2`/`9cb2646`/`f10157a`/`f1065ca`/`65d39dc`/`606f7b2`/`bc0a76f`, `[ ]` не выполнено (см. причину), `[NEW]` — новая находка, появившаяся после удаления мёртвого кода, `[FIX]`/`[restore]` — исправление критических побочных эффектов (коммит `22dace92`).
+Статусы: `[x]` выполнено в коммитах `ed82f6e9`/`22dace92`/`19081bad`/`2555914a`/`c2e906a3`/`56726fe2`/`9cb2646`/`f10157a`/`f1065ca`/`65d39dc`/`606f7b2`/`bc0a76f`/текущий, `[ ]` не выполнено (см. причину), `[NEW]` — новая находка, появившаяся после удаления мёртвого кода, `[FIX]`/`[restore]` — исправление критических побочных эффектов (коммит `22dace92`).
 
 ## 1. Сетевой слой / синхронизация / авторизация (read-only mode)
 
@@ -59,15 +59,15 @@
 
 **Важно (обнаружено 2026-07-26):** утверждение «тесты не ломаются» из исходного аудита — ложное для 2 протоколов. В `SwiftUI-SotkaAppTests/Services/Review/ReviewManagerTests.swift:222/253` определены `private final class MockReviewAttemptStore: ReviewAttemptStoring` и `private final class MockWorkoutCompletionsCounter: WorkoutCompletionsCounting`, оба используются в `makeSUT()` (строки 11-13) во всех тестах `ReviewManager`. Удаление этих двух протоколов = переписывание тестов. `ReviewContext` — **используется вне `Review/`** (внешние caller'ы: `StatusManager.swift:571`, `WorkoutPreviewViewModel.swift:238`), инлайн потребует изменения их вызовов.
 
-### Фаза A — безопасная консолидация (выполнена в `bc0a76f`, net −8, без переписывания тестов)
+### Фаза A — безопасная консолидация (выполнена в `bc0a76f` + move в текущем коммите, net −14, без переписывания тестов)
 
 Только файлы без fileprivate-моков в `ReviewManagerTests` и без внешних caller'ов:
 
-- [x] yagni `ReviewAttemptRules.swift` (10 стр.) → `nonisolated static func ReviewManager.shouldAttemptMilestone(...)`. 0 external callers вне `Services/Review/`. `ReviewAttemptRulesTests.swift` (26 стр., 2 теста) — 2 вызова переподключены на `ReviewManager.shouldAttemptMilestone`.
+- [x] yagni `ReviewAttemptRules.swift` (10 стр.) → `func ReviewMilestone.isNotYetAttempted(in:)` (3 стр.) + `ReviewManager.shouldAttemptMilestone` удалён (7 стр.). 0 external callers вне `Services/Review/`. `ReviewAttemptRulesTests.swift` (16 стр., 2 теста) — 2 вызова переподключены на `ReviewMilestone.X.isNotYetAttempted(in: [...])`. **`nonisolated` workaround снят:** метод на обычном enum'е, MainActor-изоляция не наследуется. Diff: `ReviewManager` −10 строк (100 → 90), `ReviewMilestone` +4 (17 → 21), тесты −10.
 - [x] shrink `ReviewSkipReason.swift` (9 стр.) → nested `enum ReviewManager.ReviewSkipReason` (5 cases). Отдельных тестов нет.
 - [x] yagni `ReviewStorageKeys.swift` (8 стр.) → 3 `static let` в `ReviewStorage` (private namespace `"review."` + 2 ключа). `ReviewStorageKeysTests.swift` (17 стр., 2 теста) — 3 вызова переподключены на `ReviewStorage.attemptedMilestones` / `ReviewStorage.lastReviewRequestAttemptDate`.
 
-**Фактический net (вместо планировавшегося −27): −8 стр. production.** Inline требует места для `enum`/`static func`/`static let` в файле-хозяине: `SkipReason` 9 → 8 (6 case lines + 2 open/close), `AttemptRules` 10 → 6 (без `enum` обёртки), `StorageKeys` 8 → 3 (без `enum` обёртки). Удалённые 27 строк частично возвращаются в inline-код (+15 в `ReviewManager`, +4 в `ReviewStorage`). 3 файла → 0; код инкапсулирован в 1 класс + 1 struct.
+**Фактический net (вместо планировавшегося −27): −14 стр. production, −10 стр. tests.** Inline требует места для `enum`/`static func`/`static let` в файле-хозяине: `SkipReason` 9 → 8 (6 case lines + 2 open/close), `AttemptRules` 10 → 6 inline (в `ReviewManager`) → 0 после move, `StorageKeys` 8 → 3 (без `enum` обёртки). Удалённые 27 строк частично возвращаются в inline-код (+15 в `ReviewManager`, +4 в `ReviewStorage`, +4 в `ReviewMilestone` после move). 3 файла → 0; код инкапсулирован в 1 класс + 1 struct + 1 enum-метод.
 
 ### Фаза B — переписывание тестов (доп. net −18, дополнительный −18 стр.)
 
@@ -75,18 +75,18 @@
 - [ ] yagni `WorkoutCompletionsCounting.swift` (5 стр.) → удалить протокол, использовать `WorkoutCompletionsCounter` напрямую. `MockWorkoutCompletionsCounter` в `ReviewManagerTests:253` заменить на `WorkoutCompletionsCounter` + in-memory SwiftData container.
 - [ ] yagni `ReviewContext.swift` (5 стр.) → убрать обёртку, передавать `hadRecentError: Bool` напрямую в `workoutCompletedSuccessfully(hadRecentError:)`. Затронуты 2 внешних файла: `StatusManager.swift:571`, `WorkoutPreviewViewModel.swift:238`.
 
-### keep — не трогаем
+### keep — расширен, не трогаем остальное
 
 - [x] keep `ReviewEventReporting.swift` (5 стр.) — **живой, не тронут.**
-- [x] keep `ReviewMilestone.swift` (17 стр.) — оставить отдельным файлом: `ReviewMilestoneTests.swift` (90 стр., ~10 тестов) тестирует статические методы `milestone(forCompletedWorkoutCount:)` / `isMilestoneWorkoutCount(_:)`. Гнездование в `ReviewManager` не экономит строки (enum должен остаться публичным для тестов), экономия = 0.
+- [x] `ReviewMilestone.swift` (21 стр.) — расширен `func isNotYetAttempted(in: [ReviewMilestone]) -> Bool` (3 стр., тестируется в `ReviewAttemptRulesTests`, 2 теста). Других правок нет: `ReviewMilestoneTests.swift` (90 стр., ~10 тестов) тестирует статические методы `milestone(forCompletedWorkoutCount:)` / `isMilestoneWorkoutCount(_:)`. Гнездование в `ReviewManager` не требуется: enum остаётся публичным для тестов.
 
-### Итоговая цель Review-слоя (частично достигнута: Фаза A выполнена в `bc0a76f`)
+### Итоговая цель Review-слоя (частично достигнута: Фаза A выполнена в `bc0a76f` + move в текущем коммите)
 
-После Фазы A: 270 → 262 стр. production (net −8). `ReviewManager` вырос с 85 до 100 стр. (+15), `ReviewStorage` с 31 до 36 (+4).
+После Фазы A: 270 → 256 стр. production (net −14). `ReviewManager` вырос с 85 до 90 стр. (+5), `ReviewStorage` с 31 до 36 (+4), `ReviewMilestone` с 17 до 21 (+4).
 После обеих фаз (план): 270 → 244 стр. production (net −26). `ReviewManager` 85 → ~115 стр. с учётом Фазы B.
 
-**Подитого Review (production) на 2026-07-26: 270 стр. → 262 стр. (net −8) — Фаза A выполнена. Остаток Фазы B: −18 стр. (270 → 244).**
-**Подитого Review (tests): 646 стр. сохранены (7 тестовых файлов живы и входят в 903 passed). Фаза B перепишет 2 fileprivate-мока в `ReviewManagerTests.swift` (без изменения числа тестов).**
+**Подитого Review (production) на 2026-07-26: 270 стр. → 256 стр. (net −14) — Фаза A выполнена. Остаток Фазы B: −12 стр. (256 → 244).**
+**Подитого Review (tests): 636 стр. сохранены (7 тестовых файлов живы, 2 теста в `ReviewAttemptRulesTests` стали компактнее). Фаза B перепишет 2 fileprivate-мока в `ReviewManagerTests.swift` (без изменения числа тестов).**
 
 ## 4. Другие мёртвые/yagni находки в приложении
 
@@ -201,7 +201,7 @@
 
 | Категория | Объём | Причина |
 |---|---|---|
-| Review-слой yagni/shrink | −8 стр. production выполнено в `bc0a76f` (Фаза A: 270 → 262, 3 файла удалены). Остаток Фазы B: −18 стр. (262 → 244). Фаза B перепишет 2 fileprivate-мока в `ReviewManagerTests` + сменит сигнатуру `workoutCompletedSuccessfully` в 2 внешних файлах | Фаза A выполнена. Фаза B — на следующую итерацию. Ошибка исходного аудита: `ReviewAttemptStoring`/`WorkoutCompletionsCounting` имеют fileprivate-моки в `ReviewManagerTests:222/253` (нельзя удалить протоколы без переписывания тестов); `ReviewContext` имеет внешних caller'ов в `StatusManager:571` + `WorkoutPreviewViewModel:238`. Реальный net Фазы A оказался −8, а не −27: inline требует места в файле-хозяине |
+| Review-слой yagni/shrink | −14 стр. production выполнено в `bc0a76f` + move в текущем коммите (Фаза A: 270 → 256, 3 файла удалены + shouldAttemptMilestone перенесён в ReviewMilestone). Остаток Фазы B: −12 стр. (256 → 244). Фаза B перепишет 2 fileprivate-мока в `ReviewManagerTests` + сменит сигнатуру `workoutCompletedSuccessfully` в 2 внешних файлах | Фаза A выполнена. Фаза B — на следующую итерацию. Ошибка исходного аудита: `ReviewAttemptStoring`/`WorkoutCompletionsCounting` имеют fileprivate-моки в `ReviewManagerTests:222/253` (нельзя удалить протоколы без переписывания тестов); `ReviewContext` имеет внешних caller'ов в `StatusManager:571` + `WorkoutPreviewViewModel:238`. Реальный net Фазы A оказался −14, а не −27: inline требует места в файле-хозяине + move добавил 4 стр. в `ReviewMilestone` |
 | **`AuthHelper` shrink** | 62 стр. production | Требует переноса `isOfflineOnly` в `User` (UserDefaults-бэкап) + inlining `triggerLogout` в `MoreScreen`. Снижение читаемости. Решение за продуктом |
 | **Устаревшая документация `docs/` + `AGENTS.md`** | 0 файлов: все 11 пунктов обработаны (`f10157a`/`f1065ca`/`65d39dc`/`606f7b2`). Удалены целиком: `testing-mocks.md`, `ui-test-mock-client.md`, `sync-journal.md`, `crash-swiftdata-invalid-future-backing-data.md`. Отредактированы: 6 doc + `AGENTS.md` (строка 75) | Готово |
 

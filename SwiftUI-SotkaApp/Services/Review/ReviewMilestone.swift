@@ -14,4 +14,8 @@ enum ReviewMilestone: Int, CaseIterable {
     static func isMilestoneWorkoutCount(_ count: Int) -> Bool {
         ReviewMilestone(rawValue: count) != nil
     }
+
+    func isNotYetAttempted(in attempted: [ReviewMilestone]) -> Bool {
+        !attempted.contains(self)
+    }
 }

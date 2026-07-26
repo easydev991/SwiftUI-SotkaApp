@@ -13,13 +13,6 @@ final class ReviewManager: ReviewEventReporting {
         case milestoneAlreadyAttempted
     }
 
-    nonisolated static func shouldAttemptMilestone(
-        milestone: ReviewMilestone,
-        attemptedMilestones: [ReviewMilestone]
-    ) -> Bool {
-        !attemptedMilestones.contains(milestone)
-    }
-
     private let attemptStore: any ReviewAttemptStoring
     private let completionsCounter: any WorkoutCompletionsCounting
     private let currentUserIdProvider: @MainActor () -> Int?
@@ -70,10 +63,7 @@ final class ReviewManager: ReviewEventReporting {
         }
 
         let attempted = attemptStore.attemptedMilestones()
-        guard Self.shouldAttemptMilestone(
-            milestone: milestone,
-            attemptedMilestones: attempted
-        ) else {
+        guard milestone.isNotYetAttempted(in: attempted) else {
             lastSkipReason = .milestoneAlreadyAttempted
             logger.info("Review пропущено: веху \(milestone.rawValue) уже просили оценить")
             return
