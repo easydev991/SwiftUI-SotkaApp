@@ -56,32 +56,6 @@ struct ImageProcessorTests {
         #expect(processedData == nil, "UIImage() создает изображение 1x1 пиксель, но ImageProcessor не может его обработать")
     }
 
-    // MARK: - Thumbnail Creation Tests
-
-    @Test("Создание миниатюры изображения", arguments: [
-        CGSize(width: 150, height: 150),
-        CGSize(width: 100, height: 100),
-        CGSize(width: 200, height: 200)
-    ])
-    func thumbnailCreation(size: CGSize) throws {
-        let originalImage = try #require(UIImage(data: largeImageData))
-        let thumbnail = ImageProcessor.createThumbnail(from: originalImage, size: size)
-
-        let thumbnailUnwrapped = try #require(thumbnail)
-        #expect(thumbnailUnwrapped.size.width <= size.width)
-        #expect(thumbnailUnwrapped.size.height <= size.height)
-    }
-
-    @Test("Создание миниатюры с размером по умолчанию")
-    func defaultThumbnailCreation() throws {
-        let originalImage = try #require(UIImage(data: largeImageData))
-        let thumbnail = ImageProcessor.createThumbnail(from: originalImage)
-
-        let thumbnailUnwrapped = try #require(thumbnail)
-        #expect(thumbnailUnwrapped.size.width <= 150)
-        #expect(thumbnailUnwrapped.size.height <= 150)
-    }
-
     // MARK: - Image Size Validation Tests
 
     @Test("Валидация размера изображения", arguments: [

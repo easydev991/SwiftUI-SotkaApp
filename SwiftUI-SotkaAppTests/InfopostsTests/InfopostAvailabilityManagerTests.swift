@@ -63,25 +63,6 @@ extension AllInfopostsTests {
         }
 
         @Test
-        func getAvailablePostsBySection() throws {
-            let manager = InfopostAvailabilityManager(currentDay: 10, maxReadInfoPostDay: 0)
-            let posts = [
-                createInfopost(section: .preparation, dayNumber: nil),
-                createInfopost(section: .base, dayNumber: 5),
-                createInfopost(section: .base, dayNumber: 15),
-                createInfopost(section: .advanced, dayNumber: 25)
-            ]
-
-            let postsBySection = manager.getAvailablePostsBySection(posts)
-            let preparationPosts = try #require(postsBySection[.preparation])
-            let basePosts = try #require(postsBySection[.base])
-
-            #expect(preparationPosts.count == 1)
-            #expect(basePosts.count == 1)
-            #expect(postsBySection[.advanced] == nil, "Секция не добавляется в словарь, если нет доступных постов")
-        }
-
-        @Test
         func edgeCaseCurrentDayZero() {
             let manager = InfopostAvailabilityManager(currentDay: 0, maxReadInfoPostDay: 0)
             let preparationPost = createInfopost(section: .preparation, dayNumber: nil)

@@ -1,28 +1,6 @@
 import Foundation
 
 public enum DateFormatterService {
-    public static func readableDate(
-        from string: String?,
-        locale: Locale = .autoupdatingCurrent,
-        showTimeInThisYear: Bool = true
-    ) -> String {
-        let isoFormatter = ISO8601DateFormatter()
-        if let dateString = string, !dateString.isEmpty,
-           let fullDate = isoFormatter.date(from: dateString) {
-            let formatter = DateFormatter()
-            formatter.locale = locale
-            let (prefix, dateFormat) = DateFormat.makeFormat(
-                for: fullDate,
-                showTimeInThisYear: showTimeInThisYear
-            )
-            formatter.dateFormat = dateFormat
-            let localizedPrefix = prefix.isEmpty ? "" : NSLocalizedString(prefix, comment: "") + ", "
-            return localizedPrefix + formatter.string(from: fullDate)
-        } else {
-            return ""
-        }
-    }
-
     public static func stringFromFullDate(
         _ date: Date,
         format: DateFormat = .isoDateTimeSec,
@@ -105,27 +83,6 @@ public extension DateFormatterService {
         case isoShortDate = "yyyy-MM-dd"
         case serverDateTimeSec = "yyyy-MM-dd'T'HH:mm:ss"
         case isoDateTimeSec = "yyyy-MM-dd'T'HH:mm:ss.SSS"
-        case dayMonthMediumTime = "d MMM, HH:mm"
         case dayMonthYear = "d MMM yyyy"
-        case dayMonth = "d MMM"
-        case mediumTime = "HH:mm"
-
-        static func makeFormat(
-            for date: Date,
-            showTimeInThisYear: Bool
-        ) -> (prefix: String, date: String) {
-            if date.isToday {
-                ("", mediumTime.rawValue)
-            } else if date.isYesterday {
-                ("Вчера", mediumTime.rawValue)
-            } else if date.isThisYear {
-                (
-                    "",
-                    showTimeInThisYear ? dayMonthMediumTime.rawValue : dayMonth.rawValue
-                )
-            } else {
-                ("", dayMonthYear.rawValue)
-            }
-        }
     }
 }

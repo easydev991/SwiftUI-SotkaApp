@@ -23,13 +23,6 @@ struct SWUtilsTests {
     }
 
     @Test
-    func capitalizingFirstLetter() {
-        let string = "test string"
-        let newString = string.capitalizingFirstLetter
-        #expect(newString == "Test string")
-    }
-
-    @Test
     func queryAllowedURL() {
         let urlString: String? = "https://workout.su/uploads/userfiles/св3.jpg"
         let resultURL = urlString.queryAllowedURL

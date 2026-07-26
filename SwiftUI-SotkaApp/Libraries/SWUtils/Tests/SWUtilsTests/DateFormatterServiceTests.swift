@@ -4,14 +4,6 @@ import Testing
 
 struct DateFormatterServiceTests {
     @Test
-    func readableDate() {
-        let stringDate = "2022-10-30T09:00:00+00:00"
-        let formattedResult = DateFormatterService.readableDate(from: stringDate, locale: .init(identifier: "ru_RU"))
-        let expectedString = "30 окт. 2022"
-        #expect(formattedResult == expectedString)
-    }
-
-    @Test
     func stringFromFullDate_serverDateTimeSec() {
         let date = Date(timeIntervalSinceReferenceDate: 695987883.572933)
         let formattedResult = DateFormatterService.stringFromFullDate(
