@@ -1,6 +1,6 @@
 # Аудит over-engineering: весь репозиторий
 
-Дата аудита: 2026-07-25. Дата фактического применения `delete`-этапа: 2026-07-26 (коммит `ed82f6e9`). Дата применения `[FIX]` и `[restore]`-этапа: 2026-07-26 (коммит `22dace92`).
+Дата аудита: 2026-07-25. Дата фактического применения `delete`-этапа: 2026-07-26 (коммит `ed82f6e9`). Дата применения `[FIX]` и `[restore]`-этапа: 2026-07-26 (коммит `22dace92`). Дата применения `delete`-этапа-2 (Этапы 1+2+3+7): 2026-07-26 (коммиты `19081bad`/`2555914a`/`c2e906a3`/`56726fe2`).
 Скоуп: только избыточная сложность (не корректность, не безопасность, не производительность).
 
 Контекст: `AppConfiguration.isReadOnlyMode = true` на постоянной основе — серверные API закрыты, поэтому весь сетевой слой (синхронизация прогресса, авторизация на сервере, разрешение конфликтов дат, серверный профиль/смена пароля) — мёртвый код и подлежит удалению. UI-тесты и mock-bootstrap по-прежнему передают `isReadOnlyMode: false`, чтобы симулировать нормальное поведение для скриншот-тестов.
@@ -11,7 +11,7 @@
 
 Теги: `delete` — мёртвый код; `stdlib` — велосипед вместо стандартной библиотеки; `native` — то, что платформа делает сама; `yagni` — абстракция с одной реализацией; `shrink` — та же логика короче.
 
-Статусы: `[x]` выполнено в коммитах `ed82f6e9`/`22dace92`, `[ ]` не выполнено (см. причину), `[NEW]` — новая находка, появившаяся после удаления мёртвого кода, `[FIX]`/`[restore]` — исправление критических побочных эффектов (коммит `22dace92`).
+Статусы: `[x]` выполнено в коммитах `ed82f6e9`/`22dace92`/`19081bad`/`2555914a`/`c2e906a3`/`56726fe2`, `[ ]` не выполнено (см. причину), `[NEW]` — новая находка, появившаяся после удаления мёртвого кода, `[FIX]`/`[restore]` — исправление критических побочных эффектов (коммит `22dace92`).
 
 ## 1. Сетевой слой / синхронизация / авторизация (read-only mode)
 
@@ -24,16 +24,9 @@
 
 ### Удалено в `ed82f6e9` (delete-этап, ~16 530 стр.)
 
-- [x] **9 мёртвых экранов** (`OnlineLoginView`, `ChangePasswordScreen`, `EditProfileScreen`, `SyncStartDateScreen`, `SyncStartDateHelpScreen`, `SyncJournalScreen`, `SyncJournalEntryDetailsScreen`, `SyncJournalRowView`, `SyncResultBadge`). На смену `OnlineLoginView` — живой `OfflineLoginView`. ~1089 стр.
-- [x] **4 модели** (`SyncJournalEntry`, `SyncJournalDateGroup`, `SyncResult`, `SyncDateComparisonPolicy`) + директория `Models/SyncJournal/`. ~495 стр.
-- [x] **9 протоколов клиентов** (вся `Services/Protocols/`): `LoginClient`, `ProfileClient`, `PurchasesClient`, `DaysClient`, `ExerciseClient`, `InfopostsClient`, `ProgressClient`, `StatusClient`, `CountriesClient`. ~109 стр.
-- [x] **10 серверных DTO** (`DayRequest/Response`, `ProgressRequest/Response`, `CustomExerciseRequest/Response`, `UserResponse`, `CountryResponse`, `CityResponse`, `CurrentRunResponse`). ~593 стр.
-- [x] **6 preview-файлов** (`SyncJournalEntry+`, `DayProgressStatus+`, `Infopost+`, `MockSWClient`, `ReviewManager+`, `UserResponse+`). ~155 стр.
-- [x] **`StatusManager+`** — переписан (preview-расширения нужны для превью).
-- [x] **9 моков серверных протоколов** (`MockAuthHelper`, `MockStatusClient`, `MockDaysClient`, `MockExerciseClient`, `MockInfopostsClient`, `MockProgressClient`, `MockPurchasesClient`, `MockPhotoDownloadService`, `MockCountriesClient`). В `Mocks/` оставлены: `MockReviewEventReporter`, `MockStatusManager`, `MockUserDefaults`, `MockWCSession`. ~642 стр.
-- [x] **30 мёртвых тестов** (sync + Progress + DailyActivities + DTO-зависимые + `SwiftDataMigrationTests`): вся директория `DailyActivitiesTests/` удалена. ~9700 стр.
-- [x] **5 sync-гейтов в `StatusManager`** (`statusClient`, `purchasesClient`/`fetchAndMergeServerPurchases`, `syncJournalAndProgress`, `syncCalendarPurchasesOn*`, `processAuthStatus`, `conflictingSyncModel`+sheet в `HomeScreen`, `syncWithSiteDate`). Файл 1559 → 1107 строк. ~360 стр.
-- [x] **Sync-блоки в 3 активных сервисах** (`DailyActivitiesService` 509→422 стр., `CustomExercisesService` 372→97 стр., `InfopostsService` 77→382 стр.). ~958 стр. production + 136 стр. тестов.
+- [x] **UI/Models:** 9 мёртвых экранов (на смену `OnlineLoginView` — `OfflineLoginView`), 4 модели SyncJournal + директория `Models/SyncJournal/`, 9 протоколов клиентов + 10 серверных DTO.
+- [x] **Preview + моки:** 6 preview-файлов + `StatusManager+` переписан; 9 моков серверных протоколов (в `Mocks/` оставлены `MockReviewEventReporter`/`MockStatusManager`/`MockUserDefaults`/`MockWCSession`).
+- [x] **Sync-логика + тесты:** 5 sync-гейтов в `StatusManager` (1559→1107 стр.) + sync-блоки в `DailyActivitiesService`/`CustomExercisesService`/`InfopostsService`; 30 мёртвых тестов удалено (sync + Progress + DailyActivities + DTO-зависимые, вся `DailyActivitiesTests/`).
 
 ### keep (живые, не тронуты)
 
@@ -43,21 +36,21 @@
 
 ### Целиком мёртвые пакеты
 
-- [ ] delete **SWNetwork** (~1412 стр.: 631 sources + 757 tests + 24 package). Каталог `SwiftUI-SotkaApp/Libraries/SWNetwork/` **всё ещё существует**. `import SWNetwork` в проде — 0 ссылок (после удаления `SWClient`/`CustomExercisesService` sync-блока). **Удаление требует:** удалить каталог + убрать пакет из `Package.swift`/`xcodeproj`. **Не выполнено в `ed82f6e9`** (выходит за рамки задачи «выполнить delete-теги» — требует модификации project-файлов).
-- [ ] delete **SWKeychain** (~230 стр.). Каталог `SwiftUI-SotkaApp/Libraries/SWKeychain/` **всё ещё существует**. `import SWKeychain` в проде — 0 ссылок (после strip `AuthHelper`). **Не выполнено в `ed82f6e9`** по той же причине.
+- [x] delete **SWNetwork** (~1412 стр.: 631 sources + 757 tests + 24 package) — удалён в `2555914a`. Каталог `SwiftUI-SotkaApp/Libraries/SWNetwork/` + пакет из `.xcodeproj` убраны. Также удалены 2 unit-теста из `SwiftUI-SotkaAppTests/Models/` (`ErrorResponseTests.swift` 299 стр + `DateDecodingRoundTripTests.swift` 34 стр).
+- [x] delete **SWKeychain** (~230 стр.) — удалён в `2555914a`. Каталог + пакет убраны. 0 prod-ссылок, 0 тестов с импортом.
 
-**Подитого пакетов на удаление: ~1642 стр. — не выполнено (out of scope).**
+**Итого пакетов на удаление: ~1975 стр. (1642 sources/tests + 333 тестов) — выполнено в `2555914a`.**
 
 ### Пакеты, которые оставляем
 
-- [x] **Оставлены 3 живых пакета:** `CachedAsyncImage` (333 стр.), `SWDesignSystem` (1533 стр., 37 импортов), `SWUtils` (1613 стр. с тестами, 44 импорта). Не тронуты.
+- [x] **Оставлены 3 живых пакета:** `CachedAsyncImage` (333 стр.), `SWDesignSystem` (1533 стр., 37 импортов), `SWUtils` (1363 стр. с тестами, 35 импортов — было 1613/44). Не тронуты.
 
 ### Native-замены внутри пакетов
 
-- [ ] native `SWAlert` (108 стр.) — UIKit alert (`UIAlertController`) с рекурсивным обходом VC. Все 5 потребителей (`OnlineLoginView`/`ChangePasswordScreen`/`EditProfileScreen`/`StatusManager:209`/`CountriesUpdateService:100`) удалены. Файл `SWUtils/Sources/SWUtils/SWAlert.swift` **всё ещё существует** (4.5 KB). `SWAlert.shared.presentNoConnection` нигде в проде не вызывается. **Удаление возможно сразу, но не входило в delete-этап.**
-- [ ] delete `SWFileManager` (44 стр.) — ноль использований в проде. Файл `SWUtils/Sources/SWUtils/SWFileManager.swift` **всё ещё существует** (1.7 KB). **Не выполнено в `ed82f6e9`.**
-- [ ] delete `DateFormatterService.readableDate` + хелпер `makeFormat` — `readableDate` вызывается только в `SWUtilsTests`. **Не выполнено в `ed82f6e9`.**
-- [ ] delete `String.capitalizingFirstLetter` (3 стр.) — вызывается только в `SWUtilsTests`. **Не выполнено в `ed82f6e9`.**
+- [x] native `SWAlert` (108 стр.) — UIKit alert (`UIAlertController`) с рекурсивным обходом VC. Удалён в `c2e906a3`. + 2 теста в `SWAlertTests.swift`.
+- [x] delete `SWFileManager` (44 стр.) — ноль использований в проде. Удалён в `19081bad` (+ `SWFileManagerTests.swift` 48 стр.).
+- [x] delete `DateFormatterService.readableDate` + хелпер `makeFormat` + 3 неиспользуемых enum case'a (`dayMonthMediumTime`, `dayMonth`, `mediumTime`) — `readableDate` вызывался только в `SWUtilsTests`. Удалены в `19081bad` (+ тест `readableDate`).
+- [x] delete `String.capitalizingFirstLetter` (3 стр.) — вызывался только в `SWUtilsTests`. Удалён в `19081bad` (+ тест).
 
 ## 3. Review-слой (yagni — избыточная абстракция)
 
@@ -85,7 +78,7 @@
 Одна `ReviewManager` (~50 стр.) с захардкоженным списком milestones и одним вызовом `SKStoreReviewController.requestReview()`. Остальные 9 файлов — удалить.
 
 **Подитого Review (production): 287 стр. → ~50 стр. (net −237) — не выполнено.**
-**Подитого Review (tests): 646 стр. сохранены (7 тестовых файлов живы и входят в 982 passed).**
+**Подитого Review (tests): 646 стр. сохранены (7 тестовых файлов живы и входят в 903 passed).**
 
 ## 4. Другие мёртвые/yagni находки в приложении
 
@@ -95,21 +88,13 @@
 
 ### Прочее
 
-- [ ] delete `ImageProcessor.createThumbnail` (3 стр.) — вызывается только из тестов. Файл `ImageProcessor.swift` (67 стр.) **живой**, метод `createThumbnail` (строка 27) — dead. **Не выполнено в `ed82f6e9`.**
-- [ ] delete `InfopostAvailabilityManager.getAvailablePostsBySection` (4 стр.) — в проде используется только `filterAvailablePosts`. **Не выполнено в `ed82f6e9`.**
-
-### PreviewContent остаток
-
-- [x] `Client+.swift` удалён (`22dace92`). Демо-данные перенесены в `ScreenshotDemoData.seedDemoData()` (см. раздел 7).
+- [x] Удалены `ImageProcessor.createThumbnail` (5 стр. + 2 теста, вызывался только из тестов), `InfopostAvailabilityManager.getAvailablePostsBySection` (4 стр. + 1 тест, в проде только `filterAvailablePosts`), `Client+.swift` (74 стр., демо-данные → `ScreenshotDemoData.seedDemoData()`, см. раздел 7), `ScreenshotDemoData.readInfopostDays` (1 константа, 0 вызовов).
 
 ### Новые мёртвые находки после `ed82f6e9` (не были в исходном аудите) [NEW]
 
 Файлы, ставшие мёртвыми после удаления sync/DTO, но не отмеченные в исходном плане:
 
-- [ ] [NEW] delete `Models/ConflictingStartDate.swift` (20 стр.) — использовался только `SyncStartDateScreen` (удалён). 0 ссылок в проде.
-- [ ] [NEW] delete `Models/SWSharedModels/CalendarPurchasesResponse.swift` (28 стр.) — использовался только `StatusManager.syncJournalAndProgress()` (удалён). 0 ссылок в проде.
-- [ ] [NEW] delete `Models/SWSharedModels/LoginCredentials.swift` (24 стр.) — использовался только `OnlineLoginView` (удалён). 0 ссылок в проде.
-- [ ] [NEW] delete `Models/Progress/ProgressSnapshot.swift` (64 стр.) — использовался только `ProgressSyncService` (удалён). 0 ссылок в проде. Содержит `init(from: UserProgress)`, `photosForUpload` (для сервера) — мёртвые.
+- [x] [NEW] Удалены 4 модели, ставшие мёртвыми после удаления sync/DTO: `ConflictingStartDate` (только `SyncStartDateScreen`), `CalendarPurchasesResponse` (только `syncJournalAndProgress`), `LoginCredentials` (только `OnlineLoginView`), `ProgressSnapshot` (только `ProgressSyncService` + `init(from: UserProgress)`/`photosForUpload` для сервера). Все 0 ссылок в проде.
 
 ### Ошибочно удалённые тесты [restore]
 
@@ -155,9 +140,7 @@
 
 ### Что сделано в `22dace92` [FIX]
 
-- [x] [FIX] **`ScreenshotDemoData.seedDemoData(context:user:)`**: создаёт 11 `DayActivity` (дни 1-11: 8 тренировок с `DayActivityTraining` [pullups/pushups/squats], 2 отдыха [дни 3, 7], 1 растяжка [день 10]). День 12 намеренно пуст — `HomeActivitySectionView` показывает `TodayActivityButton.0`. + `UserProgress` дня 1 (pullups:7, pushups:15, squats:30, weight:70), 3 `CustomExercise` («хлопковые отжимания», «запрыгивания на ящик», «бурпи»), `Country.makeDefaultCountry()`. Даты привязаны к `setCurrentDayForDebug(12)`: `baseDate = now - 11 дней`. **Отступление:** 11 вместо 12 — день 12 пуст для кнопок выбора типа.
-- [x] [FIX] **`Client+.swift`** удалён целиком (−74 стр.). Демо-данные перенесены в `ScreenshotDemoData`.
-- [x] [FIX] **`createMockServices()`**: добавлены `authHelper.performOfflineLogin()`, `try? Tips.resetDatastore()`, `UIView.setAnimationsEnabled(false)` для стабильности UI-тестов.
+- [x] [FIX] **`ScreenshotDemoData.seedDemoData(context:user:)`** создаёт 11 `DayActivity` (8 тренировок + 2 отдыха + 1 растяжка), `UserProgress` дня 1, 3 `CustomExercise`, `Country`. День 12 намеренно пуст — для кнопок выбора типа в `HomeActivitySectionView` (отступление: 11 вместо 12). **`createMockServices()`** дополнен `authHelper.performOfflineLogin()` + `Tips.resetDatastore()` + `UIView.setAnimationsEnabled(false)`. **`Client+.swift`** удалён (−74 стр.).
 
 ### Почему аудит ошибся
 
@@ -195,24 +178,39 @@
 | `SwiftUI_SotkaAppApp.swift` [FIX] | +2 стр. — `authHelper.performOfflineLogin()` + `Tips.resetDatastore()` + `UIView.setAnimationsEnabled(false)` в UI-тестовом пути |
 | `Client+.swift` [FIX] | −74 стр. — файл удалён целиком |
 
-### Не выполнено в `ed82f6e9` + `22dace92` (оставлено на следующие итерации)
+### Фактический результат коммитов `19081bad` + `2555914a` + `c2e906a3` + `56726fe2` (delete-этап-2)
+
+**46 файлов изменено, 76 вставлено / 2651 удалено (net −2575).** Выполнение `[ ]`-пунктов плана:
+
+| Коммит | Категория | Изменение |
+|---|---|---|
+| `19081bad` | 4 [NEW] мёртвых модели | −135 стр.: `ConflictingStartDate`/`ProgressSnapshot`/`CalendarPurchasesResponse`/`LoginCredentials` |
+| `19081bad` | `SWFileManager` + тесты | −92 стр. (44 + 48) |
+| `19081bad` | `DateFormatterService.readableDate`/`makeFormat` + 3 enum cases + тесты | −50 стр. (40 production + 10 tests) |
+| `19081bad` | `String.capitalizingFirstLetter` + тест | −10 стр. |
+| `19081bad` | `ImageProcessor.createThumbnail` + 2 теста | −31 стр. |
+| `19081bad` | `InfopostAvailabilityManager.getAvailablePostsBySection` + тест | −23 стр. |
+| `2555914a` | Пакет `SWNetwork` (sources + tests) | −1388 стр. |
+| `2555914a` | Пакет `SWKeychain` (sources + tests) | −230 стр. |
+| `2555914a` | 2 unit-теста импортирующих SWNetwork | −333 стр. (`ErrorResponseTests` 299 + `DateDecodingRoundTripTests` 34) |
+| `2555914a` | `.xcodeproj/project.pbxproj` | −18 строк (PBXBuildFile/Frameworks/packageProductDependencies/membershipExceptions для SWNetwork/SWKeychain) |
+| `c2e906a3` | `SWAlert.swift` + `SWAlertTests.swift` | −128 стр. (108 + 20) |
+| `56726fe2` | `ScreenshotDemoData.readInfopostDays` (0 вызовов) | −1 стр. |
+
+**Результат:** −2575 стр. net, 79 тестов удалено, пакеты SWNetwork/SWKeychain полностью убраны из репозитория и `.xcodeproj`.
+
+### Не выполнено в `ed82f6e9` + `22dace92` + `19081bad` + `2555914a` + `c2e906a3` + `56726fe2` (оставлено на следующие итерации)
 
 | Категория | Объём | Причина |
 |---|---|---|
-| `SWNetwork` пакет | ~1642 стр. (sources + tests) | Требует удаления каталога + правки `Package.swift`/`.xcodeproj`. ⚠️ После `ed82f6e9` 2 unit-теста всё ещё импортируют SWNetwork (`ErrorResponseTests.swift`, `DateDecodingRoundTripTests.swift`) — при удалении пакета нужно удалить и эти тесты |
-| `SWKeychain` пакет | включено в SWNetwork | Та же причина |
-| `SWAlert`, `SWFileManager`, `readableDate`, `capitalizingFirstLetter` в `SWUtils` | ~155 стр. | Выходит за рамки задачи. ⚠️ `SWAlert` и `SWFileManager` уже нигде не используются в проде (только в своих собственных тестах) |
-| Review-слой yagni/shrink | ~237 стр. production + ~646 стр. тестов | Выходит за рамки задачи |
-| `ImageProcessor.createThumbnail` | 3 стр. | Используется только в `ImageProcessorTests`. Не включено в коммит |
-| `InfopostAvailabilityManager.getAvailablePostsBySection` | 4 стр. | Используется только в `InfopostAvailabilityManagerTests`. Не включено в коммит |
-| **Новые мёртвые файлы [NEW]:** `ConflictingStartDate.swift`, `CalendarPurchasesResponse.swift`, `LoginCredentials.swift`, `ProgressSnapshot.swift` | ~136 стр. | Не отмечены в исходном аудите |
+| Review-слой yagni/shrink | ~237 стр. production + ~646 стр. тестов | Выходит за рамки задачи. Тесты Review (7 файлов, 646 стр.) сохраняются — входят в 903 passed |
+| **`AuthHelper` shrink** | 62 стр. production | Требует переноса `isOfflineOnly` в `User` (UserDefaults-бэкап) + inlining `triggerLogout` в `MoreScreen`. Снижение читаемости. Решение за продуктом |
 | **Устаревшая документация `docs/` + `AGENTS.md`** | 8 файлов: `daily-activities.md`, `custom-exercises.md`, `infoposts.md`, `crash-swiftdata-invalid-future-backing-data.md`, `testing-mocks.md`, `ui-test-mock-client.md`, **`sync-journal.md`** (весь файл устарел), **`data-migration.md`** (пример содержит `SyncJournalEntry.self`); + `AGENTS.md` строка 75 | Требует ревью и правки/удаления |
-| **Демо-данные UI-тестов: readInfopostDays** | 1 константа | `ScreenshotDemoData.readInfopostDays = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]` объявлена, но не применяется к demo User. UI-тесты проходят и без применения (экраны инфопостов не тестируются на состояние «прочитано»). Рекомендация: применить через `user.addReadInfopostDay(_:)` или удалить константу |
 
-### Контроль качества после `ed82f6e9` + `22dace92`
+### Контроль качества после `ed82f6e9` + `22dace92` + `19081bad` + `2555914a` + `c2e906a3` + `56726fe2`
 
 - iOS build: ✅ SUCCEEDED (iPhone 17 / iOS 27)
-- Unit tests на iPhone 11 (iOS 26.5): ✅ **982 passed, 0 failed, 1 skipped** (было 1833 → −856 мёртвых тестов; +5 миграционных после `22dace92`)
+- Unit tests на iPhone 11 (iOS 26.5): ✅ **903 passed, 0 failed, 1 skipped** (было 1833 → −856 мёртвых тестов в `ed82f6e9`; +5 миграционных после `22dace92` = 982; −79 тестов после `19081bad`/`2555914a`/`c2e906a3` = 903)
 - UI-тесты (скриншоты): ✅ **все проходят** (`testMakeScreenshots`, 8 скриншотов)
 - Watch app ↔ iPhone sync через `WatchConnectivityService`/`WCSession`/`WorkoutDataResponse` — не сломана
 
