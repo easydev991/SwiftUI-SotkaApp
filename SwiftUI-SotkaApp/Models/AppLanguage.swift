@@ -14,9 +14,4 @@ enum AppLanguage: CaseIterable, Identifiable {
         case .english: String(localized: .english)
         }
     }
-
-    static func makeCurrentValue(_ localeIdentifier: String) -> AppLanguage {
-        let isRussian = localeIdentifier.split(separator: "_").first == "ru"
-        return isRussian ? .russian : .english
-    }
 }

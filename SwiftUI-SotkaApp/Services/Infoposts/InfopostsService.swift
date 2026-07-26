@@ -78,7 +78,7 @@ final class InfopostsService {
         logger.info("Инициализирован InfopostsService для языка: \(language)")
     }
 
-    /// Загружает инфопост "about" напрямую из файла, минуя `filenameManager`
+    /// Загружает инфопост "about" напрямую из файла
     /// - Returns: Инфопост "about" или nil, если не найден
     func loadAboutInfopost() -> Infopost? {
         let filename = "about"
@@ -258,8 +258,7 @@ private extension InfopostsService {
     func parseAllInfoposts(for language: String) throws -> [Infopost] {
         var infoposts: [Infopost] = []
 
-        // Создаем менеджер файлов для указанного языка
-        let filenames = FilenameManager(language: language).getOrderedFilenames()
+        let filenames = orderedFilenames(for: language)
         logger.debug("Получен список из \(filenames.count) файлов для парсинга")
 
         // Парсим все файлы
@@ -281,6 +280,17 @@ private extension InfopostsService {
 
         logger.info("Успешно распарсено \(infoposts.count) инфопостов для языка \(language)")
         return infoposts
+    }
+
+    /// Возвращает упорядоченный список имен файлов инфопостов для указанного языка
+    /// - Parameter language: Язык инфопостов ("ru" или "en")
+    /// - Returns: Массив имен файлов в правильном порядке
+    func orderedFilenames(for language: String) -> [String] {
+        var filenames = ["organiz", "aims"] + (1 ... 100).map { "d\($0)" }
+        if language == "ru", Infopost(filename: "d0-women", language: language) != nil {
+            filenames.insert("d0-women", at: 2)
+        }
+        return filenames
     }
 
     /// Получает инфопост для текущего дня

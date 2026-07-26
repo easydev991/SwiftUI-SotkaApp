@@ -87,7 +87,9 @@ private extension MoreScreen {
     @ViewBuilder
     var appLanguageButton: some View {
         @Bindable var settings = appSettings
-        Picker(.appLanguage, selection: .constant(AppLanguage.makeCurrentValue(locale.identifier))) {
+        let isRussian = locale.identifier.split(separator: "_").first == "ru"
+        let currentLanguage: AppLanguage = isRussian ? .russian : .english
+        Picker(.appLanguage, selection: .constant(currentLanguage)) {
             ForEach(AppLanguage.allCases) {
                 Text($0.localizedTitle).tag($0)
             }

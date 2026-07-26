@@ -31,13 +31,20 @@ struct HomeDayCountView: View {
 }
 
 private extension HomeDayCountView {
-    var viewModel: HomeDayCountModel {
-        HomeDayCountModel(currentDay: calculator.currentDay)
+    var isFirstProgramCompletionDay: Bool {
+        calculator.currentDay == DayCalculator.baseProgramDays
+    }
+
+    static func formattedDayString(for day: Int) -> String {
+        guard day < DayCalculator.baseProgramDays else {
+            return String(day)
+        }
+        return String(format: "%02d", day)
     }
 
     @ViewBuilder
     var finishedView: some View {
-        if viewModel.isFirstProgramCompletionDay {
+        if isFirstProgramCompletionDay {
             firstFinishedView
         } else {
             extendedFinishedView
@@ -98,7 +105,7 @@ private extension HomeDayCountView {
 
     func makeNumberView(for day: Int) -> some View {
         HStack(spacing: isIpad ? 4 : 2) {
-            let formattedDay = HomeDayCountModel.formattedDayString(for: day)
+            let formattedDay = Self.formattedDayString(for: day)
             let digits = Array(formattedDay)
 
             ForEach(digits.indices, id: \.self) { index in

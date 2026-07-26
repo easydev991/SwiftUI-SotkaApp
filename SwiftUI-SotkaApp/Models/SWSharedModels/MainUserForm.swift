@@ -10,7 +10,6 @@ struct MainUserForm: Codable, Equatable {
     var countryName: String
     var cityId: String
     var cityName: String
-    var image: MediaFile?
 
     init(
         userName: String,
@@ -22,8 +21,7 @@ struct MainUserForm: Codable, Equatable {
         countryId: String = "",
         countryName: String = "",
         cityId: String = "",
-        cityName: String = "",
-        image: MediaFile? = nil
+        cityName: String = ""
     ) {
         self.userName = userName
         self.fullName = fullName
@@ -35,7 +33,6 @@ struct MainUserForm: Codable, Equatable {
         self.cityId = cityId
         self.cityName = cityName
         self.genderCode = gender
-        self.image = image
     }
 
     init(_ user: User) {
