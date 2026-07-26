@@ -29,14 +29,6 @@ enum Gender: CaseIterable, CustomStringConvertible, Codable {
         }
     }
 
-    var affiliation: String {
-        switch self {
-        case .unspecified: String(localized: .genderNotSpecifiedAfiliation)
-        case .male: String(localized: .genderMaleAffiliation)
-        case .female: String(localized: .genderFemaleAffiliation)
-        }
-    }
-
     var description: String {
         switch self {
         case .unspecified: String(localized: .genderNotSpecified)

@@ -14,8 +14,7 @@ extension AllInfopostsTests {
         private func createService(language _: String) -> InfopostsService {
             InfopostsService(
                 language: "ru",
-                analytics: AnalyticsService(providers: [NoopAnalyticsProvider()]),
-                isReadOnlyMode: false
+                analytics: AnalyticsService(providers: [NoopAnalyticsProvider()])
             )
         }
 

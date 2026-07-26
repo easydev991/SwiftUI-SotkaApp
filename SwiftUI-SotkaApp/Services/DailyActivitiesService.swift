@@ -11,13 +11,7 @@ final class DailyActivitiesService {
         category: String(describing: DailyActivitiesService.self)
     )
 
-    private let isReadOnlyMode: Bool
-
-    /// Инициализатор сервиса
-    /// - Parameter isReadOnlyMode: Флаг read-only режима (по умолчанию из AppConfiguration)
-    init(isReadOnlyMode: Bool = AppConfiguration.isReadOnlyMode) {
-        self.isReadOnlyMode = isReadOnlyMode
-    }
+    init() {}
 
     // MARK: - Публичные методы (офлайн-приоритет)
 
@@ -90,20 +84,6 @@ final class DailyActivitiesService {
         } catch {
             logger.error("[createDailyActivity] ✗ Ошибка сохранения: \(error.localizedDescription)")
         }
-    }
-
-    /// Отмечает ежедневную активность как измененную (офлайн-приоритет)
-    /// - Parameters:
-    ///   - activity: Активность для отметки как измененная
-    ///   - context: Контекст SwiftData
-    func markDailyActivityAsModified(
-        _ activity: DayActivity,
-        context: ModelContext
-    ) throws {
-        activity.modifyDate = .now
-        activity.isSynced = false
-        try context.save()
-        logger.info("[markModified] Активность дня \(activity.day) отмечена как измененная, modifyDate=\(activity.modifyDate)")
     }
 
     /// Удаляет ежедневную активность (офлайн-приоритет, мягкое удаление)

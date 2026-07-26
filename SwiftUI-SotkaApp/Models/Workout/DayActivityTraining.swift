@@ -34,17 +34,6 @@ final class DayActivityTraining {
 }
 
 extension DayActivityTraining {
-    /// Тип упражнения (если это стандартное упражнение)
-    var exerciseType: ExerciseType? {
-        get {
-            guard let typeId else { return nil }
-            return ExerciseType(rawValue: typeId)
-        }
-        set {
-            typeId = newValue?.rawValue
-        }
-    }
-
     /// Инициализатор из WorkoutPreviewTraining
     convenience init(from preview: WorkoutPreviewTraining, dayActivity: DayActivity?) {
         self.init(

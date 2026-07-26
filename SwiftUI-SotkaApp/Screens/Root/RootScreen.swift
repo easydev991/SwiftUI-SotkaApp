@@ -114,7 +114,7 @@ extension RootScreen {
     RootScreen()
         .environment(AppSettings())
         .environment(StatusManager.preview)
-        .environment(DailyActivitiesService(isReadOnlyMode: false))
+        .environment(DailyActivitiesService())
         .environment(AuthHelperImp())
         .modelContainer(PreviewModelContainer.make(with: .preview))
 }

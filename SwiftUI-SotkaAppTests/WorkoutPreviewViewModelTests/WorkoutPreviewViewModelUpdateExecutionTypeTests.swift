@@ -26,7 +26,7 @@ extension WorkoutPreviewViewModelTests {
                 modelContext: context,
                 day: 50,
                 restTime: 60,
-                activitiesService: DailyActivitiesService(isReadOnlyMode: false)
+                activitiesService: DailyActivitiesService()
             )
 
             viewModel.updateExecutionType(.cycles)
@@ -55,7 +55,7 @@ extension WorkoutPreviewViewModelTests {
                 modelContext: context,
                 day: 1,
                 restTime: 60,
-                activitiesService: DailyActivitiesService(isReadOnlyMode: false)
+                activitiesService: DailyActivitiesService()
             )
             let initialPlannedCount = try #require(viewModel.plannedCount)
             // Для дня 1 дефолтный тип - cycles (4 круга)
@@ -88,7 +88,7 @@ extension WorkoutPreviewViewModelTests {
                 modelContext: context,
                 day: 92,
                 restTime: 60,
-                activitiesService: DailyActivitiesService(isReadOnlyMode: false)
+                activitiesService: DailyActivitiesService()
             )
             let initialTrainings = viewModel.trainings
 
@@ -120,7 +120,7 @@ extension WorkoutPreviewViewModelTests {
                 modelContext: context,
                 day: 1,
                 restTime: 60,
-                activitiesService: DailyActivitiesService(isReadOnlyMode: false)
+                activitiesService: DailyActivitiesService()
             )
             let initialPlannedCount = try #require(viewModel.plannedCount)
             // Для дня 1 дефолтный тип - cycles (4 круга)
@@ -152,7 +152,7 @@ extension WorkoutPreviewViewModelTests {
                 modelContext: context,
                 day: 50,
                 restTime: 60,
-                activitiesService: DailyActivitiesService(isReadOnlyMode: false)
+                activitiesService: DailyActivitiesService()
             )
             viewModel.plannedCount = 10
 
@@ -180,7 +180,7 @@ extension WorkoutPreviewViewModelTests {
                 modelContext: context,
                 day: 50,
                 restTime: 60,
-                activitiesService: DailyActivitiesService(isReadOnlyMode: false)
+                activitiesService: DailyActivitiesService()
             )
             let initialPullupsTraining = viewModel.trainings.first { training in
                 training.typeId == ExerciseType.pullups.rawValue
@@ -223,7 +223,7 @@ extension WorkoutPreviewViewModelTests {
                 modelContext: context,
                 day: 5,
                 restTime: 60,
-                activitiesService: DailyActivitiesService(isReadOnlyMode: false)
+                activitiesService: DailyActivitiesService()
             )
 
             let squats = viewModel.trainings
@@ -275,7 +275,7 @@ extension WorkoutPreviewViewModelTests {
                 modelContext: context,
                 day: 50,
                 restTime: 60,
-                activitiesService: DailyActivitiesService(isReadOnlyMode: false)
+                activitiesService: DailyActivitiesService()
             )
             viewModel.plannedCount = 10
 
@@ -343,7 +343,7 @@ extension WorkoutPreviewViewModelTests {
                 modelContext: context,
                 day: 5,
                 restTime: 60,
-                activitiesService: DailyActivitiesService(isReadOnlyMode: false)
+                activitiesService: DailyActivitiesService()
             )
             let programCount = viewModel.trainings.count
             let addedCustom = WorkoutPreviewTraining(

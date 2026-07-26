@@ -193,7 +193,7 @@ private extension JournalListView {
             sortOrder: .forward,
             selectedPage: 0
         )
-        .environment(DailyActivitiesService(isReadOnlyMode: false))
+        .environment(DailyActivitiesService())
         .environment(StatusManager.preview)
     }
     .modelContainer(PreviewModelContainer.make(with: .preview))
@@ -208,7 +208,7 @@ private extension JournalListView {
             sortOrder: .reverse,
             selectedPage: 0
         )
-        .environment(DailyActivitiesService(isReadOnlyMode: false))
+        .environment(DailyActivitiesService())
         .environment(StatusManager.preview)
     }
     .modelContainer(PreviewModelContainer.make(with: .preview))
@@ -223,7 +223,7 @@ private extension JournalListView {
             sortOrder: .forward,
             selectedPage: 1
         )
-        .environment(DailyActivitiesService(isReadOnlyMode: false))
+        .environment(DailyActivitiesService())
         .environment(StatusManager.previewWithCalendarExtensionDay130)
     }
     .modelContainer(PreviewModelContainer.make(with: .preview))
@@ -238,7 +238,7 @@ private extension JournalListView {
             sortOrder: .forward,
             selectedPage: 1
         )
-        .environment(DailyActivitiesService(isReadOnlyMode: false))
+        .environment(DailyActivitiesService())
         .environment(StatusManager.previewWithCalendarExtensionDay130)
     }
     .modelContainer(PreviewModelContainer.make(with: .preview))

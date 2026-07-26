@@ -1,10 +1,8 @@
 import SWDesignSystem
 import SwiftData
 import SwiftUI
-import SWUtils
 
 struct WelcomeScreen: View {
-    @Environment(\.isReadOnlyMode) private var isReadOnlyMode
     @State private var destination = NavigationDestination.welcome
 
     var body: some View {

@@ -90,17 +90,6 @@ extension DayActivity {
         }
     }
 
-    /// Тип тренировки
-    var trainingType: ExerciseType? {
-        get {
-            guard let trainingTypeRaw else { return nil }
-            return ExerciseType(rawValue: trainingTypeRaw)
-        }
-        set {
-            trainingTypeRaw = newValue?.rawValue
-        }
-    }
-
     /// Пройден ли день (определяется по наличию count)
     var isPassed: Bool {
         count != nil

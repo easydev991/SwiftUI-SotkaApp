@@ -8,13 +8,12 @@ extension StatusManager {
     static var preview: StatusManager {
         let container = PreviewModelContainer.make(with: .preview)
         return StatusManager(
-            customExercisesService: CustomExercisesService(isReadOnlyMode: false),
+            customExercisesService: CustomExercisesService(),
             infopostsService: InfopostsService(
                 language: "ru",
-                analytics: AnalyticsService(providers: [NoopAnalyticsProvider()]),
-                isReadOnlyMode: false
+                analytics: AnalyticsService(providers: [NoopAnalyticsProvider()])
             ),
-            dailyActivitiesService: DailyActivitiesService(isReadOnlyMode: false),
+            dailyActivitiesService: DailyActivitiesService(),
             modelContainer: container,
             isReadOnlyMode: false
         )

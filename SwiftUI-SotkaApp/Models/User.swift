@@ -64,19 +64,6 @@ final class User {
             genderCode: genderCode
         )
     }
-
-    convenience init(fromMainUserForm form: MainUserForm, id: Int = -1) {
-        self.init(
-            id: id,
-            userName: form.userName,
-            fullName: form.fullName,
-            email: form.email,
-            cityID: Int(form.cityId) ?? 0,
-            countryID: Int(form.countryId) ?? 0,
-            genderCode: form.genderCode,
-            birthDateIsoString: form.birthDateIsoString
-        )
-    }
 }
 
 extension User {
@@ -215,22 +202,6 @@ extension User {
             days.append(day)
             readInfopostDays = days
         }
-    }
-
-    /// Добавляет день в список несинхронизированных прочитанных дней
-    func addUnsyncedReadInfopostDay(_ day: Int) {
-        var days = unsyncedReadInfopostDays
-        if !days.contains(day) {
-            days.append(day)
-            unsyncedReadInfopostDays = days
-        }
-    }
-
-    /// Удаляет день из списка несинхронизированных прочитанных дней
-    func removeUnsyncedReadInfopostDay(_ day: Int) {
-        var days = unsyncedReadInfopostDays
-        days.removeAll { $0 == day }
-        unsyncedReadInfopostDays = days
     }
 
     /// Устанавливает весь список ID избранных инфопостов

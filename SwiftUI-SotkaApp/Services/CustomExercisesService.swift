@@ -11,13 +11,7 @@ final class CustomExercisesService {
         category: String(describing: CustomExercisesService.self)
     )
 
-    private let isReadOnlyMode: Bool
-
-    /// Инициализатор сервиса
-    /// - Parameter isReadOnlyMode: Флаг read-only режима (по умолчанию из AppConfiguration)
-    init(isReadOnlyMode: Bool = AppConfiguration.isReadOnlyMode) {
-        self.isReadOnlyMode = isReadOnlyMode
-    }
+    init() {}
 
     /// Создает новое пользовательское упражнение (офлайн-приоритет)
     /// - Parameters:

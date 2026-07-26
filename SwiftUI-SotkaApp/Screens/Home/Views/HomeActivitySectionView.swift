@@ -132,7 +132,7 @@ private extension HomeActivitySectionView {
 #if DEBUG
 #Preview {
     HomeActivitySectionView(onSheetItem: { _ in })
-        .environment(DailyActivitiesService(isReadOnlyMode: false))
+        .environment(DailyActivitiesService())
         .modelContainer(PreviewModelContainer.make(with: .preview))
 }
 #endif

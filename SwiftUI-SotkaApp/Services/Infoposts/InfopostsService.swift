@@ -13,7 +13,6 @@ final class InfopostsService {
     )
     private let currentLanguage: String
     private let analytics: AnalyticsService
-    private let isReadOnlyMode: Bool
     @ObservationIgnored private var userGender: Gender?
     @ObservationIgnored private var cachedInfoposts: [Infopost]?
     /// Доступные инфопосты для текущего дня
@@ -69,12 +68,10 @@ final class InfopostsService {
 
     init(
         language: String,
-        analytics: AnalyticsService,
-        isReadOnlyMode: Bool = AppConfiguration.isReadOnlyMode
+        analytics: AnalyticsService
     ) {
         self.currentLanguage = language
         self.analytics = analytics
-        self.isReadOnlyMode = isReadOnlyMode
         logger.info("Инициализирован InfopostsService для языка: \(language)")
     }
 

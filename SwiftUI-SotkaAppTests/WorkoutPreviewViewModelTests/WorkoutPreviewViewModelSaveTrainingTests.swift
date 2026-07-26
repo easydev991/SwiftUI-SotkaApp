@@ -19,7 +19,7 @@ extension WorkoutPreviewViewModelTests {
             let user = User(id: 1)
             context.insert(user)
             try context.save()
-            let activitiesService = DailyActivitiesService(isReadOnlyMode: false)
+            let activitiesService = DailyActivitiesService()
             let viewModel = WorkoutPreviewViewModel()
 
             viewModel.dayNumber = 5
@@ -55,7 +55,7 @@ extension WorkoutPreviewViewModelTests {
             let user = User(id: 1)
             context.insert(user)
             try context.save()
-            let activitiesService = DailyActivitiesService(isReadOnlyMode: false)
+            let activitiesService = DailyActivitiesService()
             let viewModel = WorkoutPreviewViewModel()
 
             viewModel.dayNumber = 5
@@ -80,7 +80,7 @@ extension WorkoutPreviewViewModelTests {
             let user = User(id: 1)
             context.insert(user)
             try context.save()
-            let activitiesService = DailyActivitiesService(isReadOnlyMode: false)
+            let activitiesService = DailyActivitiesService()
             let viewModel = WorkoutPreviewViewModel()
 
             viewModel.dayNumber = 5
@@ -105,7 +105,7 @@ extension WorkoutPreviewViewModelTests {
             let user = User(id: 1)
             context.insert(user)
             try context.save()
-            let activitiesService = DailyActivitiesService(isReadOnlyMode: false)
+            let activitiesService = DailyActivitiesService()
             let viewModel = WorkoutPreviewViewModel()
 
             viewModel.dayNumber = 5
@@ -135,7 +135,7 @@ extension WorkoutPreviewViewModelTests {
             let user = User(id: 1)
             context.insert(user)
             try context.save()
-            let activitiesService = DailyActivitiesService(isReadOnlyMode: false)
+            let activitiesService = DailyActivitiesService()
             let viewModel = WorkoutPreviewViewModel()
 
             viewModel.dayNumber = 5
@@ -165,7 +165,7 @@ extension WorkoutPreviewViewModelTests {
             let user = User(id: 1)
             context.insert(user)
             try context.save()
-            let activitiesService = DailyActivitiesService(isReadOnlyMode: false)
+            let activitiesService = DailyActivitiesService()
             let viewModel = WorkoutPreviewViewModel()
 
             viewModel.dayNumber = 5
@@ -184,7 +184,7 @@ extension WorkoutPreviewViewModelTests {
                 modelContext: context,
                 day: 5,
                 restTime: appSettings.restTime,
-                activitiesService: DailyActivitiesService(isReadOnlyMode: false)
+                activitiesService: DailyActivitiesService()
             )
 
             #expect(reloadedViewModel.wasOriginallyPassed)

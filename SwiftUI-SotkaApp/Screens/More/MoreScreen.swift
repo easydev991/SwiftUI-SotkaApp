@@ -9,13 +9,9 @@ struct MoreScreen: View {
     @Environment(StatusManager.self) private var statusManager
     @Environment(\.analyticsService) private var analytics
     @Environment(AuthHelperImp.self) private var authHelper
-    @Environment(\.isReadOnlyMode) private var isReadOnlyMode
     let user: User
     @State private var showResetDialog = false
     @State private var showLogoutDialog = false
-    private var isOfflineUser: Bool {
-        user.isOfflineOnly || isReadOnlyMode
-    }
 
     var body: some View {
         NavigationStack {

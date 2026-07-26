@@ -217,7 +217,7 @@ private extension EditCustomExerciseScreen {
     NavigationStack {
         EditCustomExerciseScreen {}
             .modelContainer(PreviewModelContainer.make(with: User(id: 1)))
-            .environment(CustomExercisesService(isReadOnlyMode: false))
+            .environment(CustomExercisesService())
     }
 }
 
@@ -234,7 +234,7 @@ private extension EditCustomExerciseScreen {
             closeAction: {}
         )
         .modelContainer(PreviewModelContainer.make(with: User(id: 1)))
-        .environment(CustomExercisesService(isReadOnlyMode: false))
+        .environment(CustomExercisesService())
     }
 }
 #endif

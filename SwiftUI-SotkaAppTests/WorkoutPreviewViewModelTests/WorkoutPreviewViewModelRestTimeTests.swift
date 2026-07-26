@@ -29,7 +29,7 @@ extension WorkoutPreviewViewModelTests {
                 modelContext: context,
                 day: 1,
                 restTime: appSettings.restTime,
-                activitiesService: DailyActivitiesService(isReadOnlyMode: false)
+                activitiesService: DailyActivitiesService()
             )
 
             #expect(viewModel.restTime == 75)
@@ -70,7 +70,7 @@ extension WorkoutPreviewViewModelTests {
                 modelContext: context,
                 day: 5,
                 restTime: appSettings.restTime,
-                activitiesService: DailyActivitiesService(isReadOnlyMode: false)
+                activitiesService: DailyActivitiesService()
             )
 
             #expect(viewModel.restTime == 75)
@@ -97,7 +97,7 @@ extension WorkoutPreviewViewModelTests {
                 modelContext: context,
                 day: 1,
                 restTime: appSettings.restTime,
-                activitiesService: DailyActivitiesService(isReadOnlyMode: false)
+                activitiesService: DailyActivitiesService()
             )
             viewModel.restTime = 45
 
@@ -126,7 +126,7 @@ extension WorkoutPreviewViewModelTests {
                 modelContext: context,
                 day: 1,
                 restTime: appSettings.restTime,
-                activitiesService: DailyActivitiesService(isReadOnlyMode: false)
+                activitiesService: DailyActivitiesService()
             )
             viewModel.restTime = 60
 
@@ -154,7 +154,7 @@ extension WorkoutPreviewViewModelTests {
                 modelContext: context,
                 day: 1,
                 restTime: appSettings.restTime,
-                activitiesService: DailyActivitiesService(isReadOnlyMode: false)
+                activitiesService: DailyActivitiesService()
             )
             viewModel.updateRestTime(60)
 

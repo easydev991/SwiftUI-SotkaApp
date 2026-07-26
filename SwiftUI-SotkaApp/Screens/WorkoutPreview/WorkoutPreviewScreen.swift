@@ -254,7 +254,7 @@ private extension WorkoutPreviewScreen {
 #Preview {
     NavigationStack {
         WorkoutPreviewScreen(
-            activitiesService: DailyActivitiesService(isReadOnlyMode: false),
+            activitiesService: DailyActivitiesService(),
             day: 50
         )
         .modelContainer(PreviewModelContainer.make(with: .preview))

@@ -88,7 +88,7 @@ private extension EditCommentSheet {
     let container = PreviewModelContainer.make(with: user)
     if let activity = user.dayActivities.first(where: { $0.day == 7 }) ?? user.dayActivities.first {
         EditCommentSheet(activity: activity)
-            .environment(DailyActivitiesService(isReadOnlyMode: false))
+            .environment(DailyActivitiesService())
             .modelContainer(container)
     } else {
         Text("Нет активностей для предпросмотра")
@@ -100,7 +100,7 @@ private extension EditCommentSheet {
     let container = PreviewModelContainer.make(with: user)
     if let activity = user.dayActivities.first {
         EditCommentSheet(activity: activity)
-            .environment(DailyActivitiesService(isReadOnlyMode: false))
+            .environment(DailyActivitiesService())
             .modelContainer(container)
     } else {
         Text("Нет активностей для предпросмотра")

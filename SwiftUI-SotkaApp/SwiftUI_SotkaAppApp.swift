@@ -187,13 +187,12 @@ private extension SwiftUI_SotkaAppApp {
     ) {
         let authHelper = AuthHelperImp()
         let statusManager = StatusManager(
-            customExercisesService: .init(isReadOnlyMode: false),
+            customExercisesService: .init(),
             infopostsService: .init(
                 language: Self.localeIdentifier,
-                analytics: AnalyticsService(providers: [NoopAnalyticsProvider()]),
-                isReadOnlyMode: false
+                analytics: AnalyticsService(providers: [NoopAnalyticsProvider()])
             ),
-            dailyActivitiesService: .init(isReadOnlyMode: false),
+            dailyActivitiesService: .init(),
             modelContainer: modelContainer,
             isReadOnlyMode: false
         )

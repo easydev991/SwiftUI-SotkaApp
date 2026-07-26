@@ -36,7 +36,7 @@ extension WorkoutPreviewViewModelTests {
         func callsReviewReporterAfterSuccessfulSave() async throws {
             let testContext = try makeContext()
             let context = testContext.1
-            let activitiesService = DailyActivitiesService(isReadOnlyMode: false)
+            let activitiesService = DailyActivitiesService()
             let viewModel = makeViewModel()
             let reporter = MockReviewEventReporter()
 
@@ -56,7 +56,7 @@ extension WorkoutPreviewViewModelTests {
         func doesNotCallReporterWhenValidationFails() throws {
             let testContext = try makeContext()
             let context = testContext.1
-            let activitiesService = DailyActivitiesService(isReadOnlyMode: false)
+            let activitiesService = DailyActivitiesService()
             let viewModel = WorkoutPreviewViewModel()
             viewModel.dayNumber = 5
             viewModel.selectedExecutionType = nil
@@ -76,7 +76,7 @@ extension WorkoutPreviewViewModelTests {
         func passesHadRecentErrorWhenViewModelHasError() async throws {
             let testContext = try makeContext()
             let context = testContext.1
-            let activitiesService = DailyActivitiesService(isReadOnlyMode: false)
+            let activitiesService = DailyActivitiesService()
             let viewModel = makeViewModel()
             viewModel.error = .executionTypeNotSelected
             viewModel.selectedExecutionType = .cycles
@@ -101,7 +101,7 @@ extension WorkoutPreviewViewModelTests {
         func saveWorksCorrectlyWithoutReporter() throws {
             let testContext = try makeContext()
             let context = testContext.1
-            let activitiesService = DailyActivitiesService(isReadOnlyMode: false)
+            let activitiesService = DailyActivitiesService()
             let viewModel = makeViewModel()
 
             viewModel.saveTrainingAsPassed(
@@ -117,7 +117,7 @@ extension WorkoutPreviewViewModelTests {
         func repeatedSaveDoesNotDuplicateActivityAndSendsEvent() async throws {
             let testContext = try makeContext()
             let context = testContext.1
-            let activitiesService = DailyActivitiesService(isReadOnlyMode: false)
+            let activitiesService = DailyActivitiesService()
             let viewModel = makeViewModel()
             let reporter = MockReviewEventReporter()
 
