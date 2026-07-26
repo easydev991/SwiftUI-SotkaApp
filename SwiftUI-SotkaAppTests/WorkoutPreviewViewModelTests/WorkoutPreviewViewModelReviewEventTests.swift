@@ -48,8 +48,8 @@ extension WorkoutPreviewViewModelTests {
 
             await reporter.waitForCallCount(1)
             #expect(reporter.callCount == 1)
-            let reportedContext = try #require(reporter.reportedContexts.first)
-            #expect(!reportedContext.hadRecentError)
+            let hadRecentError = try #require(reporter.reportedHadRecentErrors.first)
+            #expect(!hadRecentError)
         }
 
         @Test("При ошибке валидации не вызывает reviewEventReporter")
@@ -93,8 +93,8 @@ extension WorkoutPreviewViewModelTests {
 
             await reporter.waitForCallCount(1)
             #expect(reporter.callCount == 1)
-            let reportedContext = try #require(reporter.reportedContexts.first)
-            #expect(reportedContext.hadRecentError)
+            let hadRecentError = try #require(reporter.reportedHadRecentErrors.first)
+            #expect(hadRecentError)
         }
 
         @Test("Без reporter сохранение работает корректно")

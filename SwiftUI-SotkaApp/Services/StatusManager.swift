@@ -568,10 +568,9 @@ final class StatusManager: NSObject {
 
         dailyActivitiesService.createDailyActivity(dayActivity, context: context)
 
-        let reviewContext = ReviewContext(hadRecentError: false)
         if let reporter = reviewEventReporter {
             Task { @MainActor in
-                await reporter.workoutCompletedSuccessfully(context: reviewContext)
+                await reporter.workoutCompletedSuccessfully(hadRecentError: false)
             }
         }
 

@@ -13,8 +13,8 @@ final class ReviewManager: ReviewEventReporting {
         case milestoneAlreadyAttempted
     }
 
-    private let attemptStore: any ReviewAttemptStoring
-    private let completionsCounter: any WorkoutCompletionsCounting
+    private let attemptStore: ReviewStorage
+    private let completionsCounter: WorkoutCompletionsCounter
     private let currentUserIdProvider: @MainActor () -> Int?
 
     @ObservationIgnored private let logger = Logger(
@@ -28,8 +28,8 @@ final class ReviewManager: ReviewEventReporting {
     private(set) var lastSkipReason: ReviewSkipReason?
 
     init(
-        attemptStore: any ReviewAttemptStoring,
-        completionsCounter: any WorkoutCompletionsCounting,
+        attemptStore: ReviewStorage,
+        completionsCounter: WorkoutCompletionsCounter,
         currentUserIdProvider: @MainActor @escaping () -> Int?
     ) {
         self.attemptStore = attemptStore
@@ -37,13 +37,13 @@ final class ReviewManager: ReviewEventReporting {
         self.currentUserIdProvider = currentUserIdProvider
     }
 
-    func workoutCompletedSuccessfully(context: ReviewContext) async {
+    func workoutCompletedSuccessfully(hadRecentError: Bool) async {
         if didRequestReviewThisSession {
             lastSkipReason = .alreadyAttemptedThisSession
             logger.info("Review пропущено: повтор в текущей сессии")
             return
         }
-        if context.hadRecentError {
+        if hadRecentError {
             lastSkipReason = .recentError
             logger.info("Review пропущено: недавняя ошибка")
             return

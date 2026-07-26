@@ -3,12 +3,12 @@ import Foundation
 
 @MainActor
 final class MockReviewEventReporter: ReviewEventReporting {
-    private(set) var reportedContexts: [ReviewContext] = []
+    private(set) var reportedHadRecentErrors: [Bool] = []
     private(set) var callCount = 0
 
-    func workoutCompletedSuccessfully(context: ReviewContext) async {
+    func workoutCompletedSuccessfully(hadRecentError: Bool) async {
         callCount += 1
-        reportedContexts.append(context)
+        reportedHadRecentErrors.append(hadRecentError)
     }
 
     func waitForCallCount(_ expected: Int, maxYields: Int = 20) async {

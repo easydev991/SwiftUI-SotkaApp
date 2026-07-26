@@ -1,6 +1,6 @@
 import Foundation
 
-struct ReviewStorage: ReviewAttemptStoring, @unchecked Sendable {
+struct ReviewStorage: @unchecked Sendable {
     private static let namespace = "review."
     static let attemptedMilestones = namespace + "attemptedMilestones"
     static let lastReviewRequestAttemptDate = namespace + "lastReviewRequestAttemptDate"
