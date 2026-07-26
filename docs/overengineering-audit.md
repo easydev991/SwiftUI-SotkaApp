@@ -216,12 +216,6 @@ Periphery re-run дал 46 warnings в 17 файлах. После ручной 
 
 Удаление методов + соответствующих тестов в `SWUtilsTests/DateFormatterServiceTests.swift` (~8 тестов затрагиваются) → −20 LOC prod + сокращение test file.
 
-**Skip** (Tier 2 ponytail в `8452aa0` уже оценён как «потенциально» — не критичен, churn без выигрыша):
-
-- `CloseButton` inline (−13 net, 4 файла churn, 4 caller'а в `OfflineLoginView`/`WorkoutPreviewScreen`/`WorkoutExerciseEditorScreen`/`EditCommentSheet`)
-- `ChevronView` inline (−2 net, 3 файла churn, 3 caller'а в `HomeInfopostSectionView`/`HomeFillProgressSectionView`/`InfopostsListScreen` после удаления `ListRowView` в A1)
-- `SWDivider` inline (−12 net, 1 caller `DividerIfNeededModifier`, internal, но 1-in-1-out риск churn)
-
 ### Исключены из этого плана (NOT dead / NOT safe без product-decision)
 
 | Файл/свойство | Почему исключено |
@@ -329,7 +323,6 @@ Build ✅, tests 868 passed / 7 failed (pre-existing `UNErrorDomain`) / 1 skippe
 | **Пост-`8452aa0` Periphery re-run** ([NEW], раздел 8) | **DONE** ✅ | Выполнено в `ddcb1d52`+`b8761560`+`3e928f6f`+`220375cc`+`4655820` (4 коммита + 2 fix'а, net ~−1029 LOC, 14 тестов). Подробности — раздел «Фактический результат коммитов `ddcb1d52`+`b8761560`+`3e928f6f`+`220375cc`+`4655820` (Periphery re-run #2)» выше |
 | Review Фаза B ([ ]) | **DONE** ✅ | Фаза B выполнена в `3e928f6f` (3 протокола + 2 mock rewrite). 256→252 (чистый net 0 на `Review` файлах, т.к. test-helpers `makeContainer`/`seedActivities`/`appendActivities` компенсируют убранные mock'и) |
 | `AuthHelper` shrink ([ ]) | 62 стр. production | Требует переноса `isOfflineOnly` в `User` (UserDefaults-бэкап) + inlining `triggerLogout` в `MoreScreen`. Снижение читаемости. Решение за продуктом |
-| Tier 2 ponytail (потенциально) | −62 стр. production | `CloseButton` inline (−25, 4 caller'а в `OfflineLoginView`/`WorkoutPreviewScreen`/`WorkoutExerciseEditorScreen`/`EditCommentSheet`), `ChevronView`+`SWDivider` (−9, 5+1 caller). `DateFormatterService` shrink −28 уже выполнен частично в C (−38 строк prod: 4 метода delete). `ImageProcessor` убран из кандидатов — alive через `ProgressService.pickTempPhoto` (хотя output не уходит на сервер в read-only, валидация локально полезна). Без переписывания тестов, 1-in-1-out инлайны |
 
 ### Контроль качества
 
