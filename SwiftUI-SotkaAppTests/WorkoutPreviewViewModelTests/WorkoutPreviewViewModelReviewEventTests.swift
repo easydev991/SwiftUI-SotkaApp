@@ -48,7 +48,7 @@ extension WorkoutPreviewViewModelTests {
 
             await reporter.waitForCallCount(1)
             #expect(reporter.callCount == 1)
-            let hadRecentError = try #require(reporter.reportedHadRecentErrors.first)
+            let hadRecentError: Bool = try #require(reporter.reportedHadRecentErrors.first)
             #expect(!hadRecentError)
         }
 
@@ -93,7 +93,7 @@ extension WorkoutPreviewViewModelTests {
 
             await reporter.waitForCallCount(1)
             #expect(reporter.callCount == 1)
-            let hadRecentError = try #require(reporter.reportedHadRecentErrors.first)
+            let hadRecentError: Bool = try #require(reporter.reportedHadRecentErrors.first)
             #expect(hadRecentError)
         }
 
