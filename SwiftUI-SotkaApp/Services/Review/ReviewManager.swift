@@ -5,6 +5,21 @@ import OSLog
 @MainActor
 @Observable
 final class ReviewManager: ReviewEventReporting {
+    enum ReviewSkipReason: Equatable {
+        case alreadyAttemptedThisSession
+        case recentError
+        case noCurrentUser
+        case milestoneNotReached
+        case milestoneAlreadyAttempted
+    }
+
+    nonisolated static func shouldAttemptMilestone(
+        milestone: ReviewMilestone,
+        attemptedMilestones: [ReviewMilestone]
+    ) -> Bool {
+        !attemptedMilestones.contains(milestone)
+    }
+
     private let attemptStore: any ReviewAttemptStoring
     private let completionsCounter: any WorkoutCompletionsCounting
     private let currentUserIdProvider: @MainActor () -> Int?
@@ -55,7 +70,7 @@ final class ReviewManager: ReviewEventReporting {
         }
 
         let attempted = attemptStore.attemptedMilestones()
-        guard ReviewAttemptRules.shouldAttemptMilestone(
+        guard Self.shouldAttemptMilestone(
             milestone: milestone,
             attemptedMilestones: attempted
         ) else {

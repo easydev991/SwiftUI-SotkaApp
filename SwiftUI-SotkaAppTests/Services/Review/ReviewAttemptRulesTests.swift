@@ -6,7 +6,7 @@ import Testing
 struct ReviewAttemptRulesTests {
     @Test("Повторный триггер того же milestone блокируется")
     func blocksRepeatedAttemptForSameMilestone() {
-        let canAttempt = ReviewAttemptRules.shouldAttemptMilestone(
+        let canAttempt = ReviewManager.shouldAttemptMilestone(
             milestone: .tenth,
             attemptedMilestones: [.first, .tenth]
         )
@@ -16,7 +16,7 @@ struct ReviewAttemptRulesTests {
 
     @Test("Новый milestone разрешен, если ранее не attempted")
     func allowsAttemptForNewMilestone() {
-        let canAttempt = ReviewAttemptRules.shouldAttemptMilestone(
+        let canAttempt = ReviewManager.shouldAttemptMilestone(
             milestone: .thirtieth,
             attemptedMilestones: [.first, .tenth]
         )

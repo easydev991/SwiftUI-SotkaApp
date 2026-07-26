@@ -6,12 +6,12 @@ import Testing
 struct ReviewStorageKeysTests {
     @Test("Ключи имеют namespace review.")
     func keysUseReviewNamespace() {
-        #expect(ReviewStorageKeys.attemptedMilestones.hasPrefix("review."))
-        #expect(ReviewStorageKeys.lastReviewRequestAttemptDate.hasPrefix("review."))
+        #expect(ReviewStorage.attemptedMilestones.hasPrefix("review."))
+        #expect(ReviewStorage.lastReviewRequestAttemptDate.hasPrefix("review."))
     }
 
     @Test("Ключи уникальны")
     func keysAreUnique() {
-        #expect(ReviewStorageKeys.attemptedMilestones != ReviewStorageKeys.lastReviewRequestAttemptDate)
+        #expect(ReviewStorage.attemptedMilestones != ReviewStorage.lastReviewRequestAttemptDate)
     }
 }
