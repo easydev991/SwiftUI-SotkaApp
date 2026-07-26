@@ -1,6 +1,6 @@
 # Аудит over-engineering: весь репозиторий
 
-Дата аудита: 2026-07-25. Дата фактического применения `delete`-этапа: 2026-07-26 (коммит `ed82f6e9`). Дата применения `[FIX]` и `[restore]`-этапа: 2026-07-26 (коммит `22dace92`). Дата применения `delete`-этапа-2 (Этапы 1+2+3+7): 2026-07-26 (коммиты `19081bad`/`2555914a`/`c2e906a3`/`56726fe2`). Дата применения `delete`-этапа-3 (NetworkStatus): 2026-07-26 (коммит `9cb2646`). Дата применения `delete`-этапа-4 (устаревшая документация): 2026-07-26 (коммит `f10157a`). Дата применения `delete`-этапа-5 (правка оставшейся документации): 2026-07-26 (коммит `f1065ca`). Дата применения `delete`-этапа-6 (снос устаревших секций): 2026-07-26 (коммит `65d39dc`).
+Дата аудита: 2026-07-25. Дата фактического применения `delete`-этапа: 2026-07-26 (коммит `ed82f6e9`). Дата применения `[FIX]` и `[restore]`-этапа: 2026-07-26 (коммит `22dace92`). Дата применения `delete`-этапа-2 (Этапы 1+2+3+7): 2026-07-26 (коммиты `19081bad`/`2555914a`/`c2e906a3`/`56726fe2`). Дата применения `delete`-этапа-3 (NetworkStatus): 2026-07-26 (коммит `9cb2646`). Дата применения `delete`-этапа-4 (устаревшая документация): 2026-07-26 (коммит `f10157a`). Дата применения `delete`-этапа-5 (правка оставшейся документации): 2026-07-26 (коммит `f1065ca`). Дата применения `delete`-этапа-6 (снос устаревших секций): 2026-07-26 (коммит `65d39dc`). Дата применения `delete`-этапа-7 (снос crash-doc): 2026-07-26 (коммит `606f7b2`).
 Скоуп: только избыточная сложность (не корректность, не безопасность, не производительность).
 
 Контекст: `AppConfiguration.isReadOnlyMode = true` на постоянной основе — серверные API закрыты, поэтому весь сетевой слой (синхронизация прогресса, авторизация на сервере, разрешение конфликтов дат, серверный профиль/смена пароля) — мёртвый код и подлежит удалению. UI-тесты и mock-bootstrap по-прежнему передают `isReadOnlyMode: false`, чтобы симулировать нормальное поведение для скриншот-тестов.
@@ -11,7 +11,7 @@
 
 Теги: `delete` — мёртвый код; `stdlib` — велосипед вместо стандартной библиотеки; `native` — то, что платформа делает сама; `yagni` — абстракция с одной реализацией; `shrink` — та же логика короче.
 
-Статусы: `[x]` выполнено в коммитах `ed82f6e9`/`22dace92`/`19081bad`/`2555914a`/`c2e906a3`/`56726fe2`/`9cb2646`/`f10157a`/`f1065ca`/`65d39dc`, `[ ]` не выполнено (см. причину), `[NEW]` — новая находка, появившаяся после удаления мёртвого кода, `[FIX]`/`[restore]` — исправление критических побочных эффектов (коммит `22dace92`).
+Статусы: `[x]` выполнено в коммитах `ed82f6e9`/`22dace92`/`19081bad`/`2555914a`/`c2e906a3`/`56726fe2`/`9cb2646`/`f10157a`/`f1065ca`/`65d39dc`/`606f7b2`, `[ ]` не выполнено (см. причину), `[NEW]` — новая находка, появившаяся после удаления мёртвого кода, `[FIX]`/`[restore]` — исправление критических побочных эффектов (коммит `22dace92`).
 
 ## 1. Сетевой слой / синхронизация / авторизация (read-only mode)
 
@@ -24,9 +24,9 @@
 
 ### Удалено в `ed82f6e9` (delete-этап, ~16 530 стр.)
 
-- [x] **UI/Models:** 9 мёртвых экранов (на смену `OnlineLoginView` — `OfflineLoginView`), 4 модели SyncJournal + директория `Models/SyncJournal/`, 9 протоколов клиентов + 10 серверных DTO.
-- [x] **Preview + моки:** 6 preview-файлов + `StatusManager+` переписан; 9 моков серверных протоколов (в `Mocks/` оставлены `MockReviewEventReporter`/`MockStatusManager`/`MockUserDefaults`/`MockWCSession`).
-- [x] **Sync-логика + тесты:** 5 sync-гейтов в `StatusManager` (1559→1107 стр.) + sync-блоки в `DailyActivitiesService`/`CustomExercisesService`/`InfopostsService`; 30 мёртвых тестов удалено (sync + Progress + DailyActivities + DTO-зависимые, вся `DailyActivitiesTests/`).
+- [x] **UI/Models:** 9 мёртвых экранов (на смену `OnlineLoginView` — `OfflineLoginView`), 4 модели SyncJournal, 9 протоколов клиентов + 10 серверных DTO.
+- [x] **Preview + моки:** 6 preview-файлов + `StatusManager+` переписан; 9 моков серверных протоколов удалены (в `Mocks/` оставлены `MockReviewEventReporter`/`MockStatusManager`/`MockUserDefaults`/`MockWCSession`).
+- [x] **Sync-логика + тесты:** 5 sync-гейтов в `StatusManager` (1559→1107 стр.) + sync-блоки в 3 активных сервисах; 30 мёртвых тестов (sync + Progress + DailyActivities + DTO-зависимые, вся `DailyActivitiesTests/`).
 
 ### keep (живые, не тронуты)
 
@@ -89,19 +89,17 @@
 
 ### Прочее
 
-- [x] Удалены `ImageProcessor.createThumbnail` (5 стр. + 2 теста, вызывался только из тестов), `InfopostAvailabilityManager.getAvailablePostsBySection` (4 стр. + 1 тест, в проде только `filterAvailablePosts`), `Client+.swift` (74 стр., демо-данные → `ScreenshotDemoData.seedDemoData()`, см. раздел 7), `ScreenshotDemoData.readInfopostDays` (1 константа, 0 вызовов).
+- [x] Удалены `ImageProcessor.createThumbnail` (5 стр. + 2 теста), `InfopostAvailabilityManager.getAvailablePostsBySection` (4 стр. + 1 тест), `Client+.swift` (74 стр., демо-данные → `ScreenshotDemoData.seedDemoData()`, см. раздел 7), `ScreenshotDemoData.readInfopostDays` (1 константа, 0 вызовов).
 
 ### Новые мёртвые находки после `ed82f6e9` (не были в исходном аудите) [NEW]
 
-Файлы, ставшие мёртвыми после удаления sync/DTO, но не отмеченные в исходном плане:
-
-- [x] [NEW] Удалены 4 модели, ставшие мёртвыми после удаления sync/DTO: `ConflictingStartDate` (только `SyncStartDateScreen`), `CalendarPurchasesResponse` (только `syncJournalAndProgress`), `LoginCredentials` (только `OnlineLoginView`), `ProgressSnapshot` (только `ProgressSyncService` + `init(from: UserProgress)`/`photosForUpload` для сервера). Все 0 ссылок в проде.
+- [x] [NEW] **Удалены 4 модели, ставшие мёртвыми после удаления sync/DTO:** `ConflictingStartDate`, `CalendarPurchasesResponse`, `LoginCredentials`, `ProgressSnapshot`. Все 0 ссылок в проде.
 
 ### Ошибочно удалённые тесты [restore]
 
-`SwiftDataMigrationTests.swift` (4 теста, ~200 стр.) был в `SwiftUI-SotkaAppTests/Persistence/` (коммит `0810beb`), удалён в `ed82f6e9` как «мёртвый», потому что его `makeLegacySchema()`/`makeCurrentSchema()` ссылались на `SyncJournalEntry.self`. **Удаление было ошибкой:** тесты проверяли критичный сценарий — открытие старого SwiftData store и сохранение данных пользователя при изменении схемы. Без них нет регрессионной защиты единственного места, где Apple не даёт гарантий (удаление entity + relationship в lightweight migration).
+`SwiftDataMigrationTests.swift` был удалён в `ed82f6e9` как «мёртвый», потому что ссылался на `SyncJournalEntry.self`. **Удаление было ошибкой** — тесты проверяли критичный сценарий (открытие старого SwiftData store + сохранение данных при изменении схемы).
 
-- [x] [restore] **Восстановлен `SwiftDataMigrationTests.swift`** (269 стр., `22dace92`): 4 существующих теста сохранены + новый `opensStoreAfterRemovingSyncJournalEntryAndPreservesData` (проверяет миграцию сценария пользователя с онлайн-историей). Все 5 тестов проходят.
+- [x] [restore] **Восстановлен `SwiftDataMigrationTests.swift`** (269 стр., `22dace92`): 4 теста сохранены + новый `opensStoreAfterRemovingSyncJournalEntryAndPreservesData` (миграция пользователя с онлайн-историей). Все 5 тестов проходят.
 
 ## 5. На границе скоупа (не находки, решение за продуктом / оставить сейчас)
 
@@ -115,19 +113,9 @@
 
 ## 6. Устаревшая документация (требует обновления вне `ed82f6e9`/`22dace92`)
 
-Следующие файлы `docs/` всё ещё описывают удалённый sync-слой:
+Все файлы описывали удалённый sync-слой:
 
-- [x] `docs/daily-activities.md` — строки 126, 173: описывал `syncDailyActivities(context:) async throws -> SyncResult` (метод удалён). **Удалено в текущем коммите.**
-- [x] `docs/custom-exercises.md` — строки 86, 106: описывал `syncCustomExercises(context:)` (метод удалён). **Удалено в текущем коммите.**
-- [x] `docs/infoposts.md` — строка 82: описывал `syncReadPosts(context:)` (метод удалён). **Удалено в текущем коммите.**
-- [x] `docs/crash-swiftdata-invalid-future-backing-data.md` — **весь файл устарел** (sync-механизм, на который ссылался doc, удалён; проблемный UI-паттерн `DayActivityTrainingView` + live-relationship остался, но без sync триггера сценарий краша больше не описан в коде). **Файл удалён целиком в текущем коммите.**
-- [x] `docs/testing-mocks.md` — описывал `MockDaysClient`/`MockProgressClient`/etc. со специфичными полями (`mockedDayResponses`, `errorToThrow`, `getReadPostsResult`). Удалённый `MockSWClient` был единственной реализацией этого API. **Файл удалён в текущем коммите.**
-- [x] `docs/ui-test-mock-client.md` — описывал `MockLoginClient`/`MockExerciseClient`/etc. (структуры удалены). **Файл удалён в текущем коммите.**
-- [x] `docs/sync-journal.md` — **весь файл устарел** (53 стр., модель `SyncJournalEntry` и все связанные экраны/логика удалены). **Файл удалён в текущем коммите.**
-- [x] `docs/data-migration.md` — строка 29: пример схемы содержал `SyncJournalEntry.self` (больше не существует). **Удалено в текущем коммите.**
-- [x] `docs/progress-screen.md` — строка 174: описывал `syncProgress(context:) async throws -> SyncResult` (метод удалён). **Удалено в текущем коммите** (не было в исходном ТЗ, обнаружено по той же проблеме).
-- [x] `docs/calendar-extension.md` — строка 87 и секция «Retry» (строки 82-86): ссылается на `syncJournalAndProgress()` (метод удалён). **Удалено в текущем коммите** (не было в исходном ТЗ, обнаружено по той же проблеме; добавлена «Историческая справка»).
-- [x] `AGENTS.md` — строка 75: `Domain terms: ... SyncJournalEntry` — термин больше не существует, убран из списка.
+- [x] **Все 11 doc-файлов + `AGENTS.md` обработаны** (`f10157a`/`f1065ca`/`65d39dc`/`606f7b2`): удалены целиком `testing-mocks.md`, `ui-test-mock-client.md`, `sync-journal.md`, `crash-swiftdata-invalid-future-backing-data.md`; отредактированы `daily-activities.md`, `custom-exercises.md`, `infoposts.md`, `progress-screen.md`, `calendar-extension.md`, `data-migration.md`, `AGENTS.md` (строка 75 — убран термин `SyncJournalEntry`).
 
 ## 7. UI-тестовая инфраструктура: демо-данные (критическая ошибка аудита) [FIX]
 
@@ -208,7 +196,7 @@
 |---|---|---|
 | Review-слой yagni/shrink | ~237 стр. production + ~646 стр. тестов | Выходит за рамки задачи. Тесты Review (7 файлов, 646 стр.) сохраняются — входят в 903 passed |
 | **`AuthHelper` shrink** | 62 стр. production | Требует переноса `isOfflineOnly` в `User` (UserDefaults-бэкап) + inlining `triggerLogout` в `MoreScreen`. Снижение читаемости. Решение за продуктом |
-| **Устаревшая документация `docs/` + `AGENTS.md`** | 0 файлов: все 8 пунктов обработаны. Удалены целиком в `f10157a` + `<NEW>`: `testing-mocks.md`, `ui-test-mock-client.md`, **`sync-journal.md`**, **`crash-swiftdata-invalid-future-backing-data.md`**. Отредактированы: `daily-activities.md`, `custom-exercises.md`, `infoposts.md`, `progress-screen.md`, `calendar-extension.md`, `data-migration.md`, `AGENTS.md` строка 75 | Готово |
+| **Устаревшая документация `docs/` + `AGENTS.md`** | 0 файлов: все 11 пунктов обработаны (`f10157a`/`f1065ca`/`65d39dc`/`606f7b2`). Удалены целиком: `testing-mocks.md`, `ui-test-mock-client.md`, `sync-journal.md`, `crash-swiftdata-invalid-future-backing-data.md`. Отредактированы: 6 doc + `AGENTS.md` (строка 75) | Готово |
 
 ### Контроль качества после `ed82f6e9` + `22dace92` + `19081bad` + `2555914a` + `c2e906a3` + `56726fe2`
 
