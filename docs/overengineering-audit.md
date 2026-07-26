@@ -55,7 +55,7 @@
 
 ## 3. Review-слой (yagni — избыточная абстракция)
 
-Система «оценить приложение в App Store» реализована через 12 production-файлов (270 стр.) + 7 тестовых файлов (646 стр.). **Вся зачистка этого раздела не выполнена в `ed82f6e9`** (выходит за рамки delete-этапа).
+Система «оценить приложение в App Store» реализована через **9 production-файлов (256 стр. после Фазы A) + 7 тестовых файлов (636 стр.)**. Исходно было 12 production-файлов / 270 стр. — 3 файла (`ReviewAttemptRules`/`ReviewSkipReason`/`ReviewStorageKeys`) удалены в Фазе A. **Вся зачистка этого раздела не выполнена в `ed82f6e9`** (выходит за рамки delete-этапа).
 
 **Важно (обнаружено 2026-07-26):** утверждение «тесты не ломаются» из исходного аудита — ложное для 2 протоколов. В `SwiftUI-SotkaAppTests/Services/Review/ReviewManagerTests.swift:222/253` определены `private final class MockReviewAttemptStore: ReviewAttemptStoring` и `private final class MockWorkoutCompletionsCounter: WorkoutCompletionsCounting`, оба используются в `makeSUT()` (строки 11-13) во всех тестах `ReviewManager`. Удаление этих двух протоколов = переписывание тестов. `ReviewContext` — **используется вне `Review/`** (внешние caller'ы: `StatusManager.swift:571`, `WorkoutPreviewViewModel.swift:238`), инлайн потребует изменения их вызовов.
 
@@ -79,6 +79,8 @@
 
 - [x] keep `ReviewEventReporting.swift` (5 стр.) — **живой, не тронут.**
 - [x] `ReviewMilestone.swift` (21 стр.) — расширен `func isNotYetAttempted(in: [ReviewMilestone]) -> Bool` (3 стр., тестируется в `ReviewAttemptRulesTests`, 2 теста). Других правок нет: `ReviewMilestoneTests.swift` (90 стр., ~10 тестов) тестирует статические методы `milestone(forCompletedWorkoutCount:)` / `isMilestoneWorkoutCount(_:)`. Гнездование в `ReviewManager` не требуется: enum остаётся публичным для тестов.
+- [x] keep `ReviewRequestHost.swift` (55 стр.) — SwiftUI-интеграция StoreKit `requestReview()`: `ReviewRequestTriggerID` (4-7) для `.task(id:)`, `ReviewRequestModifier` (9-49) private, `View.reviewRequestHandling(requestDelay:)` (51-55) public. Подавляет запрос при `-FASTLANE_SNAPSHOT`/`UITest`. **Живой, не тронут.** Тесты: `ReviewRequestTriggerIDTests.swift` (34 стр.).
+- [x] keep `WorkoutCompletionsCounter.swift` (31 стр.) — concrete class для подсчёта завершённых тренировок из SwiftData. **Живой, не тронут** (Фаза B заменит протокол `WorkoutCompletionsCounting` этим конкретным типом, см. ниже). Тесты: `WorkoutCompletionsCounterTests.swift` (134 стр.).
 
 ### Итоговая цель Review-слоя (частично достигнута: Фаза A выполнена в `bc0a76f` + move в текущем коммите)
 
@@ -86,7 +88,7 @@
 После обеих фаз (план): 270 → 244 стр. production (net −26). `ReviewManager` 85 → ~115 стр. с учётом Фазы B.
 
 **Подитого Review (production) на 2026-07-26: 270 стр. → 256 стр. (net −14) — Фаза A выполнена. Остаток Фазы B: −12 стр. (256 → 244).**
-**Подитого Review (tests): 636 стр. сохранены (7 тестовых файлов живы, 2 теста в `ReviewAttemptRulesTests` стали компактнее). Фаза B перепишет 2 fileprivate-мока в `ReviewManagerTests.swift` (без изменения числа тестов).**
+**Подитого Review (tests): 636 стр. сохранены (7 тестовых файлов живы, 2 теста в `ReviewAttemptRulesTests` стали компактнее: 26 → 16). Фаза B перепишет 2 fileprivate-мока в `ReviewManagerTests.swift` (без изменения числа тестов).**
 
 ## 4. Другие мёртвые/yagni находки в приложении
 
