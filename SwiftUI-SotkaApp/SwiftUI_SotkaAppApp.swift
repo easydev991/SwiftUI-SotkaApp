@@ -59,6 +59,7 @@ struct SwiftUI_SotkaAppApp: App {
             self.statusManager = mockServices.statusManager
             self.authHelper = mockServices.authHelper
             UIView.setAnimationsEnabled(false)
+            try? Tips.resetDatastore()
         } else {
             analytics = AnalyticsService(providers: [FirebaseAnalyticsProvider()])
             let authHelper = AuthHelperImp()
@@ -200,6 +201,7 @@ private extension SwiftUI_SotkaAppApp {
         )
 
         statusManager.setCurrentDayForDebug(12)
+        authHelper.performOfflineLogin()
         return (statusManager, authHelper)
     }
 }
