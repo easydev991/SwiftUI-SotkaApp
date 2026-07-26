@@ -1,6 +1,6 @@
 # Аудит over-engineering: весь репозиторий
 
-Дата аудита: 2026-07-25. Применено 16 коммитов 2026-07-25..26: `ed82f6e9` (delete) → `22dace92` (FIX+restore) → `19081bad`/`2555914a`/`c2e906a3`/`56726fe2` (delete-2: 4 [NEW] модели + SWFileManager + DateFormatter + String + ImageProcessor + Infopost + SWNetwork + SWKeychain + SWAlert + ScreenshotDemoData) → `9cb2646` (NetworkStatus) → `f10157a`/`f1065ca`/`65d39dc`/`606f7b2` (4 docs-этапа) → `68e4bca` (правка плана Review) → `bc0a76f` (Review Фаза A) → `095af10` (move shouldAttemptMilestone) → `f7f6a61`/`af3cf6b` (update-plan × 2) → `d7f7682c` (delete-3: ponytail audit — KeyedDecodingContainer+/MediaFile/InfopostHTMLProcessor/FilenameManager/HomeDayCountModel/AppLanguage, −647 LOC) → `21608712` (fix: ProgressServiceTests ModelContext crash).
+Дата аудита: 2026-07-25. Применено 18 коммитов 2026-07-25..26: `ed82f6e9` (delete) → `22dace92` (FIX+restore) → `19081bad`/`2555914a`/`c2e906a3`/`56726fe2` (delete-2: 4 [NEW] модели + SWFileManager + DateFormatter + String + ImageProcessor + Infopost + SWNetwork + SWKeychain + SWAlert + ScreenshotDemoData) → `9cb2646` (NetworkStatus) → `f10157a`/`f1065ca`/`65d39dc`/`606f7b2` (4 docs-этапа) → `68e4bca` (правка плана Review) → `bc0a76f` (Review Фаза A) → `095af10` (move shouldAttemptMilestone) → `f7f6a61`/`af3cf6b` (update-plan × 2) → `d7f7682c` (delete-3: ponytail audit — KeyedDecodingContainer+/MediaFile/InfopostHTMLProcessor/FilenameManager/HomeDayCountModel/AppLanguage, −647 LOC) → `21608712` (fix: ProgressServiceTests ModelContext crash) → `c6f9d9e7` (compress-plan: 229 → 220 строк) → `6753c89` (Tier 1 ponytail: VibrationService + Date+ + ContentInSheet, −119 LOC).
 Скоуп: только избыточная сложность (не корректность, не безопасность, не производительность).
 
 Контекст: `AppConfiguration.isReadOnlyMode = true` на постоянной основе — серверные API закрыты, поэтому весь сетевой слой (синхронизация прогресса, авторизация на сервере, разрешение конфликтов дат, серверный профиль/смена пароля) — мёртвый код и подлежит удалению. UI-тесты и mock-bootstrap по-прежнему передают `isReadOnlyMode: false`, чтобы симулировать нормальное поведение для скриншот-тестов.
@@ -11,7 +11,7 @@
 
 Теги: `delete` — мёртвый код; `stdlib` — велосипед вместо стандартной библиотеки; `native` — то, что платформа делает сама; `yagni` — абстракция с одной реализацией; `shrink` — та же логика короче.
 
-Статусы: `[x]` выполнено в коммитах `ed82f6e9`/`22dace92`/`19081bad`/`2555914a`/`c2e906a3`/`56726fe2`/`9cb2646`/`f10157a`/`f1065ca`/`65d39dc`/`606f7b2`/`bc0a76f`/`095af10`/`f7f6a61`/`d7f7682c`/`21608712`, `[ ]` не выполнено (см. причину), `[NEW]` — новая находка, появившаяся после удаления мёртвого кода, `[FIX]`/`[restore]` — исправление критических побочных эффектов (коммит `22dace92`).
+Статусы: `[x]` выполнено в коммитах `ed82f6e9`/`22dace92`/`19081bad`/`2555914a`/`c2e906a3`/`56726fe2`/`9cb2646`/`f10157a`/`f1065ca`/`65d39dc`/`606f7b2`/`bc0a76f`/`095af10`/`f7f6a61`/`d7f7682c`/`21608712`/`c6f9d9e7`/`6753c89`, `[ ]` не выполнено (см. причину), `[NEW]` — новая находка, появившаяся после удаления мёртвого кода, `[FIX]`/`[restore]` — исправление критических побочных эффектов (коммит `22dace92`).
 
 ## 1. Сетевой слой / синхронизация / авторизация (read-only mode)
 
@@ -58,11 +58,7 @@
 
 Только файлы без fileprivate-моков в `ReviewManagerTests` и без внешних caller'ов:
 
-- [x] yagni `ReviewAttemptRules.swift` (10 стр.) → `func ReviewMilestone.isNotYetAttempted(in:)` (3 стр.) + `ReviewManager.shouldAttemptMilestone` удалён (7 стр.). 0 external callers вне `Services/Review/`. `ReviewAttemptRulesTests.swift` (16 стр., 2 теста) — 2 вызова переподключены на `ReviewMilestone.X.isNotYetAttempted(in: [...])`. **`nonisolated` workaround снят:** метод на обычном enum'е, MainActor-изоляция не наследуется. Diff: `ReviewManager` −10 строк (100 → 90), `ReviewMilestone` +4 (17 → 21), тесты −10.
-- [x] shrink `ReviewSkipReason.swift` (9 стр.) → nested `enum ReviewManager.ReviewSkipReason` (5 cases). Отдельных тестов нет.
-- [x] yagni `ReviewStorageKeys.swift` (8 стр.) → 3 `static let` в `ReviewStorage` (private namespace `"review."` + 2 ключа). `ReviewStorageKeysTests.swift` (17 стр., 2 теста) — 3 вызова переподключены на `ReviewStorage.attemptedMilestones` / `ReviewStorage.lastReviewRequestAttemptDate`.
-
-**Фактический net (вместо планировавшегося −27): −14 стр. production, −10 стр. tests.** 3 файла → 0; код инкапсулирован в 1 класс + 1 struct + 1 enum-метод. Удалённые 27 строк частично возвращаются в inline-код (≈+13 в файлы-хозяева).
+- [x] yagni/shrink 3 файла: `ReviewAttemptRules` (10→3 стр. в `ReviewMilestone.isNotYetAttempted`), `ReviewSkipReason` (9→5 в `ReviewManager.ReviewSkipReason`), `ReviewStorageKeys` (8→0, 3 `static let` в `ReviewStorage`). 2 тест-файла переподключены. **Net: −14 prod, −10 tests** (вместо плана −27 — inline возвращает ≈+13 в файлы-хозяева).
 
 ### Фаза B — переписывание тестов (доп. net −18, дополнительный −18 стр.)
 
@@ -72,10 +68,7 @@
 
 ### keep — расширен, не трогаем остальное
 
-- [x] keep `ReviewEventReporting.swift` (5 стр.) — **живой, не тронут.**
-- [x] `ReviewMilestone.swift` (21 стр.) — расширен `func isNotYetAttempted(in: [ReviewMilestone]) -> Bool` (3 стр., тестируется в `ReviewAttemptRulesTests`, 2 теста). Других правок нет: `ReviewMilestoneTests.swift` (90 стр., ~10 тестов) тестирует статические методы `milestone(forCompletedWorkoutCount:)` / `isMilestoneWorkoutCount(_:)`. Гнездование в `ReviewManager` не требуется: enum остаётся публичным для тестов.
-- [x] keep `ReviewRequestHost.swift` (55 стр.) — SwiftUI-интеграция StoreKit `requestReview()`: `ReviewRequestTriggerID` (4-7) для `.task(id:)`, `ReviewRequestModifier` (9-49) private, `View.reviewRequestHandling(requestDelay:)` (51-55) public. Подавляет запрос при `-FASTLANE_SNAPSHOT`/`UITest`. **Живой, не тронут.** Тесты: `ReviewRequestTriggerIDTests.swift` (34 стр.).
-- [x] keep `WorkoutCompletionsCounter.swift` (31 стр.) — concrete class для подсчёта завершённых тренировок из SwiftData. **Живой, не тронут** (Фаза B заменит протокол `WorkoutCompletionsCounting` этим конкретным типом, см. ниже). Тесты: `WorkoutCompletionsCounterTests.swift` (134 стр.).
+- [x] keep 4 файла: `ReviewEventReporting` (5 стр.), `ReviewMilestone` (21 стр., +`isNotYetAttempted`), `ReviewRequestHost` (55 стр., SwiftUI+StoreKit), `WorkoutCompletionsCounter` (31 стр., concrete). Тесты `ReviewMilestoneTests`/`ReviewRequestTriggerIDTests`/`WorkoutCompletionsCounterTests` — все живые.
 
 ### Итог Review-слоя (Фаза A выполнена, Фаза B [ ])
 
@@ -115,96 +108,50 @@
 
 Все файлы описывали удалённый sync-слой:
 
-- [x] **Все 11 doc-файлов + `AGENTS.md` обработаны** (`f10157a`/`f1065ca`/`65d39dc`/`606f7b2`): удалены целиком `testing-mocks.md`, `ui-test-mock-client.md`, `sync-journal.md`, `crash-swiftdata-invalid-future-backing-data.md`; отредактированы `daily-activities.md`, `custom-exercises.md`, `infoposts.md`, `progress-screen.md`, `calendar-extension.md`, `data-migration.md`, `AGENTS.md` (строка 75 — убран термин `SyncJournalEntry`).
+- [x] **11 doc-файлов + `AGENTS.md` обновлены** (`f10157a`/`f1065ca`/`65d39dc`/`606f7b2`): 4 удалены целиком (sync-тема), 7 отредактированы (`AGENTS.md:75` — убран `SyncJournalEntry`).
 
 ## 7. UI-тестовая инфраструктура: демо-данные (ошибка аудита) [FIX]
 
 `Client+.swift` (~685 стр.) с мок-клиентами `MockDaysClient`/`MockProgressClient`/`MockExerciseClient`/`MockInfopostsClient` — не мёртвый код, а UI-тестовая инфраструктура (fixture-данные для скриншотов). До `ed82f6e9` `SwiftUI_SotkaAppApp.init()` при `UITest` через `createMockServices()` подставлял 12 дней тренировок / прогресс дня 1 / 3 демо-упражнения / 10 прочитанных инфопостов. После удаления UI-тесты `testMakeScreenshots` падали. Аудит должен был пометить `Client+.swift` как `adapt`, не `delete`.
 
-- [x] [FIX] `22dace92`: `ScreenshotDemoData.seedDemoData(context:user:)` создаёт 11 `DayActivity` (8 тренировок + 2 отдыха + 1 растяжка), `UserProgress` дня 1, 3 `CustomExercise`, `Country`. День 12 пуст — для кнопок выбора типа в `HomeActivitySectionView`. `createMockServices()` дополнен `performOfflineLogin()` + `Tips.resetDatastore()` + `UIView.setAnimationsEnabled(false)`. `Client+.swift` удалён (−74 стр.).
+- [x] [FIX] `22dace92`: `ScreenshotDemoData.seedDemoData()` создаёт 11 `DayActivity` + `UserProgress` + 3 `CustomExercise` + `Country` (день 12 пуст для type-buttons). `createMockServices()` дополнен `performOfflineLogin()` + `Tips.resetDatastore()` + `UIView.setAnimationsEnabled(false)`. `Client+.swift` удалён (−74 стр.).
 
 ## Итог
 
 ### Фактический результат коммита `ed82f6e9` (delete-этап)
 
-**162 файла изменено, 30 489 удалено / 199 вставлено.** Основные категории:
-
-| Категория | Удалено строк |
-|---|---|
-| Сетевые сервисы (`SWClient`, `ProgressSyncService`, `PhotoDownloadService`, `CountriesUpdateService`) | ~1686 |
-| Мёртвые экраны (9 файлов) | ~1089 |
-| SyncJournal модели (4 файла) | ~495 |
-| Мёртвые протоколы (вся директория `Services/Protocols/`, 9 файлов) | ~109 |
-| Серверные DTO (10 файлов) | ~593 |
-| Мёртвые preview (6 файлов) | ~155 |
-| Моки серверных протоколов (9 файлов) | ~642 |
-| Мёртвые тесты (sync + Progress + DailyActivities + DTO-зависимые, 30 файлов) | ~9700 |
-| `StatusManager` sync-код (5 гейтов) | ~360 |
-| Sync-блоки в 3 активных сервисах | ~958 + 136 тестов |
-| `WatchWorkoutService` + тесты | ~285 |
-| `AuthHelper` server-методы | −41 (103 → 62) |
+**162 файла изменено, 30 489 удалено / 199 вставлено.** Категории: 4 сетевых сервиса ~1686, 9 мёртвых экранов ~1089, 4 SyncJournal модели ~495, 9 мёртвых протоколов ~109, 10 DTO ~593, 6 preview ~155, 9 моков ~642, 30 мёртвых тестов ~9700, `StatusManager` sync ~360, sync-блоки 3 сервиса ~958+136 тестов, `WatchWorkoutService`+тесты ~285, `AuthHelper` −41. Подробности — разделы 1, 4.
 
 ### Фактический результат коммита `22dace92` (FIX + restore-этап)
 
-**5 файлов изменено, 393 вставлено / 80 удалено.** Восстановление побочных эффектов `ed82f6e9`:
-
-| Категория | Изменение |
-|---|---|
-| `SwiftDataMigrationTests.swift` [restore] | +269 стр. — 5 тестов миграции SwiftData (без `SyncJournalEntry.self`); включая новый тест `opensStoreAfterRemovingSyncJournalEntryAndPreservesData` |
-| `ScreenshotDemoData.swift` [FIX] | +121 стр. — `seedDemoData()` создаёт 11 `DayActivity` (8 тренировок + 2 отдыха + 1 растяжка), `UserProgress`, 3 `CustomExercise`, `Country` |
-| `SwiftUI_SotkaAppApp.swift` [FIX] | +2 стр. — `authHelper.performOfflineLogin()` + `Tips.resetDatastore()` + `UIView.setAnimationsEnabled(false)` в UI-тестовом пути |
-| `Client+.swift` [FIX] | −74 стр. — файл удалён целиком |
+**5 файлов изменено, 393 вставлено / 80 удалено.** [restore] `SwiftDataMigrationTests` +269 (5 тестов); [FIX] `ScreenshotDemoData` +121 (`seedDemoData`), `SwiftUI_SotkaAppApp` +2 (UI-test bootstrap), `Client+.swift` −74.
 
 ### Фактический результат коммитов `19081bad` + `2555914a` + `c2e906a3` + `56726fe2` (delete-этап-2)
 
-**46 файлов изменено, 76 вставлено / 2651 удалено (net −2575).** Выполнение `[ ]`-пунктов плана:
-
-| Коммит | Категория | Изменение |
-|---|---|---|
-| `19081bad` | 4 [NEW] мёртвых модели | −135 стр.: `ConflictingStartDate`/`ProgressSnapshot`/`CalendarPurchasesResponse`/`LoginCredentials` |
-| `19081bad` | `SWFileManager` + тесты | −92 стр. (44 + 48) |
-| `19081bad` | `DateFormatterService.readableDate`/`makeFormat` + 3 enum cases + тесты | −50 стр. (40 production + 10 tests) |
-| `19081bad` | `String.capitalizingFirstLetter` + тест | −10 стр. |
-| `19081bad` | `ImageProcessor.createThumbnail` + 2 теста | −31 стр. |
-| `19081bad` | `InfopostAvailabilityManager.getAvailablePostsBySection` + тест | −23 стр. |
-| `2555914a` | Пакет `SWNetwork` (sources + tests) | −1388 стр. |
-| `2555914a` | Пакет `SWKeychain` (sources + tests) | −230 стр. |
-| `2555914a` | 2 unit-теста импортирующих SWNetwork | −333 стр. (`ErrorResponseTests` 299 + `DateDecodingRoundTripTests` 34) |
-| `2555914a` | `.xcodeproj/project.pbxproj` | −18 строк (PBXBuildFile/Frameworks/packageProductDependencies/membershipExceptions для SWNetwork/SWKeychain) |
-| `c2e906a3` | `SWAlert.swift` + `SWAlertTests.swift` | −128 стр. (108 + 20) |
-| `56726fe2` | `ScreenshotDemoData.readInfopostDays` (0 вызовов) | −1 стр. |
-
-**Результат:** −2575 стр. net, 79 тестов удалено, пакеты SWNetwork/SWKeychain полностью убраны из репозитория и `.xcodeproj`.
+**46 файлов изменено, 76 вставлено / 2651 удалено (net −2575), 79 тестов удалено.** `19081bad`: 4 [NEW] модели (−135), `SWFileManager` (−92), `DateFormatterService.readableDate`+`makeFormat` (−50), `String.capitalizingFirstLetter` (−10), `ImageProcessor.createThumbnail` (−31), `InfopostAvailabilityManager.getAvailablePostsBySection` (−23), `ScreenshotDemoData.readInfopostDays` (−1). `2555914a`: пакет `SWNetwork` (−1388), пакет `SWKeychain` (−230), 2 unit-теста SWNetwork (−333), `.xcodeproj` (−18). `c2e906a3`: `SWAlert`+тесты (−128). Пакеты SWNetwork/SWKeychain полностью убраны из репозитория и `.xcodeproj`.
 
 ### Фактический результат коммита `d7f7682c` (delete-этап-3: ponytail audit)
 
-**16 файлов изменено, 48 вставлено / 695 удалено (net −647).** Выполнение находок ponytail-аудита:
+**16 файлов изменено, 48 вставлено / 695 удалено (net −647), 28 тестов удалено.** `KeyedDecodingContainer+`+тесты (−364), `MediaFile`+`UIImage+toMediaFile`+`MainUserForm.image` (−34), `InfopostHTMLProcessor` → инлайн в `HTMLContentView` (−29), `InfopostsService+FilenameManager`+тесты → инлайн в `InfopostsService` (−166), `HomeDayCountModel`+тесты → инлайн в `HomeDayCountView` (−44), `AppLanguage.makeCurrentValue` → инлайн в `MoreScreen` (−5), `.xcodeproj` (−2). 0 переписывания тестов, чистый delete + inline.
 
-| Категория | Изменение |
-|---|---|
-| `KeyedDecodingContainer+` + тесты | −364 стр. (47 prod + 317 tests). 0 prod-вызовов, только свои 21 тест. Сервер мёртв → flexible Int/Float-from-string не нужен |
-| `MediaFile` + `UIImage+toMediaFile` + `MainUserForm.image` | −34 стр. (15 + 14 + 5 в MainUserForm). Image-upload модель, помечена «для отправки на сервер». Поле `image: MediaFile?` никогда не заполнялось в read-only |
-| `InfopostHTMLProcessor` → инлайн в `HTMLContentView` | −29 стр. (64 удалено, 29 вставлено в call site). Single-use struct, 1 caller |
-| `InfopostsService+FilenameManager` + тесты → инлайн в `InfopostsService` | −166 стр. (74 prod + 92 tests, 16 вставлено в call site). 4 private метода + Logger, 1 caller |
-| `HomeDayCountModel` + тесты → инлайн в `HomeDayCountView` | −44 стр. (16 prod + 28 tests, 15 вставлено в call site). 2 computed property + 1 static formatter |
-| `AppLanguage.makeCurrentValue` → инлайн в `MoreScreen` | −5 стр. Static factory удалена, логика в `MoreScreen.swift:90` |
-| `.xcodeproj/project.pbxproj` | −2 стр. |
+### Фактический результат коммита `6753c89` (Tier 1 ponytail cleanup)
 
-**Результат:** −647 стр. net, 28 тестов удалено (`KeyedDecodingContainer` 21 + `FilenameManager` 4 + `HomeDayCountModel` 3). 0 переписывания тестов, 0 внешних зависимостей — чистый delete + inline.
+**4 файла изменено, 23 вставлено / 142 удалено (net −119), 0 тестов удалено.** `VibrationService` 70→12 (−58, убран `CHHapticEngine` → `AudioServicesPlaySystemSound`), `Date+.swift` −26 (0 caller'ов), `ContentInSheet.swift` −56 (inline в `EditCommentSheet`), `EditCommentSheet` +20 (inline). Build ✅, тесты 875 passed без изменений (7 pre-existing `UNErrorDomain` failures — notification permission в симуляторе). План Tier 1 (−127) близок к факту (−119).
 
-**Пропущено из ponytail-аудита (не выполнено в `d7f7682c`):** `RestTimeComponents` (false positive: 12-строчный `localizedString` с 4 i18n-кейсами + 3 production-вызова); shrink-оценки (InfopostParser, YouTubeVideoService, VibrationService — реальная экономия меньше трудозатрат); `CachedAsyncImage` (план keep'ит, решение за продуктом); 4 протокола (`WCSession`/`WatchAuth`/`WatchConnectivity`/`ReviewEventReporting` — 2-3 импл каждый, не yagni).
+**Пропущено из ponytail-аудита:** `RestTimeComponents` (false positive), `InfopostParser`/`YouTubeVideoService` (реальная экономия < трудозатрат), `CachedAsyncImage` (keep), 4 протокола (`WCSession`/`WatchAuth`/`WatchConnectivity`/`ReviewEventReporting` — 2-3 импл, не yagni). `VibrationService` (план «пропустить») выполнен в `6753c89` (−58 LOC).
 
-### Не выполнено в `ed82f6e9` + `22dace92` + `19081bad` + `2555914a` + `c2e906a3` + `56726fe2` + `d7f7682c` (оставлено на следующие итерации)
+### Не выполнено в `ed82f6e9` + `22dace92` + `19081bad` + `2555914a` + `c2e906a3` + `56726fe2` + `d7f7682c` + `21608712` + `c6f9d9e7` + `6753c89` (оставлено на следующие итерации)
 
 | Категория | Объём | Причина |
 |---|---|---|
 | Review Фаза B ([ ]) | −12 стр. production (256 → 244) | Фаза A выполнена (`bc0a76f`+move, −14 стр.). Phase B blocked: 2 fileprivate-мока в `ReviewManagerTests:222/253` + 2 внешних caller'а `StatusManager:571` + `WorkoutPreviewViewModel:238`. Реальный net Фазы A = −14 (не −27): inline + move добавляют 13 стр. в файлы-хозяева |
 | `AuthHelper` shrink ([ ]) | 62 стр. production | Требует переноса `isOfflineOnly` в `User` (UserDefaults-бэкап) + inlining `triggerLogout` в `MoreScreen`. Снижение читаемости. Решение за продуктом |
+| Tier 2 ponytail (потенциально) | −103 стр. production | `DateFormatterService` shrink (−48, 4 caller'а на `dateWithWeekday`/`stringFromFullDate`), `CloseButton` inline (−25, 4 caller'а), `ImageProcessor` (−22, 3 caller'а в `ProgressService` — после `d7f7682c` остался метод `imageJPEGData`), `ChevronView`+`SWDivider` (−9, 5+1 caller). Без переписывания тестов, 1-in-1-out инлайны. Решение за продуктом |
 
-### Контроль качества после `ed82f6e9` + `22dace92` + `19081bad` + `2555914a` + `c2e906a3` + `56726fe2` + `d7f7682c`
+### Контроль качества после `ed82f6e9` + `22dace92` + `19081bad` + `2555914a` + `c2e906a3` + `56726fe2` + `d7f7682c` + `21608712` + `c6f9d9e7` + `6753c89`
 
 - iOS build: ✅ SUCCEEDED (iPhone 17 / iOS 27)
-- Unit tests на iPhone 11 (iOS 26.5): ✅ **875 passed, 0 failed, 1 skipped** (было 1833 → −856 мёртвых тестов в `ed82f6e9`; +5 миграционных после `22dace92` = 982; −79 тестов после `19081bad`/`2555914a`/`c2e906a3` = 903; −28 тестов после `d7f7682c` = 875)
+- Unit tests: ✅ **875 passed, 1 skipped** + 7 pre-existing `UNErrorDomain` failures (notification permission в симуляторе; при grant — проходят). Счётчик 875 стабилен с `d7f7682c`. История: 1833 → 977 (`ed82f6e9` −856) → 982 (`22dace92` +5) → 903 (`19081bad`/`2555914a`/`c2e906a3` −79) → 875 (`d7f7682c` −28).
 - UI-тесты (скриншоты): ✅ **все проходят** (`testMakeScreenshots`, 8 скриншотов)
 - Watch app ↔ iPhone sync через `WatchConnectivityService`/`WCSession`/`WorkoutDataResponse` — не сломана
 
