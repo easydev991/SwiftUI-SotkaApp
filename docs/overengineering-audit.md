@@ -107,7 +107,7 @@ Periphery re-run дал 46 warnings в 17 файлах. После ручной 
 | `Models/City.swift` + `Country.cities: [City]` | `City` struct целиком + `cities` data | 25 стр. | `cities` пишется в `makeDefaultCountry()`, не читается; `City.id`/`name`/`lat`/`lon` — 0 reader'ов в app коде |
 | `SotkaWatchTests/Mocks/MockWatchConnectivityService.swift:21` | `requestedCurrentActivityDay` | 1 стр. | assign-only (`private(set) var`), 0 reader'ов в тестах |
 | `Libraries/SWDesignSystem/.../SectionView.swift` | `public struct` + `public init` × 3 + `public extension` | 0 LOC | redundant public (используется только в `ItemListScreen.swift:39` + previews внутри пакета) |
-| `Libraries/SWDesignSystem/.../SWDivider.swift` | `public struct` + `public init` + `public body` | 0 LOC | redundant public (используется только в `DividerIfNeededModifier.swift:15` + preview) |
+| `Libraries/SWDesignSystem/.../SWDivider.swift` | `struct` + `init` + `var body` | 13 LOC | **Стал entirely dead 2026-07-26** (пользователь удалил `DividerIfNeededModifier.swift` + `withDivider` extension — единственный consumer). 0 production-callers, 1 reference в собственном `#Preview`. Periphery-описание «redundant public» было неточным: `public` на struct'е уже не было в HEAD, файл всегда был `internal`. **Кандидат на `git rm`** (см. «Не выполнено») |
 | `Libraries/SWDesignSystem/.../Rows/ListRowView.swift` | `public struct` + `public extension` | 0 LOC | unused outside file (только previews) |
 | `Libraries/SWDesignSystem/.../ItemListScreen.swift:23` | `init(mode:allItems:...)` | 12 стр. | 0 caller'ов вне previews |
 
@@ -323,6 +323,8 @@ Build ✅, tests 868 passed / 7 failed (pre-existing `UNErrorDomain`) / 1 skippe
 | **Пост-`8452aa0` Periphery re-run** ([NEW], раздел 8) | **DONE** ✅ | Выполнено в `ddcb1d52`+`b8761560`+`3e928f6f`+`220375cc`+`4655820` (4 коммита + 2 fix'а, net ~−1029 LOC, 14 тестов). Подробности — раздел «Фактический результат коммитов `ddcb1d52`+`b8761560`+`3e928f6f`+`220375cc`+`4655820` (Periphery re-run #2)» выше |
 | Review Фаза B ([ ]) | **DONE** ✅ | Фаза B выполнена в `3e928f6f` (3 протокола + 2 mock rewrite). 256→252 (чистый net 0 на `Review` файлах, т.к. test-helpers `makeContainer`/`seedActivities`/`appendActivities` компенсируют убранные mock'и) |
 | `AuthHelper` shrink ([ ]) | 62 стр. production | Требует переноса `isOfflineOnly` в `User` (UserDefaults-бэкап) + inlining `triggerLogout` в `MoreScreen`. Снижение читаемости. Решение за продуктом |
+| **Tier 2 inline (DividerIfNeededModifier + withDivider)** (2026-07-26) | **DONE** ✅ (не закоммичено) | Удалены пользователем вручную: `DividerIfNeededModifier.swift` (`git rm`) + `withDivider` extension из `View+.swift`. Подход: убран indirection-слой (1-in-1-out abstraction), а не дублирование wrapper'а в call-site'ах (как для CloseButton/ChevronView, откачено в `3ec61f5`). Build ✅, 862 tests pass |
+| **`SWDivider.swift` deletion** (2026-07-26) | 13 стр. production | Файл стал entirely dead после удаления `DividerIfNeededModifier` (единственный production-consumer). Остался только `#Preview` внутри файла. Trivially `git rm`. Не сделано: пользователь удалил consumer, но не сам `SWDivider.swift` |
 
 ### Контроль качества
 
