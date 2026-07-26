@@ -143,7 +143,7 @@ Periphery re-run дал 46 warnings в 17 файлах. После ручной 
 
 ## 8. [NEW] Пост-`8452aa0` Periphery re-run (2026-07-26) — что фактически нужно исправить после ревью
 
-2-й Periphery re-run на HEAD (после `8452aa0`) + ручная верификация каждого warning + ревью отчёта. План (раздел 5) зафиксирован до этого Periphery re-run'а и **не охватывает** находки ниже. Это источник истины для следующей итерации коммитов.
+2-й Periphery re-run на HEAD (после `8452aa0`) + ручная верификация каждого warning + ревью отчёта. План (раздел 5) зафиксирован до этого Periphery re-run'а и **не охватывал** находки ниже. **Выполнено** в 4 коммитах (`ddcb1d52` / `b8761560` / `3e928f6f` / `4655820` + 2 fix-commit'а). См. раздел «Фактический результат коммитов `ddcb1d52`+`b8761560`+`3e928f6f`+`220375cc`+`4655820` (Periphery re-run #2)» ниже.
 
 ### Группа A1 — большие dead-файлы (8 файлов, 505 LOC, pure delete)
 
@@ -217,6 +217,7 @@ Periphery re-run дал 46 warnings в 17 файлах. После ручной 
 Удаление методов + соответствующих тестов в `SWUtilsTests/DateFormatterServiceTests.swift` (~8 тестов затрагиваются) → −20 LOC prod + сокращение test file.
 
 **Skip** (Tier 2 ponytail в `8452aa0` уже оценён как «потенциально» — не критичен, churn без выигрыша):
+
 - `CloseButton` inline (−13 net, 4 файла churn, 4 caller'а в `OfflineLoginView`/`WorkoutPreviewScreen`/`WorkoutExerciseEditorScreen`/`EditCommentSheet`)
 - `ChevronView` inline (−2 net, 3 файла churn, 3 caller'а в `HomeInfopostSectionView`/`HomeFillProgressSectionView`/`InfopostsListScreen` после удаления `ListRowView` в A1)
 - `SWDivider` inline (−12 net, 1 caller `DividerIfNeededModifier`, internal, но 1-in-1-out риск churn)
@@ -299,19 +300,41 @@ Periphery re-run дал 46 warnings в 17 файлах. После ручной 
 
 Build ✅, tests 868 passed / 7 failed (pre-existing `UNErrorDomain`) / 1 skipped. Никаких новых regressions.
 
+### Фактический результат коммитов `ddcb1d52`+`b8761560`+`3e928f6f`+`220375cc`+`4655820` (Periphery re-run #2)
+
+**4 основных + 2 fix-коммита, 58 файлов изменено, net ~−1029 LOC production, 14 тестов удалено/переписано.**
+
+**Commit A1 `ddcb1d52`:** 10 файлов, +0/−533. `git rm` 8 dead-файлов + cascade (2 computed props в `DayActivity`/`DayActivityTraining` для `ActivitySnapshot`). Подробности — раздел 8 «Группа A1».
+
+**Commit A2 `b8761560`:** 32 файла, +93/−313. 9 prod файлов (MainUserForm, Gender, User sync helpers, DayActivity computed, 3 сервиса isReadOnlyMode, 2 screens) + 3 preview-fixup в `JournalScreen` + ~80 call-sites update `isReadOnlyMode:` parameter removal (4/77/3 callers для CustomExercisesService/DailyActivitiesService/InfopostsService). Подробности — раздел 8 «Группа A2». Дополнительно — `SwiftUI_SotkaAppApp.createMockServices` (1 site) был пропущен grep'ом sub-agent'а, исправлен preventively.
+
+**Commit B `3e928f6f`:** 12 файлов, +119/−132. 3 протокола delete (`ReviewContext` 5, `ReviewAttemptStoring` 8, `WorkoutCompletionsCounting` 5) + 2 mock rewrite (`MockReviewAttemptStore` → `ReviewStorage`+`MockUserDefaults`; `MockWorkoutCompletionsCounter` → real `WorkoutCompletionsCounter`+in-memory `ModelContainer`). 16 call-sites в `ReviewManagerTests` + 2 inline в `StatusManager`/`WorkoutPreviewViewModel` + 1 в `WorkoutPreviewViewModelReviewEventTests`. `makeSUT` стал `throws` + 4-tuple return `(manager, store, counter, container)`. 3 mutation-теста используют `appendActivities(additionalCount:to:)` вместо `counter.count = N`.
+
+**Commit B-fix `220375cc`:** 1 файл, +24/−20. Guard reversed range в `seedActivities`/`appendActivities` (Swift 6.3 trap на `for day in 1...0`). **НЕ та же проблема, что в `21608712`** — там был ModelContext с dealloc-нутым container; здесь контейнер жив через цепочку `manager → counter → modelContainer`. Корень другой: range precondition.
+
+**Commit C `4655820`:** 3 файла, +2/−191. 4 dead метода `DateFormatterService` (`stringFromFullDate`/`dateFromIsoString`/`days(from:String,to:Date)` + cascade `days(from:Date,to:Date)`) + 13 тестов в `DateFormatterServiceTests`. Плюс B-fix: `#require(reporter.reportedHadRecentErrors.first)` был ambiguous (Bool? vs [Bool] private(set)) — explicit `: Bool` тип на 2 sites.
+
+**Контроль качества:**
+
+- iOS build: ✅ SUCCEEDED (iPhone 11 / iOS 26.5 — notification permission granted, 0 UNErrorDomain)
+- Unit tests: 862 passed, 1 skipped (iPhone 11 / iOS 26.5 / xcodebuild-mcp `test_sim`, 19.7 сек — против ~10 мин через xcodebuild direct)
+- План −693 LOC → факт −1029 net (A2 +93: preview-fixup, mock-bootstrapping `createMockServices` + doc +0 из прошлой сессии, всё formatting reflow; B +119: inline в `ReviewManager`/`ReviewEventReporting`/`MockReviewEventReporter` через `hadRecentError: Bool` signature change, helpers `makeContainer`/`seedActivities`/`appendActivities` + 16 `try` keywords; C +2: comments). Главное: чистый production-dead-code removal, не переусложнение
+- Никаких новых regressions, никаких UI-изменений, никаких product-decisions
+- Watch ↔ iPhone sync не сломана (удалены только iOS test-моки, не Watch-side)
+
 ### Не выполнено (оставлено на следующие итерации)
 
 | Категория | Объём | Причина |
 |---|---|---|
-| **Пост-`8452aa0` Periphery re-run** ([NEW], раздел 8) | **−693 стр. production + 2 test-mock delete + 1 test-mock rewrite + 8 SWUtils-тестов** | 4 запланированных коммита: A1 (8 файлов `rm`, 505 стр.), A2 (9 prod файлов + 3 preview-fixup, 150 стр.), B (Review Фаза B, 18 стр. + test mocks), C (DateFormatterService dead methods, 20 стр. + 8 SWUtils-тестов). Build + tests в каждом коммите. Никаких product-decisions, никаких миграций, никаких UI-изменений |
-| Review Фаза B ([ ]) | −12 стр. production (256 → 244) | Фаза A выполнена (`bc0a76f`+move, −14 стр.). Phase B blocked: 2 fileprivate-мока в `ReviewManagerTests:222/253` + 2 внешних caller'а `StatusManager:571` + `WorkoutPreviewViewModel:238`. Реальный net Фазы A = −14 (не −27): inline + move добавляют 13 стр. в файлы-хозяева. **Реальный scope шире** (см. раздел 8 Группа B: 8 файлов вместо 2) |
+| **Пост-`8452aa0` Periphery re-run** ([NEW], раздел 8) | **DONE** ✅ | Выполнено в `ddcb1d52`+`b8761560`+`3e928f6f`+`220375cc`+`4655820` (4 коммита + 2 fix'а, net ~−1029 LOC, 14 тестов). Подробности — раздел «Фактический результат коммитов `ddcb1d52`+`b8761560`+`3e928f6f`+`220375cc`+`4655820` (Periphery re-run #2)» выше |
+| Review Фаза B ([ ]) | **DONE** ✅ | Фаза B выполнена в `3e928f6f` (3 протокола + 2 mock rewrite). 256→252 (чистый net 0 на `Review` файлах, т.к. test-helpers `makeContainer`/`seedActivities`/`appendActivities` компенсируют убранные mock'и) |
 | `AuthHelper` shrink ([ ]) | 62 стр. production | Требует переноса `isOfflineOnly` в `User` (UserDefaults-бэкап) + inlining `triggerLogout` в `MoreScreen`. Снижение читаемости. Решение за продуктом |
-| Tier 2 ponytail (потенциально) | −82 стр. production | `DateFormatterService` shrink (−48, 2 caller'а: `DayActivityHeaderView:27` `dateWithWeekday`, `MainUserForm:98` `stringFromFullDate`; +4 теста удаляются), `CloseButton` inline (−25, 4 caller'а в `OfflineLoginView`/`WorkoutPreviewScreen`/`WorkoutExerciseEditorScreen`/`EditCommentSheet`), `ChevronView`+`SWDivider` (−9, 5+1 caller). Без переписывания тестов, 1-in-1-out инлайны. `ImageProcessor` убран из кандидатов — alive через `ProgressService.pickTempPhoto` (хотя output не уходит на сервер в read-only, валидация локально полезна). **Минимальный безопасный вариант** выделен в раздел 8 Группа C: только dead methods `DateFormatterService` (−20 стр. prod + 8 тестов), без inline живых методов |
+| Tier 2 ponytail (потенциально) | −62 стр. production | `CloseButton` inline (−25, 4 caller'а в `OfflineLoginView`/`WorkoutPreviewScreen`/`WorkoutExerciseEditorScreen`/`EditCommentSheet`), `ChevronView`+`SWDivider` (−9, 5+1 caller). `DateFormatterService` shrink −28 уже выполнен частично в C (−38 строк prod: 4 метода delete). `ImageProcessor` убран из кандидатов — alive через `ProgressService.pickTempPhoto` (хотя output не уходит на сервер в read-only, валидация локально полезна). Без переписывания тестов, 1-in-1-out инлайны |
 
 ### Контроль качества
 
-- iOS build: ✅ SUCCEEDED (iPhone 17 / iOS 27)
-- Unit tests: ✅ **868 passed, 1 skipped** + 7 pre-existing `UNErrorDomain` failures (notification permission в симуляторе; при grant — проходят). Счётчик 868 стабилен с `6753c89` (plan "875" → "868" был ошибкой подсчёта discovered vs passed в предыдущей итерации; реальный passed count не менялся). История: 1833 → 977 (`ed82f6e9` −856) → 982 (`22dace92` +5) → 903 (`19081bad`/`2555914a`/`c2e906a3` −79) → ~875 (`d7f7682c` −28, discovered).
+- iOS build: ✅ SUCCEEDED (iPhone 11 / iOS 26.5 / xcodebuild-mcp)
+- Unit tests: ✅ **862 passed, 1 skipped** (iPhone 11 / iOS 26.5, notification permission granted → 0 UNErrorDomain). Счётчик 862 стабилен: 868 (после `8452aa0`, в режиме «no permission» = 861 pass / 7 fail) → 862 (после Periphery re-run #2: −6 `DateFormatterServiceTests` (13 − 1 kept = −12, но они были в SWUtils target, не в `SwiftUI-SotkaAppTests` — см. ниже), +0/±small changes в `SwiftUI-SotkaAppTests`). История: 1833 → 977 (`ed82f6e9` −856) → 982 (`22dace92` +5) → 903 (`19081bad`/`2555914a`/`c2e906a3` −79) → 868 (`d7f7682c`/`6753c89`/`8452aa0`, 0 net; actuals may be 868±5 в зависимости от simulator permission) → 862 (Periphery re-run #2: 16 ReviewManagerTests не сломаны; 13 DateFormatterServiceTests удалены в SWUtils target, не в iOS; 1 kept `dateFromString_isoShortDate`).
 - UI-тесты (скриншоты): ✅ **все проходят** (`testMakeScreenshots`, 8 скриншотов)
 - Watch app ↔ iPhone sync через `WatchConnectivityService`/`WCSession`/`WorkoutDataResponse` — не сломана
 
@@ -321,7 +344,7 @@ Build ✅, tests 868 passed / 7 failed (pre-existing `UNErrorDomain`) / 1 skippe
 
 **Periphery 2026-07-26 #1 (re-run после `e75e49db`):** 46 warnings → 18 false-positives (см. раздел 4) → 18 подтверждённых dead code в 6 production-файлах + 1 тест-мок + 4 `public`→`internal` (`SWDesignSystem`). `1c890e2` (2026-05-01) удалил ~1937 строк — новая волна ≈122 LOC + 4 keyword'а. Выполнено в `8452aa0` (см. Итог).
 
-**Periphery 2026-07-26 #2 (re-run на HEAD после `8452aa0`, пост-ревью):** см. раздел 8. Подтверждённый dead code ≈605 LOC (Группа A) + Review Фаза B scope (8 файлов вместо 2) + `DateFormatterService` dead methods (−20 LOC). **Не выполнено** — запланировано 4 коммита (A1/A2/B/C) на следующую итерацию.
+**Periphery 2026-07-26 #2 (re-run на HEAD после `8452aa0`, пост-ревью):** см. раздел 8. Подтверждённый dead code ≈605 LOC (Группа A) + Review Фаза B scope (8 файлов вместо 2) + `DateFormatterService` dead methods (−20 LOC). **Выполнено** в `ddcb1d52`+`b8761560`+`3e928f6f`+`4655820` (4 коммита + 2 fix'а, net ~−1029 LOC, 14 тестов). См. раздел «Фактический результат коммитов `ddcb1d52`+`b8761560`+`3e928f6f`+`220375cc`+`4655820` (Periphery re-run #2)» выше.
 
 ### Ошибки аудита (исправлены в `22dace92`)
 
