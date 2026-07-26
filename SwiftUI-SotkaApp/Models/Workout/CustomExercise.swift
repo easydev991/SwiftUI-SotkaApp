@@ -44,20 +44,7 @@ final class CustomExercise {
         self.shouldDelete = false
     }
 
-    /// Инициализатор из ответа сервера
-    convenience init(from response: CustomExerciseResponse, user: User? = nil) {
-        self.init(
-            id: response.id,
-            name: response.name,
-            imageId: response.imageId,
-            createDate: response.createDate,
-            modifyDate: response.modifyDate ?? response.createDate,
-            user: user
-        )
-        // Данные с сервера считаются синхронизированными
-        self.isSynced = true
-        self.shouldDelete = false
-    }
+    // Инициализатор из ответа сервера
 }
 
 extension CustomExercise {
@@ -78,13 +65,6 @@ extension CustomExercise {
             return Image(systemName: "questionmark.square")
         }
         return customType.image
-    }
-
-    /// Проверяет, изменились ли данные упражнения по сравнению с ответом сервера
-    /// - Parameter serverResponse: Ответ сервера для сравнения
-    /// - Returns: `true` если данные изменились, `false` если идентичны
-    func hasDataChanged(comparedTo serverResponse: CustomExerciseResponse) -> Bool {
-        name != serverResponse.name || imageId != serverResponse.imageId
     }
 
     /// Преобразование в ExerciseSnapshot для конкурентной синхронизации

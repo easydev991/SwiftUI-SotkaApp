@@ -30,16 +30,7 @@ final class DayActivityTraining {
         self.dayActivity = dayActivity
     }
 
-    /// Инициализатор из ответа сервера
-    convenience init(from training: DayResponse.Training, dayActivity: DayActivity? = nil) {
-        self.init(
-            count: training.count,
-            typeId: training.typeId,
-            customTypeId: training.customTypeId,
-            sortOrder: training.sortOrder,
-            dayActivity: dayActivity
-        )
-    }
+    // Инициализатор из ответа сервера
 }
 
 extension DayActivityTraining {

@@ -7,13 +7,4 @@ struct City: Codable, Identifiable, Hashable {
         self.lat = lat
         self.lon = lon
     }
-
-    init(from response: CityResponse) {
-        self.init(
-            id: response.id,
-            name: response.name,
-            lat: response.lat ?? "",
-            lon: response.lon ?? ""
-        )
-    }
 }

@@ -71,7 +71,7 @@ extension WorkoutPreviewViewModelTests {
                 modelContext: context,
                 day: 5,
                 restTime: 60,
-                activitiesService: DailyActivitiesService(client: MockDaysClient(), isReadOnlyMode: false)
+                activitiesService: DailyActivitiesService(isReadOnlyMode: false)
             )
 
             #expect(!viewModel.hasChanges)
@@ -117,7 +117,7 @@ extension WorkoutPreviewViewModelTests {
                 modelContext: context,
                 day: 5,
                 restTime: 60,
-                activitiesService: DailyActivitiesService(client: MockDaysClient(), isReadOnlyMode: false)
+                activitiesService: DailyActivitiesService(isReadOnlyMode: false)
             )
             let training = try #require(viewModel.trainings.first)
             viewModel.updatePlannedCount(id: training.id, action: .increment)
@@ -157,7 +157,7 @@ extension WorkoutPreviewViewModelTests {
                 modelContext: context,
                 day: 5,
                 restTime: 60,
-                activitiesService: DailyActivitiesService(client: MockDaysClient(), isReadOnlyMode: false)
+                activitiesService: DailyActivitiesService(isReadOnlyMode: false)
             )
             viewModel.updatePlannedCount(id: "plannedCount", action: .increment)
 
@@ -196,7 +196,7 @@ extension WorkoutPreviewViewModelTests {
                 modelContext: context,
                 day: 50,
                 restTime: 60,
-                activitiesService: DailyActivitiesService(client: MockDaysClient(), isReadOnlyMode: false)
+                activitiesService: DailyActivitiesService(isReadOnlyMode: false)
             )
             viewModel.updateExecutionType(.sets)
 
@@ -236,7 +236,7 @@ extension WorkoutPreviewViewModelTests {
                 modelContext: context,
                 day: 5,
                 restTime: 60,
-                activitiesService: DailyActivitiesService(client: MockDaysClient(), isReadOnlyMode: false)
+                activitiesService: DailyActivitiesService(isReadOnlyMode: false)
             )
             viewModel.updateComment("New comment")
 
@@ -276,7 +276,7 @@ extension WorkoutPreviewViewModelTests {
                 modelContext: context,
                 day: 5,
                 restTime: 60,
-                activitiesService: DailyActivitiesService(client: MockDaysClient(), isReadOnlyMode: false)
+                activitiesService: DailyActivitiesService(isReadOnlyMode: false)
             )
             viewModel.updatePlannedCount(id: "plannedCount", action: .increment)
             #expect(viewModel.hasChanges)
@@ -304,7 +304,7 @@ extension WorkoutPreviewViewModelTests {
                 modelContext: context,
                 day: 1,
                 restTime: 60,
-                activitiesService: DailyActivitiesService(client: MockDaysClient(), isReadOnlyMode: false)
+                activitiesService: DailyActivitiesService(isReadOnlyMode: false)
             )
 
             #expect(!viewModel.hasChanges)

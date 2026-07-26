@@ -6,7 +6,6 @@ import SWUtils
 struct WelcomeScreen: View {
     @Environment(\.isReadOnlyMode) private var isReadOnlyMode
     @State private var destination = NavigationDestination.welcome
-    let client: LoginClient & StatusClient
 
     var body: some View {
         NavigationStack {
@@ -14,11 +13,6 @@ struct WelcomeScreen: View {
                 switch destination {
                 case .welcome:
                     welcomeView
-                case .online:
-                    OnlineLoginView(
-                        client: client,
-                        closeAction: { destination = .welcome }
-                    )
                 case .offline:
                     OfflineLoginView(closeAction: { destination = .welcome })
                 }
@@ -34,35 +28,15 @@ struct WelcomeScreen: View {
 private extension WelcomeScreen {
     enum NavigationDestination: Equatable {
         case welcome
-        case online
         case offline
     }
 
     var welcomeView: some View {
         VStack(spacing: 32) {
             Image(.launcherLogo)
-            onlineSection
             offlineSection
         }
         .transition(.scale(2).combined(with: .opacity))
-    }
-
-    var onlineSection: some View {
-        VStack(spacing: 8) {
-            Button(.loginScreenAuthorizeButtonTitle) {
-                destination = .online
-            }
-            .buttonStyle(SWButtonStyle(mode: .filled, size: .large))
-            .disabled(isReadOnlyMode)
-            Text(
-                isReadOnlyMode
-                    ? .loginScreenAuthNotAvailableText
-                    : .loginScreenRegistrationInfoText
-            )
-            .font(.footnote.weight(.medium))
-            .multilineTextAlignment(.center)
-            .foregroundStyle(Color.swMainText)
-        }
     }
 
     var offlineSection: some View {
@@ -78,15 +52,3 @@ private extension WelcomeScreen {
         }
     }
 }
-
-#if DEBUG
-#Preview("Успех") {
-    WelcomeScreen(client: MockLoginClient(result: .success))
-        .environment(AuthHelperImp())
-}
-
-#Preview("Ошибка") {
-    WelcomeScreen(client: MockLoginClient(result: .failure()))
-        .environment(AuthHelperImp())
-}
-#endif

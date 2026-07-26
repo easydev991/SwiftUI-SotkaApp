@@ -7,11 +7,6 @@ import WatchConnectivity
 enum MockStatusManager {
     /// Создает StatusManager с моками
     /// - Parameters:
-    ///   - statusClient: Мок клиента для работы со статусом (по умолчанию MockStatusClient())
-    ///   - exerciseClient: Мок клиента для работы с упражнениями (по умолчанию MockExerciseClient())
-    ///   - infopostsClient: Мок клиента для работы с инфопостами (по умолчанию MockInfopostsClient())
-    ///   - progressClient: Мок клиента для работы с прогрессом (по умолчанию MockProgressClient())
-    ///   - daysClient: Мок клиента для работы с днями (по умолчанию MockDaysClient())
     ///   - language: Язык для InfopostsService (по умолчанию "ru")
     ///   - userDefaults: UserDefaults для использования в тестах (по умолчанию создается новый изолированный MockUserDefaults)
     ///   - modelContainer: ModelContainer для использования в тестах (по умолчанию создается новый in-memory контейнер)
@@ -21,12 +16,6 @@ enum MockStatusManager {
     /// ModelContainer
     @MainActor
     static func create(
-        statusClient: StatusClient = MockStatusClient(),
-        exerciseClient: ExerciseClient = MockExerciseClient(),
-        infopostsClient: InfopostsClient = MockInfopostsClient(),
-        progressClient: ProgressClient = MockProgressClient(),
-        daysClient: DaysClient = MockDaysClient(),
-        purchasesClient: PurchasesClient = MockPurchasesClient(),
         language: String = "ru",
         userDefaults: UserDefaults? = nil,
         modelContainer: ModelContainer? = nil,
@@ -51,17 +40,13 @@ enum MockStatusManager {
             )
         }
         return StatusManager(
-            customExercisesService: CustomExercisesService(client: exerciseClient, isReadOnlyMode: false),
+            customExercisesService: CustomExercisesService(isReadOnlyMode: false),
             infopostsService: InfopostsService(
                 language: language,
-                infopostsClient: infopostsClient,
                 analytics: AnalyticsService(providers: [NoopAnalyticsProvider()]),
                 isReadOnlyMode: false
             ),
-            progressSyncService: ProgressSyncService(client: progressClient, isReadOnlyMode: false),
-            dailyActivitiesService: DailyActivitiesService(client: daysClient, isReadOnlyMode: false),
-            statusClient: statusClient,
-            purchasesClient: purchasesClient,
+            dailyActivitiesService: DailyActivitiesService(isReadOnlyMode: false),
             modelContainer: container,
             userDefaults: defaults,
             watchConnectivitySessionProtocol: watchConnectivitySessionProtocol,

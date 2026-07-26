@@ -1,5 +1,4 @@
 import Foundation
-import SWUtils
 
 /// Снимок активности для безопасной конкурентной синхронизации без доступа к ModelContext
 struct ActivitySnapshot: Hashable {
@@ -24,31 +23,5 @@ extension ActivitySnapshot {
         let typeId: Int?
         let customTypeId: String?
         let sortOrder: Int?
-    }
-}
-
-extension ActivitySnapshot {
-    /// Преобразование снимка в DayRequest для отправки на сервер
-    var dayRequest: DayRequest {
-        DayRequest(
-            id: day,
-            activityType: activityTypeRaw,
-            count: count,
-            plannedCount: plannedCount,
-            executeType: executeTypeRaw,
-            trainingType: trainingTypeRaw,
-            createDate: DateFormatterService.stringFromFullDate(createDate, format: .isoDateTimeSec),
-            modifyDate: DateFormatterService.stringFromFullDate(modifyDate, format: .isoDateTimeSec),
-            duration: duration,
-            comment: comment,
-            trainings: trainings?.map { training in
-                DayRequest.Training(
-                    count: training.count,
-                    typeId: training.typeId,
-                    customTypeId: training.customTypeId,
-                    sortOrder: training.sortOrder
-                )
-            }
-        )
     }
 }

@@ -12,7 +12,6 @@ final class InfopostsService {
         category: String(describing: InfopostsService.self)
     )
     private let currentLanguage: String
-    private let infopostsClient: InfopostsClient
     private let analytics: AnalyticsService
     private let isReadOnlyMode: Bool
     @ObservationIgnored private var userGender: Gender?
@@ -70,12 +69,10 @@ final class InfopostsService {
 
     init(
         language: String,
-        infopostsClient: InfopostsClient,
         analytics: AnalyticsService,
         isReadOnlyMode: Bool = AppConfiguration.isReadOnlyMode
     ) {
         self.currentLanguage = language
-        self.infopostsClient = infopostsClient
         self.analytics = analytics
         self.isReadOnlyMode = isReadOnlyMode
         logger.info("Инициализирован InfopostsService для языка: \(language)")
@@ -299,80 +296,12 @@ private extension InfopostsService {
 }
 
 extension InfopostsService {
-    /// Синхронизирует прочитанные инфопосты с сервером
-    /// - Parameter context: Контекст модели данных
-    /// - Throws: Ошибка при синхронизации или работе с базой данных
-    func syncReadPosts(context: ModelContext) async throws {
-        let user = try getCurrentUser(modelContext: context)
-
-        if user.isOfflineOnly || isReadOnlyMode {
-            logger.debug("Пропуск syncReadPosts для офлайн-пользователя")
-            return
-        }
-
-        logger.info("Начинаем синхронизацию прочитанных инфопостов")
-
-        do {
-            // Получаем прочитанные дни с сервера
-            let serverReadDays = try await infopostsClient.getReadPosts()
-            logger.info("Получено \(serverReadDays.count) прочитанных дней с сервера")
-
-            // Обновляем синхронизированные дни
-            user.setReadInfopostDays(serverReadDays)
-
-            // Параллельно отправляем несинхронизированные дни на сервер
-            let successfullySyncedDays = try await withThrowingTaskGroup(of: Int?.self) { group in
-                var syncedDays: [Int] = []
-
-                // Добавляем задачи для каждого несинхронизированного дня
-                for day in user.unsyncedReadInfopostDays {
-                    group.addTask {
-                        do {
-                            try await self.infopostsClient.setPostRead(day: day)
-                            self.logger.debug("Успешно синхронизирован день: \(day)")
-                            return day // Возвращаем успешно синхронизированный день
-                        } catch {
-                            self.logger.error("Ошибка синхронизации дня \(day): \(error.localizedDescription)")
-                            return nil // Возвращаем nil для неуспешных
-                        }
-                    }
-                }
-
-                // Собираем результаты
-                for try await result in group {
-                    if let day = result {
-                        syncedDays.append(day)
-                    }
-                }
-
-                return syncedDays
-            }
-
-            // Перемещаем успешно синхронизированные дни
-            if !successfullySyncedDays.isEmpty {
-                try moveDaysToSynced(successfullySyncedDays, user: user, modelContext: context)
-            }
-
-            logger.info("Синхронизация завершена. Успешно синхронизировано: \(successfullySyncedDays.count) дней")
-
-        } catch {
-            logger.error("Ошибка синхронизации: \(error.localizedDescription)")
-            analytics.log(
-                .appError(
-                    kind: .infopostDaySyncFailed,
-                    error: error
-                )
-            )
-            throw error
-        }
-    }
-
-    /// Отмечает инфопост как прочитанный
+    /// Отмечает инфопост как прочитанный (локально)
     /// - Parameters:
     ///   - day: День инфопоста (может быть nil)
     ///   - modelContext: Контекст модели данных
     /// - Throws: Ошибка при работе с базой данных
-    func markPostAsRead(day: Int?, modelContext: ModelContext) async throws {
+    func markPostAsRead(day: Int?, modelContext: ModelContext) throws {
         guard let day else {
             logger.warning("Попытка отметить nil день как прочитанный")
             analytics.log(
@@ -385,38 +314,10 @@ extension InfopostsService {
         }
 
         let user = try getCurrentUser(modelContext: modelContext)
-
         logger.info("Отмечаем инфопост дня \(day) как прочитанный")
 
-        // Добавляем в несинхронизированные дни
-        user.addUnsyncedReadInfopostDay(day)
-
-        // Сохраняем изменения
+        user.addReadInfopostDay(day)
         try modelContext.save()
-        logger.debug("Инфопост дня \(day) отмечен как прочитанный локально")
-
-        // Для офлайн-пользователя оставляем день в локальной очереди синхронизации
-        // и не пытаемся отправлять mark-as-read на сервер.
-        if user.isOfflineOnly || isReadOnlyMode {
-            logger.debug("Пропуск setPostRead для офлайн-пользователя (day: \(day))")
-            return
-        }
-
-        // Пытаемся синхронизировать с сервером
-        do {
-            try await infopostsClient.setPostRead(day: day)
-            // Если успешно, перемещаем из несинхронизированных в синхронизированные
-            try moveDaysToSynced([day], user: user, modelContext: modelContext)
-            logger.info("Инфопост дня \(day) успешно синхронизирован с сервером")
-        } catch {
-            logger.error("Не удалось синхронизировать день \(day) с сервером: \(error.localizedDescription)")
-            analytics.log(
-                .appError(
-                    kind: .infopostDaySyncFailed,
-                    error: error
-                )
-            )
-        }
     }
 
     /// Проверяет, прочитан ли инфопост
@@ -432,7 +333,7 @@ extension InfopostsService {
         }
         do {
             let user = try getCurrentUser(modelContext: modelContext)
-            let isRead = user.readInfopostDays.contains(dayNumber) || user.unsyncedReadInfopostDays.contains(dayNumber)
+            let isRead = user.readInfopostDays.contains(dayNumber)
             logger.debug("Инфопост \(infopost.id) (день \(dayNumber)) прочитан: \(isRead)")
             return isRead
         } catch {
@@ -477,27 +378,5 @@ extension InfopostsService {
                 "Инфопост не может быть отмечен как прочитанный"
             }
         }
-    }
-}
-
-private extension InfopostsService {
-    /// Перемещает дни из несинхронизированных в синхронизированные
-    /// - Parameters:
-    ///   - days: Массив дней для перемещения
-    ///   - user: Пользователь
-    ///   - modelContext: Контекст модели данных
-    /// - Throws: Ошибка при работе с базой данных
-    func moveDaysToSynced(_ days: [Int], user: User, modelContext: ModelContext) throws {
-        // В одном цикле делаем обе операции
-        for day in days {
-            // Удаляем из несинхронизированных
-            user.removeUnsyncedReadInfopostDay(day)
-
-            // Добавляем в синхронизированные (только если еще нет)
-            user.addReadInfopostDay(day)
-        }
-
-        // Сохраняем изменения один раз
-        try modelContext.save()
     }
 }

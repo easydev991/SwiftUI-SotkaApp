@@ -1,13 +1,15 @@
 import Foundation
 import SWUtils
 
-/// Форма для отправки при регистрации или изменении данных профиля
+/// Форма для регистрации или изменения данных профиля
 struct MainUserForm: Codable, Equatable {
     var userName, fullName, email, password: String
     var birthDate: Date
     var genderCode: Int
-    var country: CountryResponse
-    var city: CityResponse
+    var countryId: String
+    var countryName: String
+    var cityId: String
+    var cityName: String
     var image: MediaFile?
 
     init(
@@ -17,8 +19,10 @@ struct MainUserForm: Codable, Equatable {
         password: String,
         birthDate: Date,
         gender: Int,
-        country: CountryResponse,
-        city: CityResponse,
+        countryId: String = "",
+        countryName: String = "",
+        cityId: String = "",
+        cityName: String = "",
         image: MediaFile? = nil
     ) {
         self.userName = userName
@@ -26,8 +30,10 @@ struct MainUserForm: Codable, Equatable {
         self.email = email
         self.password = password
         self.birthDate = birthDate
-        self.country = country
-        self.city = city
+        self.countryId = countryId
+        self.countryName = countryName
+        self.cityId = cityId
+        self.cityName = cityName
         self.genderCode = gender
         self.image = image
     }
@@ -40,10 +46,21 @@ struct MainUserForm: Codable, Equatable {
             password: "",
             birthDate: user.birthDate,
             gender: user.genderCode ?? 0,
-            country: .init(cities: [], id: (user.countryId ?? 0).description, name: ""),
-            city: .init(id: (user.cityId ?? 0).description, name: "", lat: nil, lon: nil)
+            countryId: (user.countryId ?? 0).description,
+            cityId: (user.cityId ?? 0).description
         )
     }
+}
+
+extension MainUserForm {
+    static let preview = MainUserForm(
+        userName: "demo",
+        fullName: "Demo User",
+        email: "demo@mail.com",
+        password: "",
+        birthDate: Date(timeIntervalSince1970: 0),
+        gender: 0
+    )
 }
 
 extension MainUserForm {
@@ -109,7 +126,7 @@ extension MainUserForm {
     /// знаем только идентификаторы - их и сохраняем сразу,
     /// а название сохраняем в `onAppear`
     var shouldUpdateOnAppear: Bool {
-        country.name.isEmpty || city.name.isEmpty
+        countryName.isEmpty || cityName.isEmpty
     }
 
     /// Параметры для запроса редактирования профиля
@@ -119,8 +136,8 @@ extension MainUserForm {
             "fullname": fullName,
             "email": email,
             "gender": genderCode.description,
-            "country_id": country.id,
-            "city_id": city.id,
+            "country_id": countryId,
+            "city_id": cityId,
             "birth_date": birthDateIsoString
         ]
     }

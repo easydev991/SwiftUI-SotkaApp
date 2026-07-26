@@ -12,7 +12,7 @@ enum ScreenshotDemoData {
             context.delete(user)
         }
 
-        let user = User(from: .preview)
+        let user = User(id: 1, userName: "demo-user", fullName: "Demo User")
         context.insert(user)
         do {
             try context.save()

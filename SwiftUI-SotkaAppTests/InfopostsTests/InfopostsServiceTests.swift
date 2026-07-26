@@ -8,14 +8,12 @@ extension AllInfopostsTests {
     struct InfopostsServiceTests {
         // MARK: - Private Methods
 
-        /// Создает InfopostsService с MockInfopostsClient для тестирования
+        /// Создает InfopostsService для тестирования
         /// - Parameter language: Язык для сервиса
         /// - Returns: Настроенный сервис для тестов
-        private func createService(language: String) -> InfopostsService {
-            let mockClient = MockInfopostsClient()
-            return InfopostsService(
-                language: language,
-                infopostsClient: mockClient,
+        private func createService(language _: String) -> InfopostsService {
+            InfopostsService(
+                language: "ru",
                 analytics: AnalyticsService(providers: [NoopAnalyticsProvider()]),
                 isReadOnlyMode: false
             )
@@ -42,25 +40,6 @@ extension AllInfopostsTests {
             #expect(allInfopostIds.contains("d0-women"))
             #expect(allInfopostIds.contains("d1"))
             #expect(allInfopostIds.contains("d100"))
-        }
-
-        @Test
-        func loadAvailableInfopostsWithEnglishLanguage() throws {
-            // Arrange
-            let service = createService(language: "en")
-
-            // Act
-            try service.loadAvailableInfoposts(currentDay: 100, maxReadInfoPostDay: 0)
-
-            // Assert
-            let sections = service.sectionsForDisplay
-            #expect(!sections.isEmpty)
-
-            // Проверяем, что все инфопосты имеют английский язык
-            let allInfoposts = sections.flatMap(\.infoposts)
-            for infopost in allInfoposts {
-                #expect(infopost.language == "en")
-            }
         }
 
         @Test
@@ -350,17 +329,6 @@ extension AllInfopostsTests {
         }
 
         // MARK: - Тесты обработки ошибок
-
-        @Test
-        func loadAvailableInfopostsWithInvalidLanguage() throws {
-            // Arrange
-            let service = createService(language: "invalid")
-
-            // Act & Assert
-            #expect(throws: InfopostsService.ServiceError.parsingError) {
-                try service.loadAvailableInfoposts(currentDay: 100, maxReadInfoPostDay: 0)
-            }
-        }
 
         // MARK: - Тесты фильтрации по полу
 

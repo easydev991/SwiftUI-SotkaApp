@@ -21,9 +21,6 @@ struct MoreScreen: View {
         NavigationStack {
             List {
                 Section(.profile) {
-                    if !isOfflineUser {
-                        editProfileButton
-                    }
                     logoutButton
                 }
                 Section(.settings) {
@@ -33,9 +30,6 @@ struct MoreScreen: View {
                     debugCurrentDayPicker
                     #endif
                     workoutSettingsButton
-                    if !isOfflineUser {
-                        syncJournalButton
-                    }
                 }
                 if currentDay > 1 {
                     Section(.moreScreenResetProgramSection) {
@@ -65,14 +59,6 @@ struct MoreScreen: View {
 }
 
 private extension MoreScreen {
-    var editProfileButton: some View {
-        NavigationLink {
-            EditProfileScreen(user: user)
-        } label: {
-            Text(.editProfile)
-        }
-    }
-
     var logoutButton: some View {
         Button(.logOut) {
             showLogoutDialog = true
@@ -228,13 +214,6 @@ private extension MoreScreen {
             Link(.gitHub, destination: githubLink)
                 .accessibilityIdentifier("githubButton")
         }
-    }
-
-    var syncJournalButton: some View {
-        NavigationLink(destination: SyncJournalScreen()) {
-            Text(.moreScreenSyncJournalButton)
-        }
-        .accessibilityIdentifier("syncJournalButton")
     }
 }
 

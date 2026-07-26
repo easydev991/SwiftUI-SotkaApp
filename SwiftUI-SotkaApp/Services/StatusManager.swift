@@ -16,16 +16,11 @@ final class StatusManager: NSObject {
     @ObservationIgnored private let defaults: UserDefaults
     @ObservationIgnored let customExercisesService: CustomExercisesService
     @ObservationIgnored let infopostsService: InfopostsService
-    @ObservationIgnored let progressSyncService: ProgressSyncService
     @ObservationIgnored let dailyActivitiesService: DailyActivitiesService
     @ObservationIgnored private let reviewEventReporter: (any ReviewEventReporting)?
-    @ObservationIgnored private var isJournalSyncInProgress = false
-    @ObservationIgnored private(set) var syncReadPostsTask: Task<Void, Error>?
     @ObservationIgnored private let sessionProtocol: WCSessionProtocol?
     @ObservationIgnored let modelContainer: ModelContainer
     private let isReadOnlyMode: Bool
-    private let statusClient: StatusClient
-    private let purchasesClient: PurchasesClient?
     @ObservationIgnored private var extensionDateKeysSnapshot: Set<Int64> = []
 
     /// Последние отправленные данные статуса для дедупликации
@@ -66,9 +61,6 @@ final class StatusManager: NSObject {
     /// Калькулятор текущего дня сотки
     private(set) var currentDayCalculator: DayCalculator?
 
-    /// Конфликтующие даты начала программы
-    var conflictingSyncModel: ConflictingStartDate?
-
     private(set) var state = State.idle
 
     /// Признак успешной первичной загрузки данных
@@ -96,10 +88,7 @@ final class StatusManager: NSObject {
     init(
         customExercisesService: CustomExercisesService,
         infopostsService: InfopostsService,
-        progressSyncService: ProgressSyncService,
         dailyActivitiesService: DailyActivitiesService,
-        statusClient: StatusClient,
-        purchasesClient: PurchasesClient? = nil,
         modelContainer: ModelContainer,
         userDefaults: UserDefaults? = nil,
         watchConnectivitySessionProtocol: WCSessionProtocol? = nil,
@@ -108,10 +97,7 @@ final class StatusManager: NSObject {
     ) {
         self.customExercisesService = customExercisesService
         self.infopostsService = infopostsService
-        self.progressSyncService = progressSyncService
         self.dailyActivitiesService = dailyActivitiesService
-        self.statusClient = statusClient
-        self.purchasesClient = purchasesClient
         self.modelContainer = modelContainer
         self.reviewEventReporter = reviewEventReporter
         self.isReadOnlyMode = isReadOnlyMode
@@ -150,99 +136,19 @@ final class StatusManager: NSObject {
         let user = try? context.fetch(FetchDescriptor<User>()).first
         refreshExtensionSnapshot(for: user, context: context)
 
-        if let user, user.isOfflineOnly || isReadOnlyMode {
-            if startDate == nil {
-                startDate = now
-            }
-            rebuildCurrentDayCalculator(now: now)
-            didLoadInitialData = true
-            state = .idle
-            return
-        }
-
         rebuildCurrentDayCalculator(now: now)
-
-        guard !state.isLoading else { return }
-        state = .init(didLoadInitialData: didLoadInitialData)
-        do {
-            let currentRun = try await statusClient.current()
-            let siteStartDate = currentRun.date
-            maxReadInfoPostDay = currentRun.maxForAllRunsDay ?? 0
-            switch (startDate, siteStartDate) {
-            case (.none, .none):
-                logger.info("Сотку еще не стартовали")
-                await start(appDate: nil)
-            case let (.some(date), .none):
-                // Приложение - источник истины
-                logger.info("Дата старта есть только в приложении: \(date.description)")
-                await start(appDate: date)
-            case let (.none, .some(date)):
-                // Сайт - источник истины
-                logger.info("Дата старта есть только на сайте: \(date.description)")
-                await syncWithSiteDate(siteDate: date)
-            case let (.some(appDate), .some(siteDate)):
-                logger.info("Дата старта в приложении: \(appDate.description), и на сайте: \(siteDate.description)")
-                if appDate.isTheSameDayIgnoringTime(siteDate) {
-                    await syncJournalAndProgress()
-                } else {
-                    conflictingSyncModel = .init(appDate, siteDate)
-                }
-            }
-
-            if let user {
-                await syncCalendarPurchasesOnGetStatus(for: user, context: context, now: now)
-            } else {
-                rebuildCurrentDayCalculator(now: now)
-            }
-
-            // Отправляем текущий статус перед didLoadInitialData = true (после синхронизации)
-            let updatedCurrentDay = currentDayCalculator?.currentDay
-            let updatedCurrentActivity = updatedCurrentDay.map { dailyActivitiesService.getActivityType(day: $0, context: context) } ?? nil
-            sendCurrentStatus(isAuthorized: true, currentDay: updatedCurrentDay, currentActivity: updatedCurrentActivity)
-
-            didLoadInitialData = true
-            state = .idle
-        } catch {
-            logger.error("\(error.localizedDescription)")
-            if !didLoadInitialData {
-                state = .error(error.localizedDescription)
-                SWAlert.shared.presentDefaultUIKit(error)
-            }
-        }
+        didLoadInitialData = true
+        state = .idle
     }
 
     func startNewRun(appDate: Date?) async {
         let newStartDate = appDate ?? .now
-
-        let context = modelContainer.mainContext
-        let user = try? context.fetch(FetchDescriptor<User>()).first
-        refreshExtensionSnapshot(for: user, context: context)
-
-        if let user, user.isOfflineOnly || isReadOnlyMode {
-            startDate = newStartDate
-            rebuildCurrentDayCalculator(now: .now)
-            return
-        }
-
-        let isoDateString = DateFormatterService.stringFromFullDate(newStartDate, iso: true)
-        let currentRun = try? await statusClient.start(date: isoDateString)
-        startDate = if let siteStartDate = currentRun?.date {
-            siteStartDate
-        } else {
-            newStartDate
-        }
+        startDate = newStartDate
         rebuildCurrentDayCalculator(now: .now)
     }
 
     func start(appDate: Date?) async {
         await startNewRun(appDate: appDate)
-        await syncJournalAndProgress()
-    }
-
-    func syncWithSiteDate(siteDate: Date) async {
-        startDate = siteDate
-        rebuildCurrentDayCalculator(now: .now)
-        await syncJournalAndProgress()
     }
 
     func loadInfopostsWithUserGender() {
@@ -255,28 +161,12 @@ final class StatusManager: NSObject {
                 userGender: user?.gender,
                 force: true
             )
-
-            if let user, user.isOfflineOnly || isReadOnlyMode {
-                logger.debug("Пропуск syncReadPosts для офлайн-пользователя")
-                return
-            }
-
-            syncReadPostsTask?.cancel()
-            syncReadPostsTask = Task {
-                do {
-                    try await infopostsService.syncReadPosts(context: context)
-                } catch {
-                    logger.error("Ошибка синхронизации прочитанных инфопостов: \(error.localizedDescription)")
-                }
-            }
         } catch {
             logger.error("Не удалось загрузить инфопосты: \(error.localizedDescription)")
         }
     }
 
     func didLogout() {
-        syncReadPostsTask?.cancel()
-        syncReadPostsTask = nil
         clearExtensionDates()
         JournalPagePersistence.clear(defaults: defaults)
         startDate = nil
@@ -284,27 +174,6 @@ final class StatusManager: NSObject {
         maxReadInfoPostDay = 0
         didLoadInitialData = false
         infopostsService.didLogout()
-    }
-
-    /// Обрабатывает изменение статуса авторизации
-    /// - Parameters:
-    ///   - isAuthorized: Статус авторизации
-    func processAuthStatus(isAuthorized: Bool) {
-        let context = modelContainer.mainContext
-        if isAuthorized {
-            let currentDay = currentDayCalculator?.currentDay
-            let currentActivity = currentDay.map { dailyActivitiesService.getActivityType(day: $0, context: context) } ?? nil
-            sendCurrentStatus(isAuthorized: true, currentDay: currentDay, currentActivity: currentActivity)
-        } else {
-            sendCurrentStatus(isAuthorized: false, currentDay: nil, currentActivity: nil)
-            didLogout()
-            do {
-                try context.delete(model: User.self)
-            } catch {
-                logger.error("Не удалось удалить данные пользователя: \(error.localizedDescription)")
-                fatalError("Не удалось удалить данные пользователя: \(error.localizedDescription)")
-            }
-        }
     }
 
     /// Отправляет данные текущего дня на часы
@@ -867,7 +736,6 @@ final class StatusManager: NSObject {
         user.setUnsyncedReadInfopostDays([])
         clearExtensionDates()
         JournalPagePersistence.clear(defaults: defaults)
-        // Метод startNewRun сделает запрос к серверу через StatusClient.start(date:) и установит новую startDate
         let now = Date.now
         await startNewRun(appDate: now)
         rebuildCurrentDayCalculator(now: now)
@@ -972,7 +840,7 @@ final class StatusManager: NSObject {
 
     /// Продлевает календарь на 100 дней при доступной кнопке продления.
     ///
-    /// Локальное сохранение выполняется первым шагом. Сетевой sync запускается асинхронно для online-пользователя.
+    /// Локальное сохранение выполняется первым шагом.
     func extendCalendar() {
         guard let calculator = currentDayCalculator else {
             logger.error("Не удалось продлить календарь: currentDayCalculator не инициализирован")
@@ -1001,14 +869,6 @@ final class StatusManager: NSObject {
             currentDay: updatedCurrentDay,
             currentActivity: updatedCurrentActivity
         )
-
-        guard !(user.isOfflineOnly || isReadOnlyMode) else {
-            return
-        }
-
-        Task { @MainActor in
-            await syncCalendarPurchasesAfterLocalExtend(for: user, context: context, now: .now)
-        }
     }
 
     #if DEBUG
@@ -1110,10 +970,6 @@ extension StatusManager {
                 false
             }
         }
-
-        init(didLoadInitialData: Bool) {
-            self = didLoadInitialData ? .isSynchronizingData : .isLoadingInitialData
-        }
     }
 }
 
@@ -1211,314 +1067,6 @@ private extension StatusManager {
         refreshExtensionSnapshot(for: user, context: context)
     }
     #endif
-
-    func parseCalendarDate(_ rawValue: String) -> Date? {
-        let isoFormatter = ISO8601DateFormatter()
-        isoFormatter.formatOptions = [.withInternetDateTime, .withFractionalSeconds]
-        if let date = isoFormatter.date(from: rawValue) {
-            return date
-        }
-
-        isoFormatter.formatOptions = [.withInternetDateTime]
-        if let date = isoFormatter.date(from: rawValue) {
-            return date
-        }
-
-        let serverDateFormatter = DateFormatter()
-        serverDateFormatter.locale = Locale(identifier: "en_US_POSIX")
-        serverDateFormatter.dateFormat = DateFormatterService.DateFormat.serverDateTimeSec.rawValue
-        serverDateFormatter.timeZone = TimeZone(identifier: "Europe/Moscow")
-        if let date = serverDateFormatter.date(from: rawValue) {
-            return date
-        }
-
-        logger.error("Пропуск невалидной даты продления из ответа сервера: \(rawValue)")
-        return nil
-    }
-
-    @discardableResult
-    func fetchAndMergeServerPurchases(for user: User, context: ModelContext) async -> Bool {
-        guard let purchasesClient else {
-            return false
-        }
-
-        do {
-            let response = try await purchasesClient.getPurchases()
-            let serverDates = response.calendars.compactMap(parseCalendarDate(_:))
-            mergeServerPurchases(serverDates, for: user, context: context)
-            return true
-        } catch {
-            logger.error("Ошибка получения покупок календаря: \(error.localizedDescription)")
-            return false
-        }
-    }
-
-    func mergeServerPurchases(_ serverDates: [Date], for user: User, context: ModelContext) {
-        let localRecords = extensionRecords(for: user, context: context)
-        var recordsByKey: [CalendarExtensionDateKey: [CalendarExtensionRecord]] = [:]
-
-        for record in localRecords {
-            let key = normalizedDateKey(record.date)
-            recordsByKey[key, default: []].append(record)
-        }
-
-        // Удаляем локальные дубли и оставляем одну запись на ключ даты.
-        for records in recordsByKey.values where records.count > 1 {
-            let sortedRecords = records.sorted { lhs, rhs in
-                if lhs.isSynced != rhs.isSynced {
-                    return lhs.isSynced && !rhs.isSynced
-                }
-                if lhs.lastModified != rhs.lastModified {
-                    return lhs.lastModified > rhs.lastModified
-                }
-                if lhs.date != rhs.date {
-                    return lhs.date > rhs.date
-                }
-                return false
-            }
-            guard let keeper = sortedRecords.first else { continue }
-            let containsSynced = records.contains(where: \.isSynced)
-            if containsSynced {
-                keeper.isSynced = true
-                keeper.shouldDelete = false
-                keeper.lastModified = .now
-            }
-            for duplicate in sortedRecords.dropFirst() {
-                context.delete(duplicate)
-            }
-        }
-
-        // Перечитываем дубли после удаления, чтобы корректно дообъединить серверные даты.
-        let compactedLocalRecords = extensionRecords(for: user, context: context)
-        var compactedByKey: [CalendarExtensionDateKey: CalendarExtensionRecord] = [:]
-        for record in compactedLocalRecords {
-            compactedByKey[normalizedDateKey(record.date)] = record
-        }
-
-        for serverDate in serverDates {
-            let key = normalizedDateKey(serverDate)
-            if let existing = compactedByKey[key] {
-                if !existing.isSynced {
-                    existing.isSynced = true
-                    existing.shouldDelete = false
-                    existing.lastModified = .now
-                }
-                continue
-            }
-
-            let newRecord = CalendarExtensionRecord(
-                date: dateFromKey(key),
-                isSynced: true,
-                shouldDelete: false,
-                lastModified: .now,
-                user: user
-            )
-            context.insert(newRecord)
-            compactedByKey[key] = newRecord
-        }
-
-        do {
-            try context.save()
-        } catch {
-            logger.error("Ошибка сохранения merge покупок календаря: \(error.localizedDescription)")
-        }
-
-        refreshExtensionSnapshot(for: user, context: context)
-    }
-
-    @discardableResult
-    func retryUnsyncedPurchases(for user: User, context: ModelContext) async -> Bool {
-        guard let purchasesClient else {
-            return false
-        }
-
-        let unsyncedRecords = extensionRecords(for: user, context: context)
-            .filter { !$0.isSynced && !$0.shouldDelete }
-            .sorted { $0.date < $1.date }
-
-        guard !unsyncedRecords.isEmpty else {
-            return false
-        }
-
-        var didSyncAny = false
-        for record in unsyncedRecords {
-            do {
-                _ = try await purchasesClient.postCalendarPurchase(date: record.date)
-                record.isSynced = true
-                record.shouldDelete = false
-                record.lastModified = .now
-                didSyncAny = true
-            } catch {
-                logger.error("Ошибка отправки покупки продления: \(error.localizedDescription)")
-            }
-        }
-
-        if didSyncAny {
-            do {
-                try context.save()
-            } catch {
-                logger.error("Ошибка сохранения retry продлений: \(error.localizedDescription)")
-            }
-        }
-
-        refreshExtensionSnapshot(for: user, context: context)
-        return didSyncAny
-    }
-
-    func syncCalendarPurchasesOnGetStatus(for user: User, context: ModelContext, now: Date) async {
-        guard !user.isOfflineOnly else {
-            refreshExtensionSnapshot(for: user, context: context)
-            rebuildCurrentDayCalculator(now: now)
-            return
-        }
-
-        _ = await fetchAndMergeServerPurchases(for: user, context: context)
-        let didRetry = await retryUnsyncedPurchases(for: user, context: context)
-        if didRetry {
-            _ = await fetchAndMergeServerPurchases(for: user, context: context)
-        }
-
-        refreshExtensionSnapshot(for: user, context: context)
-        rebuildCurrentDayCalculator(now: now)
-    }
-
-    func syncCalendarPurchasesOnSyncJournal(for user: User, context: ModelContext, now: Date) async {
-        guard !user.isOfflineOnly else {
-            refreshExtensionSnapshot(for: user, context: context)
-            rebuildCurrentDayCalculator(now: now)
-            return
-        }
-
-        _ = await fetchAndMergeServerPurchases(for: user, context: context)
-        let didRetry = await retryUnsyncedPurchases(for: user, context: context)
-        if didRetry {
-            _ = await fetchAndMergeServerPurchases(for: user, context: context)
-        }
-
-        refreshExtensionSnapshot(for: user, context: context)
-        rebuildCurrentDayCalculator(now: now)
-    }
-
-    func syncCalendarPurchasesAfterLocalExtend(for user: User, context: ModelContext, now: Date) async {
-        guard !user.isOfflineOnly else {
-            refreshExtensionSnapshot(for: user, context: context)
-            rebuildCurrentDayCalculator(now: now)
-            return
-        }
-
-        let didRetry = await retryUnsyncedPurchases(for: user, context: context)
-        if didRetry {
-            _ = await fetchAndMergeServerPurchases(for: user, context: context)
-        }
-
-        refreshExtensionSnapshot(for: user, context: context)
-        rebuildCurrentDayCalculator(now: now)
-    }
-
-    func syncJournalAndProgress() async {
-        let context = modelContainer.mainContext
-        let user = try? context.fetch(FetchDescriptor<User>()).first
-        if let user, user.isOfflineOnly {
-            return
-        }
-
-        guard !isJournalSyncInProgress else { return }
-        isJournalSyncInProgress = true
-        defer { isJournalSyncInProgress = false }
-        state = .init(didLoadInitialData: didLoadInitialData)
-
-        let startDate = Date.now
-        let entry = SyncJournalEntry(
-            startDate: startDate,
-            result: .success,
-            user: user
-        )
-        context.insert(entry)
-
-        var allErrors: [SyncError] = []
-        var progressStats: SyncStats?
-        var exercisesStats: SyncStats?
-        var activitiesStats: SyncStats?
-
-        do {
-            let result = try await progressSyncService.syncProgress(context: context)
-            progressStats = result.details.progress
-            if let errors = result.details.errors {
-                allErrors.append(contentsOf: errors)
-            }
-        } catch {
-            logger.error("Ошибка синхронизации прогресса: \(error.localizedDescription)")
-            allErrors.append(
-                SyncError(
-                    type: "ProgressSyncError",
-                    message: error.localizedDescription,
-                    entityType: "progress",
-                    entityId: nil
-                )
-            )
-        }
-
-        do {
-            let result = try await customExercisesService.syncCustomExercises(context: context)
-            exercisesStats = result.details.exercises
-            if let errors = result.details.errors {
-                allErrors.append(contentsOf: errors)
-            }
-        } catch {
-            logger.error("Ошибка синхронизации упражнений: \(error.localizedDescription)")
-            allErrors.append(
-                SyncError(
-                    type: "CustomExercisesSyncError",
-                    message: error.localizedDescription,
-                    entityType: "exercise",
-                    entityId: nil
-                )
-            )
-        }
-
-        do {
-            let result = try await dailyActivitiesService.syncDailyActivities(context: context)
-            activitiesStats = result.details.activities
-            if let errors = result.details.errors {
-                allErrors.append(contentsOf: errors)
-            }
-        } catch {
-            logger.error("Ошибка синхронизации активностей: \(error.localizedDescription)")
-            allErrors.append(
-                SyncError(
-                    type: "DailyActivitiesSyncError",
-                    message: error.localizedDescription,
-                    entityType: "activity",
-                    entityId: nil
-                )
-            )
-        }
-
-        if let user {
-            await syncCalendarPurchasesOnSyncJournal(for: user, context: context, now: .now)
-        }
-
-        let combinedStats = SyncStats(combining: progressStats, exercises: exercisesStats, activities: activitiesStats)
-        let syncResult = SyncResultType(
-            errors: allErrors.isEmpty ? nil : allErrors,
-            stats: combinedStats
-        )
-
-        let details = SyncResultDetails(
-            progress: progressStats,
-            exercises: exercisesStats,
-            activities: activitiesStats,
-            errors: allErrors.isEmpty ? nil : allErrors
-        )
-
-        entry.endDate = Date.now
-        entry.result = syncResult
-        entry.details = details
-        try? context.save()
-
-        conflictingSyncModel = nil
-        state = .idle
-    }
 }
 
 // MARK: - WCSessionDelegate

@@ -26,9 +26,6 @@ final class User {
     /// Активности пользователя
     @Relationship(deleteRule: .cascade) var dayActivities: [DayActivity] = []
 
-    /// Записи журнала синхронизаций
-    @Relationship(deleteRule: .cascade) var syncJournalEntries: [SyncJournalEntry] = []
-
     /// ID избранных инфопостов (хранится как строка через запятую, например "id1,id2,id3")
     private var favoriteInfopostIdsString = ""
 
@@ -68,17 +65,16 @@ final class User {
         )
     }
 
-    convenience init(from response: UserResponse) {
+    convenience init(fromMainUserForm form: MainUserForm, id: Int = -1) {
         self.init(
-            id: response.id,
-            userName: response.name,
-            fullName: response.fullname,
-            email: response.email,
-            imageStringURL: response.image,
-            cityID: response.cityId,
-            countryID: response.countryId,
-            genderCode: response.gender,
-            birthDateIsoString: response.birthDateIsoString
+            id: id,
+            userName: form.userName,
+            fullName: form.fullName,
+            email: form.email,
+            cityID: Int(form.cityId) ?? 0,
+            countryID: Int(form.countryId) ?? 0,
+            genderCode: form.genderCode,
+            birthDateIsoString: form.birthDateIsoString
         )
     }
 }

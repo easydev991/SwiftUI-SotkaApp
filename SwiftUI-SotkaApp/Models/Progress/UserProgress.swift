@@ -89,43 +89,9 @@ final class UserProgress {
         Section(day: id)
     }
 
-    /// Создает UserProgress из ProgressResponse
-    convenience init(from response: ProgressResponse, user: User) {
-        let lastModified = response.modifyDate ?? response.createDate
-        self.init(
-            id: response.id,
-            pullUps: response.pullups,
-            pushUps: response.pushups,
-            squats: response.squats,
-            weight: response.weight,
-            urlPhotoFront: response.photoFront,
-            urlPhotoBack: response.photoBack,
-            urlPhotoSide: response.photoSide,
-            lastModified: lastModified
-        )
-        self.user = user
-        self.isSynced = true
-        self.shouldDelete = false
-    }
+    // Создает UserProgress из ProgressResponse
 
-    /// Создает UserProgress из ProgressResponse с маппингом дня
-    convenience init(from response: ProgressResponse, user: User, internalDay: Int) {
-        let lastModified = response.modifyDate ?? response.createDate
-        self.init(
-            id: internalDay,
-            pullUps: response.pullups,
-            pushUps: response.pushups,
-            squats: response.squats,
-            weight: response.weight,
-            urlPhotoFront: response.photoFront,
-            urlPhotoBack: response.photoBack,
-            urlPhotoSide: response.photoSide,
-            lastModified: lastModified
-        )
-        self.user = user
-        self.isSynced = true
-        self.shouldDelete = false
-    }
+    // Создает UserProgress из ProgressResponse с маппингом дня
 }
 
 extension UserProgress {
@@ -265,13 +231,6 @@ extension UserProgress {
     /// Проверяет, можно ли удалить прогресс (есть данные упражнений или фотографии)
     var canBeDeleted: Bool {
         hasAnyMetricsData || hasAnyPhotoDataIncludingURLs
-    }
-
-    /// Устанавливает lastModified в соответствии с серверным временем (как в Android)
-    ///
-    /// Если `modify_date` равен `nil`, используем `create_date`
-    func updateLastModified(from response: ProgressResponse) {
-        lastModified = response.modifyDate ?? response.createDate
     }
 }
 

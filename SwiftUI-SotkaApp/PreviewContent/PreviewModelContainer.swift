@@ -13,7 +13,6 @@ enum PreviewModelContainer {
                 UserProgress.self,
                 DayActivity.self,
                 DayActivityTraining.self,
-                SyncJournalEntry.self,
                 CalendarExtensionRecord.self
             ]
         )
@@ -145,9 +144,8 @@ enum PreviewModelContainer {
             container.mainContext.insert(commentActivity)
         }
 
-        let russia = CountryResponse.defaultCountry
-        let country = Country(id: russia.id, name: russia.name, cities: russia.cities.map(City.init))
-        container.mainContext.insert(country)
+        let russia = Country.makeDefaultCountry()
+        container.mainContext.insert(russia)
         return container
     }
 }

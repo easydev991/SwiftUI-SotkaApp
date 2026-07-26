@@ -189,7 +189,7 @@ private extension JournalGridView {
         pageDaysRange: 1 ... 100,
         pageSections: JournalGridPagination.makeSections(totalDays: 100, page: 0)
     )
-    .environment(DailyActivitiesService(client: MockDaysClient(result: .success)))
+    .environment(DailyActivitiesService(isReadOnlyMode: false))
     .environment(StatusManager.preview)
     .modelContainer(PreviewModelContainer.make(with: .preview))
     .environment(\.currentDay, 50)
@@ -202,7 +202,7 @@ private extension JournalGridView {
         pageDaysRange: 101 ... 200,
         pageSections: JournalGridPagination.makeSections(totalDays: 300, page: 1)
     )
-    .environment(DailyActivitiesService(client: MockDaysClient(result: .success)))
+    .environment(DailyActivitiesService(isReadOnlyMode: false))
     .environment(StatusManager.previewWithCalendarExtensionDay130)
     .modelContainer(PreviewModelContainer.make(with: .preview))
     .environment(\.currentDay, 130)
