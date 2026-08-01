@@ -19,12 +19,12 @@
 
 ### Целиком мёртвые сервисы
 
-- [x] Удалены 4 мёртвых сетевых сервиса (~1686 стр.).
-- [x] [2026-08-01] **AuthHelper переклассифицирован** после уточнения пользовательского сценария (existing authorized vs new offline-only): 62 стр. — корректная локальная абстракция, **не over-engineering**. `triggerLogout()` сбрасывает только UserDefaults-флаги; полная очистка SwiftData-данных пользователя — обязанность logout-флоу в `.onChange` (восстановление после регрессии `ed82f6e9` — см. раздел 9 Tier 1). Детальный анализ — раздел 9.
+- [x] Удалены 4 мёртвых сетевых сервиса (~1686 стр., `ed82f6e9`).
+- [x] [2026-08-01] `AuthHelper` переклассифицирован как корректная локальная абстракция (62 стр., см. раздел 9).
 
 ### Удалено в `ed82f6e9` (delete-этап, ~16 530 стр.)
 
-- [x] Удалены sync-экраны, SyncJournal, протоколы, DTO, моки, тесты, sync-сервисы (~16 530 стр., `ed82f6e9`; подробности — Итог).
+- [x] Удалены sync-экраны, SyncJournal, протоколы, DTO, моки, тесты, sync-сервисы (подробности — Итог).
 
 ### keep (живые, не тронуты)
 
@@ -34,8 +34,7 @@
 
 ### Целиком мёртвые пакеты
 
-- [x] **SWNetwork** (~1412 стр.) — удалён в `2555914a` (каталог + пакет из `.xcodeproj`).
-- [x] **SWKeychain** (~230 стр.) — удалён в `2555914a` (0 prod-ссылок, 0 тестов).
+- [x] Удалены `SWNetwork` (~1412 стр.) + `SWKeychain` (~230 стр.) в `2555914a` (каталог + пакет из `.xcodeproj`).
 
 ### Пакеты, которые оставляем
 
@@ -43,8 +42,8 @@
 
 ### Native-замены внутри пакетов
 
-- [x] **Native/delete** (`19081bad`/`c2e906a3`): SWAlert, SWFileManager, DateFormatterService helpers, String.capitalizingFirstLetter.
-- [x] [NEW] **NetworkStatus** (~46 стр., `9cb2646`): `NetworkStatus` + `NetworkStatusEnvironmentKey` + `.networkStatus(...)` modifier. Write-only: 0 ссылок на `@Environment(\.isNetworkConnected)`, `NWPathMonitor` запускался впустую.
+- [x] Native/delete (`19081bad`/`c2e906a3`): SWAlert, SWFileManager, DateFormatterService helpers, String.capitalizingFirstLetter.
+- [x] [NEW] `NetworkStatus` (~46 стр., `9cb2646`) — write-only, 0 ссылок на `@Environment(\.isNetworkConnected)`.
 
 ## 3. Review-слой (yagni — избыточная абстракция)
 
@@ -56,39 +55,37 @@
 
 Только файлы без fileprivate-моков в `ReviewManagerTests` и без внешних caller'ов:
 
-- [x] yagni/shrink 3 файла (ReviewAttemptRules 10→3, ReviewSkipReason 9→5, ReviewStorageKeys 8→0). 2 тест-файла переподключены. Net: −14 prod, −10 tests.
+- [x] yagni/shrink 3 файла (ReviewAttemptRules 10→3, ReviewSkipReason 9→5, ReviewStorageKeys 8→0, `bc0a76f`): 2 тест-файла переподключены, net −14 prod, −10 tests.
 
 ### Фаза B — переписывание тестов (доп. net −18, дополнительный −18 стр.)
 
-- [x] yagni `ReviewAttemptStoring.swift` (8 стр.) — выполнено в `3e928f6f`. `MockReviewAttemptStore` заменён на `ReviewStorage` + `MockUserDefaults`.
-- [x] yagni `WorkoutCompletionsCounting.swift` (5 стр.) — выполнено в `3e928f6f`. `MockWorkoutCompletionsCounter` заменён на `WorkoutCompletionsCounter` + in-memory `ModelContainer` (`makeContainer` helper).
-- [x] yagni `ReviewContext.swift` (5 стр.) — выполнено в `3e928f6f`. `hadRecentError: Bool` теперь передаётся напрямую в 8 файлах (~25 call-сайтов).
+- [x] yagni 3 протокола (`3e928f6f`, net −18 LOC prod + test mocks rewrite): `ReviewAttemptStoring`/`WorkoutCompletionsCounting`/`ReviewContext` — 8 файлов, ~25 call-сайтов.
 
 ### keep — расширен, не трогаем остальное
 
-- [x] keep 4 файла: `ReviewEventReporting` (5 стр.), `ReviewMilestone` (21 стр., +`isNotYetAttempted`), `ReviewRequestHost` (55 стр.), `WorkoutCompletionsCounter` (31 стр.). Тесты `ReviewMilestoneTests`/`ReviewRequestTriggerIDTests`/`WorkoutCompletionsCounterTests` — живые.
+- [x] keep 4 файла: `ReviewEventReporting` (5), `ReviewMilestone` (21, +`isNotYetAttempted`), `ReviewRequestHost` (55), `WorkoutCompletionsCounter` (31). Тесты `ReviewMilestoneTests`/`ReviewRequestTriggerIDTests`/`WorkoutCompletionsCounterTests` — живые.
 
 ### Итог Review-слоя (Фазы A и B выполнены в `3e928f6f`)
 
-`ReviewManager` 85→90, `ReviewStorage` 31→36, `ReviewMilestone` 17→21. Production 270→256 (net −14). Tests 636 без изменений. Фаза B доведёт до 244.
+Production 270→256 (net −14). Tests 636 без изменений. Подробности — Итог.
 
 ## 4. Другие мёртвые/yagni находки в приложении
 
 ### Watch-приложение
 
-- [x] Удалены `WatchWorkoutService.swift` + тесты (~285 стр.). Watch ↔ iPhone sync через `WatchConnectivityService`/`WCSession`/`WorkoutDataResponse` — не затронута.
+- [x] Удалены `WatchWorkoutService.swift` + тесты (~285 стр.). Watch sync через `WatchConnectivityService`/`WCSession`/`WorkoutDataResponse` — не затронута.
 
 ### Прочее
 
-- [x] Удалены мелкие мёртвые члены: `ImageProcessor.createThumbnail`, `InfopostAvailabilityManager.getAvailablePostsBySection`, `Client+.swift` (→ `ScreenshotDemoData.seedDemoData`, см. раздел 7), `ScreenshotDemoData.readInfopostDays`.
+- [x] Удалены мелкие мёртвые члены: `ImageProcessor.createThumbnail`, `InfopostAvailabilityManager.getAvailablePostsBySection`, `Client+.swift` (→ `ScreenshotDemoData.seedDemoData`, §7), `ScreenshotDemoData.readInfopostDays`.
 
 ### Новые мёртвые находки после `ed82f6e9` (не были в исходном аудите) [NEW]
 
-- [x] Удалены 4 мёртвые модели (все 0 ссылок в проде).
+- [x] Удалены 4 мёртвые модели (0 ссылок в проде).
 
 ### Находки Periphery 2026-07-26 (после `e75e49db`) [NEW]
 
-Periphery re-run дал 46 warnings в 17 файлах. После ручной верификации (grep по call-сайтам, проверка `@Observable` struct + `Equatable`, protocol-required properties) подтверждено **dead code ≈122 LOC** в 6 production-файлах + 1 тест-моке + 4 `public`→`internal` в `SWDesignSystem`:
+Periphery re-run: 46 warnings в 17 файлах → 18 false-positives → **dead code ≈122 LOC** в 6 prod-файлах + 1 тест-мок + 4 `public`→`internal` в `SWDesignSystem`. Выполнено в `8452aa0` (−140 net).
 
 | Файл | Находка | Объём | Обоснование |
 |---|---|---|---|
@@ -109,11 +106,11 @@ Periphery re-run дал 46 warnings в 17 файлах. После ручной 
 | `Libraries/SWDesignSystem/.../Rows/ListRowView.swift` | `public struct` + `public extension` | 0 LOC | unused outside file (только previews) |
 | `Libraries/SWDesignSystem/.../ItemListScreen.swift:23` | `init(mode:allItems:...)` | 12 стр. | 0 caller'ов вне previews |
 
-**False positives (отброшены):** 6 `WorkoutPreviewViewModel` assign-only — это `let`-свойства `private struct DataSnapshot` (`Equatable` comparison в `hasChanges`); `PreviewWatchAuthService.init(isAuthorized:)` — используется в `HomeView.swift:67,78`; `WatchAuthServiceProtocol.updateAuthStatus` — production call в `WatchConnectivityService.swift:366`; `MockWCSession.delegate` / `MockWatchSession.delegate` — `WatchSessionProtocol` requires `var delegate: WCSessionDelegate? { get set }`; `Libraries/SWDesignSystem/Package.swift:6:5 package` — build metadata.
+**False positives (отброшены):** 6 `WorkoutPreviewViewModel` assign-only (`private struct DataSnapshot`, `Equatable` comparison в `hasChanges`); `PreviewWatchAuthService.init(isAuthorized:)` (`HomeView.swift:67,78`); `WatchAuthServiceProtocol.updateAuthStatus` (`WatchConnectivityService.swift:366`); `MockWCSession.delegate`/`MockWatchSession.delegate` (`WatchSessionProtocol` requires `var delegate: WCSessionDelegate? { get set }`); `Libraries/SWDesignSystem/Package.swift:6:5 package` (build metadata).
 
 ### Ошибочно удалённые тесты [restore]
 
-`SwiftDataMigrationTests.swift` был удалён в `ed82f6e9` как «мёртвый», потому что ссылался на `SyncJournalEntry.self`. **Удаление было ошибкой** — тесты проверяли критичный сценарий (открытие старого SwiftData store + сохранение данных при изменении схемы).
+`SwiftDataMigrationTests.swift` удалён в `ed82f6e9` как «мёртвый» (ссылался на `SyncJournalEntry.self`). **Удаление было ошибкой** — тесты проверяли критичный сценарий (открытие старого SwiftData store + сохранение данных при изменении схемы).
 
 - [x] [restore] Восстановлен `SwiftDataMigrationTests.swift` (269 стр., `22dace92`): 4 теста сохранены + новый `opensStoreAfterRemovingSyncJournalEntryAndPreservesData`. Все 5 тестов проходят.
 
@@ -241,16 +238,16 @@ Periphery re-run дал 46 warnings в 17 файлах. После ручной 
 
 ### Порядок коммитов (рекомендуемый)
 
-1. **Commit A1** (`rm` 8 файлов): −505 LOC. `git rm` каждый файл → build → tests. Чистый delete
-2. **Commit A2** (9 prod файлов + 3 preview-fixup в `JournalScreen.swift`): −150 LOC. Первым заменить `.init(fromMainUserForm: .preview)` → `User.preview` в 3 previews, затем `MainUserForm.swift` + `init`, потом `Gender.affiliation` + service `isReadOnlyMode` × 3 + computed sync snapshots + `User` sync helpers + `WelcomeScreen` + `MoreScreen`
-3. **Commit B** (Review Фаза B): −18 LOC prod + test mocks rewrite. `ReviewContext` первым (наибольший scope, 8 файлов), затем `ReviewAttemptStoring` + `WorkoutCompletionsCounting`
-4. **Commit C** (DateFormatterService dead methods): −20 LOC prod + сокращение `DateFormatterServiceTests`. **Строго после A2**, когда `MainUserForm` не вызывает `stringFromFullDate`
+1. **A1** (`rm` 8 файлов): −505 LOC. Чистый delete.
+2. **A2** (9 prod + 3 preview-fixup): −150 LOC.
+3. **B** (Review Фаза B): −18 LOC prod + test mocks rewrite.
+4. **C** (DateFormatterService dead methods): −20 LOC. **Строго после A2.**
 
-**Суммарно: −693 LOC prod + 2 test-mock delete + 1 test-mock rewrite + 8 SWUtils-тестов сокращение.**
+Фактический результат — Итог (коммиты `ddcb1d52`+`b8761560`+`3e928f6f`+`220375cc`+`4655820`).
 
 ### Прогноз контроля качества
 
-См. финальный «Контроль качества» в конце документа (actual: 862 passed, build ✅, Watch sync не сломана). Прогноз −860 LOC оказался точным (факт −1029 net — большая часть из-за test-mock rewrites, не regression'ов).
+Прогноз −860 LOC оказался точным (факт −1029 net — большая часть из-за test-mock rewrites, не regression'ов). См. финальный «Контроль качества».
 
 ## 9. [NEW] Анализ офлайн-only Auth модели (2026-08-01, после уточнения пользовательского сценария)
 
