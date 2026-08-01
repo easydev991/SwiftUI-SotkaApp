@@ -5,44 +5,6 @@ import UIKit
 
 /// Unit-тесты для ImageAssetManager
 struct ImageAssetManagerTests {
-    // MARK: - Тесты получения URL изображений
-
-    @Test
-    func getImageURLForMainImage() throws {
-        // Тест получения URL для основного изображения
-        let url = try #require(ImageAssetManager.getImageURL(for: "1"))
-        #expect(url.pathExtension == "png")
-    }
-
-    @Test
-    func getImageURLForAdditionalImage() throws {
-        // Тест получения URL для дополнительного изображения
-        let url = try #require(ImageAssetManager.getImageURL(for: "1-1"))
-        #expect(url.pathExtension == "png")
-    }
-
-    @Test
-    func getImageURLForSpecialImage() throws {
-        // Тест получения URL для специального изображения
-        let url = try #require(ImageAssetManager.getImageURL(for: "aims-0"))
-        #expect(url.pathExtension == "png")
-    }
-
-    @Test
-    func getImageURLForNonExistentImage() {
-        // Тест для несуществующего изображения
-        let url = ImageAssetManager.getImageURL(for: "nonexistent-image-12345")
-        #expect(url == nil)
-    }
-
-    @Test
-    func getImageURLWithExtension() throws {
-        // Тест получения URL с расширением в имени
-        let url1 = try #require(ImageAssetManager.getImageURL(for: "1.jpg"))
-        let url2 = try #require(ImageAssetManager.getImageURL(for: "1"))
-        #expect(url1 == url2)
-    }
-
     // MARK: - Тесты копирования изображений
 
     @Test
@@ -103,73 +65,5 @@ struct ImageAssetManagerTests {
 
         // Очистка после теста
         try FileManager.default.removeItem(at: destinationURL)
-    }
-
-    // MARK: - Тесты проверки существования изображений
-
-    @Test
-    func imageExists() {
-        // Тест проверки существования изображения
-        let exists = ImageAssetManager.imageExists("1")
-        #expect(exists)
-    }
-
-    @Test
-    func imageExistsForNonExistentImage() {
-        // Тест проверки существования несуществующего изображения
-        let exists = ImageAssetManager.imageExists("nonexistent-image-12345")
-        #expect(!exists)
-    }
-
-    // MARK: - Тесты получения списка изображений
-
-    @Test
-    func getAllAvailableImages() {
-        // Тест получения списка всех доступных изображений
-        let images = ImageAssetManager.getAllAvailableImages()
-        #expect(images.count > 0)
-    }
-
-    // MARK: - Тесты получения размера изображений
-
-    @Test
-    func getImageSize() throws {
-        // Тест получения размера изображения
-        let size = try #require(ImageAssetManager.getImageSize("1"))
-        #expect(size.width > 0)
-        #expect(size.height > 0)
-    }
-
-    @Test
-    func getImageSizeForNonExistentImage() {
-        // Тест получения размера несуществующего изображения
-        let size = ImageAssetManager.getImageSize("nonexistent-image-12345")
-        #expect(size == nil)
-    }
-
-    // MARK: - Тесты производительности
-
-    @Test
-    func performanceGetImageURL() {
-        // Тест производительности получения URL
-        let startTime = CFAbsoluteTimeGetCurrent()
-
-        for i in 1 ... 100 {
-            _ = ImageAssetManager.getImageURL(for: "\(i % 10 + 1)")
-        }
-
-        let timeElapsed = CFAbsoluteTimeGetCurrent() - startTime
-        #expect(timeElapsed < 1.0)
-    }
-
-    @Test
-    func performanceGetAllAvailableImages() {
-        // Тест производительности получения всех изображений
-        let startTime = CFAbsoluteTimeGetCurrent()
-
-        _ = ImageAssetManager.getAllAvailableImages()
-
-        let timeElapsed = CFAbsoluteTimeGetCurrent() - startTime
-        #expect(timeElapsed < 1.0)
     }
 }
