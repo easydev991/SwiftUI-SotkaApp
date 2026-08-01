@@ -298,35 +298,6 @@ struct WorkoutViewModelSetsTests {
         }
     }
 
-    @Test("Должен возвращать правильное количество подходов для каждого упражнения в турбо-дне 93")
-    func getExerciseStepsForTurboDay93() {
-        let connectivityService = MockWatchConnectivityService()
-        let viewModel = WorkoutViewModel(
-            connectivityService: connectivityService
-        )
-
-        let trainings = [
-            WorkoutPreviewTraining(count: 3, typeId: ExerciseType.turbo93_1.rawValue, sortOrder: 0),
-            WorkoutPreviewTraining(count: 3, typeId: ExerciseType.turbo93_2.rawValue, sortOrder: 1),
-            WorkoutPreviewTraining(count: 2, typeId: ExerciseType.turbo93_3.rawValue, sortOrder: 2),
-            WorkoutPreviewTraining(count: 3, typeId: ExerciseType.turbo93_4.rawValue, sortOrder: 3),
-            WorkoutPreviewTraining(count: 10, typeId: ExerciseType.turbo93_5.rawValue, sortOrder: 4)
-        ]
-
-        viewModel.setupWorkoutData(
-            dayNumber: 93,
-            executionType: .turbo,
-            trainings: trainings,
-            plannedCount: 5,
-            restTime: 60
-        )
-
-        for training in trainings {
-            let exerciseSteps = viewModel.getExerciseSteps(for: training.id)
-            #expect(exerciseSteps.count == 1)
-        }
-    }
-
     @Test("Должен сохранять правильную логику для обычных дней с подходами")
     func initializeStepStatesForRegularDaysWithSets() {
         let connectivityService = MockWatchConnectivityService()

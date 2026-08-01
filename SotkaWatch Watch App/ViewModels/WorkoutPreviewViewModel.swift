@@ -87,13 +87,6 @@ final class WorkoutPreviewViewModel {
         trainings.filter { ($0.count ?? 0) > 0 }
     }
 
-    /// Определяет, можно ли удалить упражнение
-    ///
-    /// Возвращает true если упражнений больше 1, иначе false
-    var canRemoveExercise: Bool {
-        trainings.count > 1
-    }
-
     /// Отфильтрованные упражнения для редактирования (без турбо-упражнений)
     ///
     /// Возвращает только те упражнения, которые не являются турбо-упражнениями
@@ -184,51 +177,6 @@ final class WorkoutPreviewViewModel {
         selectedExecutionType = updatedCreator.executionType
         trainings = updatedCreator.trainings
         plannedCount = updatedCreator.plannedCount
-    }
-
-    /// Обновляет количество повторений для конкретной тренировки или `plannedCount`/`count`
-    ///
-    /// Для сохраненных тренировок (`count != nil`) обновляет фактическое значение `count`
-    /// Для непройденных тренировок (`count == nil`) обновляет плановое значение `plannedCount`
-    /// - Parameters:
-    ///   - id: Идентификатор тренировки или "plannedCount" для обновления `plannedCount`/`count`
-    ///   - action: Действие (increment или decrement)
-    func updatePlannedCount(id: String, action: TrainingRowAction) {
-        if id == "plannedCount" {
-            if count != nil {
-                let currentCount = count ?? 0
-                let newCount: Int = switch action {
-                case .increment:
-                    currentCount + 1
-                case .decrement:
-                    max(0, currentCount - 1)
-                }
-                count = newCount
-            } else {
-                let currentCount = plannedCount ?? 0
-                let newCount: Int = switch action {
-                case .increment:
-                    currentCount + 1
-                case .decrement:
-                    max(0, currentCount - 1)
-                }
-                plannedCount = newCount
-            }
-        } else {
-            trainings = trainings.map { existingTraining in
-                guard existingTraining.id == id else { return existingTraining }
-
-                let currentCount = existingTraining.count ?? 0
-                let newCount: Int = switch action {
-                case .increment:
-                    currentCount + 1
-                case .decrement:
-                    max(0, currentCount - 1)
-                }
-
-                return existingTraining.withCount(newCount)
-            }
-        }
     }
 
     /// Обновляет плановое количество кругов/подходов
@@ -365,45 +313,12 @@ final class WorkoutPreviewViewModel {
         logger.info("Добавлено стандартное упражнение: \(exerciseType.localizedTitle)")
     }
 
-    /// Обновляет количество повторений для упражнения по индексу
-    ///
-    /// Если количество становится 0 и упражнений больше 1, упражнение удаляется
-    /// - Parameters:
-    ///   - index: Индекс упражнения в массиве trainings
-    ///   - amount: Изменение количества (положительное для увеличения, отрицательное для уменьшения)
-    func updateTrainingCount(at index: Int, amount: Int) {
-        guard index < trainings.count else {
-            logger.warning("Индекс \(index) выходит за границы массива trainings")
-            return
-        }
-
-        var updatedTraining = trainings[index]
-        let currentCount = updatedTraining.count ?? 0
-        let newCount = max(0, currentCount + amount)
-
-        if newCount == 0, trainings.count > 1 {
-            removeTraining(at: index)
-        } else {
-            updatedTraining = updatedTraining.withCount(newCount)
-            trainings[index] = updatedTraining
-            logger.info("Обновлено количество повторений для упражнения \(index): \(newCount)")
-        }
-    }
-
     /// Инициализирует редактируемый список упражнений
     ///
     /// Возвращает список упражнений без турбо-упражнений
     /// - Returns: Отфильтрованный список упражнений для редактирования
     func initializeEditableExercises() -> [WorkoutPreviewTraining] {
         editableTrainings
-    }
-
-    /// Удаляет тренировку по индексу
-    /// - Parameter index: Индекс тренировки для удаления
-    private func removeTraining(at index: Int) {
-        guard index < trainings.count else { return }
-        trainings.remove(at: index)
-        logger.info("Тренировка \(index) удалена из списка")
     }
 
     /// Сохранение тренировки через WatchConnectivityService

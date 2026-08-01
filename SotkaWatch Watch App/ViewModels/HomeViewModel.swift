@@ -188,33 +188,6 @@ final class HomeViewModel {
         }
     }
 
-    /// Начало тренировки (запрос данных тренировки)
-    /// - Returns: Данные тренировки или `nil` если произошла ошибка
-    func startWorkout() async -> WorkoutData? {
-        guard let day = currentDay else {
-            logger.warning("Попытка начать тренировку без текущего дня")
-            error = WatchConnectivityError.sessionUnavailable
-            return nil
-        }
-
-        isLoading = true
-        error = nil
-
-        defer {
-            isLoading = false
-        }
-
-        do {
-            let response = try await connectivityService.requestWorkoutData(day: day)
-            logger.info("Получены данные тренировки для дня \(day)")
-            return response.workoutData
-        } catch {
-            logger.error("Ошибка запроса данных тренировки: \(error.localizedDescription)")
-            self.error = error
-            return nil
-        }
-    }
-
     /// Обновление данных тренировки из WatchConnectivityService
     /// - Parameter response: Полные данные тренировки с iPhone
     func updateWorkoutDataFromConnectivity(_ response: WorkoutDataResponse) {
