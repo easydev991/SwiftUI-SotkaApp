@@ -89,6 +89,7 @@
             BuildableIdentifier = "primary"
             BlueprintIdentifier = "67156B3E2EDD853500334DEF"
             BuildableName = "SotkaWatch Watch App.app"
+            BlueprintName = "SotkaWatch Watch App"
             ReferencedContainer = "container:SwiftUI-SotkaApp.xcodeproj">
          </BuildableReference>
       </BuildableProductRunnable>
@@ -105,6 +106,7 @@
             BuildableIdentifier = "primary"
             BlueprintIdentifier = "67156B3E2EDD853500334DEF"
             BuildableName = "SotkaWatch Watch App.app"
+            BlueprintName = "SotkaWatch Watch App"
             ReferencedContainer = "container:SwiftUI-SotkaApp.xcodeproj">
          </BuildableReference>
       </BuildableProductRunnable>
