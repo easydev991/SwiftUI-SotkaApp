@@ -8,6 +8,7 @@ final class CalendarExtensionRecord {
     var date: Date
 
     /// Флаг синхронизации с сервером
+    @available(*, deprecated, message: "Sync flag, kept for schema stability (server closed 2026-08-01).")
     var isSynced: Bool
 
     /// Флаг удаления на сервере (зарезервирован для дальнейших сценариев)
