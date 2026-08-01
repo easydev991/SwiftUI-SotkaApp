@@ -6,7 +6,9 @@
 
 ## Текущее состояние
 
-HealthKit не используется (см. [apple-watch-development-plan.md](apple-watch-development-plan.md)). Завершение тренировки: на часах — `WatchWorkoutService.finishWorkout()` → `WorkoutResult` → команда `saveWorkout` → `StatusManager.handleSaveWorkoutCommand`; на iPhone — `WorkoutPreviewViewModel.handleWorkoutResult` → `WorkoutProgramCreator` → SwiftData. Модели: `DayActivity`, `WorkoutResult(count, duration)`, `SaveWorkoutData`.
+HealthKit не используется (см. [apple-watch-development-plan.md](../apple-watch-development-plan.md)). Завершение тренировки: на часах — `WorkoutViewModel.finishWorkout()` → `WorkoutResult` → команда `saveWorkout` через `WatchConnectivityService` → `StatusManager.handleSaveWorkoutCommand`; на iPhone — `WorkoutPreviewViewModel.handleWorkoutResult` → `WorkoutProgramCreator` → SwiftData. Модели: `DayActivity`, `WorkoutResult(count, duration)`, `SaveWorkoutData`.
+
+> Примечание: ранее на часах завершение тренировки обрабатывал `WatchWorkoutService` — удалён в ходе overengineering-аудита (см. [overengineering-audit.md](../overengineering-audit.md)); его роль выполняют `WorkoutViewModel` и `WatchConnectivityService`.
 
 ## Реализация в SOTKA-OBJc (старое приложение)
 
@@ -58,7 +60,7 @@ HealthKit не используется (см. [apple-watch-development-plan.md]
   - `startDate` и `endDate` (по длительности из `WorkoutResult.duration` или по `createDate`/`modifyDate` из `DayActivity`);
   - опционально: активные калории, пульс — на первом этапе можно не передавать (для калорий/пульса позже потребуется `HKWorkoutSession` на часах, см. раздел про SOTKA-OBJc выше).
 - [ ] Ввести **протокол сервиса** записи тренировки в HealthKit (например, `HealthKitWorkoutWriting` или `HealthKitWorkoutServiceProtocol`) с методом вида: «сохранить тренировку с датами и длительностью».
-- [ ] Описать **источник данных** для вызова: только на часах — `WorkoutResult` + время начала (`workoutStartTime` в `WatchWorkoutService`). На iPhone запись в HealthKit не выполняем.
+- [ ] Описать **источник данных** для вызова: только на часах — `WorkoutResult` + время начала (`workoutStartTime` в `WorkoutViewModel`). На iPhone запись в HealthKit не выполняем.
 - [ ] Учесть **офлайн-first**: запись в HealthKit не должна блокировать сохранение в SwiftData; при недоступности HealthKit или отказе в разрешении — только логировать, не ломать основной сценарий.
 
 **Критерий завершения:** протокол и описание формата данных зафиксированы (в коде или в документации), согласованы с правилами проекта (без force unwrap, OSLog).
@@ -94,7 +96,7 @@ HealthKit не используется (см. [apple-watch-development-plan.md]
 
 ## Этап 4: Точка вызова записи в HealthKit (только часы)
 
-- [ ] **Apple Watch:** после успешного завершения тренировки (в месте вызова `WatchWorkoutService.finishWorkout()` или перед/после отправки результата на телефон) вызвать сервис записи в HealthKit с `workoutStartTime` и длительностью из `WorkoutResult.duration`; при отсутствии длительности — использовать `workoutStartTime` и текущее время как `endDate`. Запись в HealthKit на часах автоматически синхронизируется в «Здоровье» на iPhone.
+- [ ] **Apple Watch:** после успешного завершения тренировки (в месте вызова `WorkoutViewModel.finishWorkout()` или перед/после отправки результата на телефон) вызвать сервис записи в HealthKit с `workoutStartTime` и длительностью из `WorkoutResult.duration`; при отсутствии длительности — использовать `workoutStartTime` и текущее время как `endDate`. Запись в HealthKit на часах автоматически синхронизируется в «Здоровье» на iPhone.
 - [ ] **iPhone:** запись в HealthKit **не вызываем** — ни в `StatusManager.handleSaveWorkoutCommand`, ни при сохранении тренировки с телефона (`WorkoutPreviewViewModel.handleWorkoutResult`). Тренировки только с iPhone в «Здоровье» не попадают (нет пульса и др. метрик). Дубликатов нет: единственный источник записи — часы.
 
 **Критерий завершения:** тренировка, выполненная и завершённая на часах, отображается в «Здоровье» на iPhone.
@@ -114,7 +116,7 @@ HealthKit не используется (см. [apple-watch-development-plan.md]
 ## Этап 6: Тесты и документация
 
 - [ ] **Unit-тесты:** тесты для сервиса записи в HealthKit с моком `HKHealthStore` (или протоколом над ним), чтобы проверять вызов `save` с корректными `HKWorkout` (тип, даты). По правилам проекта — Swift Testing, без force unwrap, при необходимости `#require` для опционалов.
-- [ ] **Документация:** обновить [apple-watch-development-plan.md](apple-watch-development-plan.md): в разделе «Интеграция с HealthKit» указать, что базовая запись тренировок реализована (тип, длительность, даты); при необходимости добавить ссылку на этот план. Обновить [feature-map.md](feature-map.md) или аналог, если в нём перечислены интеграции с системными приложениями.
+- [ ] **Документация:** обновить [apple-watch-development-plan.md](../apple-watch-development-plan.md): в разделе «Интеграция с HealthKit» указать, что базовая запись тренировок реализована (тип, длительность, даты); при необходимости добавить ссылку на этот план. Обновить [feature-map.md](../feature-map.md) или аналог, если в нём перечислены интеграции с системными приложениями.
 
 **Критерий завершения:** тесты проходят (`make test`), документация отражает текущее поведение; после изменений выполнен `make format`.
 

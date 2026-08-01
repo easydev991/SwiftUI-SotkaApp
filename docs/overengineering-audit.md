@@ -295,7 +295,7 @@ Periphery re-run: 46 warnings в 17 файлах → 18 false-positives → **de
 1. `Client+.swift` = UI-инфра, не мёртвый код — см. раздел 7.
 2. `SwiftDataMigrationTests` = критичный регресс — 5 тестов восстановлены (269 стр.), см. раздел 4 [restore].
 
-### Ошибки плана Periphery 2 (пойманы ревью, скорректированы в разделе 8)
+### Ошибки плана Periphery 2
 
 1. **`PreviewContent/User+.swift` ошибочно помечен как 0-caller.** Активно используется: 7 preview-callers в `ProgressScreen.swift:3` + `ProgressGridView.swift:4`; `User.preview` — 13+ preview-callers + `ProgressCalculatorTests.swift`. Реальный статус: alive.
 2. **`PreviewContent/Progress+.swift` ошибочно помечен как чистый dead code.** Транзитивно жив: `UserProgress.previewDay1/49/100` используются только внутри `User+.swift` (12 internal calls). Удаление требует рефакторинга `User+.swift` — выходит за скоуп.

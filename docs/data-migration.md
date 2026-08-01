@@ -25,7 +25,8 @@
            CustomExercise.self,
            UserProgress.self,
            DayActivity.self,
-           DayActivityTraining.self
+           DayActivityTraining.self,
+           CalendarExtensionRecord.self
        ]
    )
    ```

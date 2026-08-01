@@ -58,7 +58,7 @@
 
 ## 6. Покрытие экранов
 
-- `screenView` внедрен для основных экранов приложения (welcome/online/offline auth, home, infoposts, workout, journal, progress, custom exercises, more/settings, sync).
+- `screenView` внедрен для основных экранов приложения (welcome/online/offline auth, home, infoposts, workout, journal, progress, custom exercises, more/settings).
 - Ключевые `userAction` и `appError` внедрены в критичных пользовательских сценариях тех же модулей.
 
 ## 7. Текущее состояние внедрения
@@ -78,7 +78,9 @@
 ## 9. Ключевые файлы
 
 - `SwiftUI-SotkaApp/Models/AnalyticsEvent.swift`
+- `SwiftUI-SotkaApp/Services/Analytics/AnalyticsProvider.swift`
 - `SwiftUI-SotkaApp/Services/Analytics/AnalyticsService.swift`
 - `SwiftUI-SotkaApp/Services/Analytics/FirebaseAnalyticsProvider.swift`
+- `SwiftUI-SotkaApp/Services/Analytics/NoopAnalyticsProvider.swift`
 - `SwiftUI-SotkaApp/Extensions/View+Analytics.swift`
 - `SwiftUI-SotkaApp/Extensions/EnvironmentValues+Analytics.swift`

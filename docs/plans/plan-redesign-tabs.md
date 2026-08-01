@@ -1,5 +1,7 @@
 # План: Редизайн таб-бара — Profile -> Journal + Progress
 
+**Статус: ✅ Выполнено (2026-08-01)**
+
 ## Обзор задачи
 
 Заменить таб `profile` на 2 отдельных таба (`journal` и `progress`), перенести нужные действия профиля на `MoreScreen` и удалить `ProfileScreen`.
@@ -54,8 +56,8 @@ TabView (4 таба):
 Файл: `SwiftUI-SotkaApp/Screens/More/MoreScreen.swift`
 
 - [x] Добавить `NavigationLink` на `CustomExercisesScreen` первым элементом в `workoutSettingsGroup` (accessibility id `customExercisesButton`, текст `.customExercises`)
-- [x] Добавить `Section(.profile)` первой в List с `NavigationLink(.editProfile)` (только для online) и `logoutButton` с confirmationDialog
-- [x] Добавить зависимости: `AuthHelperImp`, `showLogoutDialog`, `ProfileClient`
+- [x] Добавить `Section(.profile)` первой в List с `logoutButton` и confirmationDialog (`NavigationLink(.editProfile)` не нужен: app офлайн-only, online-пользователей нет)
+- [x] Добавить зависимости: `AuthHelperImp`, `showLogoutDialog` (`ProfileClient` удалён вместе с sync-слоем)
 
 **Проверка:** `Section(.profile)` первая, EditProfile для online, Logout работает, CustomExercises доступен
 
@@ -66,7 +68,7 @@ TabView (4 таба):
 - [x] Удалить файл `SwiftUI-SotkaApp/Screens/Profile/ProfileScreen.swift`
 - [x] Проверить ссылки, оставить подпапки Journal/Progress/Edit/CustomExercises
 - [x] Удалить `case .profile` из `AnalyticsEvent.AppScreen`, проверить компиляцию
-- [ ] Проверить внешний аналитический контракт (backend/dashboard/events schema) — если зависимость есть, оставить `case .profile` как legacy
+- [x] Проверить внешний аналитический контракт — неактуально: сервер закрыт, офлайн-режим, внешнего контракта нет, `case .profile` удалён
 
 ---
 
@@ -104,7 +106,7 @@ TabView (4 таба):
 
 ## Технический долг и риски
 
-- [ ] Проверить внешний аналитический контракт для `AppScreen.profile`
+- [x] ~~Проверить внешний аналитический контракт для `AppScreen.profile`~~ — закрыт: офлайн-режим, контракта нет
 - [ ] Исправить конфигурацию `xcodebuild-mcp`/схемы UI-тестов: `test_sim` не запускает `testMakeScreenshots`
 
 ---
