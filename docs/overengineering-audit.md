@@ -140,96 +140,29 @@ Periphery re-run: 46 warnings в 17 файлах → 18 false-positives → **de
 
 ## 8. [NEW] Пост-`8452aa0` Periphery re-run (2026-07-26) — что фактически нужно исправить после ревью
 
-2-й Periphery re-run на HEAD (после `8452aa0`) + ручная верификация каждого warning + ревью отчёта. План (раздел 5) зафиксирован до этого Periphery re-run'а и **не охватывал** находки ниже. **Выполнено** в 4 коммитах (`ddcb1d52` / `b8761560` / `3e928f6f` / `4655820` + 2 fix-commit'а). См. раздел «Фактический результат коммитов `ddcb1d52`+`b8761560`+`3e928f6f`+`220375cc`+`4655820` (Periphery re-run #2)» ниже.
+2-й Periphery re-run на HEAD (после `8452aa0`) + ручная верификация каждого warning + ревью отчёта. План (раздел 5) зафиксирован до этого Periphery re-run'а и **не охватывал** находки ниже. **Выполнено** в 5 коммитах (`ddcb1d52`+`b8761560`+`3e928f6f`+`220375cc`+`4655820`, net ~−1029 LOC, 14 тестов). Детальные таблицы per-file — см. Итог.
 
-### Группа A1 — большие dead-файлы (8 файлов, 505 LOC, pure delete)
+### Группы A1/A2/B/C (выполнено в Periphery re-run #2)
 
-Все кандидаты — 0 production references. Чистый `git rm`. Никаких UI/product-impact.
+- [x] **A1 `ddcb1d52` (−533):** `git rm` 8 dead-файлов: `ListRowView`/`ItemListScreen`/`CheckmarkRowView` (SWDesignSystem), `LocationFeedback`/`ActivitySnapshot`/`MockResult`/`MockWCSession`/`MockStatusManager`. Все 0 prod-callers; pure delete без UI/product-impact. `MockStatusManager` восстановлен в `de6d535` (Tier 1) вместе с logout flow.
+- [x] **A2 `b8761560` (−220):** 9 prod файлов (MainUserForm + Gender.affiliation + User sync helpers + DayActivity/DayActivityTraining computed + 3 сервиса `isReadOnlyMode` + 2 screens `WelcomeScreen`/`MoreScreen`) + 3 preview-fixup в `JournalScreen.swift`. **80 call-sites `isReadOnlyMode`** в 26 файлах синхронно обновлены.
+- [x] **B `3e928f6f` (−13 prod, ~+30 test):** 3 протокола Review — `ReviewAttemptStoring`/`WorkoutCompletionsCounting`/`ReviewContext`. Scope 8 файлов/~25 call-сайтов (план оценил 2). `MockWorkoutCompletionsCounter` rewrite потребовал `ModelContainer` setup + 16 `try` keyword'ов в `ReviewManagerTests`. **B-fix `220375cc` (+4):** guard reversed range в SwiftData seed/append.
+- [x] **C `4655820` (−189):** 4 dead метода `DateFormatterService` (`stringFromFullDate`/`dateFromIsoString`/`days(from:to:)` String overload + cascade Date overload) + 13 тестов + 2 explicit `: Bool` для ambiguous require. Net −40 prod (план занизил в 2.5×).
 
-| Файл | LOC | Подтверждение |
-|---|---|---|
-| `Libraries/SWDesignSystem/Public/Rows/ListRowView.swift` | 126 | 0 callers вне self-file. `8452aa0` сделал `public→internal`, но файл целиком dead |
-| `Libraries/SWDesignSystem/Public/ItemListScreen.swift` | 144 | 0 prod-callers. 2 self-previews тоже dead — `MockDaysClient`/`MockCountriesClient` (источник данных) удалены в `ed82f6e9`. Весь файл |
-| `Libraries/SWDesignSystem/Public/Rows/CheckmarkRowView.swift` | 35 | Транзитивно dead: единственный caller = `ItemListScreen.swift:47` |
-| `Models/SWSharedModels/LocationFeedback.swift` | 26 | 0 references. Sync-feedback для country/city picker — мёртв с `ed82f6e9` |
-| `Models/Workout/ActivitySnapshot.swift` | 27 | 0 prod-ссылок. Sync-snapshot, мёртв (callers = dead `DayActivity.activitySnapshot` + `DayActivityTraining.trainingSnapshot` — см. A2) |
-| `PreviewContent/MockResult.swift` | 11 | 0 references. Mock для mock-сервисов, удалённых в `ed82f6e9` |
-| `SwiftUI-SotkaAppTests/Mocks/MockWCSession.swift` (iOS) | 70 | 0 iOS-usage'ов. Watch-side имеет свой `MockWCSession` (`SotkaWatch Watch AppTests`) |
-| `SwiftUI-SotkaAppTests/Mocks/MockStatusManager.swift` | 66 | 0 callers `MockStatusManager.create()` на момент `ddcb1d52`. `StatusManagerLogoutTests` (где он использовался) удалены в `ed82f6e9`. **[2026-08-01] Восстановлен в `de6d535` (Tier 1)** вместе с logout flow |
-
-**Subtotal: 505 LOC чистого dead code.** Build + tests в каждом коммите.
-
-### Группа A2 — малые правки (~150 LOC, 9 prod файлов + 3 preview-fixup)
-
-Все кандидаты — `let`/`var` properties (assign-only или computed), init-параметры или computed, которые никто не читает. Чистые удаления + 3 preview-fixup в `JournalScreen.swift`.
-
-| Файл | Что удалено | Заметка |
-|---|---|---|
-| `Models/SWSharedModels/Gender.swift:32` | `var affiliation: String` | 0 readers (cascade на мёртвый `MainUserForm.genderString`) |
-| `Models/SWSharedModels/MainUserForm.swift` (122) + `Models/User.swift:68` `init(fromMainUserForm:id:)` | Файл целиком + init | 0 prod-usage'ов. 3 preview-callers в `JournalScreen.swift:215,225,235` → заменены на `User.preview`. Каскад: `image`/`genderString`/`isReadyToSave`/`Placeholder`/`requestParameters`/`shouldUpdateOnAppear` тоже dead |
-| `Models/User.swift:221,230` | `addUnsyncedReadInfopostDay` + `removeUnsyncedReadInfopostDay` | 0 callers (sync-флаги, мёртвы с `ed82f6e9`) |
-| `Models/Workout/DayActivity.swift:94,110` | `var trainingType` + `var activitySnapshot` (computed) | 0 readers. Cascade для A1 `ActivitySnapshot.swift` |
-| `Models/Workout/DayActivityTraining.swift:38,60` | `var exerciseType` + `var trainingSnapshot` (computed) | 0 readers (cascade после A1) |
-| `Services/CustomExercisesService.swift:14` | `let isReadOnlyMode` | assign-only |
-| `Services/DailyActivitiesService.swift:14,99` | `let isReadOnlyMode` (assign-only) + `markDailyActivityAsModified` (0 callers) | 2 dead члена |
-| `Services/Infoposts/InfopostsService.swift:16` | `let isReadOnlyMode` | assign-only |
-| `Screens/Login/WelcomeScreen.swift:4,7` | `import SWUtils` + `isReadOnlyMode` env-property | 0 references (cascade убирает `SWUtils` import) |
-| `Screens/More/MoreScreen.swift:12,16` | `isReadOnlyMode` env + `isOfflineUser` computed | cascade: 0 readers → drop both |
-
-**Subtotal: ~150 LOC prod + 3 preview-fixup в `JournalScreen.swift`.**
-
-### Call-sites `isReadOnlyMode` (для справки при A2)
-
-Удаление `isReadOnlyMode` init-параметра из 3 сервисов требует синхронного обновления call-сайтов. **Total: 80 call-sites в 26 файлах.** Компилятор подскажет, но список ниже даёт полную картину.
-
-| Сервис | Кол-во | Файлы (топ по количеству) |
-|---|---|---|
-| `DailyActivitiesService(isReadOnlyMode:)` | **71** в 18 файлах | `WorkoutPreviewViewModelUpdateDataTests.swift:18`, `WorkoutPreviewViewModelUpdateExecutionTypeTests.swift:9`, `WorkoutPreviewViewModelSaveTrainingTests.swift:7`, `WorkoutPreviewViewModelHasChangesTests.swift:7`, `WorkoutPreviewViewModelHandleWorkoutResultTests.swift:7`, `WorkoutPreviewViewModelRestTimeTests.swift:5`, `WorkoutPreviewViewModelReviewEventTests.swift:5`, `JournalListView.swift:4`, `JournalScreen.swift:3` (previews), `EditCommentSheet.swift:2`, `JournalGridView.swift:2`, `WorkoutScreenViewModelInterruptedWorkoutIntegrationTests.swift:3`, `MockStatusManager.swift:1`, + 5 single-callers (`RootScreen`, `HomeActivitySectionView`, `WorkoutPreviewScreen`, `StatusManager+`, `WorkoutPreviewViewModelCanEditCommentTests`) |
-| `CustomExercisesService(isReadOnlyMode:)` | **5** в 4 файлах | `EditCustomExerciseScreen.swift:2`, `CustomExercisesScreen.swift:1`, `MockStatusManager.swift:1`, `StatusManager+.swift:1` |
-| `InfopostsService(isReadOnlyMode:)` | **4** в 4 файлах | `MockStatusManager.swift:1`, `InfopostsServiceTests.swift:1`, `InfopostFavoriteAvailabilityTests.swift:1`, `StatusManager+.swift:1` |
-
-**При удалении параметра** для `CustomExercisesService` и `DailyActivitiesService` (единственный init-param): `Foo(isReadOnlyMode: false)` → `Foo()`. Для `InfopostsService` (3 params: `language`/`analytics`/`isReadOnlyMode: Bool = ...`): убираем `isReadOnlyMode:` в 4 multi-line init'ах. `make format` после commit'а выровняет trailing commas.
-
-### Группа B — Review Фаза B (yagni, −18 LOC, 8 prod файлов + 1 test mock rewrite)
-
-В исходном Periphery re-run #2 плане Фаза B была `[ ]` (не выполнена, отложена из `8452aa0`), но scope **больше** чем казалось (после ревью):
-
-| Протокол | Реальный scope |
-|---|---|
-| `ReviewAttemptStoring` (8 LOC) | 2 prod файла + `MockReviewAttemptStore` → `ReviewStorage(userDefaults:)` + `MockUserDefaults`. Mechanical |
-| `WorkoutCompletionsCounting` (5 LOC) | 2 prod файла + `MockWorkoutCompletionsCounter` → реальный `WorkoutCompletionsCounter` + in-memory `ModelContainer`. `makeSUT` стал `throws` + 4-tuple, добавлен `makeContainer()`, цикл вставки `completedWorkoutCount` `DayActivity` в SwiftData, 16 tests обновлено с `try`. ~30-40 LOC изменений в `ReviewManagerTests` |
-| `ReviewContext` (5 LOC) | 8 файлов, ~25 call-сайтов: `StatusManager` + `WorkoutPreviewViewModel` + `ReviewEventReporting` + `MockReviewEventReporter` + `ReviewManager` + 16 call-сайтов в `ReviewManagerTests` + `WorkoutPreviewViewModelReviewEventTests`. `ReviewContext(hadRecentError: X)` → `X` (Bool). План `8452aa0` говорил «2 файла», реально 8 |
-
-**Subtotal: −18 LOC prod + ~30-40 LOC test changes в `ReviewManagerTests` (`makeSUT` throws + `makeContainer` + вставка activities + 16 `try` keyword'ов).** План оценил Фазу B в 12, реально 18.
-
-### Группа C — Tier 2 minimum (1 safe item, −20 LOC, 1 prod файл + 1 test file)
-
-Минимальный безопасный ponytail: удалить 3 мёртвых метода `DateFormatterService` **после** удаления `MainUserForm` (A2): `stringFromFullDate` (0 prod-callers после A2), `dateFromIsoString` (только в `SWUtilsTests/DateFormatterServiceTests.swift`), `days(from:to:)` String overload (только в тестах) + cascade `days(from:to:)` Date overload.
-
-Удаление методов + соответствующих тестов (~8 тестов в `SWUtilsTests/DateFormatterServiceTests.swift`) → −20 LOC prod + сокращение test file.
-
-### Исключены из этого плана (NOT dead / NOT safe без product-decision)
+### Исключены (NOT dead / NOT safe без product-decision)
 
 | Файл/свойство | Почему исключено |
 |---|---|
-| `PreviewContent/User+.swift` (68 LOC) | **Активно используется**: `.previewWithDay1Progress`/`.previewWithDay49Progress`/`.previewWithDay100Progress` — 7 preview-callers в `ProgressScreen.swift:3` + `ProgressGridView.swift:4`. `User.preview` — 13+ preview-callers + `ProgressCalculatorTests.swift`. **Файл живой, не трогать** (план изначально ошибочно отмечал как 0-caller) |
-| `PreviewContent/Progress+.swift` (38 LOC) | Транзитивно жив: `UserProgress.previewDay1/49/100` используются только внутри `User+.swift` (12 internal calls). Можно удалить только вместе с рефакторингом `User+.swift` — выходит за скоуп dead code |
-| `MockWatchSession.delegate` (Watch, `SotkaWatch Watch App/PreviewContent/MockWatchSession.swift:9`) | Protocol conformance required: `WatchSessionProtocol` декларирует `var delegate: WCSessionDelegate? { get set }`. На практике **мёртвое**: `WatchConnectivityService` делает `sessionProtocol as? WCSession` (line ~21) — для `MockWatchSession` cast returns `nil`, поэтому `session.delegate = self` (line 366) никогда не вызывается на моке. **Неудаляемо** без изменения протокола → Plan D |
-| `MockWCSession.delegate` (iOS, `SwiftUI-SotkaAppTests/Mocks/MockWCSession.swift:9`) | Same: protocol required. The whole `MockWCSession.swift` сам мёртв (см. A1, 0 iOS-usage'ов), поэтому это становится moot при удалении файла |
-| `StatusManager.State.isSynchronizingData` / `.error(String)` / `.isLoading` (computed) / `.isSyncing` (computed) | **Periphery прав — все 4 члена реально dead**: `.isSynchronizingData`/`.error` never assigned, `.isLoading`/`.isSyncing` never read (единственный reader `.isLoading` в `AuthRequiredView:state.isLoading` — это **другой** `State`, не `StatusManager.State`). План блокирует: «`StatusManager` god object, делать только при следующем касании» (раздел 5, строка 127). **Plan D** |
-| `MainUserForm` deletion без preview-fixup | Удаление `MainUserForm.swift` каскадит на 3 preview в `JournalScreen.swift:215,225,235`. Не блокер, но preview-fixup обязателен — учтено в A2 |
-| Sync-флаги (`isSynced`/`shouldDelete`/`lastModified`) | План пересмотрен 2026-08-01: помечаются `// OBSOLETE: ...` комментариями **без миграции** (по решению продукта, раздел 9) |
-| Firebase Analytics + Crashlytics | План блокирует: «оставляем 100%» (раздел 5, строка 126) |
+| `PreviewContent/User+.swift`/`Progress+.swift` | Активно используются preview-callers (7 в `ProgressScreen`/`ProgressGridView`, 13+ `User.preview`). План изначально ошибочно отмечал User+ как 0-caller — это [ошибка Periphery 2](#ошибки-плана-periphery-2) |
+| `MockWatchSession.delegate`/`MockWCSession.delegate` (iOS) | Protocol conformance required: `WatchSessionProtocol` декларирует `var delegate: WCSessionDelegate? { get set }`. На практике мёртвое (cast returns `nil`), но неудаляемо без изменения протокола → Plan D. iOS-файл удалён целиком (A1) |
+| `StatusManager.State.isSynchronizingData`/`.error`/`.isLoading`/`.isSyncing` | Periphery прав — все 4 dead (never assigned/read). План блокирует: «`StatusManager` god object, делать только при следующем касании» (раздел 5). Plan D |
+| `MainUserForm` deletion без preview-fixup | Каскадит на 3 preview в `JournalScreen.swift:215,225,235` → preview-fixup учтён в A2 |
+| Sync-флаги (`isSynced`/`shouldDelete`/`lastModified`) | План пересмотрен 2026-08-01: помечаются `// OBSOLETE: ...` комментариями **без миграции** (решение продукта, раздел 9) |
+| Firebase Analytics + Crashlytics | План блокирует: «оставляем 100%» (раздел 5) |
 
-### False positives Periphery 2 (отброшены ручной верификацией)
+### False positives Periphery 2 (отброшены)
 
-- `WCSessionProtocol.delegate` / `WatchAuthServiceProtocol.updateAuthStatus` / `WatchConnectivityServiceProtocol.onCurrentActivityChanged` / `onWorkoutDataReceived` — protocol requirements
-- `MockWCSession.delegate` (iOS) / `MockWatchSession.delegate` (Watch) — protocol conformance (см. таблицу исключений)
-- `PreviewWatchAuthService.init(isAuthorized:)` — used in `HomeView.swift:67,78`
-- `WorkoutPreviewViewModel.DataSnapshot` 6 properties (× 2 файла) — `Equatable` synthesis
-- `RootScreen.tab` — used in `TabView(selection: $tab)` (line 13)
-- `InfopostDetailScreen.showError` — used in `.alert(isPresented:)` + `HTMLContentView` (lines 27, 31)
-- `ReviewRequestTriggerID.pendingRequest` + `scenePhase` — `Hashable` synthesis (для `task(id:)` идентификации)
+`WCSessionProtocol.delegate` / `WatchAuthServiceProtocol.updateAuthStatus` / `WatchConnectivityServiceProtocol.onCurrentActivityChanged` / `onWorkoutDataReceived` — protocol requirements; `PreviewWatchAuthService.init(isAuthorized:)` — used in `HomeView.swift:67,78`; `WorkoutPreviewViewModel.DataSnapshot` 6 properties (× 2 файла) — `Equatable` synthesis; `RootScreen.tab` — used in `TabView(selection: $tab)` (line 13); `InfopostDetailScreen.showError` — used in `.alert(isPresented:)` + `HTMLContentView` (lines 27, 31); `ReviewRequestTriggerID.pendingRequest` + `scenePhase` — `Hashable` synthesis.
 
 ### Прогноз контроля качества (ретроспектива)
 
@@ -237,28 +170,17 @@ Periphery re-run: 46 warnings в 17 файлах → 18 false-positives → **de
 
 ## 9. [NEW] Анализ офлайн-only Auth модели (2026-08-01, после уточнения пользовательского сценария)
 
-**Контекст:** сервер закрыт навсегда. App должно различать:
+**Контекст:** сервер закрыт навсегда. App различает existing authorized user (сразу RootScreen, локальные данные) vs new offline-only user (Welcome → OfflineLoginView → Root). **Инвариант:** данные existing authorized users НЕ должны теряться при обновлении; после явного logout ОБЯЗАНЫ удаляться (см. Tier 1). Решение 2026-08-01: **схема SwiftData не меняется** (нет миграции), obsolete-поля помечаются `@available(*, deprecated)` без удаления (см. Sync/server fields).
 
-- **Existing authorized user** (установил до отключения сервера): сразу RootScreen, данные локальны.
-- **New offline-only user** (установил после отключения): WelcomeScreen → OfflineLoginView (gender) → RootScreen.
+**`AuthHelper` (62 стр. → 46 стр. после Tier 2):** `@MainActor @Observable final class AuthHelperImp` — UserDefaults-backed `isAuthorized`, методы `performOfflineLogin()`/`triggerLogout()`. Не трогает SwiftData. Используется в `OfflineLoginView` (sentinel `id: -1`, `userName == "offline-user"`) + `MoreScreen.triggerLogout()` + `SwiftUI_SotkaAppApp.body` (ветвление Welcome ↔ Root по `isAuthorized`).
 
-**Сохранение данных existing authorized users при обновлении приложения** — критичный инвариант: после обновления приложения данные должны оставаться на устройстве (после явного logout данные ОБЯЗАНЫ удаляться — см. §9 Tier 1). Решение 2026-08-01: **схема SwiftData не меняется** (нет миграции), obsolete-поля помечаются комментариями.
+**Offline user sentinel-protection:** `User(offlineWithGenderCode:)` → `id: -1`. `OfflineLoginView` удаляет User с `id == -1` (если есть), вставляет новый. **Существующие User с `id != -1` не затрагиваются** → данные existing authorized users защищены.
 
-### Исходное состояние (до `de6d535`+`69fce28a`)
+**Logout-flow регрессия (`ed82f6e9`):** pre-commit `processAuthStatus` делал `didLogout()` + `try context.delete(model: User.self)`; `ed82f6e9` удалил метод + всю `StatusManagerTests/` (22 файла, ~6000 LOC). Восстановлен в Tier 1: `.onChange(of: authHelper.isAuthorized)` → `appSettings.didLogout()` + `reviewManager.reset()` + `statusManager.didLogout()` + `try statusManager.modelContainer.mainContext.delete(model: User.self)`. **Деталь:** `CalendarExtensionRecord.user: User?` — plain optional без `@Relationship`/`deleteRule`; нужен `didLogout()` (внутри `clearExtensionDates()` удаляет `CalendarExtensionRecord`). Одну половину восстанавливать нельзя.
 
-**`AuthHelper` (62 стр. → 46 стр. после Tier 2):** `@MainActor @Observable final class AuthHelperImp: AuthHelper` — UserDefaults-backed флаг `isAuthorized` (после Tier 2: `isOfflineOnly` удалён, см. Tier 2), методы `performOfflineLogin()` / `triggerLogout()`. Не трогает SwiftData.
+### Sync/server-related поля (выполнено: помечены `@available`, не удалять)
 
-**Двойное хранение `isOfflineOnly` (smell, решён в `6b28f00`):** `AuthHelper.isOfflineOnly` (UserDefaults, 1 reader) vs `User.isOfflineOnly` (computed `userName == "offline-user"`, 2 reader'а). Удалён `AuthHelper.isOfflineOnly` — `User.isOfflineOnly` остался source of truth.
-
-**Logout-flow регрессия (`ed82f6e9`):** pre-commit `processAuthStatus` (line 292 в `ed82f6e9~1`) делал `didLogout()` + `try context.delete(model: User.self)`. `ed82f6e9` удалил метод + call-site + всю `StatusManagerTests/` (22 файла, ~6000 LOC). Текущий `.onChange` (после `69fce28a`): `appSettings.didLogout()` + `reviewManager.reset()` + `statusManager.didLogout()` + `try statusManager.modelContainer.mainContext.delete(model: User.self)` (errors → `logger.error`).
-
-**Деталь без cascade:** `CalendarExtensionRecord.user: User?` — plain optional без `@Relationship`/`deleteRule`. Удаление User НЕ зацепит extension records → нужен `didLogout()` (внутри `clearExtensionDates()` удаляет `CalendarExtensionRecord`). Одну половину восстанавливать нельзя.
-
-**Offline user sentinel:** `User(offlineWithGenderCode:)` создаёт User с `id: -1`, `userName: "offline-user"`. `OfflineLoginView` сначала вызывает `authHelper.performOfflineLogin()` (UserDefaults), затем удаляет существующий User с `id == -1` (если есть) и вставляет новый. **Существующие User с `id != -1` НЕ затрагиваются** → данные existing authorized users защищены.
-
-### Sync/server-related поля (выполнено: помечены @available, не удалять)
-
-**На `User` модели (8 deprecated полей в `fd5f845`):** `fullName`, `email`, `imageStringURL`, `cityId`, `countryId`, `birthDateIsoString` — server profile (0 prod-readers); `unsyncedReadInfopostDaysString` (private) — sync field, 1 prod-reader (`StatusManager.extendCalendar():742` → `setUnsyncedReadInfopostDays([])`). Internal `@available` warning при use site допустим.
+**На `User` модели (8 deprecated полей в `fd5f845`):** `fullName`/`email`/`imageStringURL`/`cityId`/`countryId`/`birthDateIsoString` — server profile (0 prod-readers); `unsyncedReadInfopostDaysString` — sync field, 1 prod-reader (`StatusManager.extendCalendar():742`).
 
 **На других `@Model` (5 deprecated + 6 живых):**
 
@@ -270,28 +192,20 @@ Periphery re-run: 46 warnings в 17 файлах → 18 false-positives → **de
 | `createDate`/`modifyDate` (CustomExercise/DayActivity) | живые (audit/sort) |
 | `CalendarExtensionRecord.lastModified` | жив (sort comparator в `StatusManager.swift:1008-1009`) |
 
-**Аннотация:** `@available(*, deprecated, message: "...")` (русский текст, `24ebd8d`). **Не удалять** — нет миграции, несколько лишних nullable полей не критичны (по решению продукта 2026-08-01).
+**Аннотация:** `@available(*, deprecated, message: "...")` (русский текст, `24ebd8d`). **Не удалять** — нет миграции, по решению продукта 2026-08-01.
 
 ### Упрощения (Tiers)
 
-**Tier 1 — восстановить logout-флоу (0 риск, исправление регрессии `ed82f6e9`):**
+- [x] **Tier 1 — restore logout (`de6d535`+`69fce28a`, +211 net LOC):** `de6d535` восстановил `.onChange` body + `MockStatusManager.create()` + `StatusManagerLogoutTests` (5 адаптированных тестов, без `MockStatusClient` — протокол удалён в `ed82f6e9`). `69fce28a` follow-up: `@Environment(\.modelContext)` → `statusManager.modelContainer.mainContext` (App-struct не получает контейнер через env) + `getStatus()` автостарт дня 1 + 2 теста (`auto-start`/`keeps-existing`). Pre-commit `StatusManager.didLogout()` теперь нужен (call-site из `.onChange`). **Не literal restoration:** адаптация −164 LOC vs ~250 LOC мёртвого prod-кода при дословном. **Scope discovery:** план говорил «только `StatusManagerLogoutTests` (153 LOC)», реально `ed82f6e9` удалил всю `StatusManagerTests/` (22 файла, ~6000 LOC). Восстановлено **LogoutTests + 2 теста из GetStatusTests** = 7 тестов минимального риска. Остальные 20 — Tier 2+ итерации.
+- [x] **Tier 2 — AuthHelper simplify (`6b28f00`, −19 LOC):** `AuthHelper.isOfflineOnly` (UserDefaults дубль с `User.isOfflineOnly` computed `userName == "offline-user"`) удалён — Constants −2, AuthHelper −16, SwiftUI_SotkaAppApp −1. `User.isOfflineOnly` остался source of truth.
+- [x] **Tier 2 — deprecated markers (`fd5f845`+`24ebd8d`, +24 LOC):** 12 `@available(*, deprecated, ...)` аннотаций (7 server-полей User + 1 sync-поле `unsyncedReadInfopostDaysString` + 4 sync-флага `isSynced` + 1 timestamp `UserProgress.lastModified`) + русский текст 12 deprecated-сообщений.
 
-- [x] [2026-08-01] **`de6d535` (+164 LOC, 3 файла):** восстановлен logout flow (`.onChange` body + `MockStatusManager.create()` + `StatusManagerLogoutTests`, 5 адаптированных тестов вместо дословного восстановления — без `MockStatusClient`, протокол удалён в `ed82f6e9`).
-- [x] [2026-08-01] **`69fce28a` (+47 net, 3 файла):** follow-up Tier 1 — `@Environment(\.modelContext)` → `statusManager.modelContainer.mainContext` (App-struct не получает контейнер через env); восстановлен `getStatus()` автостарт дня 1; +2 теста (`auto-start`/`keeps-existing`).
-- [x] [2026-08-01] Pre-commit `StatusManager.didLogout()` сохранён — теперь нужен (call-site из `.onChange`), не dead code.
-- **Не literal restoration:** дословное восстановление тестов потребовало бы ~250 LOC мёртвого prod-кода (`StatusClient` + `MockStatusClient` с 0 prod-ссылок). Адаптация: −164 LOC с тем же coverage.
-- **Scope discovery:** план говорил «только `StatusManagerLogoutTests` (153 LOC)». Реально `ed82f6e9` удалил всю `StatusManagerTests/` (22 файла, ~6000 LOC). Восстановлено **LogoutTests + 2 теста из GetStatusTests** = 7 тестов минимального риска. Остальные 20 — Tier 2+ итерации.
-
-**Tier 2 — опциональное упрощение AuthHelper (низкий риск):**
-
-- [x] [2026-08-01] **`6b28f00` (−19 LOC, 3 файла):** `AuthHelper.isOfflineOnly` удалён (Constants −2, AuthHelper −16, SwiftUI_SotkaAppApp −1). Протокол AuthHelper: `isAuthorized` + `triggerLogout()` + `performOfflineLogin()`. `User.isOfflineOnly` остался source of truth. Migration нюанс не возник — `showLoadingOverlay` в test-mode под `isAuthorized = true`, в read-only prod-mode guard уже под `isReadOnlyMode`.
-
-**Tier 3 — НЕ рекомендуется:**
+### Tier 3 — НЕ рекомендуется
 
 - Полное удаление `AuthHelper`: gain −62 стр., но смешивает auth-state с UI + риск сломать logout flow + потеря данных existing authorized users. **Не делать.**
 - Удаление obsolete полей User / sync-флагов: требует SwiftData migration (manual + test migration scenarios), риск потери данных. **Не делать в этой итерации.**
 
-### Итог
+### Итог §9
 
 - **Сохранение данных existing authorized users** обеспечено: schema не меняется, OfflineLoginView не трогает User с `id != -1` (sentinel-protection). Logout удаляет данные (Tier 1 выполнен).
 - **Tier 1+2+deprecated выполнены** (`de6d535`+`69fce28a`+`6b28f00`+`fd5f845`+`24ebd8d`).
@@ -299,115 +213,34 @@ Periphery re-run: 46 warnings в 17 файлах → 18 false-positives → **de
 
 ## 10. [NEW] Следующая волна аудита (после current HEAD, 2026-08-01)
 
-Все находки верифицированы субагентами (`explore`) + ручная проверка `TrainingRowAction` через `project.pbxproj:107` (в `membershipExceptions` для Watch target). **Выполнено** в 5 коммитах (`3648fc2`+`a3c7f8f`+`af6a5bd`+`381ee78`+`fc5efb0`).
+Все находки верифицированы субагентами (`explore`) + ручная проверка `TrainingRowAction` через `project.pbxproj:107` (в `membershipExceptions` для Watch target). **Выполнено** в 5 коммитах (`3648fc2`+`a3c7f8f`+`af6a5bd`+`381ee78`+`fc5efb0`), −1118 строк. Подробные per-group таблицы — см. коммиты; здесь сводка.
 
-### Группа D — Watch VM dead members (9 членов, ~174 LOC prod + ~9 watch-тестов) [x]
+### Группы D/E/F/G/H (выполнено)
 
-| Член | VM | Prod refs (watch) | Test refs (watch) |
-|---|---|---|---|
-| `shouldShowExercisesReminder` | WorkoutViewModel | 0 | 2 (SetupTests:150,172) |
-| `getStepState(for:)` | WorkoutViewModel | 0 | 2 (StepManagementTests:153,156) |
-| `getCycleSteps()` | WorkoutViewModel | 0 | 1 (StepManagementTests:179) |
-| `getExerciseSteps(for:)` | WorkoutViewModel | 0 | 2 (StepManagementTests:214, SetsTests:325) |
-| `canRemoveExercise` | WorkoutPreviewViewModel | 0 | 2 (EditMethodsTests:21,35) |
-| `updatePlannedCount(id:action:)` | WorkoutPreviewViewModel | 0 | 2 (EditMethodsTests:191,209) |
-| `updateTrainingCount(at:amount:)` | WorkoutPreviewViewModel | 0 | 3 (EditMethodsTests:87,103,120) |
-| `removeTraining(at:)` | WorkoutPreviewViewModel | 0 (private, cascade) | 0 |
-| `startWorkout` | HomeViewModel | 0 | 1 (HomeViewModelTests:204) |
-
-Живые перегрузки/альтернативы:
-
-- `updatePlannedCount(for: Int)` (WorkoutPreviewViewModel:239) — caller: `WorkoutPreviewView.swift:162`
-- `updateTrainingCount(for:newValue:)` (WorkoutPreviewViewModel:253) — caller: `WorkoutPreviewView.swift:143`
-- `WorkoutEditView.swift:33-35` имеет свой локальный `canRemoveExercise` (не VM)
-- Кнопки `startWorkout` в watch нет: `HomeView` → `fullScreenCover` `WorkoutPreviewView` → `loadData(day:)` (HomeView:13-14, 42-46)
-
-**Safety check `TrainingRowAction`:** файл `Models/Workout/TrainingRowAction.swift` (iOS-only, в `membershipExceptions` для Watch target: `project.pbxproj:107`) **остаётся живым** в iOS. Живые ссылки: `WorkoutPreviewViewModel.swift:277` (`updatePlannedCount(id:action:)` — iOS-метод, вызывается из `WorkoutPreviewScreen.swift:148,160`) + `TrainingRowView.swift:9,17` (тип параметра `onAction` в живой iOS-view). После удаления 9 watch-членов исчезает единственная watch-ссылка (`SotkaWatch/.../WorkoutPreviewViewModel.swift:196`); 3 iOS-ссылки сохраняются. Файл `TrainingRowAction.swift` удалять не нужно.
-
-**Subtotal: ~174 LOC prod + ~9 watch-тестов (SetupTests:132-172, StepManagementTests, SetsTests:302-325, EditMethodsTests, HomeViewModelTests:204).** [x] Реальный LOC: −183 prod (HomeViewModel.swift:27, WorkoutPreviewViewModel.swift:85, WorkoutViewModel.swift:71) + −310 tests (HomeViewModelTests.swift:29, WorkoutPreviewViewModelEditMethodsTests.swift:114, WorkoutViewModelSetsTests.swift:29, WorkoutViewModelSetupTests.swift:44, WorkoutViewModelStepManagementTests.swift:94) = 493 удалений в коммите `fc5efb0`.
-
-### Группа E — SWDesignSystem dead files (2 файла, 198 LOC) [x]
-
-`ItemListScreen` удалён в `ddcb1d52` → транзитивно мёртвыми стали:
-
-| Файл | LOC | Содержимое |
-|---|---|---|
-| `Libraries/SWDesignSystem/Public/SectionView.swift` | 122 | `SectionView` struct + 3 init'а + `Mode` + extension |
-| `Libraries/SWDesignSystem/Internal/SectionHeaderView.swift` | 76 | `SectionSupplementaryView` + `#Preview` |
-
-**Уточнение:** `SectionSupplementaryView.swift` как отдельный файл **не существует** — тип живёт внутри `SectionHeaderView.swift`. Ранее Periphery (line 104) отмечал только redundant `public` модификатор — после удаления `ItemListScreen` (транзитивный caller) оба файла полностью мёртвые.
-
-**Subtotal: 198 LOC pure delete.** [x] Реальный LOC: −198 в коммите `3648fc2`.
-
-### Группа F — ImageAssetManager test-only methods (4 метода, ~63 LOC) [x]
-
-| Метод | Prod refs | Test refs |
-|---|---|---|
-| `getImageURL(for:)` | 0 (внутр. caller — `imageExists`, тоже dead) | 13 (ImageAssetManagerTests) |
-| `getAllAvailableImages()` | 0 | 2 |
-| `imageExists(_:)` | 0 | 2 |
-| `getImageSize(_:)` | 0 | 2 |
-
-**Оставить:** `copyImageToTemp(...)` — prod chain: `HTMLContentView.swift:251` → `resourceManager.copyResources` (`InfopostResourceManager.swift:54`) → `copyImagesFromAssets` (line 64) → `ImageAssetManager.copyImageToTemp` (line 130).
-
-Тестовые вызовы для очистки: ~12 мест в `ImageAssetManagerTests` (строки 13, 20, 27, 34, 41-42, 113, 120, 129, 138, 146, 158, 170).
-
-**Subtotal: ~63 LOC prod + ~12 тестовых вызовов.** [x] Реальный LOC: −67 prod + −106 tests = −173 в коммите `381ee78`.
-
-### Группа G — SWUtils dead extensions (4 члена + бонус, ~30 LOC) [x]
-
-| Член | Файл | LOC |
-|---|---|---|
-| `Date.rawValue` + `init?(rawValue:)` | `Extensions/Date+rawValue.swift` | 12 |
-| `String.trueCount` | `Extensions/String+.swift:5-7` | 4 |
-| `String.withoutSpaces` | `Extensions/String+.swift:10-12` | 4 (cascade) |
-| `Double.formattedForUI` | `Extensions/Double+.swift:7-9` | 6 |
-
-**Бонус:** `Double.fromUIString` (`Double+.swift:14-17`, 4 LOC) тоже dead. Опционально — удалить `Double+.swift` целиком (10 LOC).
-
-Тестовые файлы: `DateRawRepresentableTests.swift` (38 строк), часть `SWUtilsTests.swift` (lines 7-21), `DoubleExtensionTests.swift` (17 вхождений).
-
-**Subtotal: ~30 LOC prod (или ~36 с `Double+.swift` целиком) + 3 тестовых файла/части.** [x] Реальный LOC: −40 prod (`Date+rawValue.swift:12` + `String+.swift:10` (trueCount+withoutSpaces) + `Double+.swift:18` целиком) + −208 tests (`DateRawRepresentableTests.swift:38` + `DoubleExtensionTests.swift:151` + часть `SWUtilsTests.swift:19`) = −248 в коммите `af6a5bd`. `Float+.swift` (Float.fromUIString + .formattedForUI + .stringFromFloat) жив — используется в `UserProgress.swift:179`, `TempMetricsModel.swift:28,48`, `String+.swift:27`. **План занизил test-savings в 7×:** `DoubleExtensionTests.swift` (151 LOC) содержал больше тестов, чем казалось (все `Double.formattedForUI`/`fromUIString` тесты — удалены вместе с prod-кодом, который они покрывали).
-
-### Группа H — ReadOnlyModeKey write-only env key (5 LOC) [x]
-
-| Файл | LOC | Verdict |
-|---|---|---|
-| `Services/ReadOnlyModeKey.swift` | 5 | DEAD (write-only, 0 readers). Удалён в `a3c7f8f` (−5 prod + −1 строка `SwiftUI_SotkaAppApp.swift:142`) |
-
-Содержимое: `@Entry var isReadOnlyMode: Bool = AppConfiguration.isReadOnlyMode` (iOS 17+ Entry macro, не legacy `EnvironmentKey`). Write site: `SwiftUI_SotkaAppApp.swift:142`. **Read sites: 0** во всём проекте. Сервисы получают флаг через init-параметр, не через environment.
-
-Аналог `9cb2646` (NetworkStatus, удалён по той же причине).
+- [x] **D `fc5efb0` (−493: −183 prod, −310 tests):** 9 Watch VM dead members (`shouldShowExercisesReminder`/`getStepState(for:)`/`getCycleSteps()`/`getExerciseSteps(for:)` в `WorkoutViewModel`; `canRemoveExercise`/`updatePlannedCount(id:action:)`/`updateTrainingCount(at:amount:)`/`removeTraining(at:)` private cascade в `WorkoutPreviewViewModel`; `startWorkout` в `HomeViewModel`). Живые альтернативы: `updatePlannedCount(for: Int)` + `updateTrainingCount(for:newValue:)` (`WorkoutPreviewView.swift:143,162`); локальный `canRemoveExercise` в `WorkoutEditView.swift:33-35`. **Safety check `TrainingRowAction`:** файл остаётся живым в iOS — 3 iOS-ссылки (`WorkoutPreviewViewModel.swift:277` + `TrainingRowView.swift:9,17`) сохраняются после удаления watch-ссылки.
+- [x] **E `3648fc2` (−198):** транзитивно мёртвые после `ddcb1d52` (A1: `ItemListScreen`): `SectionView.swift` (122) + `SectionHeaderView.swift` (76, содержит `SectionSupplementaryView`). Pure delete.
+- [x] **F `381ee78` (−173: −67 prod, −106 tests):** 4 test-only метода `ImageAssetManager` (`getImageURL(for:)`/`getAllAvailableImages()`/`imageExists(_:)`/`getImageSize(_:)`) + 12 тестов. Оставлен `copyImageToTemp(...)` — prod chain через `HTMLContentView.swift:251` → `InfopostResourceManager.copyResources` → `copyImagesFromAssets` → `ImageAssetManager.copyImageToTemp`.
+- [x] **G `af6a5bd` (−248: −40 prod, −208 tests):** `Date.rawValue`+`init?(rawValue:)` (Date+rawValue.swift:12), `String.trueCount`/`withoutSpaces` (String+.swift:10), `Double+.swift` целиком (18). `Float+.swift` жив — используется в `UserProgress.swift:179` + `TempMetricsModel.swift:28,48` + `String+.swift:27`. **План занизил test-savings в 7×:** `DoubleExtensionTests.swift` (151 LOC) содержал больше тестов, чем казалось (все `Double.formattedForUI`/`fromUIString` тесты — удалены вместе с prod-кодом).
+- [x] **H `a3c7f8f` (−6: −5 prod, −1 line):** write-only `ReadOnlyModeKey.swift` (`@Entry var isReadOnlyMode: Bool = AppConfiguration.isReadOnlyMode`, iOS 17+ Entry macro) + строка `.environment(\.isReadOnlyMode, isReadOnlyMode)` в `SwiftUI_SotkaAppApp.swift:142`. Read sites: 0. Сервисы получают флаг через init-параметр, не через environment. Аналог `9cb2646` (NetworkStatus).
 
 ### Итог новой волны
 
-| Группа | LOC prod (план) | Тесты (план) | LOC prod (факт) | Тесты (факт) |
-|---|---|---|---|---|
-| D (Watch VM) | ~174 | ~9 watch-тестов | 183 | 310 |
-| E (Section) | 198 | 0 | 198 | 0 |
-| F (ImageAsset) | ~63 | ~12 вызовов | 67 | 106 |
-| G (SWUtils) | ~30 (+6 опц.) | 3 файла/части | 40 | 208 |
-| H (ReadOnlyModeKey) | 5 | 0 | 6 (5+1 line) | 0 |
-| **Итого** | **~470** | **~12** | **−494** | **−624** |
+| Группа | LOC prod (план/факт) | Тесты (план/факт) |
+|---|---|---|
+| D (Watch VM) | ~174 / 183 | ~9 / 310 |
+| E (Section) | 198 / 198 | 0 / 0 |
+| F (ImageAsset) | ~63 / 67 | ~12 / 106 |
+| G (SWUtils) | ~30 / 40 | 3 файла / 208 |
+| H (ReadOnlyModeKey) | 5 / 6 | 0 / 0 |
+| **Итого** | **~470 / −494** | **~12 / −624** |
 
-**Реальный итог в 5 коммитах:**
-
-- `3648fc2` (Группа E): −198 prod
-- `a3c7f8f` (Группа H): −6 (5 prod + 1 line)
-- `af6a5bd` (Группа G): −248 (40 prod + 208 tests)
-- `381ee78` (Группа F): −173 (67 prod + 106 tests)
-- `fc5efb0` (Группа D): −493 (183 prod + 310 tests)
-- **Σ: −1118 строк** (494 prod + 624 tests)
-
-**Контроль качества:** SwiftUI-SotkaApp build ✓, SotkaWatch Watch App build ✓, 829 iOS unit tests ✓, 155 Watch unit tests ✓ (−14 от Группы D).
-
-**Зависимости: 0.**
+**Σ: −1118 строк** (494 prod + 624 tests). Контроль качества: SwiftUI-SotkaApp build ✓, SotkaWatch Watch App build ✓, 829 iOS unit tests ✓, 155 Watch unit tests ✓ (−14 от Группы D). **Зависимости: 0.**
 
 ### Не вошло (пограничные случаи)
 
 | Файл/член | Причина |
 |---|---|
-| `SWTextField.swift` (248 LOC) | Caller (`EditProgressScreen.swift:322`) использует ~95 LOC ядра (стили + валидация + focus). `errorState`/`isSecure`/`lineLimit` — **неиспользуемые параметры public API с дефолтами**, не dead code: используются в `body`/`textField`/`borderColor`/`errorMessageViewIfNeeded`; Periphery их НЕ считает мёртвыми. Мёртвого нет, есть ~95 LOC preview (`SWTextField.swift:152-247`). Удаление целиком потеряет единую стилизацию дизайн-системы. Разумный путь — урезать preview, не удалять |
+| `SWTextField.swift` (248 LOC) | Caller (`EditProgressScreen.swift:322`) использует ~95 LOC ядра. `errorState`/`isSecure`/`lineLimit` — неиспользуемые параметры public API с дефолтами, не dead code (Periphery не считает). Мёртвого нет, есть ~95 LOC preview (`SWTextField.swift:152-247`). Удаление целиком потеряет единую стилизацию дизайн-системы — урезать preview, не удалять |
 
 ## Итог
 
@@ -424,50 +257,38 @@ Periphery re-run: 46 warnings в 17 файлах → 18 false-positives → **de
 | `21608712` (fix) | 1 | ~0 | ProgressServiceTests fix (ModelContext dealloc) |
 | `6753c89` (Tier 1) | 4 | −119 | VibrationService 70→12 (CHHapticEngine→AudioServicesPlaySystemSound), Date+ −26, ContentInSheet −56→inline. **Пропущено из ponytail:** RestTimeComponents (false positive), InfopostParser/YouTubeVideoService (gain < трудозатрат), CachedAsyncImage (keep), 4 протокола (2-3 импл, не yagni) |
 | `8452aa0` (Tier 2 Periphery) | 12 | −140 | 18 Periphery warnings (UserProgress dead methods, MainUserForm.isReadyToSave, Constants, DayCalculator, City, MockWatchConnectivityService, 4× public→internal). **Сознательные отклонения:** isReadyToRegister −9 (бонус), ItemListScreen.init оставлен (2 previews), shouldDeletePhoto/DELETED_DATA оставлены (state-машина жива) |
-| `de6d535` (Tier 1) | 3 | +164 | [restore] logout flow: `.onChange(of: isAuthorized)` body + `MockStatusManager.create()` + `StatusManagerLogoutTests` (5 адаптированных тестов). Детали — §9 Tier 1 |
-| `69fce28a` (Tier 1 follow-up) | 3 | +47 | [FIX] `@Environment(\.modelContext)` не содержит контейнер в App-struct → `try statusManager.modelContainer.mainContext.delete(...)` (тот же путь, что в докоммитном `processAuthStatus`). [restore] `StatusManager.getStatus()` автостарт дня 1 (`if startDate == nil { startDate = now }`). + `StatusManagerGetStatusTests` (2 теста: auto-start/keeps-existing) |
-| `6b28f00` (Tier 2) | 3 | −19 | Удалён `AuthHelper.isOfflineOnly` (UserDefaults `"isOfflineOnly"` key + property + assignments в `performOfflineLogin()`/`triggerLogout()`). 1 reader в `SwiftUI_SotkaAppApp.showLoadingOverlay` упрощён. `User.isOfflineOnly` остался source of truth. Детали — §9 Tier 2 |
-| `fd5f845` (deprecated markers) | 5 | +12 | 12 `@available(*, deprecated, ...)` аннотаций: 7 server-полей User + 1 sync-поле + 4 sync-флага (`isSynced` в CustomExercise/DayActivity/UserProgress/CalendarExtensionRecord) + 1 timestamp (`UserProgress.lastModified`). Живые sync-связанные поля оставлены без аннотации (soft-delete filter / sort / audit). См. §9 Sync/server fields |
-| `24ebd8d` (i18n) | 5 | ±12 | Русский текст 12 deprecated-сообщений в `@available` (Server profile → Поле профиля сервера; Sync flag → Sync-флаг; Sync field → Sync-поле; Sync timestamp → Sync-timestamp) |
-
-**Итого до Periphery re-run #2: ~−33 500 net LOC production, ~85 тестов удалено/переписано.**
-
-### Фактический результат Periphery re-run #2 (5 коммитов)
-
-| Commit | Файлы | Net | Что |
-|---|---|---|---|
 | A1 `ddcb1d52` | 10 | −533 | `git rm` 8 dead-файлов (ListRowView, ItemListScreen, CheckmarkRowView, LocationFeedback, ActivitySnapshot, MockResult, MockWCSession, MockStatusManager) + 2 cascade props |
-| A2 `b8761560` | 32 | −220 | 9 prod (MainUserForm, Gender, User sync helpers, DayActivity/DayActivityTraining computed, 3 сервиса isReadOnlyMode, 2 screens) + 3 preview-fixup + ~80 call-sites. Доп. — `createMockServices` (1 site) исправлен preventively |
+| A2 `b8761560` | 32 | −220 | 9 prod (MainUserForm, Gender, User sync helpers, DayActivity/DayActivityTraining computed, 3 сервиса isReadOnlyMode, 2 screens) + 3 preview-fixup + ~80 call-sites |
 | B `3e928f6f` | 12 | −13 | 3 протокола delete (ReviewContext, ReviewAttemptStoring, WorkoutCompletionsCounting) + 2 mock rewrite (16 call-sites в `ReviewManagerTests` + 3 inline). `makeSUT` стал `throws` + 4-tuple |
 | B-fix `220375cc` | 1 | +4 | Guard reversed range в `seedActivities`/`appendActivities` (Swift 6.3 trap). **НЕ та же проблема, что в `21608712`** — здесь range precondition, не ModelContext dealloc |
 | C `4655820` | 3 | −189 | 4 dead метода `DateFormatterService` + 13 тестов + 2 explicit `: Bool` для ambiguous require |
+| `de6d535` (Tier 1) | 3 | +164 | [restore] logout flow: `.onChange(of: isAuthorized)` body + `MockStatusManager.create()` + `StatusManagerLogoutTests` (5 адаптированных тестов). Детали — §9 Tier 1 |
+| `69fce28a` (Tier 1 follow-up) | 3 | +47 | [FIX] `@Environment(\.modelContext)` → `try statusManager.modelContainer.mainContext.delete(...)` (App-struct не получает контейнер через env). [restore] `StatusManager.getStatus()` автостарт дня 1 + `StatusManagerGetStatusTests` (2 теста: auto-start/keeps-existing) |
+| `6b28f00` (Tier 2) | 3 | −19 | Удалён `AuthHelper.isOfflineOnly` (UserDefaults дубль `User.isOfflineOnly`). 1 reader в `SwiftUI_SotkaAppApp.showLoadingOverlay` упрощён. `User.isOfflineOnly` остался source of truth |
+| `fd5f845` (deprecated markers) | 5 | +12 | 12 `@available(*, deprecated, ...)` аннотаций: 7 server-полей User + 1 sync-поле + 4 sync-флага `isSynced` + 1 timestamp `UserProgress.lastModified`. Живые sync-связанные поля (shouldDelete/createDate/modifyDate/CalendarExtensionRecord.lastModified) оставлены без аннотации |
+| `24ebd8d` (i18n) | 5 | ±12 | Русский текст 12 deprecated-сообщений в `@available` (Server profile → Поле профиля сервера; Sync flag → Sync-флаг; Sync field → Sync-поле; Sync timestamp → Sync-timestamp) |
+| `3648fc2` (Группа E) | 2 | −198 | Транзитивно мёртвые после A1 (`ItemListScreen`): `SectionView.swift` (122) + `SectionHeaderView.swift` (76, содержит `SectionSupplementaryView`). Pure delete |
+| `a3c7f8f` (Группа H) | 2 | −6 | Write-only `ReadOnlyModeKey.swift` (`@Entry var isReadOnlyMode: Bool = ...`) + строка `.environment(\.isReadOnlyMode, isReadOnlyMode)` в `SwiftUI_SotkaAppApp.swift:142`. Аналог `9cb2646` (NetworkStatus) |
+| `af6a5bd` (Группа G) | 6 | −248 | `Date.rawValue`+`init?(rawValue:)` + `String.trueCount`/`withoutSpaces` + `Double+.swift` целиком (prod) + `DateRawRepresentableTests` + `DoubleExtensionTests` + часть `SWUtilsTests` (tests). `Float+.swift` жив (UserProgress/TempMetricsModel) |
+| `381ee78` (Группа F) | 2 | −173 | 4 test-only метода `ImageAssetManager` (`getImageURL(for:)`/`getAllAvailableImages()`/`imageExists(_:)`/`getImageSize(_:)`) + 12 тестов. Оставлен `copyImageToTemp(...)` (prod chain) |
+| `fc5efb0` (Группа D) | 8 | −493 | 9 Watch VM dead members (`shouldShowExercisesReminder`/`getStepState(for:)`/`getCycleSteps()`/`getExerciseSteps(for:)` + 4 в `WorkoutPreviewViewModel` + `HomeViewModel.startWorkout`) + 14 watch-тестов |
 
-**Итого Periphery re-run #2: ~−1029 net LOC production, 14 тестов удалено/переписано.** Подробный план (A1/A2/B/C группы) — раздел 8.
-
-### Финал 2026-08-01: Tier 2 + deprecated markers
-
-Все `[ ]` пункты плана закрыты (`6b28f00`+`fd5f845`+`24ebd8d`, суммарно −19 net LOC + 24 LOC аннотаций/i18n). Подробности — §9 Tier 2 + Sync/server fields.
-
-### Не выполнено (оставлено на следующие итерации)
-
-Все запланированные Periphery re-run #2 чистки (Группа A1/A2/B/C, раздел 8), пост-чистки (Tier 2 inline + SWDivider), восстановление logout-flow (Tier 1, `de6d535`+`69fce28a`), Tier 2 (`AuthHelper.isOfflineOnly` `6b28f00`) и deprecated-аннотации User/sync полей (`fd5f845`+`24ebd8d`) **выполнены** — см. «Фактический результат Periphery re-run #2» и §9 в Итоге.
-
-**Активных [ ] пунктов нет.** Все находки аудита либо реализованы, либо явно заблокированы решением продукта (Tier 3, sync-flag миграция — см. §9 Итог). Волна §10 выполнена в 5 коммитах (`3648fc2`/`a3c7f8f`/`af6a5bd`/`381ee78`/`fc5efb0`), −1118 строк, без новых сетевых/auth зависимостей.
+**Σ всех волн:** ~−33 500 net LOC production до Periphery re-run #2, −1029 Periphery re-run #2, ±211 Tier 1+2+deprecated, −1118 волна §10. **Тестов:** ~85 до Periphery re-run #2, 14 Periphery re-run #2, +9 Tier 1, −38 §10 (24 iOS + 14 watch). Все `[ ]` пункты плана закрыты (`6b28f00`+`fd5f845`+`24ebd8d`+`3648fc2`+`a3c7f8f`+`af6a5bd`+`381ee78`+`fc5efb0`). **Активных [ ] пунктов нет** — все находки реализованы или заблокированы решением продукта (Tier 3, sync-flag миграция — см. §9).
 
 ### Контроль качества
 
-- iOS build: ✅ (iPhone 11 / iOS 26.5 / xcodebuild-mcp). Pre-existing `AppIcon` asset error в watch-таргете (`SotkaWatch Watch App` Assets.xcassets) — не связан с правками аудита (подтверждено через `git stash` до/после). **SotkaWatch Watch App build: ✅** (Apple Watch Ultra 3 49mm / watchOS latest / xcodebuild-mcp, 51 pre-existing warning про `isSynced`/`lastModified` deprecated).
-- Unit tests: **iOS 829 passed + Watch 155 passed = 984 total**, 1 iOS skipped. История: 1833 → 977 (`ed82f6e9` −856) → 868 (после `8452aa0`) → 862 (Periphery re-run #2: −6 `DateFormatterServiceTests` в SWUtils target, 16 `ReviewManagerTests` не сломаны, 0 regressions в iOS) → **867 (`de6d535` Tier 1: +5 logout-тестов)** → **869 (`69fce28a` Tier 1 follow-up: +2 getStatus-теста)** → **869 (`6b28f00`+`fd5f845`+`24ebd8d`: no test changes)** → **855 (`916e0194`+`ef400e6e`+`7cc61231`/`3648fc2`/`a3c7f8f`: no test changes — 3 план-only + 2 §10 prod-only)** → **845 (`af6a5bd` Группа G: −12 SWUtils tests из 3 файлов)** → **833 (`381ee78` Группа F: −12 `ImageAssetManagerTests`)** → **833 iOS + 155 Watch (`fc5efb0` Группа D: −14 watch tests, iOS не задет)**. **Σ §10: −12 SWUtils + −12 ImageAsset = −24 iOS tests, −14 watch tests.**
+- iOS build: ✅ (iPhone 11 / iOS 26.5 / xcodebuild-mcp). Pre-existing `AppIcon` asset error в watch-таргете — не связан с правками аудита (подтверждено через `git stash` до/после). **SotkaWatch Watch App build: ✅** (Apple Watch Ultra 3 49mm / xcodebuild-mcp, 51 pre-existing warning про `isSynced`/`lastModified` deprecated).
+- Unit tests: **iOS 829 + Watch 155 = 984 passed**, 1 iOS skipped. История: 1833 → 977 (`ed82f6e9` −856) → 869 (после Tier 1+2+deprecated) → **855** (`916e0194`+`ef400e6e`+`7cc61231`/`3648fc2`/`a3c7f8f`: 0 test changes) → **845** (`af6a5bd` Группа G: −12 SWUtils) → **833** (`381ee78` Группа F: −12 ImageAsset) → **833 iOS + 155 Watch** (`fc5efb0` Группа D: −14 watch). **Σ §10: −24 iOS + −14 watch = −38 tests.**
 - UI-тесты: ✅ (8 скриншотов, `testMakeScreenshots`)
 - Watch ↔ iPhone sync: не сломана (`WatchConnectivityService`/`WCSession`/`WorkoutDataResponse`)
 
 ### Супротив прошлого аудита (2026-07-21)
 
-Добавлены `SyncStartDateScreen`/`HelpScreen`/`ChangePasswordScreen`/`EditProfileScreen`/`SyncResultBadge`/`SyncDateComparisonPolicy` + соответствующие тесты (~+2000 строк); добавлены sync-методы в активных сервисах (DailyActivities/CustomExercises/Infoposts) + 4 мёртвых протокола (+~1100 строк production, +136 строк тестов); удалены в `1c890e2` Periphery-чистки (учтены в новых счётчиках). `MockSWClient` помечен как **warning** — использовался в 14 unit-тестах `CustomExercisesServiceTests`. В `ed82f6e9` выбран **вариант (b)**: `MockSWClient` + тесты удалены целиком. `ProgressServiceTests` перенесён в keep (тестирует живой локальный `ProgressService`).
+Добавлены `SyncStartDateScreen`/`HelpScreen`/`ChangePasswordScreen`/`EditProfileScreen`/`SyncResultBadge`/`SyncDateComparisonPolicy` + тесты (~+2000 строк); добавлены sync-методы в активных сервисах + 4 мёртвых протокола (+~1100 строк production, +136 строк тестов); удалены в `1c890e2` Periphery-чистки (учтены в новых счётчиках). `MockSWClient` — warning, использовался в 14 unit-тестах; `ed82f6e9` выбрал вариант (b): MockSWClient + тесты удалены целиком. `ProgressServiceTests` перенесён в keep.
 
-**Periphery 2026-07-26 #1 (re-run после `e75e49db`):** 46 warnings → 18 false-positives (см. раздел 4) → 18 подтверждённых dead code в 6 production-файлах + 1 тест-мок + 4 `public`→`internal` (`SWDesignSystem`). `1c890e2` (2026-05-01) удалил ~1937 строк — новая волна ≈122 LOC + 4 keyword'а. Выполнено в `8452aa0` (см. Итог).
+**Periphery 2026-07-26 #1 (re-run после `e75e49db`):** 46 warnings → 18 false-positives → 18 подтверждённых dead code в 6 production-файлах + 1 тест-мок + 4 `public→internal` (`SWDesignSystem`). `1c890e2` (2026-05-01) удалил ~1937 строк — новая волна ≈122 LOC + 4 keyword'а. Выполнено в `8452aa0`.
 
-**Periphery 2026-07-26 #2 (re-run на HEAD после `8452aa0`, пост-ревью):** см. раздел 8. Подтверждённый dead code ≈605 LOC (Группа A) + Review Фаза B scope (8 файлов вместо 2) + `DateFormatterService` dead methods (−20 LOC). **Выполнено** в `ddcb1d52`+`b8761560`+`3e928f6f`+`4655820` (4 коммита + 2 fix'а, net ~−1029 LOC, 14 тестов). См. раздел «Фактический результат коммитов `ddcb1d52`+`b8761560`+`3e928f6f`+`220375cc`+`4655820` (Periphery re-run #2)» выше.
+**Periphery 2026-07-26 #2 (re-run на HEAD после `8452aa0`, пост-ревью):** подтверждённый dead code ≈605 LOC (Группа A) + Review Фаза B scope (8 файлов вместо 2) + `DateFormatterService` dead methods (−20 LOC). Выполнено в `ddcb1d52`+`b8761560`+`3e928f6f`+`220375cc`+`4655820` (net ~−1029 LOC, 14 тестов).
 
 ### Ошибки аудита (исправлены в `22dace92`)
 
@@ -476,12 +297,12 @@ Periphery re-run: 46 warnings в 17 файлах → 18 false-positives → **de
 
 ### Ошибки плана Periphery 2 (пойманы ревью, скорректированы в разделе 8)
 
-1. **`PreviewContent/User+.swift` ошибочно помечен как 0-caller** в исходном отчёте Periphery 2. Файл активно используется: `.previewWithDay1Progress`/`.previewWithDay49Progress`/`.previewWithDay100Progress` — 7 preview-callers в `ProgressScreen.swift:3` + `ProgressGridView.swift:4`; `User.preview` — 13+ preview-callers + `ProgressCalculatorTests.swift`. **Реальный статус: alive, не трогать.**
-2. **`PreviewContent/Progress+.swift` ошибочно помечен как чистый dead code.** Транзитивно жив: `UserProgress.previewDay1/49/100` используются только внутри `User+.swift` (12 internal calls). Удаление требует рефакторинга `User+.swift` — выходит за скоуп dead code.
-3. **`User.init(fromMainUserForm:id:)` помечен как «0 readers»** — на самом деле 3 preview-caller'а в `JournalScreen.swift:215,225,235`. Удаление требует preview-fixup (заменить `.init(fromMainUserForm: .preview)` на `User.preview`), учтено в Группе A2.
-4. **Net-savings `DateFormatterService` занижены в 2.5×** (заявлено −15, реально −40): план не учёл, что 3 метода (`stringFromFullDate`/`dateFromIsoString`/`days(from:to:)` String overload) полностью мертвы после удаления `MainUserForm` (A2), а не просто inline-кандидаты. Группа C обновлена.
-5. **Scope `ReviewContext` undercount'нут**: план говорил «2 внешних caller'а», реально 8 файлов (~25 call-сайтов): `StatusManager` + `WorkoutPreviewViewModel` + `ReviewEventReporting` + `MockReviewEventReporter` + `ReviewManager` + 16 call-сайтов в `ReviewManagerTests` + `WorkoutPreviewViewModelReviewEventTests`. Группа B обновлена.
-6. **`StatusManager.State` 4 мёртвых члена ошибочно отнесены к false positives** в исходном отчёте Periphery 2. Periphery прав: `.isSynchronizingData`/`.error` never assigned, `.isLoading`/`.isSyncing` never read. План блокирует (god object, раздел 5, строка 127) → Plan D.
-7. **LOC-план `MockWorkoutCompletionsCounter` занижен**: исходный отчёт говорил «тривиально, ~5 LOC нового кода в тестах». Реально ~30-40 LOC изменений в `ReviewManagerTests.swift` (5 пунктов детального плана в Группе B). `MockWorkoutCompletionsCounter` — единственный non-trivial mock rewrite в Фазе B, т.к. требует `ModelContainer` setup + имитация `completedWorkoutCount` через вставку `DayActivity` в SwiftData (вместо простого `count: Int`).
+1. **`PreviewContent/User+.swift` ошибочно помечен как 0-caller.** Активно используется: 7 preview-callers в `ProgressScreen.swift:3` + `ProgressGridView.swift:4`; `User.preview` — 13+ preview-callers + `ProgressCalculatorTests.swift`. Реальный статус: alive.
+2. **`PreviewContent/Progress+.swift` ошибочно помечен как чистый dead code.** Транзитивно жив: `UserProgress.previewDay1/49/100` используются только внутри `User+.swift` (12 internal calls). Удаление требует рефакторинга `User+.swift` — выходит за скоуп.
+3. **`User.init(fromMainUserForm:id:)` помечен как «0 readers»** — на самом деле 3 preview-caller'а в `JournalScreen.swift:215,225,235`. Preview-fixup учтён в Группе A2.
+4. **Net-savings `DateFormatterService` занижены в 2.5×** (заявлено −15, реально −40): план не учёл, что 3 метода (`stringFromFullDate`/`dateFromIsoString`/`days(from:to:)` String overload) полностью мертвы после удаления `MainUserForm` (A2).
+5. **Scope `ReviewContext` undercount'нут**: план говорил «2 внешних caller'а», реально 8 файлов (~25 call-сайтов).
+6. **`StatusManager.State` 4 мёртвых члена ошибочно отнесены к false positives** в исходном отчёте Periphery 2. Periphery прав: `.isSynchronizingData`/`.error` never assigned, `.isLoading`/`.isSyncing` never read. План блокирует (god object, раздел 5) → Plan D.
+7. **LOC-план `MockWorkoutCompletionsCounter` занижен**: исходный отчёт говорил «тривиально, ~5 LOC нового кода в тестах». Реально ~30-40 LOC изменений в `ReviewManagerTests.swift` — `ModelContainer` setup + имитация `completedWorkoutCount` через вставку `DayActivity` в SwiftData.
 
 CachedAsyncImage остаётся: `AsyncImage` + `URLCache` не решает мерцание при перерисовках ячеек, а кастомный `ImageLoader`/`ImageCache` даёт стабильное изображение без фаз загрузки. Удаление sync-флагов и Firebase в эту цифму не входят: флаги — вторая итерация с миграцией, Firebase — оставляем 100%.
