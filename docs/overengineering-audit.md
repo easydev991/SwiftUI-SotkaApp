@@ -1,6 +1,6 @@
 # Аудит over-engineering: весь репозиторий
 
-Дата аудита: 2026-07-25. Применено 20 коммитов 2026-07-25..26, хронология (подробности — разделы 1-7 + Итог): `ed82f6e9` (delete, −30 489/+199) → `22dace92` (FIX+restore, +393/−80) → delete-2 (`19081bad`/`2555914a`/`c2e906a3`/`56726fe2`, net −2575) → `9cb2646` (NetworkStatus) → 4 docs (`f10157a`/`f1065ca`/`65d39dc`/`606f7b2`) → `68e4bca` (правка плана Review) → `bc0a76f` (Review Фаза A) → `095af10` (move shouldAttemptMilestone) → 2 update-plan (`f7f6a61`/`af3cf6b`) → `d7f7682c` (delete-3 ponytail, −647) → `21608712` (fix ProgressServiceTests) → `c6f9d9e7` (compress) → `6753c89` (Tier 1 ponytail, −119) → `e75e49db` (compress) → `fbb689fb` (Periphery findings) → `8452aa0` (Tier 2 Periphery, −140).
+Дата аудита: 2026-07-25. Применено 33 коммита 2026-07-25..2026-08-01, хронология (подробности — разделы 1-8 + Итог): `ed82f6e9` (delete, −30 489/+199) → `22dace92` (FIX+restore, +393/−80) → delete-2 (`19081bad`/`2555914a`/`c2e906a3`/`56726fe2`, net −2575) → `9cb2646` (NetworkStatus) → 4 docs (`f10157a`/`f1065ca`/`65d39dc`/`606f7b2`) → `68e4bca` (правка плана Review) → `bc0a76f` (Review Фаза A) → `095af10` (move shouldAttemptMilestone) → 2 update-plan (`f7f6a61`/`af3cf6b`) → `d7f7682c` (delete-3 ponytail, −647) → `21608712` (fix ProgressServiceTests) → `c6f9d9e7` (compress) → `6753c89` (Tier 1 ponytail, −119) → `e75e49db` (compress) → `fbb689fb` (Periphery findings) → `8452aa0` (Tier 2 Periphery, −140) → Periphery re-run #2: `ddcb1d52`/`b8761560`/`3e928f6f`/`220375cc`/`4655820` (5 коммитов, ~−1029, раздел 8) → пост-чистки: `a63ef811` (Tier 2 inline: DividerIfNeededModifier + withDivider, −35 LOC) → `738e24d8` (docs) → `fd040669` (docs compress) → `1f051228` (SWDivider rm + doc drift, −13 LOC) → `fff7e885` (Watch schemes cosmetic, xcodebuild artifact).
 Скоуп: только избыточная сложность (не корректность, не безопасность, не производительность).
 
 Контекст: `AppConfiguration.isReadOnlyMode = true` на постоянной основе — серверные API закрыты, поэтому весь сетевой слой (синхронизация прогресса, авторизация на сервере, разрешение конфликтов дат, серверный профиль/смена пароля) — мёртвый код и подлежит удалению. UI-тесты и mock-bootstrap по-прежнему передают `isReadOnlyMode: false`, чтобы симулировать нормальное поведение для скриншот-тестов.
@@ -19,12 +19,12 @@
 
 ### Целиком мёртвые сервисы
 
-- [x] Удалены 4 сетевых сервиса: `SWClient`, `ProgressSyncService`, `PhotoDownloadService`, `CountriesUpdateService` (~1686 стр.).
+- [x] Удалены 4 мёртвых сетевых сервиса (~1686 стр.).
 - [ ] shrink `AuthHelper.swift` — частично выполнено: удалены серверные методы (`authToken`, `saveAuthData`, `updateAuthData`, `didAuthorize`, импорт `KeychainWrapper`). **Осталось 62 стр.** в виде `AuthHelperImp` с локальной логикой (`isAuthorized`/`isOfflineOnly`/`performOfflineLogin`/`triggerLogout`). Класс **живой** — используется `OfflineLoginView`, `MoreScreen.triggerLogout()`, `RootScreen`, `SwiftUI_SotkaAppApp`. Полное удаление требует переноса `isOfflineOnly` флага в `User` (UserDefaults-бэкап) и inlining `triggerLogout` в `MoreScreen`. **См. раздел 4 «На границе скоупа».**
 
 ### Удалено в `ed82f6e9` (delete-этап, ~16 530 стр.)
 
-- [x] 9 экранов + 4 SyncJournal + 9 протоколов + 10 DTO + 6 preview + 9 моков + StatusManager 1559→1107 + 5 sync-гейтов + 3 sync-сервиса + 30 тестов (`ed82f6e9`; подробности — Итог).
+- [x] Удалены sync-экраны, SyncJournal, протоколы, DTO, моки, тесты, sync-сервисы (~16 530 стр., `ed82f6e9`; подробности — Итог).
 
 ### keep (живые, не тронуты)
 
@@ -34,19 +34,17 @@
 
 ### Целиком мёртвые пакеты
 
-- [x] **SWNetwork** (~1412 стр.: 631 sources + 757 tests + 24 package) — удалён в `2555914a`. Каталог + пакет из `.xcodeproj` убраны, + 2 unit-теста (`ErrorResponseTests` 299 стр + `DateDecodingRoundTripTests` 34 стр).
-- [x] **SWKeychain** (~230 стр.) — удалён в `2555914a`. 0 prod-ссылок, 0 тестов с импортом.
-
-**Итого: ~1975 стр. — выполнено в `2555914a`.**
+- [x] **SWNetwork** (~1412 стр.) — удалён в `2555914a` (каталог + пакет из `.xcodeproj`).
+- [x] **SWKeychain** (~230 стр.) — удалён в `2555914a` (0 prod-ссылок, 0 тестов).
 
 ### Пакеты, которые оставляем
 
-- [x] 3 живых пакета: `CachedAsyncImage` (333 стр.), `SWDesignSystem` (1533 стр., 37 импортов), `SWUtils` (1363 стр., 35 импортов — было 1613/44).
+- [x] 3 живых пакета сохранены (CachedAsyncImage, SWDesignSystem, SWUtils).
 
 ### Native-замены внутри пакетов
 
-- [x] **Native/delete** (`19081bad`/`c2e906a3`): SWAlert 108+20 тестов, SWFileManager 44+48 тестов, DateFormatterService.readableDate+makeFormat+3 enum case'a, String.capitalizingFirstLetter.
-- [x] [NEW] **NetworkStatus** (`9cb2646`): `NetworkStatus`+`NetworkStatusEnvironmentKey` (~46 стр.) + `.networkStatus(...)` в `SwiftUI_SotkaAppApp`. Write-only: `@Environment(\.isNetworkConnected)` = 0 ссылок, `NWPathMonitor` запускался впустую.
+- [x] **Native/delete** (`19081bad`/`c2e906a3`): SWAlert, SWFileManager, DateFormatterService helpers, String.capitalizingFirstLetter.
+- [x] [NEW] **NetworkStatus** (~46 стр., `9cb2646`): `NetworkStatus` + `NetworkStatusEnvironmentKey` + `.networkStatus(...)` modifier. Write-only: 0 ссылок на `@Environment(\.isNetworkConnected)`, `NWPathMonitor` запускался впустую.
 
 ## 3. Review-слой (yagni — избыточная абстракция)
 
@@ -82,11 +80,11 @@
 
 ### Прочее
 
-- [x] Удалены `ImageProcessor.createThumbnail` (5 стр. + 2 теста), `InfopostAvailabilityManager.getAvailablePostsBySection` (4 стр. + 1 тест), `Client+.swift` (74 стр. → `ScreenshotDemoData.seedDemoData()`, см. раздел 7), `ScreenshotDemoData.readInfopostDays` (0 вызовов).
+- [x] Удалены мелкие мёртвые члены: `ImageProcessor.createThumbnail`, `InfopostAvailabilityManager.getAvailablePostsBySection`, `Client+.swift` (→ `ScreenshotDemoData.seedDemoData`, см. раздел 7), `ScreenshotDemoData.readInfopostDays`.
 
 ### Новые мёртвые находки после `ed82f6e9` (не были в исходном аудите) [NEW]
 
-- [x] Удалены 4 модели: `ConflictingStartDate`, `CalendarPurchasesResponse`, `LoginCredentials`, `ProgressSnapshot` (все 0 ссылок в проде).
+- [x] Удалены 4 мёртвые модели (все 0 ссылок в проде).
 
 ### Находки Periphery 2026-07-26 (после `e75e49db`) [NEW]
 
@@ -107,7 +105,7 @@ Periphery re-run дал 46 warnings в 17 файлах. После ручной 
 | `Models/City.swift` + `Country.cities: [City]` | `City` struct целиком + `cities` data | 25 стр. | `cities` пишется в `makeDefaultCountry()`, не читается; `City.id`/`name`/`lat`/`lon` — 0 reader'ов в app коде |
 | `SotkaWatchTests/Mocks/MockWatchConnectivityService.swift:21` | `requestedCurrentActivityDay` | 1 стр. | assign-only (`private(set) var`), 0 reader'ов в тестах |
 | `Libraries/SWDesignSystem/.../SectionView.swift` | `public struct` + `public init` × 3 + `public extension` | 0 LOC | redundant public (используется только в `ItemListScreen.swift:39` + previews внутри пакета) |
-| `Libraries/SWDesignSystem/.../SWDivider.swift` | `struct` + `init` + `var body` | 13 LOC | **Стал entirely dead 2026-07-26** (пользователь удалил `DividerIfNeededModifier.swift` + `withDivider` extension — единственный consumer). 0 production-callers, 1 reference в собственном `#Preview`. Periphery-описание «redundant public» было неточным: `public` на struct'е уже не было в HEAD, файл всегда был `internal`. **Кандидат на `git rm`** (см. «Не выполнено») |
+| `Libraries/SWDesignSystem/.../SWDivider.swift` | `struct` + `init` + `var body` | 13 LOC | **Стал entirely dead 2026-07-26** (пользователь удалил `DividerIfNeededModifier.swift` + `withDivider` extension — единственный consumer). 0 production-callers, 1 reference в собственном `#Preview`. Periphery-описание «redundant public» было неточным: `public` на struct'е уже не было в HEAD, файл всегда был `internal`. **`git rm` в `1f051228`** |
 | `Libraries/SWDesignSystem/.../Rows/ListRowView.swift` | `public struct` + `public extension` | 0 LOC | unused outside file (только previews) |
 | `Libraries/SWDesignSystem/.../ItemListScreen.swift:23` | `init(mode:allItems:...)` | 12 стр. | 0 caller'ов вне previews |
 
@@ -249,7 +247,7 @@ Periphery re-run дал 46 warnings в 17 файлах. После ручной 
 
 **Суммарно: −693 LOC prod + 2 test-mock delete + 1 test-mock rewrite + 8 SWUtils-тестов сокращение.**
 
-### Контроль качества (expected post-implementation)
+### Прогноз контроля качества
 
 См. финальный «Контроль качества» в конце документа (actual: 862 passed, build ✅, Watch sync не сломана). Прогноз −860 LOC оказался точным (факт −1029 net — большая часть из-за test-mock rewrites, не regression'ов).
 
@@ -285,13 +283,11 @@ Periphery re-run дал 46 warnings в 17 файлах. После ручной 
 
 ### Не выполнено (оставлено на следующие итерации)
 
+Все запланированные Periphery re-run #2 чистки (Группа A1/A2/B/C, раздел 8) и пост-чистки (Tier 2 inline + SWDivider) выполнены — см. «Фактический результат Periphery re-run #2» в Итоге. Осталось единственное:
+
 | Категория | Объём | Причина |
 |---|---|---|
-| **Пост-`8452aa0` Periphery re-run** ([NEW], раздел 8) | **DONE** ✅ | 5 коммитов (`ddcb1d52`+`b8761560`+`3e928f6f`+`220375cc`+`4655820`), ~−1029 LOC, 14 тестов (см. таблицу Periphery re-run #2 выше) |
-| Review Фаза B ([ ]) | **DONE** ✅ `3e928f6f` | 3 протокола + 2 mock rewrite. Net 0 на Review-файлах (test-helpers `makeContainer`/`seedActivities`/`appendActivities` компенсируют) |
 | `AuthHelper` shrink ([ ]) | 62 стр. production | Требует переноса `isOfflineOnly` в `User` (UserDefaults-бэкап) + inlining `triggerLogout` в `MoreScreen`. Снижение читаемости. Решение за продуктом |
-| **Tier 2 inline (DividerIfNeededModifier + withDivider)** (2026-07-26) | **DONE** ✅ `a63ef81` | Удалён indirection-слой (1-in-1-out): `DividerIfNeededModifier.swift` + `withDivider` extension. Build ✅, 862 tests pass |
-| **`SWDivider.swift` deletion** (2026-07-26) | **DONE** ✅ | 13 стр. production. Файл entirely dead после удаления `DividerIfNeededModifier` (единственный production-consumer). `git rm` (staged) |
 
 ### Контроль качества
 
