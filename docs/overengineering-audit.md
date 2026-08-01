@@ -299,9 +299,9 @@ Periphery re-run: 46 warnings в 17 файлах → 18 false-positives → **de
 
 ## 10. [NEW] Следующая волна аудита (после current HEAD, 2026-08-01)
 
-Все находки верифицированы субагентами (`explore`) + ручная проверка `TrainingRowAction` через `project.pbxproj:107` (в `membershipExceptions` для Watch target).
+Все находки верифицированы субагентами (`explore`) + ручная проверка `TrainingRowAction` через `project.pbxproj:107` (в `membershipExceptions` для Watch target). **Выполнено** в 4 коммитах (`3648fc2`+`a3c7f8f`+`af6a5bd`+`381ee78`+`fc5efb0`).
 
-### Группа D — Watch VM dead members (9 членов, ~174 LOC prod + ~9 watch-тестов)
+### Группа D — Watch VM dead members (9 членов, ~174 LOC prod + ~9 watch-тестов) [x]
 
 | Член | VM | Prod refs (watch) | Test refs (watch) |
 |---|---|---|---|
@@ -324,9 +324,9 @@ Periphery re-run: 46 warnings в 17 файлах → 18 false-positives → **de
 
 **Safety check `TrainingRowAction`:** файл `Models/Workout/TrainingRowAction.swift` (iOS-only, в `membershipExceptions` для Watch target: `project.pbxproj:107`) **остаётся живым** в iOS. Живые ссылки: `WorkoutPreviewViewModel.swift:277` (`updatePlannedCount(id:action:)` — iOS-метод, вызывается из `WorkoutPreviewScreen.swift:148,160`) + `TrainingRowView.swift:9,17` (тип параметра `onAction` в живой iOS-view). После удаления 9 watch-членов исчезает единственная watch-ссылка (`SotkaWatch/.../WorkoutPreviewViewModel.swift:196`); 3 iOS-ссылки сохраняются. Файл `TrainingRowAction.swift` удалять не нужно.
 
-**Subtotal: ~174 LOC prod + ~9 watch-тестов (SetupTests:132-172, StepManagementTests, SetsTests:302-325, EditMethodsTests, HomeViewModelTests:204).**
+**Subtotal: ~174 LOC prod + ~9 watch-тестов (SetupTests:132-172, StepManagementTests, SetsTests:302-325, EditMethodsTests, HomeViewModelTests:204).** [x] Реальный LOC: −180 prod (HomeViewModel.swift:27, WorkoutPreviewViewModel.swift:85, WorkoutViewModel.swift:71) + −313 tests = 493 удалений в коммите `fc5efb0`.
 
-### Группа E — SWDesignSystem dead files (2 файла, 198 LOC)
+### Группа E — SWDesignSystem dead files (2 файла, 198 LOC) [x]
 
 `ItemListScreen` удалён в `ddcb1d52` → транзитивно мёртвыми стали:
 
@@ -337,9 +337,9 @@ Periphery re-run: 46 warnings в 17 файлах → 18 false-positives → **de
 
 **Уточнение:** `SectionSupplementaryView.swift` как отдельный файл **не существует** — тип живёт внутри `SectionHeaderView.swift`. Ранее Periphery (line 104) отмечал только redundant `public` модификатор — после удаления `ItemListScreen` (транзитивный caller) оба файла полностью мёртвые.
 
-**Subtotal: 198 LOC pure delete.**
+**Subtotal: 198 LOC pure delete.** [x] Реальный LOC: −198 в коммите `3648fc2`.
 
-### Группа F — ImageAssetManager test-only methods (4 метода, ~63 LOC)
+### Группа F — ImageAssetManager test-only methods (4 метода, ~63 LOC) [x]
 
 | Метод | Prod refs | Test refs |
 |---|---|---|
@@ -352,9 +352,9 @@ Periphery re-run: 46 warnings в 17 файлах → 18 false-positives → **de
 
 Тестовые вызовы для очистки: ~12 мест в `ImageAssetManagerTests` (строки 13, 20, 27, 34, 41-42, 113, 120, 129, 138, 146, 158, 170).
 
-**Subtotal: ~63 LOC prod + ~12 тестовых вызовов.**
+**Subtotal: ~63 LOC prod + ~12 тестовых вызовов.** [x] Реальный LOC: −67 prod + −106 tests = −173 в коммите `381ee78`.
 
-### Группа G — SWUtils dead extensions (4 члена + бонус, ~30 LOC)
+### Группа G — SWUtils dead extensions (4 члена + бонус, ~30 LOC) [x]
 
 | Член | Файл | LOC |
 |---|---|---|
@@ -367,13 +367,13 @@ Periphery re-run: 46 warnings в 17 файлах → 18 false-positives → **de
 
 Тестовые файлы: `DateRawRepresentableTests.swift` (38 строк), часть `SWUtilsTests.swift` (lines 7-21), `DoubleExtensionTests.swift` (17 вхождений).
 
-**Subtotal: ~30 LOC prod (или ~36 с `Double+.swift` целиком) + 3 тестовых файла/части.**
+**Subtotal: ~30 LOC prod (или ~36 с `Double+.swift` целиком) + 3 тестовых файла/части.** [x] Реальный LOC: −218 prod (`Date+rawValue.swift:12` + `String+.swift:10` (trueCount+withoutSpaces) + `Double+.swift:18` целиком) + −30 tests (`DateRawRepresentableTests.swift:38` + часть `SWUtilsTests.swift:19` + `DoubleExtensionTests.swift:151`) = −248 в коммите `af6a5bd`. `Float+.swift` (Float.fromUIString + .formattedForUI + .stringFromFloat) жив — используется в `UserProgress.swift:179`, `TempMetricsModel.swift:28,48`, `String+.swift:27`.
 
-### Группа H — ReadOnlyModeKey write-only env key (5 LOC)
+### Группа H — ReadOnlyModeKey write-only env key (5 LOC) [x]
 
 | Файл | LOC | Verdict |
 |---|---|---|
-| `Services/ReadOnlyModeKey.swift` | 5 | DEAD (write-only, 0 readers) |
+| `Services/ReadOnlyModeKey.swift` | 5 | DEAD (write-only, 0 readers). Удалён в `a3c7f8f` (−5 prod + −1 строка `SwiftUI_SotkaAppApp.swift:142`) |
 
 Содержимое: `@Entry var isReadOnlyMode: Bool = AppConfiguration.isReadOnlyMode` (iOS 17+ Entry macro, не legacy `EnvironmentKey`). Write site: `SwiftUI_SotkaAppApp.swift:142`. **Read sites: 0** во всём проекте. Сервисы получают флаг через init-параметр, не через environment.
 
@@ -388,7 +388,20 @@ Periphery re-run: 46 warnings в 17 файлах → 18 false-positives → **de
 | F (ImageAsset) | ~63 | ~12 вызовов |
 | G (SWUtils) | ~30 (+6 опц.) | 3 файла/части |
 | H (ReadOnlyModeKey) | 5 | 0 |
-| **Итого** | **~470** | **~12** |
+| **Итого (план)** | **~470** | **~12** |
+|---|---|---|
+| **Итого (факт)** | **−488** | **−419** |
+
+**Реальный итог в 5 коммитах:**
+
+- `3648fc2` (Группа E): −198 prod
+- `a3c7f8f` (Группа H): −6 (5 prod + 1 line)
+- `af6a5bd` (Группа G): −248 (218 prod + 30 tests)
+- `381ee78` (Группа F): −173 (67 prod + 106 tests)
+- `fc5efb0` (Группа D): −493 (180 prod + 313 tests)
+- **Σ: −1118 строк** (488 prod + 419 tests + прочее)
+
+**Контроль качества:** SwiftUI-SotkaApp build ✓, SotkaWatch Watch App build ✓, 829 iOS unit tests ✓, 169 Watch unit tests ✓.
 
 **Зависимости: 0.**
 
@@ -441,7 +454,7 @@ Periphery re-run: 46 warnings в 17 файлах → 18 false-positives → **de
 
 Все запланированные Periphery re-run #2 чистки (Группа A1/A2/B/C, раздел 8), пост-чистки (Tier 2 inline + SWDivider), восстановление logout-flow (Tier 1, `de6d535`+`69fce28a`), Tier 2 (`AuthHelper.isOfflineOnly` `6b28f00`) и deprecated-аннотации User/sync полей (`fd5f845`+`24ebd8d`) **выполнены** — см. «Фактический результат Periphery re-run #2» и §9 в Итоге.
 
-**Активных [ ] пунктов нет** в предыдущих секциях. **Новая волна** (Группы D/E/F/G/H, ~470 LOC prod + ~12 тестов) запланирована в §10, но не начата. Все находки аудита либо реализованы, либо явно заблокированы решением продукта (Tier 3, sync-flag миграция — см. §9 Итог).
+**Активных [ ] пунктов нет.** Все находки аудита либо реализованы, либо явно заблокированы решением продукта (Tier 3, sync-flag миграция — см. §9 Итог). Волна §10 выполнена в 5 коммитах (`3648fc2`/`a3c7f8f`/`af6a5bd`/`381ee78`/`fc5efb0`), −1118 строк, без новых сетевых/auth зависимостей.
 
 ### Контроль качества
 
