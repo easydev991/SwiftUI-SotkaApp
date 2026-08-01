@@ -322,7 +322,7 @@ Periphery re-run: 46 warnings в 17 файлах → 18 false-positives → **de
 - `WorkoutEditView.swift:33-35` имеет свой локальный `canRemoveExercise` (не VM)
 - Кнопки `startWorkout` в watch нет: `HomeView` → `fullScreenCover` `WorkoutPreviewView` → `loadData(day:)` (HomeView:13-14, 42-46)
 
-**Safety check `TrainingRowAction`:** файл `Models/Workout/TrainingRowAction.swift` (iOS-only, в `membershipExceptions` для Watch target: `project.pbxproj:107`) живёт в iOS — используется в `WorkoutPreviewViewModel.swift:277`, `TrainingRowView.swift:9,17`. После удаления 9 членов — 0 ссылок на `TrainingRowAction` где-либо.
+**Safety check `TrainingRowAction`:** файл `Models/Workout/TrainingRowAction.swift` (iOS-only, в `membershipExceptions` для Watch target: `project.pbxproj:107`) **остаётся живым** в iOS. Живые ссылки: `WorkoutPreviewViewModel.swift:277` (`updatePlannedCount(id:action:)` — iOS-метод, вызывается из `WorkoutPreviewScreen.swift:148,160`) + `TrainingRowView.swift:9,17` (тип параметра `onAction` в живой iOS-view). После удаления 9 watch-членов исчезает единственная watch-ссылка (`SotkaWatch/.../WorkoutPreviewViewModel.swift:196`); 3 iOS-ссылки сохраняются. Файл `TrainingRowAction.swift` удалять не нужно.
 
 **Subtotal: ~174 LOC prod + ~9 watch-тестов (SetupTests:132-172, StepManagementTests, SetsTests:302-325, EditMethodsTests, HomeViewModelTests:204).**
 
@@ -396,7 +396,7 @@ Periphery re-run: 46 warnings в 17 файлах → 18 false-positives → **de
 
 | Файл/член | Причина |
 |---|---|
-| `SWTextField.swift` (248 LOC) | Caller (`EditProgressScreen.swift:322`) использует ~95 LOC ядра (стили + валидация + focus); мёртвое только ~65 LOC (`errorState`/`isSecure`/`lineLimit>1`) + ~95 preview. Удаление целиком потеряет единую стилизацию дизайн-системы. Разумный путь — урезать до ядра, не удалять |
+| `SWTextField.swift` (248 LOC) | Caller (`EditProgressScreen.swift:322`) использует ~95 LOC ядра (стили + валидация + focus). `errorState`/`isSecure`/`lineLimit` — **неиспользуемые параметры public API с дефолтами**, не dead code: используются в `body`/`textField`/`borderColor`/`errorMessageViewIfNeeded`; Periphery их НЕ считает мёртвыми. Мёртвого нет, есть ~95 LOC preview (`SWTextField.swift:152-247`). Удаление целиком потеряет единую стилизацию дизайн-системы. Разумный путь — урезать preview, не удалять |
 
 ## Итог
 
