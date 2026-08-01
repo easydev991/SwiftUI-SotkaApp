@@ -1,6 +1,6 @@
 # Аудит over-engineering: весь репозиторий
 
-Дата аудита: 2026-07-25. Применено 33 коммита 2026-07-25..2026-08-01, хронология (подробности — разделы 1-8 + Итог): `ed82f6e9` (delete, −30 489/+199) → `22dace92` (FIX+restore, +393/−80) → delete-2 (`19081bad`/`2555914a`/`c2e906a3`/`56726fe2`, net −2575) → `9cb2646` (NetworkStatus) → 4 docs (`f10157a`/`f1065ca`/`65d39dc`/`606f7b2`) → `68e4bca` (правка плана Review) → `bc0a76f` (Review Фаза A) → `095af10` (move shouldAttemptMilestone) → 2 update-plan (`f7f6a61`/`af3cf6b`) → `d7f7682c` (delete-3 ponytail, −647) → `21608712` (fix ProgressServiceTests) → `c6f9d9e7` (compress) → `6753c89` (Tier 1 ponytail, −119) → `e75e49db` (compress) → `fbb689fb` (Periphery findings) → `8452aa0` (Tier 2 Periphery, −140) → Periphery re-run #2: `ddcb1d52`/`b8761560`/`3e928f6f`/`220375cc`/`4655820` (5 коммитов, ~−1029, раздел 8) → пост-чистки: `a63ef811` (Tier 2 inline: DividerIfNeededModifier + withDivider, −35 LOC) → `738e24d8` (docs) → `fd040669` (docs compress) → `1f051228` (SWDivider rm + doc drift, −13 LOC) → `fff7e885` (Watch schemes cosmetic, xcodebuild artifact) → `9a1fc327` (план update+compress) → `97c75839` (план: исправлены 8 фактических ошибок) → `8dfdf312` (план compress) → `de6d535` (restore logout flow, +164, см. §9 Tier 1) → **`69fce28a` (Tier 1 follow-up: modelContainer.mainContext + getStatus автостарт, +47, см. §9 Tier 1)**.
+Дата аудита: 2026-07-25. Применено 36 коммитов 2026-07-25..2026-08-01, хронология (подробности — разделы 1-8 + Итог): `ed82f6e9` (delete, −30 489/+199) → `22dace92` (FIX+restore, +393/−80) → delete-2 (`19081bad`/`2555914a`/`c2e906a3`/`56726fe2`, net −2575) → `9cb2646` (NetworkStatus) → 4 docs (`f10157a`/`f1065ca`/`65d39dc`/`606f7b2`) → `68e4bca` (правка плана Review) → `bc0a76f` (Review Фаза A) → `095af10` (move shouldAttemptMilestone) → 2 update-plan (`f7f6a61`/`af3cf6b`) → `d7f7682c` (delete-3 ponytail, −647) → `21608712` (fix ProgressServiceTests) → `c6f9d9e7` (compress) → `6753c89` (Tier 1 ponytail, −119) → `e75e49db` (compress) → `fbb689fb` (Periphery findings) → `8452aa0` (Tier 2 Periphery, −140) → Periphery re-run #2: `ddcb1d52`/`b8761560`/`3e928f6f`/`220375cc`/`4655820` (5 коммитов, ~−1029, раздел 8) → пост-чистки: `a63ef811` (Tier 2 inline: DividerIfNeededModifier + withDivider, −35 LOC) → `738e24d8` (docs) → `fd040669` (docs compress) → `1f051228` (SWDivider rm + doc drift, −13 LOC) → `fff7e885` (Watch schemes cosmetic, xcodebuild artifact) → `9a1fc327` (план update+compress) → `97c75839` (план: исправлены 8 фактических ошибок) → `8dfdf312` (план compress) → `de6d535` (restore logout flow, +164, см. §9 Tier 1) → `69fce28a` (Tier 1 follow-up: modelContainer.mainContext + getStatus автостарт, +47, см. §9 Tier 1) → **`6b28f00` (Tier 2: AuthHelper.isOfflineOnly −19 LOC, см. §9 Tier 2)** → **`fd5f845` (deprecated-аннотации @available: 12 полей User + sync-флагов, +12 LOC, см. §9 Sync/server fields)** → **`24ebd8d` (i18n: перевод deprecated-сообщений на русский, 12 строк)**.
 Скоуп: только избыточная сложность (не корректность, не безопасность, не производительность).
 
 Контекст: `AppConfiguration.isReadOnlyMode = true` на постоянной основе — серверные API закрыты, поэтому весь сетевой слой (синхронизация прогресса, авторизация на сервере, разрешение конфликтов дат, серверный профиль/смена пароля) — мёртвый код и подлежит удалению. UI-тесты и mock-bootstrap по-прежнему передают `isReadOnlyMode: false`, чтобы симулировать нормальное поведение для скриншот-тестов.
@@ -20,7 +20,7 @@
 ### Целиком мёртвые сервисы
 
 - [x] Удалены 4 мёртвых сетевых сервиса (~1686 стр., `ed82f6e9`).
-- [x] [2026-08-01] `AuthHelper` переклассифицирован как корректная локальная абстракция (62 стр., см. раздел 9).
+- [x] [2026-08-01] `AuthHelper` переклассифицирован как корректная локальная абстракция (46 стр. после `6b28f00`, см. раздел 9).
 
 ### Удалено в `ed82f6e9` (delete-этап, ~16 530 стр.)
 
@@ -116,12 +116,12 @@ Periphery re-run: 46 warnings в 17 файлах → 18 false-positives → **de
 
 ## 5. На границе скоупа (не находки, решение за продуктом / оставить сейчас)
 
-- Sync-флаги (`isSynced`, `shouldDelete`, `lastModified`) на `@Model` (`CustomExercise`/`DayActivity`/`UserProgress`/`CalendarExtensionRecord`) — **оставляем в схеме, помечаем obsolete** (без удаления). По решению продукта 2026-08-01 миграция SwiftData нецелесообразна: риск потери данных existing authorized users + несколько лишних полей не критичны. Комментарий: `// OBSOLETE: sync flag, kept for schema stability (2026-08-01)`.
+- Sync-флаги (`isSynced`) на `@Model` (`CustomExercise`/`DayActivity`/`UserProgress`/`CalendarExtensionRecord`) — **оставляем в схеме, помечаем deprecated** (без удаления). По решению продукта 2026-08-01 миграция SwiftData нецелесообразна: риск потери данных existing authorized users + несколько лишних полей не критичны. Аннотация: `@available(*, deprecated, message: "Sync-флаг, оставлен для стабильности схемы (сервер закрыт 2026-08-01).")` — выполнено в `fd5f845` (см. §9). **Живые sync-связанные поля оставлены без аннотации:** `shouldDelete` (используется как soft-delete filter в queries), `createDate`/`modifyDate` (display/sort/audit), `CalendarExtensionRecord.lastModified` (sort comparator в `StatusManager.swift:1008-1009`).
 - `AuthHelper` (62 стр.) — **жив и нужен** (см. раздел 9). `OfflineLoginView` использует `performOfflineLogin()` (создаёт User с sentinel id -1, `userName == "offline-user"`), `MoreScreen` использует `triggerLogout()` (UserDefaults reset → триггер `.onChange` для logout-флоу, см. Tier 1), `SwiftUI_SotkaAppApp.body` ветвит Welcome ↔ Root по `authHelper.isAuthorized`. Полное удаление **не рекомендуется** — gain −62 стр. не оправдывает риск сломать (уже сломанный после `ed82f6e9`) logout flow и смешать auth-state с UI. Минимальная чистка — см. раздел 9 (Tier 1: восстановление logout-флоу + тестов, Tier 2: опциональное удаление дубля `isOfflineOnly`).
 - Firebase (Analytics + Crashlytics): оставляем 100%. Crashlytics полезен и офлайн (очередь + отправка при сети); Analytics — продуктовое решение. Слой провайдеров мал (~115 стр.), оставить.
 - `StatusManager` (1106 стр. после Periphery re-run #2) — god object; экстракция `WatchCommandHandler`/`CalendarExtensionManager` нейтральна по строкам, делать только при следующем касании. **Logout flow восстановлен 2026-08-01 в `de6d535`:** `didLogout()` (lines 169–177) вызывается из `.onChange(of: authHelper.isAuthorized)` при `!isAuthorized` (вместе с `try modelContext.delete(model: User.self)`, errors через `logger.error`). 4 dead члена `State.isSynchronizingData`/`.error`/`.isLoading`/`.isSyncing` — оставить в Plan D (god object, делать при следующем касании).
-- **User model obsolete поля** (2026-08-01) — 7 nullable полей на `User` (`fullName`/`email`/`imageStringURL`/`cityId`/`countryId`/`birthDateIsoString`/`unsyncedReadInfopostDaysString`) — server-profile + sync fields, obsolete после отключения сервера. **Не удалять** (нет миграции, по решению продукта). Пометить `// OBSOLETE: ...` комментариями.
-- **AuthHelper.isOfflineOnly** (2026-08-01) — дубль с `User.isOfflineOnly` (computed `userName == "offline-user"`). 1 reader (`SwiftUI_SotkaAppApp.showLoadingOverlay`). Опциональное упрощение Tier 2 (см. раздел 9): −6 LOC + 1 reader migration. **Решение за продуктом.**
+- **User model obsolete поля** (2026-08-01) — 7 nullable полей на `User` (`fullName`/`email`/`imageStringURL`/`cityId`/`countryId`/`birthDateIsoString`/`unsyncedReadInfopostDaysString`) — server-profile + sync fields, obsolete после отключения сервера. **Не удалять** (нет миграции, по решению продукта). Помечены `@available(*, deprecated, ...)` аннотациями в `fd5f845` (русский текст сообщений — `24ebd8d`).
+- **AuthHelper.isOfflineOnly** (2026-08-01) — дубль с `User.isOfflineOnly` (computed `userName == "offline-user"`). 1 reader (`SwiftUI_SotkaAppApp.showLoadingOverlay`). **Удалено в `6b28f00`** (Tier 2): −19 LOC (Constants −2, AuthHelper −16, SwiftUI_SotkaAppApp −1). Инвариант сохранён: `User.isOfflineOnly` остался source of truth.
 - `WorkoutProgramCreator` (449 стр.) — активно используется 3 ViewModels, не мёртвый. Оставить.
 - `AnalyticsService` (317 стр.) — Firebase-провайдер функционален, протокол для тестируемости. Не over-engineering.
 - `WorkoutPreviewViewModel`, `WorkoutScreenViewModel`, `DailyActivitiesService` (422 стр.) — крупные, но выполняют реальные функции. YAGNI не применяется.
@@ -280,9 +280,9 @@ Periphery re-run: 46 warnings в 17 файлах → 18 false-positives → **de
 
 **Offline user sentinel:** `User(offlineWithGenderCode:)` создаёт User с `id: -1`, `userName: "offline-user"`. `OfflineLoginView.performOfflineLogin(with:)` (lines 98–108) сначала вызывает `authHelper.performOfflineLogin()` (UserDefaults), затем удаляет существующий User с `id == -1` (если есть) и вставляет новый. **Существующие User с `id != -1` НЕ затрагиваются** → данные existing authorized users защищены.
 
-### Sync/server-related поля (рекомендация: пометить obsolete, не удалять)
+### Sync/server-related поля (выполнено: помечены @available, не удалять)
 
-**На `User` модели (8 полей, obsolete после отключения сервера):**
+**На `User` модели (8 полей, помечены deprecated в `fd5f845`):**
 
 - `fullName: String?` — server profile, 0 prod-readers
 - `email: String?` — server profile, 0 prod-readers
@@ -290,16 +290,22 @@ Periphery re-run: 46 warnings в 17 файлах → 18 false-positives → **de
 - `cityId: Int?` — server city, 0 prod-readers
 - `countryId: Int?` — server country, 0 prod-readers (есть отдельная `Country` модель)
 - `birthDateIsoString: String?` — server profile, 0 prod-readers
-- `unsyncedReadInfopostDaysString: String` (private) — sync field, 0 prod-readers после удаления sync
+- `unsyncedReadInfopostDaysString: String` (private) — sync field, 1 prod-reader (`StatusManager.extendCalendar()` line 742 → `user.setUnsyncedReadInfopostDays([])`). Internal `@available` warning при use site — допустимо (поле остаётся в схеме, вызов жив).
 
-**На других `@Model` (sync flags, ~10 полей):**
+**На других `@Model` (sync flags, 5 полей deprecated + 4 живых):**
 
-- `CustomExercise.isSynced`/`shouldDelete` + `modifyDate`/`createDate`
-- `DayActivity.isSynced`/`shouldDelete` + `createDate`/`modifyDate`
-- `UserProgress.isSynced`/`shouldDelete`/`lastModified`
-- `CalendarExtensionRecord.isSynced`/`shouldDelete`/`lastModified`
+| Поле | Статус |
+|---|---|
+| `CustomExercise.isSynced` | deprecated (sync flag) |
+| `CustomExercise.shouldDelete` + `createDate` + `modifyDate` | живые (soft-delete filter / audit) |
+| `DayActivity.isSynced` | deprecated (sync flag) |
+| `DayActivity.shouldDelete` + `createDate` + `modifyDate` | живые (soft-delete filter / sort / audit) |
+| `UserProgress.isSynced` + `lastModified` | deprecated |
+| `UserProgress.shouldDelete` | жив (soft-delete filter) |
+| `CalendarExtensionRecord.isSynced` | deprecated |
+| `CalendarExtensionRecord.shouldDelete` + `lastModified` | живые (soft-delete filter + sort comparator в `StatusManager.swift:1008-1009`) |
 
-**Рекомендация:** добавить `// OBSOLETE: server profile field / sync flag, kept for schema stability (2026-08-01)` комментарий к каждому полю. **Не удалять** — нет миграции, несколько лишних nullable полей не критичны (по решению продукта 2026-08-01).
+**Аннотация:** `@available(*, deprecated, message: "...")` (русский текст, `24ebd8d`). **Не удалять** — нет миграции, несколько лишних nullable полей не критичны (по решению продукта 2026-08-01).
 
 ### Упрощения (Tiers)
 
@@ -319,9 +325,12 @@ Periphery re-run: 46 warnings в 17 файлах → 18 false-positives → **de
 
 **Tier 2 — опциональное упрощение AuthHelper (низкий риск):**
 
-- Удалить `AuthHelper.isOfflineOnly` (UserDefaults `"isOfflineOnly"` key + computed property + assignment в `performOfflineLogin()`/`triggerLogout()`). −6 LOC + 1 migration в `SwiftUI_SotkaAppApp.showLoadingOverlay`: `!authHelper.isOfflineOnly` → потребует fetch User (нет в scope computed property — `showLoadingOverlay` имеет только `authHelper`/`statusManager`, без `modelContext`/без `@Query`; `statusManager.getStatus()` возвращает `Void`, локальный `user` не проброшен наружу). Подробности — отдельно при следующем касании.
+- [x] [2026-08-01] **`6b28f00` (−19 LOC, 3 файла):** `AuthHelper.isOfflineOnly` удалён (UserDefaults `"isOfflineOnly"` key + computed property + assignment в `performOfflineLogin()`/`triggerLogout()`).
+  - `SwiftUI-SotkaApp/Models/SWSharedModels/Constants.swift` (−2): `isOfflineOnlyKey` удалён.
+  - `SwiftUI-SotkaApp/Services/AuthHelper.swift` (−16): `isOfflineOnly` property + 2 assignments убраны. Протокол теперь: `isAuthorized` + `triggerLogout()` + `performOfflineLogin()`.
+  - `SwiftUI-SotkaApp/SwiftUI_SotkaAppApp.swift` (−1): `!authHelper.isOfflineOnly` удалён из `showLoadingOverlay` guard. После: `guard authHelper.isAuthorized, !AppConfiguration.isReadOnlyMode else { return false }`.
+- **Migration нюанс не возник:** `showLoadingOverlay` в UI-тестах уже под `isAuthorized = true` от `performOfflineLogin()` → флаг `isOfflineOnly = true` всегда в test-mode. В read-only prod-mode `isAuthorized` сразу `true` от `AppConfiguration.isReadOnlyMode` guard, поэтому удаление `!isOfflineOnly` branch не меняет поведение.
 - Сохраняет инвариант: `User.isOfflineOnly` остаётся source of truth (computed `userName == "offline-user"`).
-- **Решение за продуктом** — дубль флага технически не вреден, читатель всего один. `[ ]` в «Не выполнено».
 
 **Tier 3 — НЕ рекомендуется:**
 
@@ -331,8 +340,8 @@ Periphery re-run: 46 warnings в 17 файлах → 18 false-positives → **de
 ### Итог
 
 - **Сохранение данных existing authorized users при обновлении приложения** обеспечено: schema не меняется, OfflineLoginView не трогает User с `id != -1` (sentinel-protection). Logout удаляет данные (Tier 1 выполнен в `de6d535`+`69fce28a`).
-- **Минимально рекомендуемое действие:** obsolete-комментарии на User/sync-flag полях (не выполнено).
-- **Опционально:** Tier 2 (удаление дубля `isOfflineOnly` флага) — решить с продуктом.
+- **Выполнено в `fd5f845`+`24ebd8d`:** deprecated-аннотации на 7 server-полях User + 1 sync-поле + 4 sync-флагах + 1 timestamp. Живые sync-связанные поля оставлены без аннотации.
+- **Выполнено в `6b28f00`:** Tier 2 (удаление дубля `isOfflineOnly` флага).
 - **Не делать:** Tier 3, sync-flag удаления.
 
 ## Итог
@@ -352,6 +361,9 @@ Periphery re-run: 46 warnings в 17 файлах → 18 false-positives → **de
 | `8452aa0` (Tier 2 Periphery) | 12 | −140 | 18 Periphery warnings (UserProgress dead methods, MainUserForm.isReadyToSave, Constants, DayCalculator, City, MockWatchConnectivityService, 4× public→internal). **Сознательные отклонения:** isReadyToRegister −9 (бонус), ItemListScreen.init оставлен (2 previews), shouldDeletePhoto/DELETED_DATA оставлены (state-машина жива) |
 | `de6d535` (Tier 1) | 3 | +164 | [restore] logout flow: `.onChange(of: isAuthorized)` body + `MockStatusManager.create()` + `StatusManagerLogoutTests` (5 адаптированных тестов). Детали — §9 Tier 1 |
 | `69fce28a` (Tier 1 follow-up) | 3 | +47 | [FIX] `@Environment(\.modelContext)` не содержит контейнер в App-struct → `try statusManager.modelContainer.mainContext.delete(...)` (тот же путь, что в докоммитном `processAuthStatus`). [restore] `StatusManager.getStatus()` автостарт дня 1 (`if startDate == nil { startDate = now }`). + `StatusManagerGetStatusTests` (2 теста: auto-start/keeps-existing) |
+| `6b28f00` (Tier 2) | 3 | −19 | Удалён `AuthHelper.isOfflineOnly` (UserDefaults `"isOfflineOnly"` key + property + assignments в `performOfflineLogin()`/`triggerLogout()`). 1 reader в `SwiftUI_SotkaAppApp.showLoadingOverlay` упрощён. `User.isOfflineOnly` остался source of truth. Детали — §9 Tier 2 |
+| `fd5f845` (deprecated markers) | 5 | +12 | 12 `@available(*, deprecated, ...)` аннотаций: 7 server-полей User + 1 sync-поле + 4 sync-флага (`isSynced` в CustomExercise/DayActivity/UserProgress/CalendarExtensionRecord) + 1 timestamp (`UserProgress.lastModified`). Живые sync-связанные поля оставлены без аннотации (soft-delete filter / sort / audit). См. §9 Sync/server fields |
+| `24ebd8d` (i18n) | 5 | ±12 | Русский текст 12 deprecated-сообщений в `@available` (Server profile → Поле профиля сервера; Sync flag → Sync-флаг; Sync field → Sync-поле; Sync timestamp → Sync-timestamp) |
 
 **Итого до Periphery re-run #2: ~−33 500 net LOC production, ~85 тестов удалено/переписано.**
 
@@ -367,19 +379,20 @@ Periphery re-run: 46 warnings в 17 файлах → 18 false-positives → **de
 
 **Итого Periphery re-run #2: ~−1029 net LOC production, 14 тестов удалено/переписано.** Подробный план (A1/A2/B/C группы) — раздел 8.
 
+### Финал 2026-08-01: Tier 2 + deprecated markers
+
+Все `[ ]` пункты плана закрыты (`6b28f00`+`fd5f845`+`24ebd8d`, суммарно −19 net LOC + 24 LOC аннотаций/i18n). Подробности — §9 Tier 2 + Sync/server fields.
+
 ### Не выполнено (оставлено на следующие итерации)
 
-Все запланированные Periphery re-run #2 чистки (Группа A1/A2/B/C, раздел 8) и пост-чистки (Tier 2 inline + SWDivider) выполнены — см. «Фактический результат Periphery re-run #2» в Итоге. План пересмотрен 2026-08-01 после уточнения пользовательского сценария (existing authorized vs new offline-only, раздел 9):
+Все запланированные Periphery re-run #2 чистки (Группа A1/A2/B/C, раздел 8), пост-чистки (Tier 2 inline + SWDivider), восстановление logout-flow (Tier 1, `de6d535`+`69fce28a`), Tier 2 (`AuthHelper.isOfflineOnly` `6b28f00`) и deprecated-аннотации User/sync полей (`fd5f845`+`24ebd8d`) **выполнены** — см. «Фактический результат Periphery re-run #2» и §9 в Итоге.
 
-| Категория | Объём | Риск | Причина |
-|---|---|---|---|
-| User model obsolete comments ([ ]) | 7 nullable + 1 sync-flag поля | Нет | Пометить `// OBSOLETE: server profile / sync flag, kept for schema stability (2026-08-01)` комментариями по решению продукта. Без миграции, без удаления |
-| `AuthHelper.isOfflineOnly` redundant flag ([ ]) | ~6 LOC + 1 reader migration | Низкий | Дубль с `User.isOfflineOnly` (computed `userName == "offline-user"`). 1 reader (`SwiftUI_SotkaAppApp.showLoadingOverlay`). Решение за продуктом — см. раздел 9 Tier 2 |
+**Активных [ ] пунктов нет.** Все находки аудита либо реализованы, либо явно заблокированы решением продукта (Tier 3, sync-flag миграция — см. §9 Итог).
 
 ### Контроль качества
 
-- iOS build: ✅ (iPhone 11 / iOS 26.5 / xcodebuild-mcp)
-- Unit tests: 869 passed, 1 skipped. История: 1833 → 977 (`ed82f6e9` −856) → 868 (после `8452aa0`) → 862 (Periphery re-run #2: −6 `DateFormatterServiceTests` в SWUtils target, 16 `ReviewManagerTests` не сломаны, 0 regressions в iOS) → **867 (`de6d535` Tier 1: +5 logout-тестов)** → **869 (`69fce28a` Tier 1 follow-up: +2 getStatus-теста)**
+- iOS build: ✅ (iPhone 11 / iOS 26.5 / xcodebuild-mcp). Pre-existing `AppIcon` asset error в watch-таргете (`SotkaWatch Watch App` Assets.xcassets) — не связан с правками аудита (подтверждено через `git stash` до/после).
+- Unit tests: 869 passed, 1 skipped. История: 1833 → 977 (`ed82f6e9` −856) → 868 (после `8452aa0`) → 862 (Periphery re-run #2: −6 `DateFormatterServiceTests` в SWUtils target, 16 `ReviewManagerTests` не сломаны, 0 regressions в iOS) → **867 (`de6d535` Tier 1: +5 logout-тестов)** → **869 (`69fce28a` Tier 1 follow-up: +2 getStatus-теста)** → **869 (`6b28f00`+`fd5f845`+`24ebd8d`: no test changes, удаление флага + deprecation-аннотации не требуют новых тестов — YAGNI)**
 - UI-тесты: ✅ (8 скриншотов, `testMakeScreenshots`)
 - Watch ↔ iPhone sync: не сломана (`WatchConnectivityService`/`WCSession`/`WorkoutDataResponse`)
 
