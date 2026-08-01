@@ -1,16 +1,6 @@
 import Foundation
 
 public extension String {
-    /// Количество символов без учета пробелов
-    var trueCount: Int {
-        withoutSpaces.count
-    }
-
-    /// Без пробелов
-    var withoutSpaces: Self {
-        replacingOccurrences(of: " ", with: "")
-    }
-
     /// Проверяет, является ли строка валидным неотрицательным целым числом (0 или положительное)
     /// - Returns: true, если строка пустая или содержит неотрицательное целое число (>= 0)
     var isValidNonNegativeInteger: Bool {

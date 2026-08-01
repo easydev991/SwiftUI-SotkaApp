@@ -4,25 +4,6 @@ import Testing
 
 struct SWUtilsTests {
     @Test
-    func trueCountIsOne() {
-        let testString = " 1"
-        #expect(testString.trueCount == 1)
-    }
-
-    @Test
-    func trueCountIsZero() {
-        let testString = " "
-        #expect(testString.trueCount == 0)
-    }
-
-    @Test
-    func withoutSpaces() {
-        let stringWithSpaces = "Hello World from workout"
-        let cleanString = stringWithSpaces.withoutSpaces
-        #expect(cleanString == "HelloWorldfromworkout")
-    }
-
-    @Test
     func queryAllowedURL() {
         let urlString: String? = "https://workout.su/uploads/userfiles/св3.jpg"
         let resultURL = urlString.queryAllowedURL
