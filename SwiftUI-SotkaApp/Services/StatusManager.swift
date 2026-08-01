@@ -136,6 +136,13 @@ final class StatusManager: NSObject {
         let user = try? context.fetch(FetchDescriptor<User>()).first
         refreshExtensionSnapshot(for: user, context: context)
 
+        // Автостарт дня 1 для пользователей без стартовой даты (offline-only,
+        // восстановление поведения из докоммитного getStatus). Без этого
+        // DayCalculator возвращает nil и HomeScreen бесконечно показывает загрузку.
+        if startDate == nil {
+            startDate = now
+        }
+
         rebuildCurrentDayCalculator(now: now)
         didLoadInitialData = true
         state = .idle
