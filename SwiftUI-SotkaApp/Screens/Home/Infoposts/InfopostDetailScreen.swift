@@ -105,8 +105,6 @@ private extension InfopostDetailScreen {
 
     func didReadPost() {
         analytics.log(.userAction(action: .markInfopostRead))
-        Task {
-            try? await infopostsService.markPostAsRead(day: infopost.dayNumber, modelContext: modelContext)
-        }
+        try? infopostsService.markPostAsRead(day: infopost.dayNumber, modelContext: modelContext)
     }
 }

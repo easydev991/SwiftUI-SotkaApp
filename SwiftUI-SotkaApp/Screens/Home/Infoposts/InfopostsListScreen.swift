@@ -111,9 +111,7 @@ private extension InfopostsListScreen {
            !isRead {
             Button {
                 analytics.log(.userAction(action: .markInfopostRead))
-                Task {
-                    try? await infopostsService.markPostAsRead(day: infopost.dayNumber, modelContext: modelContext)
-                }
+                try? infopostsService.markPostAsRead(day: infopost.dayNumber, modelContext: modelContext)
             } label: {
                 Image(systemName: "checkmark.circle.fill")
             }
