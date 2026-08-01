@@ -90,12 +90,12 @@ struct SwiftUI_SotkaAppApp: App {
         analytics = AnalyticsService(providers: [FirebaseAnalyticsProvider()])
         let authHelper = AuthHelperImp()
         self.statusManager = StatusManager(
-            customExercisesService: .init(modelContext: modelContainer.mainContext),
+            customExercisesService: .init(),
             infopostsService: .init(
                 language: Self.localeIdentifier,
                 analytics: analytics
             ),
-            dailyActivitiesService: .init(modelContext: modelContainer.mainContext),
+            dailyActivitiesService: .init(),
             modelContainer: modelContainer,
             reviewEventReporter: reviewManager
         )

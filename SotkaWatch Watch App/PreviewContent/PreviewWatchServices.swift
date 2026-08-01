@@ -1,3 +1,4 @@
+#if DEBUG
 import Foundation
 import Observation
 
@@ -68,3 +69,4 @@ final class PreviewWatchConnectivityService: WatchConnectivityServiceProtocol {
         print("Заглушка deleteActivity")
     }
 }
+#endif
