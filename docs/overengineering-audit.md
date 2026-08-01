@@ -62,15 +62,15 @@
 
 ### Фаза B — переписывание тестов (доп. net −18, дополнительный −18 стр.)
 
-- [ ] yagni `ReviewAttemptStoring.swift` (8 стр.) → удалить протокол, использовать `ReviewStorage` напрямую. `MockReviewAttemptStore` в `ReviewManagerTests:222` заменить на `ReviewStorage` + `MockUserDefaults`.
-- [ ] yagni `WorkoutCompletionsCounting.swift` (5 стр.) → удалить протокол, использовать `WorkoutCompletionsCounter` напрямую. `MockWorkoutCompletionsCounter` в `ReviewManagerTests:253` заменить на `WorkoutCompletionsCounter` + in-memory SwiftData container.
-- [ ] yagni `ReviewContext.swift` (5 стр.) → убрать обёртку, передавать `hadRecentError: Bool` напрямую в `workoutCompletedSuccessfully(hadRecentError:)`. Затронуты 2 внешних файла: `StatusManager.swift:571`, `WorkoutPreviewViewModel.swift:238`.
+- [x] yagni `ReviewAttemptStoring.swift` (8 стр.) — выполнено в `3e928f6f`. `MockReviewAttemptStore` заменён на `ReviewStorage` + `MockUserDefaults`.
+- [x] yagni `WorkoutCompletionsCounting.swift` (5 стр.) — выполнено в `3e928f6f`. `MockWorkoutCompletionsCounter` заменён на `WorkoutCompletionsCounter` + in-memory `ModelContainer` (`makeContainer` helper).
+- [x] yagni `ReviewContext.swift` (5 стр.) — выполнено в `3e928f6f`. `hadRecentError: Bool` теперь передаётся напрямую в 8 файлах (~25 call-сайтов).
 
 ### keep — расширен, не трогаем остальное
 
 - [x] keep 4 файла: `ReviewEventReporting` (5 стр.), `ReviewMilestone` (21 стр., +`isNotYetAttempted`), `ReviewRequestHost` (55 стр.), `WorkoutCompletionsCounter` (31 стр.). Тесты `ReviewMilestoneTests`/`ReviewRequestTriggerIDTests`/`WorkoutCompletionsCounterTests` — живые.
 
-### Итог Review-слоя (Фаза A выполнена, Фаза B [ ])
+### Итог Review-слоя (Фазы A и B выполнены в `3e928f6f`)
 
 `ReviewManager` 85→90, `ReviewStorage` 31→36, `ReviewMilestone` 17→21. Production 270→256 (net −14). Tests 636 без изменений. Фаза B доведёт до 244.
 
@@ -291,7 +291,7 @@ Periphery re-run дал 46 warnings в 17 файлах. После ручной 
 | Review Фаза B ([ ]) | **DONE** ✅ `3e928f6f` | 3 протокола + 2 mock rewrite. Net 0 на Review-файлах (test-helpers `makeContainer`/`seedActivities`/`appendActivities` компенсируют) |
 | `AuthHelper` shrink ([ ]) | 62 стр. production | Требует переноса `isOfflineOnly` в `User` (UserDefaults-бэкап) + inlining `triggerLogout` в `MoreScreen`. Снижение читаемости. Решение за продуктом |
 | **Tier 2 inline (DividerIfNeededModifier + withDivider)** (2026-07-26) | **DONE** ✅ `a63ef81` | Удалён indirection-слой (1-in-1-out): `DividerIfNeededModifier.swift` + `withDivider` extension. Build ✅, 862 tests pass |
-| **`SWDivider.swift` deletion** (2026-07-26) | 13 стр. production | Файл стал entirely dead после удаления `DividerIfNeededModifier` (единственный production-consumer). Остался только `#Preview` внутри файла. Trivially `git rm`. Не сделано: пользователь удалил consumer, но не сам `SWDivider.swift` |
+| **`SWDivider.swift` deletion** (2026-07-26) | **DONE** ✅ | 13 стр. production. Файл entirely dead после удаления `DividerIfNeededModifier` (единственный production-consumer). `git rm` (staged) |
 
 ### Контроль качества
 
