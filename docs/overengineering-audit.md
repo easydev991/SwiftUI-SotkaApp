@@ -163,20 +163,20 @@ Periphery re-run: 46 warnings в 17 файлах → 18 false-positives → **de
 
 Все кандидаты — `let`/`var` properties (assign-only или computed), init-параметры или computed, которые никто не читает. Чистые удаления + 3 preview-fixup в `JournalScreen.swift`.
 
-| Файл | Что удалить | Заметка |
+| Файл | Что удалено | Заметка |
 |---|---|---|
-| `Models/SWSharedModels/Gender.swift:32` | `var affiliation: String` | 0 readers (cascade: единственный reader `MainUserForm.genderString` тоже мёртв) |
-| `Models/SWSharedModels/MainUserForm.swift` (122) + `Models/User.swift:68` `init(fromMainUserForm:id:)` | Файл целиком + init | 0 prod-usage'ов. 3 preview-callers в `JournalScreen.swift:215,225,235` (`.init(fromMainUserForm: .preview)`) → заменить на `User.preview` в каждом preview. Каскад: `MainUserForm.image`/`genderString`/`isReadyToSave`/`Placeholder`/`requestParameters`/`shouldUpdateOnAppear` тоже dead |
-| `Models/User.swift:221,230` | `addUnsyncedReadInfopostDay` + `removeUnsyncedReadInfopostDay` | 0 callers. Sync-флаги, мёртвы с `ed82f6e9` |
-| `Models/Workout/DayActivity.swift:94,110` | `var trainingType` + `var activitySnapshot` (computed) | 0 readers. Sync-snapshot getters — cascade-удаление разблокирует A1 для `ActivitySnapshot.swift` |
-| `Models/Workout/DayActivityTraining.swift:38,60` | `var exerciseType` + `var trainingSnapshot` (computed) | 0 readers. После удаления `ActivitySnapshot.swift` (A1) эти computed тоже полностью dead |
-| `Services/CustomExercisesService.swift:14` | `let isReadOnlyMode` | assign-only (init-параметр, не читается) |
+| `Models/SWSharedModels/Gender.swift:32` | `var affiliation: String` | 0 readers (cascade на мёртвый `MainUserForm.genderString`) |
+| `Models/SWSharedModels/MainUserForm.swift` (122) + `Models/User.swift:68` `init(fromMainUserForm:id:)` | Файл целиком + init | 0 prod-usage'ов. 3 preview-callers в `JournalScreen.swift:215,225,235` → заменены на `User.preview`. Каскад: `image`/`genderString`/`isReadyToSave`/`Placeholder`/`requestParameters`/`shouldUpdateOnAppear` тоже dead |
+| `Models/User.swift:221,230` | `addUnsyncedReadInfopostDay` + `removeUnsyncedReadInfopostDay` | 0 callers (sync-флаги, мёртвы с `ed82f6e9`) |
+| `Models/Workout/DayActivity.swift:94,110` | `var trainingType` + `var activitySnapshot` (computed) | 0 readers. Cascade для A1 `ActivitySnapshot.swift` |
+| `Models/Workout/DayActivityTraining.swift:38,60` | `var exerciseType` + `var trainingSnapshot` (computed) | 0 readers (cascade после A1) |
+| `Services/CustomExercisesService.swift:14` | `let isReadOnlyMode` | assign-only |
 | `Services/DailyActivitiesService.swift:14,99` | `let isReadOnlyMode` (assign-only) + `markDailyActivityAsModified` (0 callers) | 2 dead члена |
 | `Services/Infoposts/InfopostsService.swift:16` | `let isReadOnlyMode` | assign-only |
-| `Screens/Login/WelcomeScreen.swift:4,7` | `import SWUtils` + `isReadOnlyMode` env-property | 0 references. Удаление cascade убирает `SWUtils` import |
-| `Screens/More/MoreScreen.swift:12,16` | `isReadOnlyMode` env + `isOfflineUser` computed | cascade: `isOfflineUser` определён, но 0 readers → drop both |
+| `Screens/Login/WelcomeScreen.swift:4,7` | `import SWUtils` + `isReadOnlyMode` env-property | 0 references (cascade убирает `SWUtils` import) |
+| `Screens/More/MoreScreen.swift:12,16` | `isReadOnlyMode` env + `isOfflineUser` computed | cascade: 0 readers → drop both |
 
-**Subtotal: ~150 LOC prod + 3 preview-fixup (мелкие правки в `JournalScreen.swift`).**
+**Subtotal: ~150 LOC prod + 3 preview-fixup в `JournalScreen.swift`.**
 
 ### Call-sites `isReadOnlyMode` (для справки при A2)
 
@@ -194,24 +194,19 @@ Periphery re-run: 46 warnings в 17 файлах → 18 false-positives → **de
 
 План уже отмечал Фазу B как `[ ]` в `8452aa0`, но scope **больше** чем казалось (после ревью):
 
-| Протокол | Реальный scope | Заметка |
-|---|---|---|
-| `ReviewAttemptStoring` (8 LOC) | 2 prod файла (`ReviewAttemptStoring.swift` delete + `ReviewStorage` remove conformance) + 1 test mock (`MockReviewAttemptStore` в `ReviewManagerTests:222` → `ReviewStorage(userDefaults:)` + `MockUserDefaults`) | Mechanical |
-| `WorkoutCompletionsCounting` (5 LOC) | 2 prod файла + 1 test mock (`MockWorkoutCompletionsCounter` в `ReviewManagerTests:253` → реальный `WorkoutCompletionsCounter` + in-memory `ModelContainer` в `ReviewManagerTests`) | **Конкретный план замены** (LOC-план пересмотрен: ~30-40 LOC, не 5):<br>① `makeSUT` становится `throws` + возвращает `(ReviewManager, ReviewStorage, WorkoutCompletionsCounter)` вместо `(ReviewManager, MockReviewAttemptStore, MockWorkoutCompletionsCounter)`;<br>② добавить `private func makeContainer() throws -> ModelContainer` (~5 LOC) по образцу `WorkoutCompletionsCounterTests.swift:9-16` — `User.self` + `DayActivity.self` + `DayActivityTraining.self` + `ModelConfiguration(isStoredInMemoryOnly: true)`;<br>③ в `makeSUT` если `completedWorkoutCount > 0`: создать `User(id: 1, genderCode: 1)`, вставить в `context`, циклом создать `completedWorkoutCount` `DayActivity` с `activityTypeRaw: .workout.rawValue` + `count: 5` + `user: user` (паттерн `WorkoutCompletionsCounterTests.swift:18-36, 47-61`), `try context.save()`;<br>④ все 16 tests в `ReviewManagerTests.swift` обновить: `let (manager, _, _) = makeSUT(...)` → `let (manager, _, _) = try makeSUT(...)`. Тесты без `throws` в сигнатуре — добавить `throws` (большинство уже `async` или `async throws`);<br>⑤ удалить `MockWorkoutCompletionsCounter` class (10 LOC) + его init. `MockReviewAttemptStore` остаётся до удаления `ReviewAttemptStoring` |
-| `ReviewContext` (5 LOC) | **8 файлов, ~25 call-сайтов**: `ReviewContext.swift` delete + `ReviewManager.swift:40` (signature) + `ReviewEventReporting.swift:4` (signature) + `MockReviewEventReporter.swift:6,9` (signature) + `StatusManager.swift:571,574` (2 inline) + `WorkoutPreviewViewModel.swift:238,241` (2 inline) + 16 call-сайтов в `ReviewManagerTests.swift` + `WorkoutPreviewViewModelReviewEventTests.swift` (1 call через `MockReviewEventReporter`) | Чисто синтаксический find-replace: `ReviewContext(hadRecentError: X)` → `X` (Bool). План `8452aa0` говорил «2 файла», реально 8 |
+| Протокол | Реальный scope |
+|---|---|
+| `ReviewAttemptStoring` (8 LOC) | 2 prod файла + `MockReviewAttemptStore` → `ReviewStorage(userDefaults:)` + `MockUserDefaults`. Mechanical |
+| `WorkoutCompletionsCounting` (5 LOC) | 2 prod файла + `MockWorkoutCompletionsCounter` → реальный `WorkoutCompletionsCounter` + in-memory `ModelContainer`. `makeSUT` стал `throws` + 4-tuple, добавлен `makeContainer()`, цикл вставки `completedWorkoutCount` `DayActivity` в SwiftData, 16 tests обновлено с `try`. ~30-40 LOC изменений в `ReviewManagerTests` |
+| `ReviewContext` (5 LOC) | 8 файлов, ~25 call-сайтов: `StatusManager` + `WorkoutPreviewViewModel` + `ReviewEventReporting` + `MockReviewEventReporter` + `ReviewManager` + 16 call-сайтов в `ReviewManagerTests` + `WorkoutPreviewViewModelReviewEventTests`. `ReviewContext(hadRecentError: X)` → `X` (Bool). План `8452aa0` говорил «2 файла», реально 8 |
 
-**Subtotal: −18 LOC prod + 1 test mock rewrite (пересмотренная оценка: ~30-40 LOC изменений в `ReviewManagerTests.swift` — `makeSUT` становится `throws` + добавляется `makeContainer` + вставка activities + 16 `try` keyword'ов).** План оценил Фазу B в 12, реально 18.
+**Subtotal: −18 LOC prod + ~30-40 LOC test changes в `ReviewManagerTests` (`makeSUT` throws + `makeContainer` + вставка activities + 16 `try` keyword'ов).** План оценил Фазу B в 12, реально 18.
 
 ### Группа C — Tier 2 minimum (1 safe item, −20 LOC, 1 prod файл + 1 test file)
 
-Минимальный безопасный ponytail: удалить 3 мёртвых метода `DateFormatterService` **после** удаления `MainUserForm` (A2):
+Минимальный безопасный ponytail: удалить 3 мёртвых метода `DateFormatterService` **после** удаления `MainUserForm` (A2): `stringFromFullDate` (0 prod-callers после A2), `dateFromIsoString` (только в `SWUtilsTests/DateFormatterServiceTests.swift`), `days(from:to:)` String overload (только в тестах) + cascade `days(from:to:)` Date overload.
 
-- `stringFromFullDate` — 0 prod-callers после A2 (единственный caller `MainUserForm.swift:98` удалён)
-- `dateFromIsoString` — 0 prod-callers (только `SWUtilsTests/DateFormatterServiceTests.swift`)
-- `days(from:to:)` (String overload) — 0 prod-callers (только `SWUtilsTests/DateFormatterServiceTests.swift`)
-- Cascade: `days(from:to:)` (Date overload) — dead (единственный caller = String overload)
-
-Удаление методов + соответствующих тестов в `SWUtilsTests/DateFormatterServiceTests.swift` (~8 тестов затрагиваются) → −20 LOC prod + сокращение test file.
+Удаление методов + соответствующих тестов (~8 тестов в `SWUtilsTests/DateFormatterServiceTests.swift`) → −20 LOC prod + сокращение test file.
 
 ### Исключены из этого плана (NOT dead / NOT safe без product-decision)
 
@@ -236,16 +231,7 @@ Periphery re-run: 46 warnings в 17 файлах → 18 false-positives → **de
 - `InfopostDetailScreen.showError` — used in `.alert(isPresented:)` + `HTMLContentView` (lines 27, 31)
 - `ReviewRequestTriggerID.pendingRequest` + `scenePhase` — `Hashable` synthesis (для `task(id:)` идентификации)
 
-### Порядок коммитов (рекомендуемый)
-
-1. **A1** (`rm` 8 файлов): −505 LOC. Чистый delete.
-2. **A2** (9 prod + 3 preview-fixup): −150 LOC.
-3. **B** (Review Фаза B): −18 LOC prod + test mocks rewrite.
-4. **C** (DateFormatterService dead methods): −20 LOC. **Строго после A2.**
-
-Фактический результат — Итог (коммиты `ddcb1d52`+`b8761560`+`3e928f6f`+`220375cc`+`4655820`).
-
-### Прогноз контроля качества
+### Прогноз контроля качества (ретроспектива)
 
 Прогноз −860 LOC оказался точным (факт −1029 net — большая часть из-за test-mock rewrites, не regression'ов). См. финальный «Контроль качества».
 
@@ -258,52 +244,31 @@ Periphery re-run: 46 warnings в 17 файлах → 18 false-positives → **de
 
 **Сохранение данных existing authorized users при обновлении приложения** — критичный инвариант: после обновления приложения данные должны оставаться на устройстве (после явного logout данные ОБЯЗАНЫ удаляться — см. §9 Tier 1). Решение 2026-08-01: **схема SwiftData не меняется** (нет миграции), obsolete-поля помечаются комментариями.
 
-### Текущее состояние (62 LOC AuthHelper + 1106 LOC StatusManager + 221 LOC User)
+### Исходное состояние (до `de6d535`+`69fce28a`)
 
-**`AuthHelper` (62 стр.):** `@MainActor @Observable final class AuthHelperImp: AuthHelper` — UserDefaults-backed флаги `isAuthorized`/`isOfflineOnly`, методы `performOfflineLogin()` (выставляет оба `true`) и `triggerLogout()` (сбрасывает оба в `false`). Не трогает SwiftData. 4 call-site'а: `OfflineLoginView.performOfflineLogin(with:)` (set), `MoreScreen.logoutButton` (logout), `SwiftUI_SotkaAppApp.body` (root switch), `SwiftUI_SotkaAppApp.showLoadingOverlay` (offline-only → не показывать loading).
+**`AuthHelper` (62 стр. → 46 стр. после Tier 2):** `@MainActor @Observable final class AuthHelperImp: AuthHelper` — UserDefaults-backed флаг `isAuthorized` (после Tier 2: `isOfflineOnly` удалён, см. Tier 2), методы `performOfflineLogin()` / `triggerLogout()`. Не трогает SwiftData.
 
-**`User` SwiftData модель (221 стр.):** `id` (@Attribute(.unique)), `userName: String?` (sentinel `"offline-user"`), `genderCode: Int?`, `customExercises`/`progressResults`/`dayActivities` (cascade relationships), `favoriteInfopostIdsString`, `readInfopostDaysString`, `unsyncedReadInfopostDaysString`. Computed `var isOfflineOnly: Bool { userName == "offline-user" }` — **дубликат `AuthHelper.isOfflineOnly`**, но независимый source (User, не UserDefaults).
+**Двойное хранение `isOfflineOnly` (smell, решён в `6b28f00`):** `AuthHelper.isOfflineOnly` (UserDefaults, 1 reader) vs `User.isOfflineOnly` (computed `userName == "offline-user"`, 2 reader'а). Удалён `AuthHelper.isOfflineOnly` — `User.isOfflineOnly` остался source of truth.
 
-**Двойное хранение `isOfflineOnly`** (smell):
+**Logout-flow регрессия (`ed82f6e9`):** pre-commit `processAuthStatus` (line 292 в `ed82f6e9~1`) делал `didLogout()` + `try context.delete(model: User.self)`. `ed82f6e9` удалил метод + call-site + всю `StatusManagerTests/` (22 файла, ~6000 LOC). Текущий `.onChange` (после `69fce28a`): `appSettings.didLogout()` + `reviewManager.reset()` + `statusManager.didLogout()` + `try statusManager.modelContainer.mainContext.delete(model: User.self)` (errors → `logger.error`).
 
-- `AuthHelper.isOfflineOnly` (UserDefaults `"isOfflineOnly"` key) — пишется в `performOfflineLogin()` (line 53–56) и `triggerLogout()` (line 58–61).
-- `User.isOfflineOnly` (computed `userName == "offline-user"`) — пишется через `User(offlineWithGenderCode:)` init в `OfflineLoginView.swift:105`.
-- Читатели: `AuthHelper.isOfflineOnly` — только `SwiftUI_SotkaAppApp.showLoadingOverlay` (1 reader). `User.isOfflineOnly` — `StatusManager.extendCalendar()` (line 860) + `HomeScreen.loadingView` (line 98).
+**Деталь без cascade:** `CalendarExtensionRecord.user: User?` — plain optional без `@Relationship`/`deleteRule`. Удаление User НЕ зацепит extension records → нужен `didLogout()` (внутри `clearExtensionDates()` удаляет `CalendarExtensionRecord`). Одну половину восстанавливать нельзя.
 
-**`StatusManager.didLogout()` (lines 169–177)** — dead code в текущем HEAD (0 production callers после `ed82f6e9`), но **нужен для logout-флоу** — см. Tier 1. Содержит `clearExtensionDates()`/`JournalPagePersistence.clear`/reset state/`infopostsService.didLogout()`.
-
-**Logout flow (должен удалять данные с девайса — сейчас регрессия):** `MoreScreen.logoutButton` → `authHelper.triggerLogout()` (UserDefaults reset) → app `.onChange(of: authHelper.isAuthorized)` → **нужно**: `statusManager.didLogout()` (clears `CalendarExtensionRecord` через `clearExtensionDates()`, `JournalPagePersistence.clear`, startDate/currentDayCalculator/maxReadInfoPostDay reset, `infopostsService.didLogout()`) **+** `try modelContext.delete(model: User.self)` (cascade: customExercises/progressResults/dayActivities → DayActivityTraining). На ошибке: `Logger.error(...)` (НЕ `fatalError` — recoverable failure, per AGENTS.md).
-
-**Регрессия после `ed82f6e9` (исправлена 2026-08-01 в `de6d535`+`69fce28a`):** pre-commit `StatusManager.processAuthStatus(isAuthorized:)` (line 292 в `ed82f6e9~1`) делал ровно это (`didLogout()` + `try context.delete(model: User.self)` + `fatalError` при ошибке; `context` был локальным `modelContainer.mainContext`). `ed82f6e9` удалил метод + его call-site из `.onChange` (`SwiftUI_SotkaAppApp.swift:177` в `ed82f6e9~1`), плюс всю `StatusManagerTests/` (22 файла, ~6000 LOC, включая `StatusManagerLogoutTests.swift` 153 LOC + `MockStatusClient.swift` 121 LOC + `StatusClient` protocol 8 LOC). Текущий `.onChange` (после `69fce28a`) делает `appSettings.didLogout()` + `reviewManager.reset()` + `statusManager.didLogout()` + `try statusManager.modelContainer.mainContext.delete(model: User.self)` (errors → `logger.error`, no `fatalError` per AGENTS.md). Промежуточный `de6d535` использовал `@Environment(\.modelContext)`, но в App-структуре context не содержит контейнер (`.modelContainer` применяется к сцене) → NSInternalInconsistencyException при fetch → заменён на прямой `modelContainer.mainContext` в `69fce28a`. Подробности — Tier 1.
-
-**Деталь без cascade:** `CalendarExtensionRecord.user: User?` — plain optional без `@Relationship`, без `deleteRule` (`Models/CalendarExtensionRecord.swift`). Удаление User НЕ зацепит extension records → нужен `didLogout()` (внутри `clearExtensionDates()` удаляет `CalendarExtensionRecord`). Одну половину восстанавливать нельзя.
-
-**Offline user sentinel:** `User(offlineWithGenderCode:)` создаёт User с `id: -1`, `userName: "offline-user"`. `OfflineLoginView.performOfflineLogin(with:)` (lines 98–108) сначала вызывает `authHelper.performOfflineLogin()` (UserDefaults), затем удаляет существующий User с `id == -1` (если есть) и вставляет новый. **Существующие User с `id != -1` НЕ затрагиваются** → данные existing authorized users защищены.
+**Offline user sentinel:** `User(offlineWithGenderCode:)` создаёт User с `id: -1`, `userName: "offline-user"`. `OfflineLoginView` сначала вызывает `authHelper.performOfflineLogin()` (UserDefaults), затем удаляет существующий User с `id == -1` (если есть) и вставляет новый. **Существующие User с `id != -1` НЕ затрагиваются** → данные existing authorized users защищены.
 
 ### Sync/server-related поля (выполнено: помечены @available, не удалять)
 
-**На `User` модели (8 полей, помечены deprecated в `fd5f845`):**
+**На `User` модели (8 deprecated полей в `fd5f845`):** `fullName`, `email`, `imageStringURL`, `cityId`, `countryId`, `birthDateIsoString` — server profile (0 prod-readers); `unsyncedReadInfopostDaysString` (private) — sync field, 1 prod-reader (`StatusManager.extendCalendar():742` → `setUnsyncedReadInfopostDays([])`). Internal `@available` warning при use site допустим.
 
-- `fullName: String?` — server profile, 0 prod-readers
-- `email: String?` — server profile, 0 prod-readers
-- `imageStringURL: String?` — server avatar, 0 prod-readers
-- `cityId: Int?` — server city, 0 prod-readers
-- `countryId: Int?` — server country, 0 prod-readers (есть отдельная `Country` модель)
-- `birthDateIsoString: String?` — server profile, 0 prod-readers
-- `unsyncedReadInfopostDaysString: String` (private) — sync field, 1 prod-reader (`StatusManager.extendCalendar()` line 742 → `user.setUnsyncedReadInfopostDays([])`). Internal `@available` warning при use site — допустимо (поле остаётся в схеме, вызов жив).
-
-**На других `@Model` (sync flags, 5 полей deprecated + 4 живых):**
+**На других `@Model` (5 deprecated + 6 живых):**
 
 | Поле | Статус |
 |---|---|
-| `CustomExercise.isSynced` | deprecated (sync flag) |
-| `CustomExercise.shouldDelete` + `createDate` + `modifyDate` | живые (soft-delete filter / audit) |
-| `DayActivity.isSynced` | deprecated (sync flag) |
-| `DayActivity.shouldDelete` + `createDate` + `modifyDate` | живые (soft-delete filter / sort / audit) |
-| `UserProgress.isSynced` + `lastModified` | deprecated |
-| `UserProgress.shouldDelete` | жив (soft-delete filter) |
-| `CalendarExtensionRecord.isSynced` | deprecated |
-| `CalendarExtensionRecord.shouldDelete` + `lastModified` | живые (soft-delete filter + sort comparator в `StatusManager.swift:1008-1009`) |
+| `isSynced` (CustomExercise/DayActivity/UserProgress/CalendarExtensionRecord) | deprecated (sync flag) |
+| `UserProgress.lastModified` | deprecated (sync timestamp) |
+| `shouldDelete` (все 4 модели) | жив (soft-delete filter) |
+| `createDate`/`modifyDate` (CustomExercise/DayActivity) | живые (audit/sort) |
+| `CalendarExtensionRecord.lastModified` | жив (sort comparator в `StatusManager.swift:1008-1009`) |
 
 **Аннотация:** `@available(*, deprecated, message: "...")` (русский текст, `24ebd8d`). **Не удалять** — нет миграции, несколько лишних nullable полей не критичны (по решению продукта 2026-08-01).
 
@@ -311,38 +276,26 @@ Periphery re-run: 46 warnings в 17 файлах → 18 false-positives → **de
 
 **Tier 1 — восстановить logout-флоу (0 риск, исправление регрессии `ed82f6e9`):**
 
-- [x] [2026-08-01] **`de6d535` (+164 LOC, 3 файла):** logout flow восстановлен.
-  - `SwiftUI_SotkaAppApp.swift` (+13 LOC): `@Environment(\.modelContext)` + file-level `Logger` + восстановлен `.onChange` body (`statusManager.didLogout()` + `try modelContext.delete(model: User.self)`, errors → `logger.error(...)` без `fatalError` per AGENTS.md).
-  - `SwiftUI-SotkaAppTests/Mocks/MockStatusManager.swift` (+65 LOC): factory восстановлен из `ddcb1d52~1` (НЕ `ed82f6e9~1` — файл удалён в `ddcb1d52` A1 cleanup, не в `ed82f6e9`). Без `statusClient` параметра (текущий `StatusManager.init` его не принимает).
-  - `SwiftUI-SotkaAppTests/Services/StatusManagerLogoutTests.swift` (+86 LOC, 5 тестов): создан заново для текущей архитектуры. Без `MockStatusClient` (протокол `StatusClient` + мок удалены в `ed82f6e9`, 0 prod-ссылок после = мёртвый код, не возвращаем). Адаптированные тесты: `currentDayCalculator=nil`, `startDate` key removal, `maxReadInfoPostDay=0`, `CalendarExtensionRecord` cleanup, `Journal.SelectedPage` removal.
-- [x] [2026-08-01] **`69fce28a` (+47 net, 3 файла):** follow-up Tier 1 — исправлены две регрессии.
-  - `SwiftUI_SotkaAppApp.swift` (+4/−2): `@Environment(\.modelContext)` **удалён** (возвращал пустой ModelContext без контейнера → fetch падал NSInternalInconsistencyException при `try modelContext.delete(model: User.self)`). Заменён на `try statusManager.modelContainer.mainContext.delete(model: User.self)` — тот же путь, что в докоммитном `processAuthStatus` (там `context` был локальным `modelContainer.mainContext`).
-  - `SwiftUI-SotkaApp/Services/StatusManager.swift` (+7): в `getStatus()` восстановлен автостарт дня 1 (`if startDate == nil { startDate = now }`) — без него `DayCalculator.init?` возвращал nil → `currentDayCalculator == nil` → `HomeScreen` бесконечно показывал loading. Докоммитное поведение (`processAuthStatus` → `getStatus()`) делало ровно это для offline/read-only пользователей.
-  - `SwiftUI-SotkaAppTests/Services/StatusManagerGetStatusTests.swift` (+38, 2 теста): coverage автостарта — `getStatusAutoStartsProgramForUserWithoutStartDate` (startDate=nil → после `getStatus()` startDate установлен, `currentDayCalculator.currentDay == 1`) и `getStatusKeepsExistingStartDate` (startDate=−10 days → после `getStatus()` `currentDay == 11`, не перезаписано).
-- [x] [2026-08-01] Pre-commit `StatusManager.didLogout()` (lines 169–177) **сохранён** — теперь нужен, не dead code. Pre-commit `didLogout()` (line 277–288 в `ed82f6e9~1`) уже содержит `clearExtensionDates()`/`JournalPagePersistence.clear`/reset state — никакого нового кода не нужно, только call-site.
-- **Не literal restoration:** первоначальный план предполагал дословное восстановление тест-файла из `ed82f6e9~1`, но он использует `MockStatusClient` + `MockStatusManager.create(statusClient:)` — оба API удалены в `ed82f6e9` (а `MockStatusManager` — в `ddcb1d52`). Дословное восстановление потребовало бы вернуть ~250 LOC мёртвого prod-кода (`StatusClient` протокол + `MockStatusClient` с 0 prod-ссылок). Адаптация дала тот же coverage с −164 LOC вместо −250+ и без мёртвого кода.
-- **Scope discovery:** план ошибочно документировал удаление как «только `StatusManagerLogoutTests.swift` (153 LOC)». Реально `ed82f6e9` удалил всю `StatusManagerTests/` (22 файла, ~6000 LOC): `LogoutTests`/`GetStatusTests`/`IntegrationTests`/`CalendarExtensionTests`/`LoadInfopostsTests`/`OfflineIntegrationTests`/`OfflineTests`/`ProcessAuthStatusTests`/`PropertiesTests`/`ResetLogoutTests`/`ResetProgramTests`/`ReviewEventTests`/`SendDayDataToWatchTests`/`SendWorkoutDataToWatchTests`/`SetCurrentDayForDebugTests`/`StartNewRunTests`/`StartTests`/`StateTests`/`SyncDateTests`/`SyncJournalTests`/`Tests.swift`/`WatchConnectivityTests` + `MockStatusClient.swift` (121 LOC) + `StatusClient.swift` (8 LOC). Восстановление **LogoutTests + 2 теста из GetStatusTests** (auto-start/keeps-existing-startDate) — минимальный риск (Tier 1, 5+2=7 тестов), остальные 20 — следующие итерации (Tier 2+).
+- [x] [2026-08-01] **`de6d535` (+164 LOC, 3 файла):** восстановлен logout flow (`.onChange` body + `MockStatusManager.create()` + `StatusManagerLogoutTests`, 5 адаптированных тестов вместо дословного восстановления — без `MockStatusClient`, протокол удалён в `ed82f6e9`).
+- [x] [2026-08-01] **`69fce28a` (+47 net, 3 файла):** follow-up Tier 1 — `@Environment(\.modelContext)` → `statusManager.modelContainer.mainContext` (App-struct не получает контейнер через env); восстановлен `getStatus()` автостарт дня 1; +2 теста (`auto-start`/`keeps-existing`).
+- [x] [2026-08-01] Pre-commit `StatusManager.didLogout()` сохранён — теперь нужен (call-site из `.onChange`), не dead code.
+- **Не literal restoration:** дословное восстановление тестов потребовало бы ~250 LOC мёртвого prod-кода (`StatusClient` + `MockStatusClient` с 0 prod-ссылок). Адаптация: −164 LOC с тем же coverage.
+- **Scope discovery:** план говорил «только `StatusManagerLogoutTests` (153 LOC)». Реально `ed82f6e9` удалил всю `StatusManagerTests/` (22 файла, ~6000 LOC). Восстановлено **LogoutTests + 2 теста из GetStatusTests** = 7 тестов минимального риска. Остальные 20 — Tier 2+ итерации.
 
 **Tier 2 — опциональное упрощение AuthHelper (низкий риск):**
 
-- [x] [2026-08-01] **`6b28f00` (−19 LOC, 3 файла):** `AuthHelper.isOfflineOnly` удалён (UserDefaults `"isOfflineOnly"` key + computed property + assignment в `performOfflineLogin()`/`triggerLogout()`).
-  - `SwiftUI-SotkaApp/Models/SWSharedModels/Constants.swift` (−2): `isOfflineOnlyKey` удалён.
-  - `SwiftUI-SotkaApp/Services/AuthHelper.swift` (−16): `isOfflineOnly` property + 2 assignments убраны. Протокол теперь: `isAuthorized` + `triggerLogout()` + `performOfflineLogin()`.
-  - `SwiftUI-SotkaApp/SwiftUI_SotkaAppApp.swift` (−1): `!authHelper.isOfflineOnly` удалён из `showLoadingOverlay` guard. После: `guard authHelper.isAuthorized, !AppConfiguration.isReadOnlyMode else { return false }`.
-- **Migration нюанс не возник:** `showLoadingOverlay` в UI-тестах уже под `isAuthorized = true` от `performOfflineLogin()` → флаг `isOfflineOnly = true` всегда в test-mode. В read-only prod-mode `isAuthorized` сразу `true` от `AppConfiguration.isReadOnlyMode` guard, поэтому удаление `!isOfflineOnly` branch не меняет поведение.
-- Сохраняет инвариант: `User.isOfflineOnly` остаётся source of truth (computed `userName == "offline-user"`).
+- [x] [2026-08-01] **`6b28f00` (−19 LOC, 3 файла):** `AuthHelper.isOfflineOnly` удалён (Constants −2, AuthHelper −16, SwiftUI_SotkaAppApp −1). Протокол AuthHelper: `isAuthorized` + `triggerLogout()` + `performOfflineLogin()`. `User.isOfflineOnly` остался source of truth. Migration нюанс не возник — `showLoadingOverlay` в test-mode под `isAuthorized = true`, в read-only prod-mode guard уже под `isReadOnlyMode`.
 
 **Tier 3 — НЕ рекомендуется:**
 
-- Полное удаление `AuthHelper` (бывший план): gain −62 стр., но смешивает auth-state с UI + риск сломать (уже сломанный после `ed82f6e9`!) logout flow + риск потери данных existing authorized users при неудачном рефакторинге. **Двойная регрессия** (текущий logout-flow не удаляет данные — см. Tier 1) делает удаление AuthHelper ещё опаснее: без него нечем будет триггерить восстановленный logout. **Не делать.**
-- Удаление obsolete полей User / sync-флагов с других `@Model`: требует SwiftData migration (manual + test migration scenarios для каждого `@Model`), риск потери данных existing authorized users. **Не делать в этой итерации.**
+- Полное удаление `AuthHelper`: gain −62 стр., но смешивает auth-state с UI + риск сломать logout flow + потеря данных existing authorized users. **Не делать.**
+- Удаление obsolete полей User / sync-флагов: требует SwiftData migration (manual + test migration scenarios), риск потери данных. **Не делать в этой итерации.**
 
 ### Итог
 
-- **Сохранение данных existing authorized users при обновлении приложения** обеспечено: schema не меняется, OfflineLoginView не трогает User с `id != -1` (sentinel-protection). Logout удаляет данные (Tier 1 выполнен в `de6d535`+`69fce28a`).
-- **Выполнено в `fd5f845`+`24ebd8d`:** deprecated-аннотации на 7 server-полях User + 1 sync-поле + 4 sync-флагах + 1 timestamp. Живые sync-связанные поля оставлены без аннотации.
-- **Выполнено в `6b28f00`:** Tier 2 (удаление дубля `isOfflineOnly` флага).
-- **Не делать:** Tier 3, sync-flag удаления.
+- **Сохранение данных existing authorized users** обеспечено: schema не меняется, OfflineLoginView не трогает User с `id != -1` (sentinel-protection). Logout удаляет данные (Tier 1 выполнен).
+- **Tier 1+2+deprecated выполнены** (`de6d535`+`69fce28a`+`6b28f00`+`fd5f845`+`24ebd8d`).
+- **Не делать:** Tier 3, sync-flag удаления (решение продукта).
 
 ## Итог
 
