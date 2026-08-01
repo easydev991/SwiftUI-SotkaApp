@@ -1,6 +1,6 @@
 # Аудит over-engineering: весь репозиторий
 
-Дата аудита: 2026-07-25. Применено 36 коммитов 2026-07-25..2026-08-01, хронология (подробности — разделы 1-8 + Итог): `ed82f6e9` (delete, −30 489/+199) → `22dace92` (FIX+restore, +393/−80) → delete-2 (`19081bad`/`2555914a`/`c2e906a3`/`56726fe2`, net −2575) → `9cb2646` (NetworkStatus) → 4 docs (`f10157a`/`f1065ca`/`65d39dc`/`606f7b2`) → `68e4bca` (правка плана Review) → `bc0a76f` (Review Фаза A) → `095af10` (move shouldAttemptMilestone) → 2 update-plan (`f7f6a61`/`af3cf6b`) → `d7f7682c` (delete-3 ponytail, −647) → `21608712` (fix ProgressServiceTests) → `c6f9d9e7` (compress) → `6753c89` (Tier 1 ponytail, −119) → `e75e49db` (compress) → `fbb689fb` (Periphery findings) → `8452aa0` (Tier 2 Periphery, −140) → Periphery re-run #2: `ddcb1d52`/`b8761560`/`3e928f6f`/`220375cc`/`4655820` (5 коммитов, ~−1029, раздел 8) → пост-чистки: `a63ef811` (Tier 2 inline: DividerIfNeededModifier + withDivider, −35 LOC) → `738e24d8` (docs) → `fd040669` (docs compress) → `1f051228` (SWDivider rm + doc drift, −13 LOC) → `fff7e885` (Watch schemes cosmetic, xcodebuild artifact) → `9a1fc327` (план update+compress) → `97c75839` (план: исправлены 8 фактических ошибок) → `8dfdf312` (план compress) → `de6d535` (restore logout flow, +164, см. §9 Tier 1) → `69fce28a` (Tier 1 follow-up: modelContainer.mainContext + getStatus автостарт, +47, см. §9 Tier 1) → **`6b28f00` (Tier 2: AuthHelper.isOfflineOnly −19 LOC, см. §9 Tier 2)** → **`fd5f845` (deprecated-аннотации @available: 12 полей User + sync-флагов, +12 LOC, см. §9 Sync/server fields)** → **`24ebd8d` (i18n: перевод deprecated-сообщений на русский, 12 строк)**.
+Дата аудита: 2026-07-25. Применено 44 коммита 2026-07-25..2026-08-01, хронология (подробности — разделы 1-8 + Итог): `ed82f6e9` (delete, −30 489/+199) → `22dace92` (FIX+restore, +393/−80) → delete-2 (`19081bad`/`2555914a`/`c2e906a3`/`56726fe2`, net −2575) → `9cb2646` (NetworkStatus) → 4 docs (`f10157a`/`f1065ca`/`65d39dc`/`606f7b2`) → `68e4bca` (правка плана Review) → `bc0a76f` (Review Фаза A) → `095af10` (move shouldAttemptMilestone) → 2 update-plan (`f7f6a61`/`af3cf6b`) → `d7f7682c` (delete-3 ponytail, −647) → `21608712` (fix ProgressServiceTests) → `c6f9d9e7` (compress) → `6753c89` (Tier 1 ponytail, −119) → `e75e49db` (compress) → `fbb689fb` (Periphery findings) → `8452aa0` (Tier 2 Periphery, −140) → Periphery re-run #2: `ddcb1d52`/`b8761560`/`3e928f6f`/`220375cc`/`4655820` (5 коммитов, ~−1029, раздел 8) → пост-чистки: `a63ef811` (Tier 2 inline: DividerIfNeededModifier + withDivider, −35 LOC) → `738e24d8` (docs) → `fd040669` (docs compress) → `1f051228` (SWDivider rm + doc drift, −13 LOC) → `fff7e885` (Watch schemes cosmetic, xcodebuild artifact) → `9a1fc327` (план update+compress) → `97c75839` (план: исправлены 8 фактических ошибок) → `8dfdf312` (план compress) → `de6d535` (restore logout flow, +164, см. §9 Tier 1) → `69fce28a` (Tier 1 follow-up: modelContainer.mainContext + getStatus автостарт, +47, см. §9 Tier 1) → **`6b28f00` (Tier 2: AuthHelper.isOfflineOnly −19 LOC, см. §9 Tier 2)** → **`fd5f845` (deprecated-аннотации @available: 12 полей User + sync-флагов, +12 LOC, см. §9 Sync/server fields)** → **`24ebd8d` (i18n: перевод deprecated-сообщений на русский, 12 строк)** → **`916e0194` (markPostAsRead: убраны лишние Task-обёртки)** → **`ef400e6e` (план: добавлены новые находки §10)** → **`7cc61231` (план: уточнены Safety check + SWTextField в §10)** → волна §10: **`3648fc2` (Группа E: SectionView + SectionHeaderView, −198)** → **`a3c7f8f` (Группа H: ReadOnlyModeKey, −6)** → **`af6a5bd` (Группа G: SWUtils dead extensions, −248)** → **`381ee78` (Группа F: ImageAssetManager test-only, −173)** → **`fc5efb0` (Группа D: Watch VM dead members, −493)** → **`626cc77` (план: §10 помечен выполненным)**. **Σ §10: −1118 строк за 5 prod-коммитов.**
 Скоуп: только избыточная сложность (не корректность, не безопасность, не производительность).
 
 Контекст: `AppConfiguration.isReadOnlyMode = true` на постоянной основе — серверные API закрыты, поэтому весь сетевой слой (синхронизация прогресса, авторизация на сервере, разрешение конфликтов дат, серверный профиль/смена пароля) — мёртвый код и подлежит удалению. UI-тесты и mock-bootstrap по-прежнему передают `isReadOnlyMode: false`, чтобы симулировать нормальное поведение для скриншот-тестов.
@@ -192,7 +192,7 @@ Periphery re-run: 46 warnings в 17 файлах → 18 false-positives → **de
 
 ### Группа B — Review Фаза B (yagni, −18 LOC, 8 prod файлов + 1 test mock rewrite)
 
-План уже отмечал Фазу B как `[ ]` в `8452aa0`, но scope **больше** чем казалось (после ревью):
+В исходном Periphery re-run #2 плане Фаза B была `[ ]` (не выполнена, отложена из `8452aa0`), но scope **больше** чем казалось (после ревью):
 
 | Протокол | Реальный scope |
 |---|---|
@@ -299,7 +299,7 @@ Periphery re-run: 46 warnings в 17 файлах → 18 false-positives → **de
 
 ## 10. [NEW] Следующая волна аудита (после current HEAD, 2026-08-01)
 
-Все находки верифицированы субагентами (`explore`) + ручная проверка `TrainingRowAction` через `project.pbxproj:107` (в `membershipExceptions` для Watch target). **Выполнено** в 4 коммитах (`3648fc2`+`a3c7f8f`+`af6a5bd`+`381ee78`+`fc5efb0`).
+Все находки верифицированы субагентами (`explore`) + ручная проверка `TrainingRowAction` через `project.pbxproj:107` (в `membershipExceptions` для Watch target). **Выполнено** в 5 коммитах (`3648fc2`+`a3c7f8f`+`af6a5bd`+`381ee78`+`fc5efb0`).
 
 ### Группа D — Watch VM dead members (9 членов, ~174 LOC prod + ~9 watch-тестов) [x]
 
@@ -324,7 +324,7 @@ Periphery re-run: 46 warnings в 17 файлах → 18 false-positives → **de
 
 **Safety check `TrainingRowAction`:** файл `Models/Workout/TrainingRowAction.swift` (iOS-only, в `membershipExceptions` для Watch target: `project.pbxproj:107`) **остаётся живым** в iOS. Живые ссылки: `WorkoutPreviewViewModel.swift:277` (`updatePlannedCount(id:action:)` — iOS-метод, вызывается из `WorkoutPreviewScreen.swift:148,160`) + `TrainingRowView.swift:9,17` (тип параметра `onAction` в живой iOS-view). После удаления 9 watch-членов исчезает единственная watch-ссылка (`SotkaWatch/.../WorkoutPreviewViewModel.swift:196`); 3 iOS-ссылки сохраняются. Файл `TrainingRowAction.swift` удалять не нужно.
 
-**Subtotal: ~174 LOC prod + ~9 watch-тестов (SetupTests:132-172, StepManagementTests, SetsTests:302-325, EditMethodsTests, HomeViewModelTests:204).** [x] Реальный LOC: −180 prod (HomeViewModel.swift:27, WorkoutPreviewViewModel.swift:85, WorkoutViewModel.swift:71) + −313 tests = 493 удалений в коммите `fc5efb0`.
+**Subtotal: ~174 LOC prod + ~9 watch-тестов (SetupTests:132-172, StepManagementTests, SetsTests:302-325, EditMethodsTests, HomeViewModelTests:204).** [x] Реальный LOC: −183 prod (HomeViewModel.swift:27, WorkoutPreviewViewModel.swift:85, WorkoutViewModel.swift:71) + −310 tests (HomeViewModelTests.swift:29, WorkoutPreviewViewModelEditMethodsTests.swift:114, WorkoutViewModelSetsTests.swift:29, WorkoutViewModelSetupTests.swift:44, WorkoutViewModelStepManagementTests.swift:94) = 493 удалений в коммите `fc5efb0`.
 
 ### Группа E — SWDesignSystem dead files (2 файла, 198 LOC) [x]
 
@@ -367,7 +367,7 @@ Periphery re-run: 46 warnings в 17 файлах → 18 false-positives → **de
 
 Тестовые файлы: `DateRawRepresentableTests.swift` (38 строк), часть `SWUtilsTests.swift` (lines 7-21), `DoubleExtensionTests.swift` (17 вхождений).
 
-**Subtotal: ~30 LOC prod (или ~36 с `Double+.swift` целиком) + 3 тестовых файла/части.** [x] Реальный LOC: −218 prod (`Date+rawValue.swift:12` + `String+.swift:10` (trueCount+withoutSpaces) + `Double+.swift:18` целиком) + −30 tests (`DateRawRepresentableTests.swift:38` + часть `SWUtilsTests.swift:19` + `DoubleExtensionTests.swift:151`) = −248 в коммите `af6a5bd`. `Float+.swift` (Float.fromUIString + .formattedForUI + .stringFromFloat) жив — используется в `UserProgress.swift:179`, `TempMetricsModel.swift:28,48`, `String+.swift:27`.
+**Subtotal: ~30 LOC prod (или ~36 с `Double+.swift` целиком) + 3 тестовых файла/части.** [x] Реальный LOC: −40 prod (`Date+rawValue.swift:12` + `String+.swift:10` (trueCount+withoutSpaces) + `Double+.swift:18` целиком) + −208 tests (`DateRawRepresentableTests.swift:38` + `DoubleExtensionTests.swift:151` + часть `SWUtilsTests.swift:19`) = −248 в коммите `af6a5bd`. `Float+.swift` (Float.fromUIString + .formattedForUI + .stringFromFloat) жив — используется в `UserProgress.swift:179`, `TempMetricsModel.swift:28,48`, `String+.swift:27`. **План занизил test-savings в 7×:** `DoubleExtensionTests.swift` (151 LOC) содержал больше тестов, чем казалось (все `Double.formattedForUI`/`fromUIString` тесты — удалены вместе с prod-кодом, который они покрывали).
 
 ### Группа H — ReadOnlyModeKey write-only env key (5 LOC) [x]
 
@@ -381,27 +381,25 @@ Periphery re-run: 46 warnings в 17 файлах → 18 false-positives → **de
 
 ### Итог новой волны
 
-| Группа | LOC prod | Тесты |
-|---|---|---|
-| D (Watch VM) | ~174 | ~9 watch-тестов |
-| E (Section) | 198 | 0 |
-| F (ImageAsset) | ~63 | ~12 вызовов |
-| G (SWUtils) | ~30 (+6 опц.) | 3 файла/части |
-| H (ReadOnlyModeKey) | 5 | 0 |
-| **Итого (план)** | **~470** | **~12** |
-|---|---|---|
-| **Итого (факт)** | **−488** | **−419** |
+| Группа | LOC prod (план) | Тесты (план) | LOC prod (факт) | Тесты (факт) |
+|---|---|---|---|---|
+| D (Watch VM) | ~174 | ~9 watch-тестов | 183 | 310 |
+| E (Section) | 198 | 0 | 198 | 0 |
+| F (ImageAsset) | ~63 | ~12 вызовов | 67 | 106 |
+| G (SWUtils) | ~30 (+6 опц.) | 3 файла/части | 40 | 208 |
+| H (ReadOnlyModeKey) | 5 | 0 | 6 (5+1 line) | 0 |
+| **Итого** | **~470** | **~12** | **−494** | **−624** |
 
 **Реальный итог в 5 коммитах:**
 
 - `3648fc2` (Группа E): −198 prod
 - `a3c7f8f` (Группа H): −6 (5 prod + 1 line)
-- `af6a5bd` (Группа G): −248 (218 prod + 30 tests)
+- `af6a5bd` (Группа G): −248 (40 prod + 208 tests)
 - `381ee78` (Группа F): −173 (67 prod + 106 tests)
-- `fc5efb0` (Группа D): −493 (180 prod + 313 tests)
-- **Σ: −1118 строк** (488 prod + 419 tests + прочее)
+- `fc5efb0` (Группа D): −493 (183 prod + 310 tests)
+- **Σ: −1118 строк** (494 prod + 624 tests)
 
-**Контроль качества:** SwiftUI-SotkaApp build ✓, SotkaWatch Watch App build ✓, 829 iOS unit tests ✓, 169 Watch unit tests ✓.
+**Контроль качества:** SwiftUI-SotkaApp build ✓, SotkaWatch Watch App build ✓, 829 iOS unit tests ✓, 155 Watch unit tests ✓ (−14 от Группы D).
 
 **Зависимости: 0.**
 
@@ -458,8 +456,8 @@ Periphery re-run: 46 warnings в 17 файлах → 18 false-positives → **de
 
 ### Контроль качества
 
-- iOS build: ✅ (iPhone 11 / iOS 26.5 / xcodebuild-mcp). Pre-existing `AppIcon` asset error в watch-таргете (`SotkaWatch Watch App` Assets.xcassets) — не связан с правками аудита (подтверждено через `git stash` до/после).
-- Unit tests: 869 passed, 1 skipped. История: 1833 → 977 (`ed82f6e9` −856) → 868 (после `8452aa0`) → 862 (Periphery re-run #2: −6 `DateFormatterServiceTests` в SWUtils target, 16 `ReviewManagerTests` не сломаны, 0 regressions в iOS) → **867 (`de6d535` Tier 1: +5 logout-тестов)** → **869 (`69fce28a` Tier 1 follow-up: +2 getStatus-теста)** → **869 (`6b28f00`+`fd5f845`+`24ebd8d`: no test changes, удаление флага + deprecation-аннотации не требуют новых тестов — YAGNI)**
+- iOS build: ✅ (iPhone 11 / iOS 26.5 / xcodebuild-mcp). Pre-existing `AppIcon` asset error в watch-таргете (`SotkaWatch Watch App` Assets.xcassets) — не связан с правками аудита (подтверждено через `git stash` до/после). **SotkaWatch Watch App build: ✅** (Apple Watch Ultra 3 49mm / watchOS latest / xcodebuild-mcp, 51 pre-existing warning про `isSynced`/`lastModified` deprecated).
+- Unit tests: **iOS 829 passed + Watch 155 passed = 984 total**, 1 iOS skipped. История: 1833 → 977 (`ed82f6e9` −856) → 868 (после `8452aa0`) → 862 (Periphery re-run #2: −6 `DateFormatterServiceTests` в SWUtils target, 16 `ReviewManagerTests` не сломаны, 0 regressions в iOS) → **867 (`de6d535` Tier 1: +5 logout-тестов)** → **869 (`69fce28a` Tier 1 follow-up: +2 getStatus-теста)** → **869 (`6b28f00`+`fd5f845`+`24ebd8d`: no test changes)** → **855 (`916e0194`+`ef400e6e`+`7cc61231`/`3648fc2`/`a3c7f8f`: no test changes — 3 план-only + 2 §10 prod-only)** → **845 (`af6a5bd` Группа G: −12 SWUtils tests из 3 файлов)** → **833 (`381ee78` Группа F: −12 `ImageAssetManagerTests`)** → **833 iOS + 155 Watch (`fc5efb0` Группа D: −14 watch tests, iOS не задет)**. **Σ §10: −12 SWUtils + −12 ImageAsset = −24 iOS tests, −14 watch tests.**
 - UI-тесты: ✅ (8 скриншотов, `testMakeScreenshots`)
 - Watch ↔ iPhone sync: не сломана (`WatchConnectivityService`/`WCSession`/`WorkoutDataResponse`)
 
