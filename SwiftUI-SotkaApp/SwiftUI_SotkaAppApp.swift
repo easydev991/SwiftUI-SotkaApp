@@ -139,7 +139,6 @@ struct SwiftUI_SotkaAppApp: App {
             .restTimeBetweenSets(appSettings.restTime)
             .environment(youtubeVideoService)
             .environment(\.analyticsService, analyticsService)
-            .environment(\.isReadOnlyMode, isReadOnlyMode)
             .preferredColorScheme(appSettings.appTheme.colorScheme)
             .onChange(of: statusManager.currentDayCalculator) { _, newCalculator in
                 guard authHelper.isAuthorized else { return }
