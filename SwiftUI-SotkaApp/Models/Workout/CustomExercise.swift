@@ -18,7 +18,7 @@ final class CustomExercise {
     var modifyDate: Date
 
     /// Флаг синхронизации с сервером
-    @available(*, deprecated, message: "Sync flag, kept for schema stability (server closed 2026-08-01).")
+    @available(*, deprecated, message: "Sync-флаг, оставлен для стабильности схемы (сервер закрыт 2026-08-01).")
     var isSynced = false
     /// Флаг для удаления с сервера
     var shouldDelete = false

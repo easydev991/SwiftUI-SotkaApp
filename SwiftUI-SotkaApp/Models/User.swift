@@ -9,18 +9,18 @@ private let logger = Logger(subsystem: Bundle.sotkaAppBundleId, category: String
 final class User {
     @Attribute(.unique) var id: Int
     var userName: String?
-    @available(*, deprecated, message: "Server profile field, kept for schema stability (server closed 2026-08-01).")
+    @available(*, deprecated, message: "Поле профиля сервера, оставлено для стабильности схемы (сервер закрыт 2026-08-01).")
     var fullName: String?
-    @available(*, deprecated, message: "Server profile field, kept for schema stability (server closed 2026-08-01).")
+    @available(*, deprecated, message: "Поле профиля сервера, оставлено для стабильности схемы (сервер закрыт 2026-08-01).")
     var email: String?
-    @available(*, deprecated, message: "Server profile field, kept for schema stability (server closed 2026-08-01).")
+    @available(*, deprecated, message: "Поле профиля сервера, оставлено для стабильности схемы (сервер закрыт 2026-08-01).")
     var imageStringURL: String?
-    @available(*, deprecated, message: "Server profile field, kept for schema stability (server closed 2026-08-01).")
+    @available(*, deprecated, message: "Поле профиля сервера, оставлено для стабильности схемы (сервер закрыт 2026-08-01).")
     var cityId: Int?
-    @available(*, deprecated, message: "Server profile field, kept for schema stability (server closed 2026-08-01).")
+    @available(*, deprecated, message: "Поле профиля сервера, оставлено для стабильности схемы (сервер закрыт 2026-08-01).")
     var countryId: Int?
     var genderCode: Int?
-    @available(*, deprecated, message: "Server profile field, kept for schema stability (server closed 2026-08-01).")
+    @available(*, deprecated, message: "Поле профиля сервера, оставлено для стабильности схемы (сервер закрыт 2026-08-01).")
     var birthDateIsoString: String?
 
     /// Пользовательские упражнения
@@ -39,7 +39,7 @@ final class User {
     private var readInfopostDaysString = ""
 
     /// Несинхронизированные прочитанные дни инфопостов (хранится как строка через запятую, например "1,2,15")
-    @available(*, deprecated, message: "Sync field, kept for schema stability (server closed 2026-08-01).")
+    @available(*, deprecated, message: "Sync-поле, оставлено для стабильности схемы (сервер закрыт 2026-08-01).")
     private var unsyncedReadInfopostDaysString = ""
 
     init(

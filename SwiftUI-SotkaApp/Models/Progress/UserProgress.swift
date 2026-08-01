@@ -12,10 +12,10 @@ final class UserProgress {
     var pushUps: Int?
     var squats: Int?
     var weight: Float?
-    @available(*, deprecated, message: "Sync flag, kept for schema stability (server closed 2026-08-01).")
+    @available(*, deprecated, message: "Sync-флаг, оставлен для стабильности схемы (сервер закрыт 2026-08-01).")
     var isSynced = false
     var shouldDelete = false
-    @available(*, deprecated, message: "Sync timestamp, kept for schema stability (server closed 2026-08-01).")
+    @available(*, deprecated, message: "Sync-timestamp, оставлен для стабильности схемы (сервер закрыт 2026-08-01).")
     var lastModified = Date.now
 
     /// Связь с пользователем
