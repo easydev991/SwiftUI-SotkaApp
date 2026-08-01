@@ -1,12 +1,19 @@
+import OSLog
 import SWDesignSystem
 import SwiftData
 import SwiftUI
 import SWUtils
 import TipKit
 
+private let logger = Logger(
+    subsystem: Bundle.main.bundleIdentifier ?? "SotkaApp",
+    category: String(describing: SwiftUI_SotkaAppApp.self)
+)
+
 @main
 struct SwiftUI_SotkaAppApp: App {
     @UIApplicationDelegateAdaptor(AppDelegate.self) var delegate
+    @Environment(\.modelContext) private var modelContext
     @Environment(\.scenePhase) private var scenePhase
     private let youtubeVideoService: YouTubeVideoService
     private let statusManager: StatusManager
@@ -153,6 +160,12 @@ struct SwiftUI_SotkaAppApp: App {
             if !isAuthorized {
                 appSettings.didLogout()
                 reviewManager.reset()
+                statusManager.didLogout()
+                do {
+                    try modelContext.delete(model: User.self)
+                } catch {
+                    logger.error("Не удалось удалить данные пользователя: \(error.localizedDescription)")
+                }
             }
         }
     }
