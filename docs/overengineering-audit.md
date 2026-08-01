@@ -297,6 +297,107 @@ Periphery re-run: 46 warnings в 17 файлах → 18 false-positives → **de
 - **Tier 1+2+deprecated выполнены** (`de6d535`+`69fce28a`+`6b28f00`+`fd5f845`+`24ebd8d`).
 - **Не делать:** Tier 3, sync-flag удаления (решение продукта).
 
+## 10. [NEW] Следующая волна аудита (после current HEAD, 2026-08-01)
+
+Все находки верифицированы субагентами (`explore`) + ручная проверка `TrainingRowAction` через `project.pbxproj:107` (в `membershipExceptions` для Watch target).
+
+### Группа D — Watch VM dead members (9 членов, ~174 LOC prod + ~9 watch-тестов)
+
+| Член | VM | Prod refs (watch) | Test refs (watch) |
+|---|---|---|---|
+| `shouldShowExercisesReminder` | WorkoutViewModel | 0 | 2 (SetupTests:150,172) |
+| `getStepState(for:)` | WorkoutViewModel | 0 | 2 (StepManagementTests:153,156) |
+| `getCycleSteps()` | WorkoutViewModel | 0 | 1 (StepManagementTests:179) |
+| `getExerciseSteps(for:)` | WorkoutViewModel | 0 | 2 (StepManagementTests:214, SetsTests:325) |
+| `canRemoveExercise` | WorkoutPreviewViewModel | 0 | 2 (EditMethodsTests:21,35) |
+| `updatePlannedCount(id:action:)` | WorkoutPreviewViewModel | 0 | 2 (EditMethodsTests:191,209) |
+| `updateTrainingCount(at:amount:)` | WorkoutPreviewViewModel | 0 | 3 (EditMethodsTests:87,103,120) |
+| `removeTraining(at:)` | WorkoutPreviewViewModel | 0 (private, cascade) | 0 |
+| `startWorkout` | HomeViewModel | 0 | 1 (HomeViewModelTests:204) |
+
+Живые перегрузки/альтернативы:
+
+- `updatePlannedCount(for: Int)` (WorkoutPreviewViewModel:239) — caller: `WorkoutPreviewView.swift:162`
+- `updateTrainingCount(for:newValue:)` (WorkoutPreviewViewModel:253) — caller: `WorkoutPreviewView.swift:143`
+- `WorkoutEditView.swift:33-35` имеет свой локальный `canRemoveExercise` (не VM)
+- Кнопки `startWorkout` в watch нет: `HomeView` → `fullScreenCover` `WorkoutPreviewView` → `loadData(day:)` (HomeView:13-14, 42-46)
+
+**Safety check `TrainingRowAction`:** файл `Models/Workout/TrainingRowAction.swift` (iOS-only, в `membershipExceptions` для Watch target: `project.pbxproj:107`) живёт в iOS — используется в `WorkoutPreviewViewModel.swift:277`, `TrainingRowView.swift:9,17`. После удаления 9 членов — 0 ссылок на `TrainingRowAction` где-либо.
+
+**Subtotal: ~174 LOC prod + ~9 watch-тестов (SetupTests:132-172, StepManagementTests, SetsTests:302-325, EditMethodsTests, HomeViewModelTests:204).**
+
+### Группа E — SWDesignSystem dead files (2 файла, 198 LOC)
+
+`ItemListScreen` удалён в `ddcb1d52` → транзитивно мёртвыми стали:
+
+| Файл | LOC | Содержимое |
+|---|---|---|
+| `Libraries/SWDesignSystem/Public/SectionView.swift` | 122 | `SectionView` struct + 3 init'а + `Mode` + extension |
+| `Libraries/SWDesignSystem/Internal/SectionHeaderView.swift` | 76 | `SectionSupplementaryView` + `#Preview` |
+
+**Уточнение:** `SectionSupplementaryView.swift` как отдельный файл **не существует** — тип живёт внутри `SectionHeaderView.swift`. Ранее Periphery (line 104) отмечал только redundant `public` модификатор — после удаления `ItemListScreen` (транзитивный caller) оба файла полностью мёртвые.
+
+**Subtotal: 198 LOC pure delete.**
+
+### Группа F — ImageAssetManager test-only methods (4 метода, ~63 LOC)
+
+| Метод | Prod refs | Test refs |
+|---|---|---|
+| `getImageURL(for:)` | 0 (внутр. caller — `imageExists`, тоже dead) | 13 (ImageAssetManagerTests) |
+| `getAllAvailableImages()` | 0 | 2 |
+| `imageExists(_:)` | 0 | 2 |
+| `getImageSize(_:)` | 0 | 2 |
+
+**Оставить:** `copyImageToTemp(...)` — prod chain: `HTMLContentView.swift:251` → `resourceManager.copyResources` (`InfopostResourceManager.swift:54`) → `copyImagesFromAssets` (line 64) → `ImageAssetManager.copyImageToTemp` (line 130).
+
+Тестовые вызовы для очистки: ~12 мест в `ImageAssetManagerTests` (строки 13, 20, 27, 34, 41-42, 113, 120, 129, 138, 146, 158, 170).
+
+**Subtotal: ~63 LOC prod + ~12 тестовых вызовов.**
+
+### Группа G — SWUtils dead extensions (4 члена + бонус, ~30 LOC)
+
+| Член | Файл | LOC |
+|---|---|---|
+| `Date.rawValue` + `init?(rawValue:)` | `Extensions/Date+rawValue.swift` | 12 |
+| `String.trueCount` | `Extensions/String+.swift:5-7` | 4 |
+| `String.withoutSpaces` | `Extensions/String+.swift:10-12` | 4 (cascade) |
+| `Double.formattedForUI` | `Extensions/Double+.swift:7-9` | 6 |
+
+**Бонус:** `Double.fromUIString` (`Double+.swift:14-17`, 4 LOC) тоже dead. Опционально — удалить `Double+.swift` целиком (10 LOC).
+
+Тестовые файлы: `DateRawRepresentableTests.swift` (38 строк), часть `SWUtilsTests.swift` (lines 7-21), `DoubleExtensionTests.swift` (17 вхождений).
+
+**Subtotal: ~30 LOC prod (или ~36 с `Double+.swift` целиком) + 3 тестовых файла/части.**
+
+### Группа H — ReadOnlyModeKey write-only env key (5 LOC)
+
+| Файл | LOC | Verdict |
+|---|---|---|
+| `Services/ReadOnlyModeKey.swift` | 5 | DEAD (write-only, 0 readers) |
+
+Содержимое: `@Entry var isReadOnlyMode: Bool = AppConfiguration.isReadOnlyMode` (iOS 17+ Entry macro, не legacy `EnvironmentKey`). Write site: `SwiftUI_SotkaAppApp.swift:142`. **Read sites: 0** во всём проекте. Сервисы получают флаг через init-параметр, не через environment.
+
+Аналог `9cb2646` (NetworkStatus, удалён по той же причине).
+
+### Итог новой волны
+
+| Группа | LOC prod | Тесты |
+|---|---|---|
+| D (Watch VM) | ~174 | ~9 watch-тестов |
+| E (Section) | 198 | 0 |
+| F (ImageAsset) | ~63 | ~12 вызовов |
+| G (SWUtils) | ~30 (+6 опц.) | 3 файла/части |
+| H (ReadOnlyModeKey) | 5 | 0 |
+| **Итого** | **~470** | **~12** |
+
+**Зависимости: 0.**
+
+### Не вошло (пограничные случаи)
+
+| Файл/член | Причина |
+|---|---|
+| `SWTextField.swift` (248 LOC) | Caller (`EditProgressScreen.swift:322`) использует ~95 LOC ядра (стили + валидация + focus); мёртвое только ~65 LOC (`errorState`/`isSecure`/`lineLimit>1`) + ~95 preview. Удаление целиком потеряет единую стилизацию дизайн-системы. Разумный путь — урезать до ядра, не удалять |
+
 ## Итог
 
 ### Фактический результат коммитов (хронология)
@@ -340,7 +441,7 @@ Periphery re-run: 46 warnings в 17 файлах → 18 false-positives → **de
 
 Все запланированные Periphery re-run #2 чистки (Группа A1/A2/B/C, раздел 8), пост-чистки (Tier 2 inline + SWDivider), восстановление logout-flow (Tier 1, `de6d535`+`69fce28a`), Tier 2 (`AuthHelper.isOfflineOnly` `6b28f00`) и deprecated-аннотации User/sync полей (`fd5f845`+`24ebd8d`) **выполнены** — см. «Фактический результат Periphery re-run #2» и §9 в Итоге.
 
-**Активных [ ] пунктов нет.** Все находки аудита либо реализованы, либо явно заблокированы решением продукта (Tier 3, sync-flag миграция — см. §9 Итог).
+**Активных [ ] пунктов нет** в предыдущих секциях. **Новая волна** (Группы D/E/F/G/H, ~470 LOC prod + ~12 тестов) запланирована в §10, но не начата. Все находки аудита либо реализованы, либо явно заблокированы решением продукта (Tier 3, sync-flag миграция — см. §9 Итог).
 
 ### Контроль качества
 
