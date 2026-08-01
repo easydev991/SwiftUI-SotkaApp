@@ -5,8 +5,6 @@ import Observation
 protocol AuthHelper: AnyObject, Sendable {
     /// Статус авторизации
     var isAuthorized: Bool { get }
-    /// Флаг офлайн-пользователя
-    var isOfflineOnly: Bool { get }
     /// Логаут с удалением всех данных пользователя
     func triggerLogout()
     /// Офлайн-авторизация без серверных кредов
@@ -38,25 +36,11 @@ final class AuthHelperImp: AuthHelper {
         }
     }
 
-    private(set) var isOfflineOnly: Bool {
-        get {
-            access(keyPath: \.isOfflineOnly)
-            return defaults.bool(forKey: Constants.isOfflineOnlyKey)
-        }
-        set {
-            withMutation(keyPath: \.isOfflineOnly) {
-                defaults.set(newValue, forKey: Constants.isOfflineOnlyKey)
-            }
-        }
-    }
-
     func performOfflineLogin() {
-        isOfflineOnly = true
         isAuthorized = true
     }
 
     func triggerLogout() {
         isAuthorized = false
-        isOfflineOnly = false
     }
 }

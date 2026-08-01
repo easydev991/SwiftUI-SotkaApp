@@ -182,7 +182,6 @@ private extension SwiftUI_SotkaAppApp {
 
     var showLoadingOverlay: Bool {
         guard authHelper.isAuthorized,
-              !authHelper.isOfflineOnly,
               !AppConfiguration.isReadOnlyMode
         else { return false }
         return statusManager.state.isLoadingInitialData
