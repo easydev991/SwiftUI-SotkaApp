@@ -254,12 +254,16 @@ private extension WorkoutPreviewScreen {
 #Preview {
     NavigationStack {
         WorkoutPreviewScreen(
-            activitiesService: DailyActivitiesService(client: MockDaysClient(result: .success)),
+            activitiesService: DailyActivitiesService(),
             day: 50
         )
         .modelContainer(PreviewModelContainer.make(with: .preview))
         .environment(StatusManager.preview)
-        .environment(ReviewManager.preview)
+        .environment(ReviewManager(
+            attemptStore: ReviewStorage(),
+            completionsCounter: WorkoutCompletionsCounter(modelContainer: PreviewModelContainer.make(with: .preview)),
+            currentUserIdProvider: { 1 }
+        ))
     }
 }
 #endif

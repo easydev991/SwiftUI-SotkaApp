@@ -30,30 +30,10 @@ final class DayActivityTraining {
         self.dayActivity = dayActivity
     }
 
-    /// Инициализатор из ответа сервера
-    convenience init(from training: DayResponse.Training, dayActivity: DayActivity? = nil) {
-        self.init(
-            count: training.count,
-            typeId: training.typeId,
-            customTypeId: training.customTypeId,
-            sortOrder: training.sortOrder,
-            dayActivity: dayActivity
-        )
-    }
+    // Инициализатор из ответа сервера
 }
 
 extension DayActivityTraining {
-    /// Тип упражнения (если это стандартное упражнение)
-    var exerciseType: ExerciseType? {
-        get {
-            guard let typeId else { return nil }
-            return ExerciseType(rawValue: typeId)
-        }
-        set {
-            typeId = newValue?.rawValue
-        }
-    }
-
     /// Инициализатор из WorkoutPreviewTraining
     convenience init(from preview: WorkoutPreviewTraining, dayActivity: DayActivity?) {
         self.init(
@@ -62,16 +42,6 @@ extension DayActivityTraining {
             customTypeId: preview.customTypeId,
             sortOrder: preview.sortOrder,
             dayActivity: dayActivity
-        )
-    }
-
-    /// Преобразование в ActivitySnapshot.TrainingSnapshot для снимков синхронизации
-    var trainingSnapshot: ActivitySnapshot.TrainingSnapshot {
-        .init(
-            count: count,
-            typeId: typeId,
-            customTypeId: customTypeId,
-            sortOrder: sortOrder
         )
     }
 

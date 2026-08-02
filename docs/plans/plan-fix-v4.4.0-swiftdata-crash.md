@@ -1,5 +1,7 @@
 # План исправления краша v4.4.0 (SwiftData, `DayActivity.trainings.getter`)
 
+**Статус: ✅ Выполнено (2026-04-10, перепроверено 2026-08-01)**
+
 ## Контекст инцидента
 
 - Краш наблюдается в версии `4.4.0 (1)` в логах от `2 апреля 2026`.
@@ -16,7 +18,7 @@
 ## Цель
 
 - Устранить краш при повторном сохранении тренировки в `WorkoutPreview`.
-- Сохранить offline-first контракт: локальное сохранение первым шагом, синк асинхронный и неблокирующий.
+- Сохранить offline-first контракт: локальное сохранение в SwiftData первым шагом (синк-слой удалён, синхронизация с сервером не выполняется).
 - Не допустить регрессий в iOS и watchOS сценариях, связанных с данными тренировки.
 
 ## Границы изменений
@@ -24,7 +26,7 @@
 - Основная зона: [DailyActivitiesService.swift](/Users/Oleg991/Documents/GitHub/SwiftUI-SotkaApp/SwiftUI-SotkaApp/Services/DailyActivitiesService.swift).
 - Смежная зона: [WorkoutPreviewViewModel.swift](/Users/Oleg991/Documents/GitHub/SwiftUI-SotkaApp/SwiftUI-SotkaApp/Screens/WorkoutPreview/WorkoutPreviewViewModel.swift) (без изменения бизнес-логики, только при необходимости для безопасной передачи данных).
 - Тесты:
-  - iOS unit: `SwiftUI-SotkaAppTests/DailyActivitiesTests/*`, `SwiftUI-SotkaAppTests/WorkoutPreviewViewModelTests/*`.
+  - iOS unit: `SwiftUI-SotkaAppTests/WorkoutPreviewViewModelTests/*` (папка `DailyActivitiesTests/` удалена в `ed82f6e9`).
   - iOS UI: `SwiftUI-SotkaAppUITests/SwiftUI_SotkaAppUITests.swift`.
   - watchOS unit smoke: `SotkaWatch Watch AppTests`.
 - Без широкого рефакторинга несвязанных модулей.
@@ -48,6 +50,7 @@
 ## Этап 1. Red: воспроизведение в тестах (с конкретными файлами)
 
 - [x] Добавлен набор crash-regression тестов в `DailyActivitiesUpdateExistingCrashTests.swift` (интеграционный путь, боевой путь через ViewModel, replace/cascade и корректный `sortOrder`).
+  - ⚠️ Примечание (перепроверка 2026-08-01): папка `SwiftUI-SotkaAppTests/DailyActivitiesTests/` (включая crash-тесты) удалена в commit `ed82f6e9` «Чистка мёртвого кода по аудиту 2026-07-25» вместе с sync-слоем. Фикс в коде остаётся; сохранение через ViewModel покрыто `WorkoutPreviewViewModelSaveTrainingTests`.
 
 Критерий завершения этапа:
 
@@ -56,7 +59,7 @@
 
 ## Этап 2. Green: конкретный безопасный фикс
 
-- [x] Реализован snapshot-based replace в `createDailyActivity/updateExistingActivity` без чтения `new.trainings` после начала мутации.
+- [x] Реализован snapshot-based replace в `createDailyActivity/updateExistingActivity` без чтения `new.trainings` после начала мутации (см. `updateExistingActivity(_:with:trainingsSnapshot:user:)` и `TrainingReplacementSnapshot`).
 - [x] Добавлены создание/регистрация новых trainings и явная очистка старых из `ModelContext` без изменения offline-first контрактов.
 
 Критерий завершения этапа:
@@ -65,7 +68,7 @@
 
 ## Этап 3. Refactor safety net
 
-- [x] Добавлены тесты safety net: идемпотентность 3+ сохранений, корректный replace, отсутствие orphan в контексте и стабильный повторный fetch после `context.save()`.
+- [x] Добавлены тесты safety net: идемпотентность 3+ сохранений, корректный replace, отсутствие orphan в контексте и стабильный повторный fetch после `context.save()` (удалены вместе с `DailyActivitiesTests/` в `ed82f6e9`, см. примечание к Этапу 1).
 
 Критерий завершения этапа:
 
@@ -83,7 +86,7 @@
 
 ## Этап 5. Проверка watchOS-совместимости и регресс
 
-- [x] Выполнен watchOS smoke/regression: `make test_watch` (189 тестов), деградаций и проблем с `WorkoutPreviewTraining/WorkoutData` не найдено.
+- [x] Выполнен watchOS smoke/regression: `make test_watch` (189 тестов на момент фикса; после чистки sync-слоя в `ed82f6e9` в watch-таргете ~169 `@Test`), деградаций и проблем с `WorkoutPreviewTraining/WorkoutData` не найдено.
 
 Критерий завершения этапа:
 
@@ -121,8 +124,8 @@
 
 ## Definition of Done
 
-- [x] Краш `v4.4.0` в сценарии повторного сохранения тренировки не воспроизводится.
-- [x] Есть regression-тесты на crash-path и cascade replace relationship.
+- [x] Краш `v4.4.0` в сценарии повторного сохранения тренировки не воспроизводится (фикс snapshot-based replace присутствует в `DailyActivitiesService`).
+- [x] Есть regression-тесты на crash-path и cascade replace relationship (на момент фикса; удалены из репозитория в `ed82f6e9` при чистке sync-слоя).
 - [x] iOS unit/UI проверки и watchOS smoke-проверка пройдены.
 - [x] Документация по инциденту и фиксу обновлена.
 - [x] Ручная проверка сценария на `WorkoutPreview`/`Journal` из Этапа 4 выполнена.

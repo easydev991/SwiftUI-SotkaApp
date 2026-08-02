@@ -3,59 +3,36 @@ import Foundation
 import SwiftData
 
 extension StatusManager {
+    /// Превью StatusManager для простых экранов (без продлений календаря)
+    @MainActor
     static var preview: StatusManager {
-        let schema = Schema(
-            [
-                User.self,
-                Country.self,
-                CustomExercise.self,
-                UserProgress.self,
-                DayActivity.self,
-                DayActivityTraining.self,
-                SyncJournalEntry.self,
-                CalendarExtensionRecord.self
-            ]
-        )
-        let config = ModelConfiguration(schema: schema, isStoredInMemoryOnly: true)
-        let modelContainer = try! ModelContainer(for: schema, configurations: config)
-
+        let container = PreviewModelContainer.make(with: .preview)
         return StatusManager(
-            customExercisesService: .init(
-                client: MockExerciseClient(result: .success)
-            ),
-            infopostsService: .init(
+            customExercisesService: CustomExercisesService(),
+            infopostsService: InfopostsService(
                 language: "ru",
-                infopostsClient: MockInfopostsClient(result: .success),
                 analytics: AnalyticsService(providers: [NoopAnalyticsProvider()])
             ),
-            progressSyncService: ProgressSyncService(client: MockProgressClient(result: .success)),
-            dailyActivitiesService: DailyActivitiesService(client: MockDaysClient(result: .success)),
-            statusClient: MockLoginClient(result: .success),
-            modelContainer: modelContainer
+            dailyActivitiesService: DailyActivitiesService(),
+            modelContainer: container,
+            isReadOnlyMode: false
         )
     }
 
+    /// Превью StatusManager с продлением календаря
+    @MainActor
     static var previewWithCalendarExtension: StatusManager {
-        let statusManager = preview
-        let context = statusManager.modelContainer.mainContext
-        let user = User.preview
-        context.insert(user)
-        try? context.save()
-
-        statusManager.setCurrentDayForDebug(100)
-        statusManager.addExtensionDate(.now, isSynced: true)
-        return statusManager
+        let manager = preview
+        manager.setCurrentDayForDebug(150)
+        return manager
     }
 
+    /// Превью StatusManager с продлением календаря до 130-го дня
+    @MainActor
     static var previewWithCalendarExtensionDay130: StatusManager {
-        let statusManager = preview
-        let context = statusManager.modelContainer.mainContext
-        let user = User.preview
-        context.insert(user)
-        try? context.save()
-
-        statusManager.setCurrentDayForDebug(130, extensionCount: 1)
-        return statusManager
+        let manager = preview
+        manager.setCurrentDayForDebug(130)
+        return manager
     }
 }
 #endif

@@ -5,8 +5,16 @@ import OSLog
 @MainActor
 @Observable
 final class ReviewManager: ReviewEventReporting {
-    private let attemptStore: any ReviewAttemptStoring
-    private let completionsCounter: any WorkoutCompletionsCounting
+    enum ReviewSkipReason: Equatable {
+        case alreadyAttemptedThisSession
+        case recentError
+        case noCurrentUser
+        case milestoneNotReached
+        case milestoneAlreadyAttempted
+    }
+
+    private let attemptStore: ReviewStorage
+    private let completionsCounter: WorkoutCompletionsCounter
     private let currentUserIdProvider: @MainActor () -> Int?
 
     @ObservationIgnored private let logger = Logger(
@@ -20,8 +28,8 @@ final class ReviewManager: ReviewEventReporting {
     private(set) var lastSkipReason: ReviewSkipReason?
 
     init(
-        attemptStore: any ReviewAttemptStoring,
-        completionsCounter: any WorkoutCompletionsCounting,
+        attemptStore: ReviewStorage,
+        completionsCounter: WorkoutCompletionsCounter,
         currentUserIdProvider: @MainActor @escaping () -> Int?
     ) {
         self.attemptStore = attemptStore
@@ -29,13 +37,13 @@ final class ReviewManager: ReviewEventReporting {
         self.currentUserIdProvider = currentUserIdProvider
     }
 
-    func workoutCompletedSuccessfully(context: ReviewContext) async {
+    func workoutCompletedSuccessfully(hadRecentError: Bool) async {
         if didRequestReviewThisSession {
             lastSkipReason = .alreadyAttemptedThisSession
             logger.info("Review пропущено: повтор в текущей сессии")
             return
         }
-        if context.hadRecentError {
+        if hadRecentError {
             lastSkipReason = .recentError
             logger.info("Review пропущено: недавняя ошибка")
             return
@@ -55,10 +63,7 @@ final class ReviewManager: ReviewEventReporting {
         }
 
         let attempted = attemptStore.attemptedMilestones()
-        guard ReviewAttemptRules.shouldAttemptMilestone(
-            milestone: milestone,
-            attemptedMilestones: attempted
-        ) else {
+        guard milestone.isNotYetAttempted(in: attempted) else {
             lastSkipReason = .milestoneAlreadyAttempted
             logger.info("Review пропущено: веху \(milestone.rawValue) уже просили оценить")
             return

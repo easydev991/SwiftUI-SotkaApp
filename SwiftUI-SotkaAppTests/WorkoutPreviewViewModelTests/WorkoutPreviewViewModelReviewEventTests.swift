@@ -36,7 +36,7 @@ extension WorkoutPreviewViewModelTests {
         func callsReviewReporterAfterSuccessfulSave() async throws {
             let testContext = try makeContext()
             let context = testContext.1
-            let activitiesService = DailyActivitiesService(client: MockDaysClient(), isReadOnlyMode: false)
+            let activitiesService = DailyActivitiesService()
             let viewModel = makeViewModel()
             let reporter = MockReviewEventReporter()
 
@@ -48,15 +48,15 @@ extension WorkoutPreviewViewModelTests {
 
             await reporter.waitForCallCount(1)
             #expect(reporter.callCount == 1)
-            let reportedContext = try #require(reporter.reportedContexts.first)
-            #expect(!reportedContext.hadRecentError)
+            let hadRecentError: Bool = try #require(reporter.reportedHadRecentErrors.first)
+            #expect(!hadRecentError)
         }
 
         @Test("При ошибке валидации не вызывает reviewEventReporter")
         func doesNotCallReporterWhenValidationFails() throws {
             let testContext = try makeContext()
             let context = testContext.1
-            let activitiesService = DailyActivitiesService(client: MockDaysClient(), isReadOnlyMode: false)
+            let activitiesService = DailyActivitiesService()
             let viewModel = WorkoutPreviewViewModel()
             viewModel.dayNumber = 5
             viewModel.selectedExecutionType = nil
@@ -76,7 +76,7 @@ extension WorkoutPreviewViewModelTests {
         func passesHadRecentErrorWhenViewModelHasError() async throws {
             let testContext = try makeContext()
             let context = testContext.1
-            let activitiesService = DailyActivitiesService(client: MockDaysClient(), isReadOnlyMode: false)
+            let activitiesService = DailyActivitiesService()
             let viewModel = makeViewModel()
             viewModel.error = .executionTypeNotSelected
             viewModel.selectedExecutionType = .cycles
@@ -93,15 +93,15 @@ extension WorkoutPreviewViewModelTests {
 
             await reporter.waitForCallCount(1)
             #expect(reporter.callCount == 1)
-            let reportedContext = try #require(reporter.reportedContexts.first)
-            #expect(reportedContext.hadRecentError)
+            let hadRecentError: Bool = try #require(reporter.reportedHadRecentErrors.first)
+            #expect(hadRecentError)
         }
 
         @Test("Без reporter сохранение работает корректно")
         func saveWorksCorrectlyWithoutReporter() throws {
             let testContext = try makeContext()
             let context = testContext.1
-            let activitiesService = DailyActivitiesService(client: MockDaysClient(), isReadOnlyMode: false)
+            let activitiesService = DailyActivitiesService()
             let viewModel = makeViewModel()
 
             viewModel.saveTrainingAsPassed(
@@ -117,7 +117,7 @@ extension WorkoutPreviewViewModelTests {
         func repeatedSaveDoesNotDuplicateActivityAndSendsEvent() async throws {
             let testContext = try makeContext()
             let context = testContext.1
-            let activitiesService = DailyActivitiesService(client: MockDaysClient(), isReadOnlyMode: false)
+            let activitiesService = DailyActivitiesService()
             let viewModel = makeViewModel()
             let reporter = MockReviewEventReporter()
 

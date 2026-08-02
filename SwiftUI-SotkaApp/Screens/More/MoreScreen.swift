@@ -9,21 +9,14 @@ struct MoreScreen: View {
     @Environment(StatusManager.self) private var statusManager
     @Environment(\.analyticsService) private var analytics
     @Environment(AuthHelperImp.self) private var authHelper
-    @Environment(\.isReadOnlyMode) private var isReadOnlyMode
     let user: User
     @State private var showResetDialog = false
     @State private var showLogoutDialog = false
-    private var isOfflineUser: Bool {
-        user.isOfflineOnly || isReadOnlyMode
-    }
 
     var body: some View {
         NavigationStack {
             List {
                 Section(.profile) {
-                    if !isOfflineUser {
-                        editProfileButton
-                    }
                     logoutButton
                 }
                 Section(.settings) {
@@ -33,9 +26,6 @@ struct MoreScreen: View {
                     debugCurrentDayPicker
                     #endif
                     workoutSettingsButton
-                    if !isOfflineUser {
-                        syncJournalButton
-                    }
                 }
                 if currentDay > 1 {
                     Section(.moreScreenResetProgramSection) {
@@ -65,14 +55,6 @@ struct MoreScreen: View {
 }
 
 private extension MoreScreen {
-    var editProfileButton: some View {
-        NavigationLink {
-            EditProfileScreen(user: user)
-        } label: {
-            Text(.editProfile)
-        }
-    }
-
     var logoutButton: some View {
         Button(.logOut) {
             showLogoutDialog = true
@@ -101,7 +83,9 @@ private extension MoreScreen {
     @ViewBuilder
     var appLanguageButton: some View {
         @Bindable var settings = appSettings
-        Picker(.appLanguage, selection: .constant(AppLanguage.makeCurrentValue(locale.identifier))) {
+        let isRussian = locale.identifier.split(separator: "_").first == "ru"
+        let currentLanguage: AppLanguage = isRussian ? .russian : .english
+        Picker(.appLanguage, selection: .constant(currentLanguage)) {
             ForEach(AppLanguage.allCases) {
                 Text($0.localizedTitle).tag($0)
             }
@@ -228,13 +212,6 @@ private extension MoreScreen {
             Link(.gitHub, destination: githubLink)
                 .accessibilityIdentifier("githubButton")
         }
-    }
-
-    var syncJournalButton: some View {
-        NavigationLink(destination: SyncJournalScreen()) {
-            Text(.moreScreenSyncJournalButton)
-        }
-        .accessibilityIdentifier("syncJournalButton")
     }
 }
 

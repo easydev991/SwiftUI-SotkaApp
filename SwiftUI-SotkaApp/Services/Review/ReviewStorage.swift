@@ -1,6 +1,10 @@
 import Foundation
 
-struct ReviewStorage: ReviewAttemptStoring, @unchecked Sendable {
+struct ReviewStorage: @unchecked Sendable {
+    private static let namespace = "review."
+    static let attemptedMilestones = namespace + "attemptedMilestones"
+    static let lastReviewRequestAttemptDate = namespace + "lastReviewRequestAttemptDate"
+
     private let defaults: UserDefaults
 
     init(userDefaults: UserDefaults = .standard) {
@@ -8,7 +12,7 @@ struct ReviewStorage: ReviewAttemptStoring, @unchecked Sendable {
     }
 
     func attemptedMilestones() -> [ReviewMilestone] {
-        let rawValues = defaults.object(forKey: ReviewStorageKeys.attemptedMilestones) as? [Int] ?? []
+        let rawValues = defaults.object(forKey: Self.attemptedMilestones) as? [Int] ?? []
         return rawValues.compactMap { ReviewMilestone(rawValue: $0) }
     }
 
@@ -16,17 +20,17 @@ struct ReviewStorage: ReviewAttemptStoring, @unchecked Sendable {
         var existing = attemptedMilestones()
         if !existing.contains(milestone) {
             existing.append(milestone)
-            defaults.set(existing.map(\.rawValue), forKey: ReviewStorageKeys.attemptedMilestones)
+            defaults.set(existing.map(\.rawValue), forKey: Self.attemptedMilestones)
         }
-        defaults.set(Date(), forKey: ReviewStorageKeys.lastReviewRequestAttemptDate)
+        defaults.set(Date(), forKey: Self.lastReviewRequestAttemptDate)
     }
 
     func lastReviewRequestAttemptDate() -> Date? {
-        defaults.object(forKey: ReviewStorageKeys.lastReviewRequestAttemptDate) as? Date
+        defaults.object(forKey: Self.lastReviewRequestAttemptDate) as? Date
     }
 
     func reset() {
-        defaults.removeObject(forKey: ReviewStorageKeys.attemptedMilestones)
-        defaults.removeObject(forKey: ReviewStorageKeys.lastReviewRequestAttemptDate)
+        defaults.removeObject(forKey: Self.attemptedMilestones)
+        defaults.removeObject(forKey: Self.lastReviewRequestAttemptDate)
     }
 }

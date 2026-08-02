@@ -38,15 +38,18 @@
 
 ```
 SotkaWatch Watch App/
+├── SotkaWatchApp.swift                 # Точка входа Watch App ✅
 ├── Models/
 │   ├── AuthState.swift                 # Модель состояния авторизации для Watch App ✅
 │   └── WorkoutPreviewTraining+ActivityRowData.swift # Расширение для отображения упражнений ✅
+├── PreviewContent/
+│   ├── MockWatchSession.swift          # Мок WCSession для UI-тестов ✅
+│   └── PreviewWatchServices.swift      # Моки сервисов для превью ✅
 ├── Services/
 │   ├── WatchAuthService.swift          # Сервис авторизации для Watch App ✅
 │   ├── WatchAuthServiceProtocol.swift  # Протокол сервиса авторизации ✅
 │   ├── WatchConnectivityService.swift  # Сервис связи с iPhone через WatchConnectivity ✅
 │   ├── WatchConnectivityServiceProtocol.swift # Протокол сервиса связи ✅
-│   ├── WatchWorkoutService.swift       # Сервис тренировок для Watch App ✅
 │   └── WCSessionProtocol.swift         # Протокол для WCSession (для тестирования) ✅
 ├── ViewModels/
 │   ├── HomeViewModel.swift              # ViewModel для главного экрана ✅
@@ -59,7 +62,6 @@ SotkaWatch Watch App/
 │   ├── DayActivitySelectionView.swift  # Выбор типа активности ✅
 │   ├── SelectedActivityView.swift      # Отображение выбранной активности ✅
 │   ├── WatchDayActivityTrainingView.swift # Компонент отображения данных тренировки ✅
-│   ├── WatchDayActivityCommentView.swift  # Компонент отображения комментария ✅
 │   ├── WorkoutPreviewView.swift        # Экран превью тренировки ✅
 │   ├── WorkoutEditView.swift           # Экран редактирования упражнений в тренировке ✅
 │   ├── WorkoutStepperView.swift        # Компонент для изменения значений (stepper) ✅
@@ -199,7 +201,7 @@ SotkaWatch Watch App/
 
 #### 8.1-8.2 Тестирование ✅
 
-Выполнено.
+Выполнено. Сборка `SotkaWatch Watch App` успешна, unit-тесты Watch App проходят (155 тестов).
 
 #### 8.3 UI-тесты (опционально) ✅ Выполнено
 
@@ -599,7 +601,7 @@ extension Constants {
 
 **Новое приложение (текущее состояние):**
 
-- Интеграция с HealthKit **не реализована** (в планах как будущее улучшение); пошаговый план реализации см. [plan-healthkit-integration.md](plan-healthkit-integration.md)
+- Интеграция с HealthKit **не реализована** (в планах как будущее улучшение); пошаговый план реализации см. [plan-healthkit-integration.md](plans/plan-healthkit-integration.md)
 - Тренировки сохраняются только в SwiftData на iPhone
 - Данные о пульсе и калориях не собираются во время тренировки
 

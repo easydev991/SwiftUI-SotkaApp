@@ -15,7 +15,6 @@ struct HTMLContentView: UIViewRepresentable, @preconcurrency Equatable {
         category: String(describing: HTMLContentView.self)
     )
     private let resourceManager = InfopostResourceManager()
-    private let htmlProcessor = InfopostHTMLProcessor()
     private let fontSize: FontSize
     private let infopost: Infopost
     @Binding private var showError: Bool
@@ -224,15 +223,27 @@ private extension HTMLContentView {
             return
         }
 
+        // Загружаем HTML файл из бандла
+        guard let htmlFileURL = Bundle.main.url(forResource: filename, withExtension: "html") else {
+            logger.error("❌ Файл не найден: \(filename).html в бандле")
+            showError(InfopostError.htmlProcessingFailed(filename: filename))
+            return
+        }
+
         // Загружаем и обрабатываем HTML контент
-        guard let processedHTML = htmlProcessor.loadAndProcessHTML(
-            filename: filename,
-            fontSize: fontSize,
-            infopost: infopost,
-            youtubeService: youtubeService
-        ) else {
-            let error = InfopostError.htmlProcessingFailed(filename: filename)
-            showError(error)
+        let processedHTML: String
+        do {
+            let htmlContent = try String(contentsOf: htmlFileURL, encoding: .utf8)
+            let parser = InfopostParser(filename: filename, language: infopost.language)
+            processedHTML = parser.prepareHTMLForDisplay(
+                htmlContent,
+                fontSize: fontSize,
+                infopost: infopost,
+                youtubeService: youtubeService
+            )
+        } catch {
+            logger.error("❌ Ошибка загрузки HTML файла: \(error.localizedDescription)")
+            showError(InfopostError.htmlProcessingFailed(filename: filename))
             return
         }
 

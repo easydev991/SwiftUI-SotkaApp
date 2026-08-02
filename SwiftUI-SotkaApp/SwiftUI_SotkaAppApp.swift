@@ -1,8 +1,14 @@
+import OSLog
 import SWDesignSystem
 import SwiftData
 import SwiftUI
 import SWUtils
 import TipKit
+
+private let logger = Logger(
+    subsystem: Bundle.main.bundleIdentifier ?? "SotkaApp",
+    category: String(describing: SwiftUI_SotkaAppApp.self)
+)
 
 @main
 struct SwiftUI_SotkaAppApp: App {
@@ -10,12 +16,9 @@ struct SwiftUI_SotkaAppApp: App {
     @Environment(\.scenePhase) private var scenePhase
     private let youtubeVideoService: YouTubeVideoService
     private let statusManager: StatusManager
-    private let countriesService: CountriesUpdateService
     @State private var appSettings = AppSettings()
     @State private var authHelper: AuthHelperImp
-    @State private var networkStatus = NetworkStatus()
     @State private var reviewManager: ReviewManager
-    private let client: SWClient
     private let analyticsService: AnalyticsService
 
     init() {
@@ -27,7 +30,6 @@ struct SwiftUI_SotkaAppApp: App {
                 UserProgress.self,
                 DayActivity.self,
                 DayActivityTraining.self,
-                SyncJournalEntry.self,
                 CalendarExtensionRecord.self
             ]
         )
@@ -60,31 +62,23 @@ struct SwiftUI_SotkaAppApp: App {
             analytics = AnalyticsService(providers: [NoopAnalyticsProvider()])
             let mockServices = Self.createMockServices(modelContainer: modelContainer)
             self.statusManager = mockServices.statusManager
-            self.countriesService = mockServices.countriesService
             self.authHelper = mockServices.authHelper
-            self.client = mockServices.client
             UIView.setAnimationsEnabled(false)
+            try? Tips.resetDatastore()
         } else {
             analytics = AnalyticsService(providers: [FirebaseAnalyticsProvider()])
             let authHelper = AuthHelperImp()
-            let client = SWClient(with: authHelper)
             self.statusManager = StatusManager(
-                customExercisesService: .init(client: client),
+                customExercisesService: .init(),
                 infopostsService: .init(
                     language: Self.localeIdentifier,
-                    infopostsClient: client,
                     analytics: analytics
                 ),
-                progressSyncService: .init(client: client),
-                dailyActivitiesService: .init(client: client),
-                statusClient: client,
-                purchasesClient: client,
+                dailyActivitiesService: .init(),
                 modelContainer: modelContainer,
                 reviewEventReporter: reviewManager
             )
-            self.countriesService = .init(client: client)
             self.authHelper = authHelper
-            self.client = client
             do {
                 try Tips.resetDatastore()
                 try Tips.configure()
@@ -95,24 +89,17 @@ struct SwiftUI_SotkaAppApp: App {
         #else
         analytics = AnalyticsService(providers: [FirebaseAnalyticsProvider()])
         let authHelper = AuthHelperImp()
-        let client = SWClient(with: authHelper)
         self.statusManager = StatusManager(
-            customExercisesService: .init(client: client),
+            customExercisesService: .init(),
             infopostsService: .init(
                 language: Self.localeIdentifier,
-                infopostsClient: client,
                 analytics: analytics
             ),
-            progressSyncService: .init(client: client),
-            dailyActivitiesService: .init(client: client),
-            statusClient: client,
-            purchasesClient: client,
+            dailyActivitiesService: .init(),
             modelContainer: modelContainer,
             reviewEventReporter: reviewManager
         )
-        self.countriesService = .init(client: client)
         self.authHelper = authHelper
-        self.client = client
         do {
             try Tips.configure()
         } catch {
@@ -135,7 +122,7 @@ struct SwiftUI_SotkaAppApp: App {
                             await appSettings.syncNotificationSettings()
                         }
                 } else {
-                    WelcomeScreen(client: client)
+                    WelcomeScreen()
                 }
             }
             .loadingOverlay(if: showLoadingOverlay)
@@ -150,19 +137,13 @@ struct SwiftUI_SotkaAppApp: App {
             .environment(statusManager.infopostsService)
             .currentDay(statusManager.currentDayCalculator?.currentDay)
             .restTimeBetweenSets(appSettings.restTime)
-            .networkStatus(networkStatus.isOnline)
             .environment(youtubeVideoService)
             .environment(\.analyticsService, analyticsService)
-            .environment(\.isReadOnlyMode, isReadOnlyMode)
             .preferredColorScheme(appSettings.appTheme.colorScheme)
             .onChange(of: statusManager.currentDayCalculator) { _, newCalculator in
                 guard authHelper.isAuthorized else { return }
                 statusManager.loadInfopostsWithUserGender()
                 statusManager.sendDayDataToWatch(currentDay: newCalculator?.currentDay)
-            }
-            .onChange(of: scenePhase) { _, newPhase in
-                guard newPhase == .active else { return }
-                countriesService.update(statusManager.modelContainer.mainContext)
             }
             .task {
                 #if DEBUG
@@ -174,10 +155,18 @@ struct SwiftUI_SotkaAppApp: App {
         }
         .modelContainer(statusManager.modelContainer)
         .onChange(of: authHelper.isAuthorized) { _, isAuthorized in
-            statusManager.processAuthStatus(isAuthorized: isAuthorized)
             if !isAuthorized {
                 appSettings.didLogout()
                 reviewManager.reset()
+                statusManager.didLogout()
+                // Контекст берём из modelContainer напрямую: @Environment(\.modelContext)
+                // внутри App-структуры не содержит контейнер (модификатор .modelContainer
+                // применяется к контенту сцены) и падает с NSInternalInconsistencyException
+                do {
+                    try statusManager.modelContainer.mainContext.delete(model: User.self)
+                } catch {
+                    logger.error("Не удалось удалить данные пользователя: \(error.localizedDescription)")
+                }
             }
         }
     }
@@ -192,7 +181,6 @@ private extension SwiftUI_SotkaAppApp {
 
     var showLoadingOverlay: Bool {
         guard authHelper.isAuthorized,
-              !authHelper.isOfflineOnly,
               !AppConfiguration.isReadOnlyMode
         else { return false }
         return statusManager.state.isLoadingInitialData
@@ -208,35 +196,23 @@ private extension SwiftUI_SotkaAppApp {
 private extension SwiftUI_SotkaAppApp {
     static func createMockServices(modelContainer: ModelContainer) -> (
         statusManager: StatusManager,
-        countriesService: CountriesUpdateService,
-        authHelper: AuthHelperImp,
-        client: SWClient
+        authHelper: AuthHelperImp
     ) {
         let authHelper = AuthHelperImp()
-        let mockClient = MockSWClient(instantResponse: true)
-        // Настоящий клиент только для для WelcomeScreen, хотя он не показывается
-        let clientForProperty = SWClient(with: authHelper)
         let statusManager = StatusManager(
-            customExercisesService: .init(client: mockClient, isReadOnlyMode: false),
+            customExercisesService: .init(),
             infopostsService: .init(
                 language: Self.localeIdentifier,
-                infopostsClient: mockClient,
-                analytics: AnalyticsService(providers: [NoopAnalyticsProvider()]),
-                isReadOnlyMode: false
+                analytics: AnalyticsService(providers: [NoopAnalyticsProvider()])
             ),
-            progressSyncService: .init(client: mockClient, isReadOnlyMode: false),
-            dailyActivitiesService: .init(client: mockClient, isReadOnlyMode: false),
-            statusClient: mockClient,
-            purchasesClient: mockClient,
+            dailyActivitiesService: .init(),
             modelContainer: modelContainer,
             isReadOnlyMode: false
         )
 
-        let countriesService = CountriesUpdateService(client: mockClient, isReadOnlyMode: false)
-        authHelper.didAuthorize()
         statusManager.setCurrentDayForDebug(12)
-        // Возвращаем настоящий клиент для WelcomeScreen (хотя он не показывается, так как авторизация пропущена)
-        return (statusManager, countriesService, authHelper, clientForProperty)
+        authHelper.performOfflineLogin()
+        return (statusManager, authHelper)
     }
 }
 #endif

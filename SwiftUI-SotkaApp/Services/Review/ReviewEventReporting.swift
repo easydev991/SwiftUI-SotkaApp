@@ -1,5 +1,5 @@
 import Foundation
 
 protocol ReviewEventReporting: Sendable {
-    func workoutCompletedSuccessfully(context: ReviewContext) async
+    func workoutCompletedSuccessfully(hadRecentError: Bool) async
 }

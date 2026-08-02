@@ -40,9 +40,9 @@ Follow these repo-specific conventions and commands.
 
 - Unit tests use Swift Testing (`import Testing`, `@Test`, `#expect`, `#require`).
 - UI tests use XCTest and launch app with argument `UITest`.
-- DEBUG-only mock bootstrapping for UI tests (`MockSWClient`, `ScreenshotDemoData`).
+- DEBUG-only UI-test bootstrapping in `SwiftUI_SotkaAppApp`: `ScreenshotDemoData` seed + offline login, with `isReadOnlyMode: false`.
 - Prefer deterministic tests with in-memory `ModelContainer` for SwiftData.
-- Use mocks from `SwiftUI-SotkaAppTests/Mocks/` for network/service isolation.
+- Use mocks from `SwiftUI-SotkaAppTests/Mocks/` for service isolation.
 - TDD: Red-Green-Refactor cycle. Write tests before implementation.
 
 ## Swift Style Rules (swiftformat)
@@ -69,27 +69,24 @@ Key `.swiftformat` settings applied by `make format`:
 
 - ViewModels: `...ViewModel` with `@Observable`
 - Services: `...Service` or `...Manager`
-- Client protocols: `...Client` (e.g., `DaysClient`, `StatusClient`)
+- Protocols: `...Protocol` or gerund (e.g., `WCSessionProtocol`, `ReviewEventReporting`) — no network `...Client` protocols remain
 - SwiftData models: PascalCase without suffix
-- API DTOs: `...Request`, `...Response`
-- Domain terms: `DayActivity`, `UserProgress`, `SyncJournalEntry`
+- Domain terms: `DayActivity`, `UserProgress`
 - Russian-localized strings: in `.strings`/`.stringsdict` files, NOT hardcoded
 
 ## Architecture and Design
 
 - MVVM with `@Observable` view models/services.
 - Modular structure: `Screens`, `Services`, `Models`, `Extensions`, `PreviewContent`.
-- Dependency injection via `Environment` and protocol-based clients.
-- Client protocols live under `Services/Protocols/`.
-- `SWClient` is the concrete API client implementing multiple client protocols.
+- Dependency injection via SwiftUI `Environment` (services are `@Observable` classes) and init parameters.
+- Services are assembled in `SwiftUI_SotkaAppApp.init` and injected with `.environment(...)`.
 
 ## Offline-First Rules (Mandatory)
 
-- Offline-first is mandatory for all app behavior.
-- Persist locally first (SwiftData), then sync asynchronously.
-- Sync must be optional and non-blocking for user flows.
-- Online authentication requires network; offline login is supported and must stay fully local-first.
-- SwiftData sync entities carry flags: `isSynced`, `shouldDelete`, `lastModified`/`modifyDate`.
+- Offline-first is mandatory: all data is persisted locally in SwiftData.
+- The sync layer was removed (server `100.workout.su` closed) — there is no network sync.
+- Only offline login exists (`AuthHelper`, UserDefaults-backed `isAuthorized`, sentinel user).
+- Legacy sync flags (`isSynced`, `shouldDelete`, `lastModified`) remain on models but are `@available(*, deprecated)` — do not add new ones.
 
 ## Single-User Data Model
 
@@ -118,8 +115,8 @@ Key `.swiftformat` settings applied by `make format`:
 - Never use UIKit/Core Data unless SwiftUI cannot implement required functionality.
 - Never leave unused code after refactoring.
 - Never add code without explicit request.
-- Add sync flags (`isSynced`, `shouldDelete`, `lastModified`) to all models.
-- Always implement local SwiftData persistence first; sync is async and non-blocking.
+- Do not add new sync flags (`isSynced`, `shouldDelete`, `lastModified`) — they are deprecated legacy.
+- Always implement local SwiftData persistence first; no sync layer exists.
 - Test offline functionality for every feature.
 
 ## Agent Workflow Checklist

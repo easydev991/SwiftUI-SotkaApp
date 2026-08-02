@@ -26,10 +26,11 @@
 - [x] Этапы 1–7.3 завершены: доменные типы, `ReviewManager`, `ReviewStorage`, `WorkoutCompletionsCounter`, UI-модификатор, интеграция, логирование, `reset()` при logout, milestone eligibility (`>=`), pending review при watch-save в фоне.
 - [ ] Этап 7: ручная валидация.
 - Код: `SwiftUI-SotkaApp/Services/Review/`.
+- Рефактор после реализации (Фазы A/B): удалены протоколы `ReviewContext`, `ReviewAttemptStoring`, `WorkoutCompletionsCounting`; остался `ReviewEventReporting`.
 
 ### Ключевые детали реализации
 
-- `ReviewContext.hadRecentError` — единственное поле.
+- `ReviewManager.workoutCompletedSuccessfully(hadRecentError:)` — Bool-признак недавней ошибки (тип `ReviewContext` удалён в Фазе B рефактора).
 - `WorkoutCompletionsCounter`: `activityType == .workout`, `!shouldDelete`, post-filter по `userId`.
 - `milestone(forCompletedWorkoutCount:)` — nearest milestone where `count >= milestone`.
 - UI-модификатор: configurable delay, `task(id:)`, `StoreKit` изолирован.

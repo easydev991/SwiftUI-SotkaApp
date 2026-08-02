@@ -2,7 +2,7 @@ import Foundation
 import SwiftData
 
 @MainActor
-struct WorkoutCompletionsCounter: WorkoutCompletionsCounting {
+struct WorkoutCompletionsCounter {
     private let modelContainer: ModelContainer
 
     init(modelContainer: ModelContainer) {

@@ -23,11 +23,6 @@ enum ImageProcessor {
         return compressedData
     }
 
-    /// Создает уменьшенную копию изображения для предварительного просмотра
-    static func createThumbnail(from image: UIImage, size: CGSize = CGSize(width: 150, height: 150)) -> UIImage? {
-        resizeImage(image, to: min(size.width, size.height))
-    }
-
     static func validateImageSize(_ data: Data) -> Bool {
         data.count <= maxFileSize
     }

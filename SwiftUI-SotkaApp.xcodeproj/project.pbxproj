@@ -8,9 +8,7 @@
 
 /* Begin PBXBuildFile section */
 		67156B5F2EDD853700334DEF /* SotkaWatch Watch App.app in Embed Watch Content */ = {isa = PBXBuildFile; fileRef = 67156B3F2EDD853500334DEF /* SotkaWatch Watch App.app */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
-		671E09232DD715820007350F /* SWKeychain in Frameworks */ = {isa = PBXBuildFile; productRef = 671E09222DD715820007350F /* SWKeychain */; };
 		675FDD152DD5E67A0040CA20 /* SWUtils in Frameworks */ = {isa = PBXBuildFile; productRef = 675FDD142DD5E67A0040CA20 /* SWUtils */; };
-		675FDD182DD5E6DE0040CA20 /* SWNetwork in Frameworks */ = {isa = PBXBuildFile; productRef = 675FDD172DD5E6DE0040CA20 /* SWNetwork */; };
 		679DD77F2DDC7D4900A939D9 /* SWDesignSystem in Frameworks */ = {isa = PBXBuildFile; productRef = 679DD77E2DDC7D4900A939D9 /* SWDesignSystem */; };
 		67BFDD972EF59AFF008E63D2 /* SWDesignSystem in Frameworks */ = {isa = PBXBuildFile; productRef = 67BFDD962EF59AFF008E63D2 /* SWDesignSystem */; };
 		67E3C35D2F88FD7700B4C373 /* FirebaseAnalytics in Frameworks */ = {isa = PBXBuildFile; productRef = 67E3C35C2F88FD7700B4C373 /* FirebaseAnalytics */; };
@@ -143,8 +141,6 @@
 			membershipExceptions = (
 				Libraries/CachedAsyncImage,
 				Libraries/SWDesignSystem,
-				Libraries/SWKeychain,
-				Libraries/SWNetwork,
 				Libraries/SWUtils,
 				SupportingFiles/Info.plist,
 			);
@@ -231,8 +227,6 @@
 			buildActionMask = 2147483647;
 			files = (
 				675FDD152DD5E67A0040CA20 /* SWUtils in Frameworks */,
-				675FDD182DD5E6DE0040CA20 /* SWNetwork in Frameworks */,
-				671E09232DD715820007350F /* SWKeychain in Frameworks */,
 				67E3C35F2F88FD7700B4C373 /* FirebaseCrashlytics in Frameworks */,
 				67E3C35D2F88FD7700B4C373 /* FirebaseAnalytics in Frameworks */,
 				679DD77F2DDC7D4900A939D9 /* SWDesignSystem in Frameworks */,
@@ -383,8 +377,6 @@
 			name = "SwiftUI-SotkaApp";
 			packageProductDependencies = (
 				675FDD142DD5E67A0040CA20 /* SWUtils */,
-				675FDD172DD5E6DE0040CA20 /* SWNetwork */,
-				671E09222DD715820007350F /* SWKeychain */,
 				679DD77E2DDC7D4900A939D9 /* SWDesignSystem */,
 				67E3C35C2F88FD7700B4C373 /* FirebaseAnalytics */,
 				67E3C35E2F88FD7700B4C373 /* FirebaseCrashlytics */,
@@ -667,7 +659,7 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				MARKETING_VERSION = 4.9.0;
+				MARKETING_VERSION = 4.10.0;
 				PRODUCT_BUNDLE_IDENTIFIER = "com.oleg991.SwiftUI-SotkaApp.watchkitapp";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SDKROOT = watchos;
@@ -702,7 +694,7 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				MARKETING_VERSION = 4.9.0;
+				MARKETING_VERSION = 4.10.0;
 				PRODUCT_BUNDLE_IDENTIFIER = "com.oleg991.SwiftUI-SotkaApp.watchkitapp";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SDKROOT = watchos;
@@ -965,7 +957,7 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				MARKETING_VERSION = 4.9.0;
+				MARKETING_VERSION = 4.10.0;
 				PRODUCT_BUNDLE_IDENTIFIER = "com.oleg991.SwiftUI-SotkaApp";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
@@ -1007,7 +999,7 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				MARKETING_VERSION = 4.9.0;
+				MARKETING_VERSION = 4.10.0;
 				PRODUCT_BUNDLE_IDENTIFIER = "com.oleg991.SwiftUI-SotkaApp";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
@@ -1185,17 +1177,9 @@
 /* End XCRemoteSwiftPackageReference section */
 
 /* Begin XCSwiftPackageProductDependency section */
-		671E09222DD715820007350F /* SWKeychain */ = {
-			isa = XCSwiftPackageProductDependency;
-			productName = SWKeychain;
-		};
 		675FDD142DD5E67A0040CA20 /* SWUtils */ = {
 			isa = XCSwiftPackageProductDependency;
 			productName = SWUtils;
-		};
-		675FDD172DD5E6DE0040CA20 /* SWNetwork */ = {
-			isa = XCSwiftPackageProductDependency;
-			productName = SWNetwork;
 		};
 		679DD77E2DDC7D4900A939D9 /* SWDesignSystem */ = {
 			isa = XCSwiftPackageProductDependency;

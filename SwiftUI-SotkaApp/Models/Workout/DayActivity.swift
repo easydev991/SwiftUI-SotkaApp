@@ -27,6 +27,7 @@ final class DayActivity {
     var modifyDate: Date
 
     /// Флаг синхронизации с сервером
+    @available(*, deprecated, message: "Sync-флаг, оставлен для стабильности схемы (сервер закрыт 2026-08-01).")
     var isSynced = false
     /// Флаг для удаления с сервера
     var shouldDelete = false
@@ -65,35 +66,6 @@ final class DayActivity {
         self.isSynced = false
         self.shouldDelete = false
     }
-
-    /// Инициализатор из ответа сервера
-    convenience init(from response: DayResponse, user: User? = nil) {
-        let createDate = response.createDate ?? .now
-        let modifyDate = response.modifyDate ?? .now
-        self.init(
-            day: response.id,
-            activityTypeRaw: response.activityType,
-            count: response.count,
-            plannedCount: response.plannedCount,
-            executeTypeRaw: response.executeType,
-            trainingTypeRaw: response.trainType,
-            duration: response.duration,
-            comment: response.comment,
-            createDate: createDate,
-            modifyDate: modifyDate,
-            user: user
-        )
-        // Данные с сервера считаются синхронизированными
-        self.isSynced = true
-        self.shouldDelete = false
-
-        // Преобразуем trainings из ответа сервера
-        if let responseTrainings = response.trainings {
-            self.trainings = responseTrainings.map { training in
-                DayActivityTraining(from: training, dayActivity: self)
-            }
-        }
-    }
 }
 
 extension DayActivity {
@@ -119,59 +91,9 @@ extension DayActivity {
         }
     }
 
-    /// Тип тренировки
-    var trainingType: ExerciseType? {
-        get {
-            guard let trainingTypeRaw else { return nil }
-            return ExerciseType(rawValue: trainingTypeRaw)
-        }
-        set {
-            trainingTypeRaw = newValue?.rawValue
-        }
-    }
-
     /// Пройден ли день (определяется по наличию count)
     var isPassed: Bool {
         count != nil
-    }
-
-    /// Преобразование в ActivitySnapshot для конкурентной синхронизации
-    var activitySnapshot: ActivitySnapshot {
-        ActivitySnapshot(
-            day: day,
-            activityTypeRaw: activityTypeRaw,
-            count: count,
-            plannedCount: plannedCount,
-            executeTypeRaw: executeTypeRaw,
-            trainingTypeRaw: trainingTypeRaw,
-            duration: duration,
-            comment: comment,
-            createDate: createDate,
-            modifyDate: modifyDate,
-            shouldDelete: shouldDelete,
-            trainings: trainings.isEmpty ? nil : trainings.map(\.trainingSnapshot)
-        )
-    }
-
-    /// Проверяет, изменились ли данные активности по сравнению с ответом сервера
-    /// - Parameter serverResponse: Ответ сервера для сравнения
-    /// - Returns: `true` если данные изменились, `false` если идентичны
-    func hasDataChanged(comparedTo serverResponse: DayResponse) -> Bool {
-        // Проверяем основные поля активности
-        let basicDataChanged = activityTypeRaw != serverResponse.activityType ||
-            count != serverResponse.count ||
-            plannedCount != serverResponse.plannedCount ||
-            executeTypeRaw != serverResponse.executeType ||
-            trainingTypeRaw != serverResponse.trainType ||
-            duration != serverResponse.duration ||
-            comment != serverResponse.comment
-
-        // Проверяем изменения в trainings: сравниваем количество
-        let serverTrainingsCount = serverResponse.trainings?.count ?? 0
-        let localTrainingsCount = trainings.count
-        let trainingsChanged = localTrainingsCount != serverTrainingsCount
-
-        return basicDataChanged || trainingsChanged
     }
 
     /// Устанавливает тип активности для stretch/rest/sick и очищает тренировочные данные

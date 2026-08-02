@@ -180,35 +180,6 @@ struct HomeViewModelTests {
         #expect(sentActivity.activityType == .stretch)
     }
 
-    @Test("Запрашивает данные тренировки при начале тренировки")
-    func requestsWorkoutDataWhenStartingWorkout() async throws {
-        let authService = MockWatchAuthService(isAuthorized: true)
-        let connectivityService = MockWatchConnectivityService()
-        let workoutData = WorkoutData(
-            day: 5,
-            executionType: 0,
-            trainings: [],
-            plannedCount: 4
-        )
-        connectivityService.currentDay = 5
-        connectivityService.mockWorkoutData = workoutData
-
-        let viewModel = HomeViewModel(
-            authService: authService,
-            connectivityService: connectivityService
-        )
-
-        await viewModel.loadData()
-        let currentDay = try #require(viewModel.currentDay)
-
-        let result = await viewModel.startWorkout()
-
-        let requestedDay = try #require(connectivityService.requestedWorkoutDataDay)
-        #expect(requestedDay == currentDay)
-        let requestedWorkoutData = try #require(result)
-        #expect(requestedWorkoutData.day == workoutData.day)
-    }
-
     @Test("Обрабатывает ошибки связи с iPhone")
     func handlesConnectivityErrors() async throws {
         let authService = MockWatchAuthService(isAuthorized: true)

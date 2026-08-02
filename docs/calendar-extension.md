@@ -5,8 +5,7 @@
 Функционал позволяет продолжать программу после 100-го дня блоками по 100 дней.
 В текущей реализации продление бесплатное и доступно из Home.
 
-- Авторизованный пользователь: продления синхронизируются с сервером.
-- `offline-only` пользователь: продления хранятся только локально.
+- Все пользователи работают офлайн (сервер закрыт): продления хранятся только локально.
 
 ---
 
@@ -48,12 +47,12 @@ let shouldShowInfopost = currentDay <= 100
 
 ### Локальная модель
 
-Используется SwiftData-сущность `CalendarExtensionRecord` с sync-флагами:
+Используется SwiftData-сущность `CalendarExtensionRecord`:
 
-- `isSynced`
-- `shouldDelete`
-- `lastModified`
-- связь с `User`
+- `isSynced` — `@available(*, deprecated, message: "Sync-флаг, оставлен для стабильности схемы (сервер закрыт 2026-08-01).")`;
+- `shouldDelete` — резервный флаг (серверного удаления нет);
+- `lastModified` — живое поле, используется как sort comparator;
+- связь с `User` — plain optional без `@Relationship`/`deleteRule`.
 
 ### Очистка данных
 
@@ -64,27 +63,18 @@ let shouldShowInfopost = currentDay <= 100
 
 ---
 
-## Серверная синхронизация покупок
+## Серверная синхронизация покупок (удалена)
 
-Для авторизованного пользователя используется серверный контракт покупок календаря:
+Серверная синхронизация покупок календаря удалена вместе со sync-слоем: сервер `100.workout.su` закрыт (2026-08-01), приложение в read-only режиме.
+
+Ранее использовался серверный контракт:
 
 - `GET /100/purchases`
 - `POST /100/purchases/calendars`
 
-Поле `calendars` содержит массив ISO-дат.
+Поле `calendars` содержало массив ISO-дат, и применялась merge-логика (union `serverDates`/`localDates`, дедуп по нормализованной UTC-дате, перевод unsynced-записи в `isSynced=true`). Контракт утратил актуальность.
 
-### Merge-логика
-
-- источник `extensionCount` = `union(serverDates, localDates)`;
-- дедуп по нормализованной UTC-дате (точность до секунд);
-- unsynced локальная запись, уже присутствующая на сервере, не дублируется и переводится в `isSynced=true`.
-
-### Retry
-
-Retry unsynced выполняется детерминированно в:
-
-- `getStatus()`
-- `syncJournalAndProgress()`
+> **Историческая справка (sync-слой удалён в `ed82f6e9`):** ранее здесь также была секция «Retry» — `getStatus()` детерминированно вызывал `syncJournalAndProgress()`, что инициировало retry unsynced. Раздел утратил актуальность и удалён.
 
 ---
 
@@ -105,7 +95,7 @@ Retry unsynced выполняется детерминированно в:
 - grid/list используют единый toolbar-контрол пагинации по 100 дней (показывается только при `totalDays > 100`);
 - для страниц `101+` в list используется плоский список без базовых секций;
 - выбранная страница journal персистится в `UserDefaults` (ключ `Journal.SelectedPage`) и валидируется через clamp по `totalDays`;
-- один и тот же persisted-ключ используется для online и `offline-only` режимов;
+- один и тот же persisted-ключ используется во всех режимах;
 - persisted-страница очищается при `logout`/`resetProgram()`.
 
 ### Debug/Preview
@@ -157,7 +147,7 @@ Retry unsynced выполняется детерминированно в:
 Реализация покрыта unit/integration/regression тестами, включая:
 
 - математику DayCalculator;
-- StatusManager (sync/merge/retry/offline-only);
+- StatusManager (offline-only, локальные продления, cleanup);
 - Home/Journal/Analytics;
 - cleanup при logout/reset;
 - SwiftData migration-тесты для legacy-store.

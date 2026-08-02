@@ -2,7 +2,7 @@
 
 ## Текущий статус
 
-Этап 1 выполнен; этапы 2–4 не выполнены (проверки с диапазонами остаются в указанных ниже файлах).
+Этап 1 выполнен. Этапы 2–4 закрыты без выполнения: все указанные в них тестовые файлы удалены при удалении sync-слоя (июль–август 2026), рефакторинг не требуется. Оставшиеся диапазонные проверки в уцелевших файлах корректны и остаются диапазонами по пп. 3–5.
 
 ## Цель
 
@@ -32,35 +32,19 @@
 
 ### 2. Счетчики вызовов (нужно проанализировать каждый случай)
 
-#### 2.1. StatusManagerWatchConnectivityTests.swift
+**Закрыто:** файлы пунктов 2.1–2.3 удалены вместе с каталогом `SwiftUI-SotkaAppTests/StatusManagerTests/` при удалении sync-слоя, анализ не требуется.
 
-**Файл:** `SwiftUI-SotkaAppTests/StatusManagerTests/StatusManagerWatchConnectivityTests.swift`
+#### 2.1. StatusManagerWatchConnectivityTests.swift — файл удалён
 
-**Паттерны в файле (номера строк могут смещаться):**
+Файл находился в каталоге `SwiftUI-SotkaAppTests/StatusManagerTests/`, удалён вместе с ним. Паттерны `mockSession.sentMessages.count >= 1`, `applicationContexts.count >= 1` и подобные более не существуют.
 
-- `#expect(mockSession.sentMessages.count >= 1)` — в нескольких тестах (порядка строк 188, 207, 333, 350, 389, 541). Контекст: проверка отправки сообщений. Действие: если гарантируется ровно одно сообщение — заменить на `== 1`.
-- `#expect(mockSession.applicationContexts.count >= 1)` — в нескольких тестах (порядка строк 647, 668, 698, 825, 842, 861, 903). Контекст: отправка applicationContext. Действие: при гарантии ровно одного контекста — заменить на `== 1`.
-- `#expect(mockSession.applicationContexts.count > initialContextCount)` (около строки 767). Действие: определить точное ожидаемое увеличение и заменить на `== initialContextCount + N`.
-- `#expect(mockSession.applicationContexts.count <= initialContextCount + 1)` (около строки 808). Действие: заменить на точное равенство после анализа логики (например `== initialContextCount` или `== initialContextCount + 1`).
+#### 2.2. StatusManagerWatchConnectivityIntegrationTests+FullStartupScenarios.swift — файл удалён
 
-**Требуется анализ:** по каждому тесту определить точное ожидаемое количество сообщений/контекстов.
+Файл находился в каталоге `SwiftUI-SotkaAppTests/StatusManagerTests/`, удалён вместе с ним.
 
-#### 2.2. StatusManagerWatchConnectivityIntegrationTests+FullStartupScenarios.swift
+#### 2.3. StatusManagerSyncJournalTests.swift — файл удалён
 
-**Файл:** `SwiftUI-SotkaAppTests/StatusManagerTests/StatusManagerWatchConnectivityIntegrationTests+FullStartupScenarios.swift`
-
-**Паттерны:** `#expect(mockSession.applicationContexts.count >= initialApplicationContextCount + 2)` и `>= initialApplicationContextCount + 5` (порядка строк 357, 396). Контекст: интеграционные сценарии запуска. Действие: определить точное ожидаемое количество контекстов и заменить на `==`.
-
-#### 2.3. StatusManagerSyncJournalTests.swift
-
-**Файл:** `SwiftUI-SotkaAppTests/StatusManagerTests/StatusManagerSyncJournalTests.swift`
-
-**Паттерны (строки 53–55, 98, 141, 184):**
-
-- `#expect(mockProgressClient.getProgressCallCount >= initialProgressCalls)` и аналоги для `getCustomExercisesCallCount`, `getDaysCallCount` — при синхронизации. Действие: выяснить точное число вызовов и заменить на `==`.
-- `#expect(mockProgressClient.getProgressCallCount > initialCalls)` (и аналоги для exercise/days). Действие: определить точное приращение и заменить на `== initialCalls + N`.
-
-**Требуется анализ:** логика синхронизации и количество вызовов клиентов в каждом сценарии.
+Файл находился в каталоге `SwiftUI-SotkaAppTests/StatusManagerTests/`, удалён вместе с ним. Паттерны `getProgressCallCount >= initialProgressCalls` и аналогичные более не существуют.
 
 ### 3. Время выполнения (оставить диапазоны)
 
@@ -74,44 +58,40 @@
 
 **Обоснование:** Даты зависят от времени выполнения кода или проверяют логическую корректность, диапазоны оправданы.
 
-- **DayActivityTests.swift:** строки 706-707, 858-861 - `modifyDate`, `createDate`
-- **StatusManagerResetProgramTests.swift:** строки 433-434 - `startDate`
-- **StatusManagerStartNewRunTests.swift:** строки 55-56 - `startDate`
-- **StatusManagerSyncJournalTests.swift:** строки 333, 372, 503 - `endDate >= startDate`
-- **ProgressSyncServicePhotoTests.swift:** строка 104 - `lastModified >= originalDate`
-- **CountriesUpdateServiceTests.swift:** строки 351-352 - `lastUpdateDate`
-- **WorkoutProgramCreatorDayActivityTests.swift:** строки 110-113 - `createDate`, `modifyDate`
-- **WorkoutScreenViewModelSetupTests.swift:** строка 39 - `workoutStartTime <= Date()`
+- **DayActivityTests.swift:** файл удалён
+- **StatusManagerResetProgramTests.swift:** файл удалён
+- **StatusManagerStartNewRunTests.swift:** файл удалён
+- **StatusManagerSyncJournalTests.swift:** файл удалён
+- **ProgressSyncServicePhotoTests.swift:** файл удалён
+- **CountriesUpdateServiceTests.swift:** файл удалён
+- **WorkoutProgramCreatorDayActivityTests.swift:** строки 110-113 - `createDate`, `modifyDate` (проверки на месте)
+- **WorkoutScreenViewModelSetupTests.swift:** строка 39 - `workoutStartTime <= Date()` (проверка на месте)
 
 ### 5. Валидация размеров (оставить диапазоны)
 
 **Обоснование:** Проверка ограничений размера, диапазоны оправданы.
 
-- **ImageProcessorTests.swift:** строки 71-72, 81-82 - проверки `width <= size.width`, `height <= size.height`
+- **ImageProcessorTests.swift:** файл переписан (август 2026), проверки `width <= size.width` / `height <= size.height` удалены; валидация идёт через `validateImageSize`/`validateImageFormat`. Пункт неактуален.
 
 ### 6. Валидация года (оставить диапазоны)
 
 **Обоснование:** Валидация диапазона года, диапазоны оправданы.
 
-- **UserProgressTests.swift:** строки 1127-1128, 1160-1161 - проверки `year >= 2020, <= 2030`
+- **UserProgressTests.swift:** файл удалён, пункт неактуален
 
 ### 7. Счетчики операций синхронизации (нужно проанализировать)
 
-**Контекст:** Проверки вида `details.created >= 0`, `details.updated >= 0`, `details.deleted >= 0` в тестах синхронизации.  
-**Действие:** В каждом тесте определить ожидаемое точное количество операций (created/updated/deleted) и заменить на `== N` где это однозначно.  
-**Требуется анализ:** Логика сценария и контракт сервиса для каждого теста.
+**Закрыто:** все файлы пункта удалены при удалении sync-слоя, анализ не требуется.
 
-- **DailyActivitiesServiceTests.swift** (SwiftUI-SotkaAppTests/DailyActivitiesTests/): строки 60–62, 158, 212
-- **CustomExercisesServiceTests.swift** (SwiftUI-SotkaAppTests/Services/): строки 486–488, 567, 604
-- **ProgressSyncServiceTests.swift** (SwiftUI-SotkaAppTests/ProgressTests/): строки 1001–1003, 1093–1095 (и при необходимости 1166: `totalOperations > 0`)
+- **DailyActivitiesServiceTests.swift** (SwiftUI-SotkaAppTests/DailyActivitiesTests/): файл удалён
+- **CustomExercisesServiceTests.swift** (SwiftUI-SotkaAppTests/Services/): файл удалён
+- **ProgressSyncServiceTests.swift** (SwiftUI-SotkaAppTests/ProgressTests/): файл удалён
 
 ### 8. Специальные случаи
 
-#### 8.1. InfopostFilenameManagerTests.swift
+#### 8.1. InfopostFilenameManagerTests.swift — файл удалён
 
-**Файл:** `SwiftUI-SotkaAppTests/InfopostsTests/InfopostFilenameManagerTests.swift` (строка ~60)
-
-**Паттерн:** `#expect(russianFilenames.count >= englishFilenames.count)`. Контекст: сравнение количества русских и английских имён файлов. Действие: если в тесте подразумеваются конкретные числа (например 103 и 102), заменить на проверки `== 103` и `== 102`. Требуется анализ контекста теста.
+Файл находился в каталоге `SwiftUI-SotkaAppTests/InfopostsTests/`, удалён при рефакторинге. Паттерн `russianFilenames.count >= englishFilenames.count` более не существует.
 
 ## Порядок выполнения рефакторинга
 
@@ -119,25 +99,25 @@
 
 См. п. 1 выше.
 
-### Этап 2: Счетчики вызовов (приоритет: средний) — не выполнен
+### Этап 2: Счетчики вызовов — закрыт (файлы удалены)
 
-1. StatusManagerWatchConnectivityTests.swift  
-2. StatusManagerWatchConnectivityIntegrationTests+FullStartupScenarios.swift  
-3. StatusManagerSyncJournalTests.swift  
+1. StatusManagerWatchConnectivityTests.swift — файл удалён
+2. StatusManagerWatchConnectivityIntegrationTests+FullStartupScenarios.swift — файл удалён
+3. StatusManagerSyncJournalTests.swift — файл удалён
 
-Требуется анализ логики для определения точных значений в каждом тесте.
+Все файлы этапа удалены вместе с каталогом `StatusManagerTests/` при удалении sync-слоя.
 
-### Этап 3: Счетчики операций синхронизации (приоритет: средний) — не выполнен
+### Этап 3: Счетчики операций синхронизации — закрыт (файлы удалены)
 
-1. DailyActivitiesServiceTests.swift (папка DailyActivitiesTests/)  
-2. CustomExercisesServiceTests.swift  
-3. ProgressSyncServiceTests.swift  
+1. DailyActivitiesServiceTests.swift — файл удалён
+2. CustomExercisesServiceTests.swift — файл удалён
+3. ProgressSyncServiceTests.swift — файл удалён
 
-Требуется анализ логики синхронизации и контракта сервисов.
+Все файлы этапа удалены при удалении sync-слоя.
 
-### Этап 4: Специальные случаи (приоритет: низкий) — не выполнен
+### Этап 4: Специальные случаи — закрыт (файл удалён)
 
-1. InfopostFilenameManagerTests.swift — проверка `russianFilenames.count >= englishFilenames.count`.
+1. InfopostFilenameManagerTests.swift — файл удалён
 
 ## Правила выполнения рефакторинга
 

@@ -9,12 +9,18 @@ private let logger = Logger(subsystem: Bundle.sotkaAppBundleId, category: String
 final class User {
     @Attribute(.unique) var id: Int
     var userName: String?
+    @available(*, deprecated, message: "Поле профиля сервера, оставлено для стабильности схемы (сервер закрыт 2026-08-01).")
     var fullName: String?
+    @available(*, deprecated, message: "Поле профиля сервера, оставлено для стабильности схемы (сервер закрыт 2026-08-01).")
     var email: String?
+    @available(*, deprecated, message: "Поле профиля сервера, оставлено для стабильности схемы (сервер закрыт 2026-08-01).")
     var imageStringURL: String?
+    @available(*, deprecated, message: "Поле профиля сервера, оставлено для стабильности схемы (сервер закрыт 2026-08-01).")
     var cityId: Int?
+    @available(*, deprecated, message: "Поле профиля сервера, оставлено для стабильности схемы (сервер закрыт 2026-08-01).")
     var countryId: Int?
     var genderCode: Int?
+    @available(*, deprecated, message: "Поле профиля сервера, оставлено для стабильности схемы (сервер закрыт 2026-08-01).")
     var birthDateIsoString: String?
 
     /// Пользовательские упражнения
@@ -26,9 +32,6 @@ final class User {
     /// Активности пользователя
     @Relationship(deleteRule: .cascade) var dayActivities: [DayActivity] = []
 
-    /// Записи журнала синхронизаций
-    @Relationship(deleteRule: .cascade) var syncJournalEntries: [SyncJournalEntry] = []
-
     /// ID избранных инфопостов (хранится как строка через запятую, например "id1,id2,id3")
     private var favoriteInfopostIdsString = ""
 
@@ -36,6 +39,7 @@ final class User {
     private var readInfopostDaysString = ""
 
     /// Несинхронизированные прочитанные дни инфопостов (хранится как строка через запятую, например "1,2,15")
+    @available(*, deprecated, message: "Sync-поле, оставлено для стабильности схемы (сервер закрыт 2026-08-01).")
     private var unsyncedReadInfopostDaysString = ""
 
     init(
@@ -65,20 +69,6 @@ final class User {
             id: -1,
             userName: "offline-user",
             genderCode: genderCode
-        )
-    }
-
-    convenience init(from response: UserResponse) {
-        self.init(
-            id: response.id,
-            userName: response.name,
-            fullName: response.fullname,
-            email: response.email,
-            imageStringURL: response.image,
-            cityID: response.cityId,
-            countryID: response.countryId,
-            genderCode: response.gender,
-            birthDateIsoString: response.birthDateIsoString
         )
     }
 }
@@ -219,22 +209,6 @@ extension User {
             days.append(day)
             readInfopostDays = days
         }
-    }
-
-    /// Добавляет день в список несинхронизированных прочитанных дней
-    func addUnsyncedReadInfopostDay(_ day: Int) {
-        var days = unsyncedReadInfopostDays
-        if !days.contains(day) {
-            days.append(day)
-            unsyncedReadInfopostDays = days
-        }
-    }
-
-    /// Удаляет день из списка несинхронизированных прочитанных дней
-    func removeUnsyncedReadInfopostDay(_ day: Int) {
-        var days = unsyncedReadInfopostDays
-        days.removeAll { $0 == day }
-        unsyncedReadInfopostDays = days
     }
 
     /// Устанавливает весь список ID избранных инфопостов

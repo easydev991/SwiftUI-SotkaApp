@@ -39,17 +39,6 @@ final class WorkoutViewModel {
         stepStates.allSatisfy { $0.state == .completed }
     }
 
-    /// Определяет, нужно ли показывать секцию со списком упражнений
-    var shouldShowExercisesReminder: Bool {
-        if executionType == .cycles {
-            return true
-        }
-        if executionType == .turbo {
-            return getEffectiveExecutionType() == .cycles
-        }
-        return false
-    }
-
     /// Инициализатор
     /// - Parameter connectivityService: Сервис связи с iPhone для сохранения результата тренировки
     init(
@@ -315,66 +304,6 @@ final class WorkoutViewModel {
         }
 
         return WorkoutResult(count: count, duration: duration)
-    }
-
-    /// Получение состояния этапа
-    /// - Parameter step: Этап тренировки
-    /// - Returns: Состояние этапа
-    func getStepState(for step: WorkoutStep) -> WorkoutState {
-        guard let stepState = stepStates.first(where: { $0.step.id == step.id }) else {
-            return .inactive
-        }
-        return stepState.state
-    }
-
-    /// Получение списка кругов (для типа .cycles)
-    /// - Returns: Список этапов кругов
-    func getCycleSteps() -> [WorkoutStepState] {
-        let effectiveType = getEffectiveExecutionType()
-        guard effectiveType == .cycles else {
-            return []
-        }
-        return stepStates.filter { stepState in
-            if case .exercise(.cycles, _) = stepState.step {
-                return true
-            }
-            return false
-        }
-    }
-
-    /// Получение списка подходов для упражнения (для типа .sets)
-    /// - Parameter trainingId: Идентификатор упражнения
-    /// - Returns: Список этапов подходов для упражнения
-    func getExerciseSteps(for trainingId: String) -> [WorkoutStepState] {
-        let effectiveType = getEffectiveExecutionType()
-        guard effectiveType == .sets else {
-            return []
-        }
-
-        guard let exerciseIndex = trainings.firstIndex(where: { $0.id == trainingId }) else {
-            return []
-        }
-
-        let setsPerExercise = isTurboWithSets ? 1 : (plannedCount ?? 0)
-
-        guard setsPerExercise > 0 else {
-            return []
-        }
-
-        let startIndex = 1 + exerciseIndex * setsPerExercise
-        let endIndex = startIndex + setsPerExercise
-
-        guard startIndex < stepStates.count, endIndex <= stepStates.count else {
-            return []
-        }
-
-        let exerciseSteps = Array(stepStates[startIndex ..< endIndex])
-        return exerciseSteps.filter { stepState in
-            if case .exercise(.sets, _) = stepState.step {
-                return true
-            }
-            return false
-        }
     }
 
     /// Определяет индекс текущего упражнения на основе глобального номера подхода

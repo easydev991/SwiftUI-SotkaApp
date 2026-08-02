@@ -41,10 +41,6 @@ struct SwiftDataMigrationTests {
         #expect(progressList.count == 1)
         #expect(firstProgress.id == 7)
 
-        let syncEntry = SyncJournalEntry(startDate: .now, result: .success)
-        context.insert(syncEntry)
-        try context.save()
-
         let extensions = try context.fetch(FetchDescriptor<CalendarExtensionRecord>())
         #expect(extensions.isEmpty)
     }
@@ -149,6 +145,80 @@ struct SwiftDataMigrationTests {
         #expect(users.count == 1)
     }
 
+    @Test("Миграция со старой схемой (с SyncJournalEntry) сохраняет User, Progress, DayActivity, CustomExercise, CalendarExtensionRecord")
+    func opensStoreAfterRemovingSyncJournalEntryAndPreservesData() throws {
+        let (directoryURL, storeURL) = makeStoreURLs()
+        defer { try? FileManager.default.removeItem(at: directoryURL) }
+
+        do {
+            let oldSchema = makeLegacySchema()
+            let oldConfiguration = ModelConfiguration("SyncJournalMigrationTest", schema: oldSchema, url: storeURL)
+            let oldContainer = try ModelContainer(for: oldSchema, configurations: [oldConfiguration])
+            let oldContext = oldContainer.mainContext
+
+            let user = User(id: 1, userName: "migration-user", fullName: "Migration User", email: "migration@example.com")
+            let progress = UserProgress(id: 1, pullUps: 10, pushUps: 20, squats: 30, weight: 75)
+            progress.user = user
+
+            let exercise = CustomExercise(
+                id: "demo-exercise-1",
+                name: "Тестовое упражнение",
+                imageId: 0,
+                createDate: .now,
+                modifyDate: .now,
+                user: user
+            )
+
+            let activity = DayActivity(
+                day: 1,
+                activityTypeRaw: DayActivityType.workout.rawValue,
+                count: 4,
+                executeTypeRaw: ExerciseExecutionType.cycles.rawValue,
+                createDate: .now,
+                modifyDate: .now,
+                user: user
+            )
+            activity.trainings = [
+                DayActivityTraining(count: 5, typeId: ExerciseType.pullups.rawValue, sortOrder: 0),
+                DayActivityTraining(count: 10, typeId: ExerciseType.pushups.rawValue, sortOrder: 1),
+                DayActivityTraining(count: 15, typeId: ExerciseType.squats.rawValue, sortOrder: 2)
+            ]
+
+            oldContext.insert(user)
+            oldContext.insert(progress)
+            oldContext.insert(exercise)
+            oldContext.insert(activity)
+            try oldContext.save()
+        }
+
+        let newSchema = makeCurrentSchema()
+        let newConfiguration = ModelConfiguration("SyncJournalMigrationTest", schema: newSchema, url: storeURL)
+        let migratedContainer = try ModelContainer(for: newSchema, configurations: [newConfiguration])
+        let context = migratedContainer.mainContext
+
+        let users = try context.fetch(FetchDescriptor<User>())
+        let firstUser = try #require(users.first)
+        #expect(users.count == 1)
+        #expect(firstUser.id == 1)
+
+        let progressList = try context.fetch(FetchDescriptor<UserProgress>())
+        #expect(progressList.count == 1)
+        let firstProgress = try #require(progressList.first)
+        #expect(firstProgress.id == 1)
+        #expect(firstProgress.pullUps == 10)
+
+        let exercises = try context.fetch(FetchDescriptor<CustomExercise>())
+        #expect(exercises.count == 1)
+
+        let activities = try context.fetch(FetchDescriptor<DayActivity>())
+        #expect(activities.count == 1)
+        let firstActivity = try #require(activities.first)
+        #expect(firstActivity.day == 1)
+
+        let extensions = try context.fetch(FetchDescriptor<CalendarExtensionRecord>())
+        #expect(extensions.isEmpty)
+    }
+
     private func makeLegacySchema() -> Schema {
         Schema(
             [
@@ -157,8 +227,7 @@ struct SwiftDataMigrationTests {
                 CustomExercise.self,
                 UserProgress.self,
                 DayActivity.self,
-                DayActivityTraining.self,
-                SyncJournalEntry.self
+                DayActivityTraining.self
             ]
         )
     }
@@ -185,7 +254,6 @@ struct SwiftDataMigrationTests {
                 UserProgress.self,
                 DayActivity.self,
                 DayActivityTraining.self,
-                SyncJournalEntry.self,
                 CalendarExtensionRecord.self
             ]
         )

@@ -5,11 +5,13 @@ import SwiftData
 final class Country {
     @Attribute(.unique) var id: String
     var name: String
-    var cities: [City]
 
-    init(id: String = UUID().uuidString, name: String = "", cities: [City] = []) {
+    init(id: String = UUID().uuidString, name: String = "") {
         self.id = id
         self.name = name
-        self.cities = cities
+    }
+
+    static func makeDefaultCountry() -> Country {
+        Country(id: "ru", name: "Россия")
     }
 }

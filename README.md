@@ -1,7 +1,7 @@
 # Street Workout Тренировки
 
 <!-- BEGIN_VERSIONS -->
-[<img alt="Xcode Version" src="https://img.shields.io/badge/Xcode_Version-27.0-blue">](https://developer.apple.com/xcode/)
+[<img alt="Xcode Version" src="https://img.shields.io/badge/Xcode_Version-26.6-blue">](https://developer.apple.com/xcode/)
 [<img alt="Swift Version" src="https://img.shields.io/badge/Swift_Version-6.3.0-orange">](https://swift.org)
 [<img alt="iOS Version" src="https://img.shields.io/badge/iOS_Version-17.0-4F9153">](https://www.apple.com/ios/)
 <!-- END_VERSIONS -->
@@ -43,7 +43,7 @@
 
 - [Установка и настройка](docs/setup-guide.md) - подробная инструкция по настройке проекта
 - [Миграция данных](docs/data-migration.md) - руководство по миграции данных SwiftData
-- [Продление календаря](docs/calendar-extension.md) - описание продления после 100-го дня и синхронизации
+- [Продление календаря](docs/calendar-extension.md) - описание продления после 100-го дня
 - [UI-тесты и скриншоты](docs/ui-tests-and-screenshots.md) - запуск `make test_ui`/`make screenshots` и preflight симулятора
 - [Публикация приложения](docs/deployment.md) - инструкции по сборке и публикации в AppStore
 - Остальная документация есть в папке [docs](docs)

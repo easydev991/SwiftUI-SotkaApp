@@ -1,9 +1,6 @@
 {
   "sourceLanguage" : "en",
   "strings" : {
-    "" : {
-      "shouldTranslate" : false
-    },
     "%.1f sec" : {
       "comment" : "Duration format for seconds with one decimal place",
       "extractionState" : "manual",

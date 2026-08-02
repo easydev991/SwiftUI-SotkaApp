@@ -8,11 +8,6 @@ public extension View {
         modifier(CardBackgroundModifier(padding: padding))
     }
 
-    /// Добавляет разделитель, если нужно, с указанным спейсингом
-    func withDivider(if showDivider: Bool, spacing: CGFloat = 0) -> some View {
-        modifier(DividerIfNeededModifier(showDivider, spacing))
-    }
-
     /// Добавляет в оверлей индикатор загрузки
     func loadingOverlay(if isLoading: Bool) -> some View {
         modifier(LoadingOverlayModifier(isLoading: isLoading))

@@ -26,7 +26,7 @@
            UserProgress.self,
            DayActivity.self,
            DayActivityTraining.self,
-           SyncJournalEntry.self  // Новая модель
+           CalendarExtensionRecord.self
        ]
    )
    ```

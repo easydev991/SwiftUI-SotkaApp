@@ -127,48 +127,4 @@ struct WorkoutViewModelSetupTests {
 
         #expect(viewModel.isWorkoutCompleted)
     }
-
-    @Test("Должен определять нужно ли показывать напоминание об упражнениях для .cycles")
-    func shouldShowExercisesReminderForCycles() {
-        let connectivityService = MockWatchConnectivityService()
-        let viewModel = WorkoutViewModel(
-            connectivityService: connectivityService
-        )
-
-        let trainings = [
-            WorkoutPreviewTraining(count: 5, typeId: 0)
-        ]
-
-        viewModel.setupWorkoutData(
-            dayNumber: 1,
-            executionType: .cycles,
-            trainings: trainings,
-            plannedCount: 4,
-            restTime: 60
-        )
-
-        #expect(viewModel.shouldShowExercisesReminder)
-    }
-
-    @Test("Должен определять нужно ли показывать напоминание об упражнениях для .sets")
-    func shouldShowExercisesReminderForSets() {
-        let connectivityService = MockWatchConnectivityService()
-        let viewModel = WorkoutViewModel(
-            connectivityService: connectivityService
-        )
-
-        let trainings = [
-            WorkoutPreviewTraining(count: 5, typeId: 0)
-        ]
-
-        viewModel.setupWorkoutData(
-            dayNumber: 1,
-            executionType: .sets,
-            trainings: trainings,
-            plannedCount: 6,
-            restTime: 60
-        )
-
-        #expect(!viewModel.shouldShowExercisesReminder)
-    }
 }

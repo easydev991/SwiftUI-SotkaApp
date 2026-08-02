@@ -6,6 +6,24 @@ import Testing
 extension AllProgressTests {
     @MainActor
     struct ProgressServiceTests {
+        let modelContainer: ModelContainer
+        let modelContext: ModelContext
+
+        init() throws {
+            let modelConfiguration = ModelConfiguration(isStoredInMemoryOnly: true)
+            self.modelContainer = try ModelContainer(
+                for: User.self,
+                UserProgress.self,
+                configurations: modelConfiguration
+            )
+            self.modelContext = modelContainer.mainContext
+
+            // Создаем тестового пользователя
+            let user = User(id: 1, userName: "test", email: "test@test.com", cityID: nil)
+            modelContext.insert(user)
+            try modelContext.save()
+        }
+
         @Test("canSave возвращает false для пустых данных")
         func canSaveReturnsFalseForEmptyData() {
             let progress = UserProgress(id: 1)
@@ -231,16 +249,6 @@ extension AllProgressTests {
 
         @Test("saveProgress обновляет данные прогресса")
         func saveProgressUpdatesProgressData() throws {
-            // Создаем отдельный модельный контекст для этого теста
-            let modelConfiguration = ModelConfiguration(isStoredInMemoryOnly: true)
-            let modelContainer = try ModelContainer(for: User.self, UserProgress.self, configurations: modelConfiguration)
-            let modelContext = modelContainer.mainContext
-
-            // Создаем тестового пользователя
-            let user = User(id: 1, userName: "test", email: "test@test.com", cityID: nil)
-            modelContext.insert(user)
-            try modelContext.save()
-
             // Создаем прогресс через контекст
             let progress = UserProgress(id: 1)
             modelContext.insert(progress)
@@ -267,16 +275,6 @@ extension AllProgressTests {
 
         @Test("saveProgress создает связь с пользователем")
         func saveProgressCreatesUserRelation() throws {
-            // Создаем отдельный модельный контекст для этого теста
-            let modelConfiguration = ModelConfiguration(isStoredInMemoryOnly: true)
-            let modelContainer = try ModelContainer(for: User.self, UserProgress.self, configurations: modelConfiguration)
-            let modelContext = modelContainer.mainContext
-
-            // Создаем тестового пользователя
-            let user = User(id: 1, userName: "test", email: "test@test.com", cityID: nil)
-            modelContext.insert(user)
-            try modelContext.save()
-
             // Создаем прогресс через контекст
             let progress = UserProgress(id: 1)
             modelContext.insert(progress)
@@ -297,10 +295,10 @@ extension AllProgressTests {
         @Test("deleteProgress помечает прогресс для удаления")
         func deleteProgressMarksProgressForDeletion() throws {
             let progress = UserProgress(id: 1, pullUps: 10)
-            let service = makeService(progress: progress)
+            modelContext.insert(progress)
+            try modelContext.save()
 
-            // Создаем модельный контекст для теста
-            let modelContext = try createTestModelContext()
+            let service = makeService(progress: progress)
 
             // Удаляем
             try service.deleteProgress(context: modelContext)
@@ -308,20 +306,6 @@ extension AllProgressTests {
             // Проверяем, что прогресс помечен для удаления
             #expect(progress.shouldDelete)
             #expect(!progress.isSynced)
-        }
-
-        private func createTestModelContext() throws -> ModelContext {
-            let modelConfiguration = ModelConfiguration(isStoredInMemoryOnly: true)
-            // Включаем обе модели в контейнер для корректной работы с отношениями
-            let modelContainer = try ModelContainer(for: User.self, UserProgress.self, configurations: modelConfiguration)
-
-            // Создаем тестового пользователя
-            let user = User(id: 1, userName: "test", email: "test@test.com", cityID: nil)
-            modelContainer.mainContext.insert(user)
-
-            try modelContainer.mainContext.save()
-
-            return modelContainer.mainContext
         }
 
         private func makeService(progress: UserProgress) -> ProgressService {

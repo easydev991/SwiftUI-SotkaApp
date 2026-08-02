@@ -212,8 +212,8 @@ extension JournalScreen {
 #Preview("Без продления") {
     let statusManager = StatusManager.preview
     NavigationStack {
-        JournalScreen(user: .init(from: .preview))
-            .environment(DailyActivitiesService(client: MockDaysClient(result: .success)))
+        JournalScreen(user: .preview)
+            .environment(DailyActivitiesService())
             .environment(statusManager)
     }
     .currentDay(statusManager.currentDayCalculator?.currentDay)
@@ -222,8 +222,8 @@ extension JournalScreen {
 #Preview("С продлением календаря") {
     let statusManager = StatusManager.previewWithCalendarExtension
     NavigationStack {
-        JournalScreen(user: .init(from: .preview))
-            .environment(DailyActivitiesService(client: MockDaysClient(result: .success)))
+        JournalScreen(user: .preview)
+            .environment(DailyActivitiesService())
             .environment(statusManager)
     }
     .currentDay(statusManager.currentDayCalculator?.currentDay)
@@ -232,8 +232,8 @@ extension JournalScreen {
 #Preview("С продлением, день 130") {
     let statusManager = StatusManager.previewWithCalendarExtensionDay130
     NavigationStack {
-        JournalScreen(user: .init(from: .preview))
-            .environment(DailyActivitiesService(client: MockDaysClient(result: .success)))
+        JournalScreen(user: .preview)
+            .environment(DailyActivitiesService())
             .environment(statusManager)
     }
     .currentDay(statusManager.currentDayCalculator?.currentDay)

@@ -34,10 +34,4 @@ struct InfopostAvailabilityManager {
     func filterAvailablePosts(_ posts: [Infopost]) -> [Infopost] {
         posts.filter { isInfopostAvailable($0) }
     }
-
-    /// Возвращает доступные инфопосты, сгруппированные по секциям
-    func getAvailablePostsBySection(_ posts: [Infopost]) -> [InfopostSection: [Infopost]] {
-        let availablePosts = filterAvailablePosts(posts)
-        return Dictionary(grouping: availablePosts) { $0.section }
-    }
 }

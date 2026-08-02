@@ -22,7 +22,8 @@ struct EditCommentSheet: View {
     }
 
     var body: some View {
-        ContentInSheet(title: String(localized: .dayActivityCommentTitle)) {
+        VStack {
+            sheetHeader
             VStack {
                 SWTextEditor(
                     text: commentBinding,
@@ -49,6 +50,23 @@ struct EditCommentSheet: View {
 }
 
 private extension EditCommentSheet {
+    var sheetHeader: some View {
+        Text(String(localized: .dayActivityCommentTitle))
+            .lineLimit(1)
+            .font(.headline)
+            .foregroundStyle(Color.swMainText)
+            .frame(maxWidth: .infinity)
+            .padding(.horizontal, 50)
+            .overlay(alignment: .trailing) {
+                CloseButton(mode: .xmark) {
+                    dismiss()
+                }
+                .padding(.trailing)
+            }
+            .padding(.top, 26)
+            .padding(.bottom, 10)
+    }
+
     var saveButton: some View {
         Button(.dayActivityCommentSave) {
             isFocused = false
@@ -70,7 +88,7 @@ private extension EditCommentSheet {
     let container = PreviewModelContainer.make(with: user)
     if let activity = user.dayActivities.first(where: { $0.day == 7 }) ?? user.dayActivities.first {
         EditCommentSheet(activity: activity)
-            .environment(DailyActivitiesService(client: MockDaysClient(result: .success)))
+            .environment(DailyActivitiesService())
             .modelContainer(container)
     } else {
         Text("Нет активностей для предпросмотра")
@@ -82,7 +100,7 @@ private extension EditCommentSheet {
     let container = PreviewModelContainer.make(with: user)
     if let activity = user.dayActivities.first {
         EditCommentSheet(activity: activity)
-            .environment(DailyActivitiesService(client: MockDaysClient(result: .success)))
+            .environment(DailyActivitiesService())
             .modelContainer(container)
     } else {
         Text("Нет активностей для предпросмотра")

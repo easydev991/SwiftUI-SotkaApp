@@ -142,7 +142,7 @@ private extension CustomExercisesScreen {
     NavigationStack {
         CustomExercisesScreen()
             .modelContainer(PreviewModelContainer.make(with: User(id: 1)))
-            .environment(CustomExercisesService(client: MockExerciseClient(result: .success)))
+            .environment(CustomExercisesService())
     }
 }
 #endif

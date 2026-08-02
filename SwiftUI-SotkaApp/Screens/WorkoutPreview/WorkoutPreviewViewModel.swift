@@ -235,10 +235,9 @@ final class WorkoutPreviewViewModel {
         let dayNumber = dayNumber
         logger.info("Тренировка для дня \(dayNumber) сохранена")
 
-        let reviewContext = ReviewContext(hadRecentError: hadErrorBeforeSave)
         if let reporter = reviewEventReporter {
             Task { @MainActor in
-                await reporter.workoutCompletedSuccessfully(context: reviewContext)
+                await reporter.workoutCompletedSuccessfully(hadRecentError: hadErrorBeforeSave)
             }
         }
     }

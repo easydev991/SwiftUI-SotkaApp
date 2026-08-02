@@ -49,9 +49,6 @@ struct HomeScreen: View {
             }
             .animation(.default, value: model)
             .frame(maxWidth: .infinity)
-            .sheet(item: $statusManager.conflictingSyncModel) { model in
-                SyncStartDateView(model: model)
-            }
             .navigationTitle(.sotka)
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
@@ -164,7 +161,7 @@ private extension HomeScreen {
 #if DEBUG
 #Preview("Без продления") {
     let statusManager = StatusManager.preview
-    return HomeScreen()
+    HomeScreen()
         .environment(statusManager)
         .environment(statusManager.dailyActivitiesService)
         .modelContainer(PreviewModelContainer.make(with: User(id: 1)))
@@ -172,7 +169,7 @@ private extension HomeScreen {
 
 #Preview("С продлением, день 130") {
     let statusManager = StatusManager.previewWithCalendarExtensionDay130
-    return HomeScreen()
+    HomeScreen()
         .environment(statusManager)
         .environment(statusManager.dailyActivitiesService)
         .currentDay(statusManager.currentDayCalculator?.currentDay)
