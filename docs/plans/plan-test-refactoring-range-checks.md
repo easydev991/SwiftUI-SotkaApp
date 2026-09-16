@@ -50,9 +50,9 @@
 
 **Обоснование:** Время выполнения зависит от времени выполнения кода, диапазоны оправданы.
 
-- **WorkoutScreenViewModelGetWorkoutResultTests.swift:** строки 60-61, 328-329 - проверки `duration`
-- **WorkoutScreenViewModelStepCompletionTests.swift:** строки 130-131, 297-298, 359-360 - проверки `totalRestTime`
-- **WorkoutScreenViewModelExpiredTimerTests.swift:** строки 142-143, 181-182, 220-221, 302-303 - проверки `totalRestTime`
+- **WorkoutScreenViewModelGetWorkoutResultTests.swift:** строки 60-61, 321-322 - проверки `duration`
+- **WorkoutScreenViewModelStepCompletionTests.swift:** строки 122-123, 279-280, 337-338 - проверки `totalRestTime`
+- **WorkoutScreenViewModelExpiredTimerTests.swift:** строки 139-140, 177-178, 215-216, 295-296 - проверки `totalRestTime`
 
 ### 4. Даты (оставить диапазоны)
 

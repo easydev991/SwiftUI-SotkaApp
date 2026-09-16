@@ -118,20 +118,31 @@
 
 ## Рекомендации для SwiftUI-SotkaApp
 
+> **Статус (2026-09-16):** в SwiftUI-SotkaApp функция **не реализована** — ни футера с кнопкой восстановления, ни проверки совпадения с рекомендуемым набором в коде нет. Предусловие выполнено: набор упражнений можно менять через `WorkoutExerciseEditorScreen` (`.sheet`, только для типов `.cycles` и `.sets`).
+
+Соответствие понятий:
+
+- `TrainProgramCreator` → `WorkoutProgramCreator` (структура, функциональный стиль: `withExecutionType(_:)`, `withCustomExercises(_:)`, `withData(from:)`)
+- `recommendExercisesForDay:type:` → рекомендуемый набор получают через `WorkoutProgramCreator(day:executionType:)` (генерация — приватный `generateExercises(for:executionType:)`)
+- `recommendNumberOfCyclesForDay:type:gender:` → `calculatePlannedCircles(for:executionType:)` — параметр `gender` удалён вместе с гендерной логикой
+- `cycleSegment.selectedSegmentIndex != 2` → `selectedExecutionType != .turbo` (`ExerciseExecutionType`)
+- `tableView.editing` → редактор упражнений `WorkoutExerciseEditorScreen` в `.sheet`
+- `TrainingController` → `WorkoutPreviewScreen` / `WorkoutPreviewViewModel`
+
 ### 1. Структура
 
 ```swift
-// Модификатор для отображения футера с кнопкой восстановления
+// Футер с кнопкой восстановления для списка упражнений на WorkoutPreviewScreen
 struct RestoreExercisesFooter: View {
     let onRestore: () -> Void
 
     var body: some View {
         HStack {
-            Text("Набор упражнений отличается от рекомендуемых")
+            Text(.exercisesDifferFromRecommended)  // ключ добавить в String Catalog
                 .font(.caption)
-                .foregroundColor(.secondary)
+                .foregroundStyle(.secondary)
             Spacer()
-            Button("Восстановить", action: onRestore)
+            Button(.restore, action: onRestore)  // ключ добавить в String Catalog
                 .buttonStyle(.bordered)
         }
         .padding()
@@ -144,40 +155,57 @@ struct RestoreExercisesFooter: View {
 ```swift
 var shouldShowRestoreButton: Bool {
     // Не показывать в турбо-режиме
-    guard trainType != .turbo else { return false }
+    guard selectedExecutionType != .turbo else { return false }
 
     // Не показывать если упражнения совпадают с рекомендуемыми
     return !exercisesMatchRecommended
 }
 
 var exercisesMatchRecommended: Bool {
-    let recommended = TrainProgramCreator.recommendedExercises(for: day, type: trainType)
-    let currentTypeIds = Set(trainings.compactMap { $0.typeId })
-    let recommendedTypeIds = Set(recommended.compactMap { $0.typeId })
+    let recommended = WorkoutProgramCreator(
+        day: dayNumber,
+        executionType: selectedExecutionType
+    ).trainings
 
-    return recommendedTypeIds.isSubset(of: currentTypeIds)
+    // Сравнение должно учитывать и typeId, и customTypeId (пользовательские упражнения).
+    // В WorkoutProgramCreator уже есть приватная утилита makeTrainingMatchKey(for:) —
+    // при реализации открыть к ней доступ или использовать ту же логику.
+    func matchKey(for training: WorkoutPreviewTraining) -> String {
+        training.customTypeId.map { "custom:\($0)" }
+            ?? training.typeId.map { "type:\($0)" }
+            ?? "id:\(training.id)"
+    }
+
+    let currentKeys = Set(trainings.map(matchKey))
+    return recommended.allSatisfy { currentKeys.contains(matchKey(for: $0)) }
 }
 ```
+
+Дополнительные условия:
+
+- Скрывать футер, пока открыт редактор упражнений (`WorkoutExerciseEditorScreen` в `.sheet`).
+- Ограничение то же, что у кнопки редактирования (`shouldShowEditButton`): только `.cycles` и `.sets`.
 
 ### 3. Действие восстановления
 
 ```swift
 func restoreRecommendedExercises() {
-    let recommended = TrainProgramCreator.recommendedExercises(for: day, type: trainType)
-    trainings = recommended.map { training in
-        DayActivityTraining(from: training, dayActivity: self)
-    }
-
-    // Восстановить рекомендуемое количество кругов
-    cycleCount = TrainProgramCreator.recommendedCycles(
-        for: day,
-        type: trainType,
-        gender: userGender
+    let recommended = WorkoutProgramCreator(
+        day: dayNumber,
+        executionType: selectedExecutionType
     )
+
+    // Восстанавливаем рекомендуемые упражнения и количество кругов/подходов
+    trainings = recommended.trainings
+    plannedCount = recommended.plannedCount
 }
 ```
 
+- Восстановление меняет только состояние `WorkoutPreviewViewModel`; запись в SwiftData — через существующий поток сохранения (`buildDayActivity()` → `DailyActivitiesService.createDailyActivity`). Механизм snapshot автоматически активирует кнопку «Сохранить» через `hasChanges`.
+
 ## Связанные компоненты
 
-- `TrainProgramCreator` - генератор рекомендуемых программ тренировок
-- Методы `recommendExercisesForDay:type:` и `recommendNumberOfCyclesForDay:type:gender:`
+- `WorkoutProgramCreator` (`SwiftUI-SotkaApp/Services/WorkoutProgramCreator.swift`, `WorkoutProgramCreator+DayActivity.swift`) - генератор рекомендуемых программ тренировок
+- Методы `generateExercises(for:executionType:)` (приватный) и `calculatePlannedCircles(for:executionType:)`
+- `WorkoutPreviewScreen` / `WorkoutPreviewViewModel` - экран превью тренировки (аналог `TrainingController`)
+- `WorkoutExerciseEditorScreen` - редактор набора упражнений (только `.cycles` и `.sets`)

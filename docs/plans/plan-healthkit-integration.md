@@ -8,7 +8,7 @@
 
 HealthKit не используется (см. [apple-watch-development-plan.md](../apple-watch-development-plan.md)). Завершение тренировки: на часах — `WorkoutViewModel.finishWorkout()` → `WorkoutResult` → команда `saveWorkout` через `WatchConnectivityService` → `StatusManager.handleSaveWorkoutCommand`; на iPhone — `WorkoutPreviewViewModel.handleWorkoutResult` → `WorkoutProgramCreator` → SwiftData. Модели: `DayActivity`, `WorkoutResult(count, duration)`, `SaveWorkoutData`.
 
-> Примечание: ранее на часах завершение тренировки обрабатывал `WatchWorkoutService` — удалён в ходе overengineering-аудита (см. [overengineering-audit.md](../overengineering-audit.md)); его роль выполняют `WorkoutViewModel` и `WatchConnectivityService`.
+> Примечание: ранее на часах завершение тренировки обрабатывал `WatchWorkoutService` — удалён в ходе overengineering-аудита; его роль выполняют `WorkoutViewModel` и `WatchConnectivityService`.
 
 ## Реализация в SOTKA-OBJc (старое приложение)
 
@@ -37,18 +37,13 @@ HealthKit не используется (см. [apple-watch-development-plan.md]
 - **Режим фона:** в `Info.plist` Watch Extension указан `WKBackgroundModes` → `workout-processing`, чтобы сессия продолжалась при свёрнутом приложении.
 - **Проверка доступности:** перед стартом сессии в `HomeInterfaceController.m` проверяется `[HKHealthStore isHealthDataAvailable]`.
 
-### Что использовать в плане
+### Что взять из SOTKA-OBJc
 
-| Аспект | SOTKA-OBJc | Использование в плане |
-|--------|------------|------------------------|
-| Тип активности | `HKWorkoutActivityTypeCrossTraining` | Сохраняем в этапе 1 (уже указано). |
-| Тип локации | `HKWorkoutSessionLocationTypeIndoor` | При реализации фазы с `HKWorkoutSession` на часах — задать в конфигурации. |
-| Запись тренировки | Только на Watch, через `HKWorkoutSession` + `HKLiveWorkoutBuilder`; iPhone только читает | В новом приложении так же: запись в «Здоровье» только с Watch (часы имеют доступ к пульсу и др.); iPhone не пишет. |
-| Пульс и калории | Сбор в реальном времени на Watch через `HKLiveWorkoutDataSource` и статистику builder | Расширение после базовой интеграции; в плане уже отмечено как отдельный шаг (этап 3, риски). |
-| Разрешения | Share: workoutType; Read: heart rate, distance, active energy, workout | Для базовой записи достаточно запроса на запись `workoutType`; чтение — по необходимости (дедупликация, аналитика). |
-| Локализация описаний | `InfoPlist.strings`: «Разрешить обновление Здоровья», «Разрешить делиться данными Здоровья» | Взять формулировки как референс для этапа 2 и 5 (можно уточнить под контекст записи/чтения). |
-| WKBackgroundModes | `workout-processing` для Watch | Добавить в этап 2 при реализации на часах живой сессии (HKWorkoutSession). |
-| Ошибки | NSLog в completion; при ошибке beginCollection — остановка сессии | OSLog, не ронять приложение (этап 3). |
+- Конфигурация сессии на часах: `HKWorkoutActivityTypeCrossTraining` + `HKWorkoutSessionLocationTypeIndoor`.
+- Референс локализации разрешений: `ru.lproj/InfoPlist.strings` («Разрешить обновление Здоровья», «Разрешить делиться данными Здоровья») — для Этапов 2 и 5.
+- `WKBackgroundModes` → `workout-processing` — при переходе к живой сессии (Этап 2).
+- Сбор пульса/калорий через `HKLiveWorkoutDataSource` — отдельный шаг после базовой интеграции (см. Риски).
+- Ошибки не роняют приложение — в новой версии через OSLog (Этап 3).
 
 Для первой версии — простая запись `HKWorkout` по датам/длительности; полная схема (сессия + пульс/калории) — при расширении.
 
@@ -57,7 +52,7 @@ HealthKit не используется (см. [apple-watch-development-plan.md]
 - [ ] Определить **что записывать в HealthKit** для одной тренировки:
   - тип активности: `HKWorkoutActivityType.crossTraining` (как в плане по часам и в SOTKA-OBJc: `WorkOutSessionManager.m`, конфигурация сессии);
   - при использовании живой сессии на часах — тип локации `HKWorkoutSessionLocationTypeIndoor` (как в старом приложении);
-  - `startDate` и `endDate` (по длительности из `WorkoutResult.duration` или по `createDate`/`modifyDate` из `DayActivity`);
+  - `startDate` и `endDate`: из `workoutStartTime` (`WorkoutViewModel`) и длительности `WorkoutResult.duration` — решение зафиксировано в Этапе 4;
   - опционально: активные калории, пульс — на первом этапе можно не передавать (для калорий/пульса позже потребуется `HKWorkoutSession` на часах, см. раздел про SOTKA-OBJc выше).
 - [ ] Ввести **протокол сервиса** записи тренировки в HealthKit (например, `HealthKitWorkoutWriting` или `HealthKitWorkoutServiceProtocol`) с методом вида: «сохранить тренировку с датами и длительностью».
 - [ ] Описать **источник данных** для вызова: только на часах — `WorkoutResult` + время начала (`workoutStartTime` в `WorkoutViewModel`). На iPhone запись в HealthKit не выполняем.
@@ -86,7 +81,7 @@ HealthKit не используется (см. [apple-watch-development-plan.md]
   - запрос разрешения на **запись** типа `HKObjectType.workoutType()`;
   - при необходимости чтения (например, для проверки дубликатов или будущей аналитики) — запрос разрешения на чтение тренировок и, при желании, активных калорий/пульса;
   - метод: по `startDate` и `endDate` (или по `startDate` + `duration` в секундах) создать `HKWorkout` с типом `HKWorkoutActivityType.crossTraining` и сохранить через `HKHealthStore.save(_:withCompletion:)`.
-- [ ] Размещение кода: сервис записи нужен **только в таргете SotkaWatch** (на iPhone запись в HealthKit не вызывается). Реализация — в Watch-приложении (например, `SotkaWatch Watch App/Services/`). При желании общий протокол или тип данных можно вынести в общий модуль, доступный watchOS.
+- [ ] Размещение кода: сервис записи нужен **только в таргете SotkaWatch** (запись выполняется только на часах, см. Этап 4). Реализация — в Watch-приложении (например, `SotkaWatch Watch App/Services/`). При желании общий протокол или тип данных можно вынести в общий модуль, доступный watchOS.
 - [ ] Обработка ошибок: отказ в разрешении, недоступность HealthKit (например, на симуляторе), ошибки `save` — логировать через OSLog (на русском), не прерывать сохранение в SwiftData.
 - [ ] Не блокировать UI: вызовы HealthKit выполнять асинхронно (async/await или completion handlers), не вызывать запрос разрешений и сохранение из главного потока без необходимости.
 
@@ -105,9 +100,9 @@ HealthKit не используется (см. [apple-watch-development-plan.md]
 
 ## Этап 5: UI и настройки
 
-- [ ] **Запрос разрешений (на часах):** в момент первого обращения к HealthKit на часах (например, при первом завершении тренировки на Watch) запрашивать разрешение на запись тренировок; текст — по смыслу `NSHealthUpdateUsageDescription` в Info.plist Watch-приложения.
+- [ ] **Текст запроса разрешений (на часах):** сам запрос реализуется в Этапе 3; здесь — только формулировка текста: по смыслу `NSHealthUpdateUsageDescription` в Info.plist Watch-приложения.
 - [ ] **Настройки (опционально):** переключатель «Синхронизировать тренировки с „Здоровье“» — в настройках на часах или на iPhone (при хранении на iPhone передавать флаг на часы через WatchConnectivity); при выключении на часах не вызывать сервис записи.
-- [ ] Локализация: все строки, показываемые пользователю (описания разрешений, подписи в настройках), вынести в Localizable.strings и учесть в skill локализации. Референс формулировок для «Здоровье»: SOTKA-OBJc `WorkOut100Days/ru.lproj/InfoPlist.strings` — «Разрешить обновление Здоровья», «Разрешить делиться данными Здоровья» (уточнить под контекст записи тренировок).
+- [ ] Локализация: описания разрешений (`NSHealthShareUsageDescription`, `NSHealthUpdateUsageDescription`) локализуются через InfoPlist-таблицу (`InfoPlist.strings` / `InfoPlist.xcstrings`), не через Localizable.strings; подписи в настройках — в Localizable.strings. Учесть в skill локализации. Референс формулировок для «Здоровье»: SOTKA-OBJc `WorkOut100Days/ru.lproj/InfoPlist.strings` — «Разрешить обновление Здоровья», «Разрешить делиться данными Здоровья» (уточнить под контекст записи тренировок).
 
 **Критерий завершения:** пользователь видит запрос «Здоровье» с понятным текстом; при необходимости может отключить синхронизацию в настройках.
 
@@ -118,20 +113,20 @@ HealthKit не используется (см. [apple-watch-development-plan.md]
 - [ ] **Unit-тесты:** тесты для сервиса записи в HealthKit с моком `HKHealthStore` (или протоколом над ним), чтобы проверять вызов `save` с корректными `HKWorkout` (тип, даты). По правилам проекта — Swift Testing, без force unwrap, при необходимости `#require` для опционалов.
 - [ ] **Документация:** обновить [apple-watch-development-plan.md](../apple-watch-development-plan.md): в разделе «Интеграция с HealthKit» указать, что базовая запись тренировок реализована (тип, длительность, даты); при необходимости добавить ссылку на этот план. Обновить [feature-map.md](../feature-map.md) или аналог, если в нём перечислены интеграции с системными приложениями.
 
-**Критерий завершения:** тесты проходят (`make test`), документация отражает текущее поведение; после изменений выполнен `make format`.
+**Критерий завершения:** тесты проходят (`make test_watch` — сервис живёт в Watch-таргете; при изменениях в iOS-таргете дополнительно `make test`), документация отражает текущее поведение; после изменений выполнен `make format`.
 
 ---
 
 ## Зависимости между этапами
 
-1. Этап 1 → 2, 3; 2 → 3; 3 → 4 (сервис перед вызовом на Watch). 4 и 5 — частично параллельно. 6 — после 3–5.
+1. 1 → 3 (контракт сервиса), 2 → 3 (capability и ключи Info.plist); 3 → 4 (сервис перед вызовом на Watch). 4 и 5 — частично параллельно. 6 — после 3–5.
 
 ## Правила проекта
 
-- Следовать [sotka-development.mdc](../.agents/rules/sotka-development.mdc): MVVM, @Observable, сервисы по протоколам, OSLog, без force unwrap.
+- Следовать [sotka-development.mdc](../../.agents/rules/sotka-development.mdc): MVVM, @Observable, сервисы по протоколам, OSLog, без force unwrap.
 - Офлайн-first: отказ или недоступность HealthKit не должны мешать сохранению в SwiftData и основной работе приложения.
-- Логи — на русском (см. [logs-language SKILL](../.agents/skills/logs-language/SKILL.md)).
-- Локализация — по [localization SKILL](../.agents/skills/localization/SKILL.md).
+- Логи — на русском (см. [logs-language SKILL](../../.agents/skills/logs-language/SKILL.md)).
+- Локализация — по [localization SKILL](../../.agents/skills/localization/SKILL.md).
 
 ## Риски и ограничения
 

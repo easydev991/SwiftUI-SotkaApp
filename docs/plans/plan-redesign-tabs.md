@@ -23,10 +23,11 @@ TabView (4 таба):
   journal  -> JournalScreen (иконка book.closed)
   progress -> ProgressScreen (иконка chart.line.uptrend.xyaxis)
   more     -> MoreScreen:
-               1) новая Section(.profile) первой в List
-                  - NavigationLink(.editProfile) -> EditProfileScreen
-                  - logoutButton с существующим confirmationDialog
-               2) NavigationLink на CustomExercisesScreen первым элементом в workoutSettingsGroup
+                1) новая Section(.profile) первой в List — только logoutButton
+                   с существующим confirmationDialog (EditProfileScreen удалён:
+                   офлайн-only, online-пользователей нет)
+                2) CustomExercises доступен через workoutSettingsButton ->
+                   WorkoutSettingsScreen (customExercisesButton первым элементом)
 ```
 
 ### Важное уточнение по объёму
@@ -55,18 +56,18 @@ TabView (4 таба):
 
 Файл: `SwiftUI-SotkaApp/Screens/More/MoreScreen.swift`
 
-- [x] Добавить `NavigationLink` на `CustomExercisesScreen` первым элементом в `workoutSettingsGroup` (accessibility id `customExercisesButton`, текст `.customExercises`)
-- [x] Добавить `Section(.profile)` первой в List с `logoutButton` и confirmationDialog (`NavigationLink(.editProfile)` не нужен: app офлайн-only, online-пользователей нет)
+- [x] NavigationLink на `CustomExercisesScreen` (accessibility id `customExercisesButton`, текст `.customExercises`) — итог: первым элементом первой Section в `WorkoutSettingsScreen`; из `MoreScreen` переход через `workoutSettingsButton` (настройки вынесены на отдельный экран)
+- [x] Добавить `Section(.profile)` первой в List с `logoutButton` и confirmationDialog (`NavigationLink(.editProfile)` не нужен: app офлайн-only, online-пользователей нет, `EditProfileScreen` удалён)
 - [x] Добавить зависимости: `AuthHelperImp`, `showLogoutDialog` (`ProfileClient` удалён вместе с sync-слоем)
 
-**Проверка:** `Section(.profile)` первая, EditProfile для online, Logout работает, CustomExercises доступен
+**Проверка:** `Section(.profile)` первая, Logout работает, CustomExercises доступен через `WorkoutSettingsScreen`
 
 ---
 
 ## Этап 3: Удаление ProfileScreen
 
 - [x] Удалить файл `SwiftUI-SotkaApp/Screens/Profile/ProfileScreen.swift`
-- [x] Проверить ссылки, оставить подпапки Journal/Progress/Edit/CustomExercises
+- [x] Проверить ссылки, оставить подпапки Journal/Progress/Edit/CustomExercises — актуально: папка `Screens/Profile/` удалена целиком (Journal -> `Screens/Journal`, Progress -> `Screens/Progress`, CustomExercises -> `Screens/Workout/CustomExercises`)
 - [x] Удалить `case .profile` из `AnalyticsEvent.AppScreen`, проверить компиляцию
 - [x] Проверить внешний аналитический контракт — неактуально: сервер закрыт, офлайн-режим, внешнего контракта нет, `case .profile` удалён
 
@@ -77,7 +78,7 @@ TabView (4 таба):
 Файл: `SwiftUI-SotkaAppUITests/SwiftUI_SotkaAppUITests.swift`
 
 - [x] Заменить `profileTabButton` на `journalTabButton`/`progressTabButton`, удалить `ProfileJournalButton`/`ProfileProgressButton`
-- [x] Переход к CustomExercises: `moreTabButton` -> `workoutSettingsGroup` (раскрыть) -> `CustomExercises`
+- [x] Переход к CustomExercises: `moreTabButton` -> `workoutSettingsButton` (переход на `WorkoutSettingsScreen`) -> `customExercisesButton`
 - [x] Обновить индексы табов для iPhone (4 таба), accessibility id для iPad
 - [x] Сохранить порядок: progress -> journal -> more -> CustomExercises
 - [x] Проверить локализационные ключи
@@ -88,8 +89,8 @@ TabView (4 таба):
 
 ## Этап 4.5: Рефактор MoreScreen — User через RootScreen
 
-- [x] Изменить сигнатуру `MoreScreen`: `let user: User` вместо `@Query ... users`, обновить `isOfflineUser`
-- [x] Убрать костыль `if !isOfflineUser { if let user ... }` -> `if !isOfflineUser { NavigationLink ... EditProfileScreen(user: user, client: client) }`
+- [x] Изменить сигнатуру `MoreScreen`: `let user: User` вместо `@Query ... users` (`isOfflineUser` впоследствии удалён вместе с EditProfile-веткой)
+- [x] EditProfile-ветка убрана: `EditProfileScreen` и `isOfflineUser` больше не существуют — `Section(.profile)` содержит только `logoutButton` (app офлайн-only)
 - [x] В `RootScreen.tabContent` обернуть `MoreScreen` в `if let user { ... } else { ProgressView() }`
 - [x] Обновить `#Preview`
 
@@ -116,6 +117,7 @@ TabView (4 таба):
 | Файл | Действие |
 |------|----------|
 | `SwiftUI-SotkaApp/Screens/Root/RootScreen.swift` | Обновить табы (journal/progress), передача User в JournalScreen/ProgressScreen/MoreScreen |
-| `SwiftUI-SotkaApp/Screens/More/MoreScreen.swift` | Добавить `Section(.profile)`, CustomExercises в workoutSettingsGroup, приём User (неопциональный) |
+| `SwiftUI-SotkaApp/Screens/More/MoreScreen.swift` | Добавить `Section(.profile)` (logoutButton), приём User (неопциональный); CustomExercises — через WorkoutSettingsScreen |
+| `SwiftUI-SotkaApp/Screens/More/WorkoutSettingsScreen.swift` | NavigationLink на `CustomExercisesScreen` (`customExercisesButton`) первым элементом |
 | `SwiftUI-SotkaApp/Screens/Profile/ProfileScreen.swift` | Удалить |
 | `SwiftUI-SotkaAppUITests/SwiftUI_SotkaAppUITests.swift` | Обновить тестовый сценарий под новые табы |

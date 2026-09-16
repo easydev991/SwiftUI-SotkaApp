@@ -83,6 +83,7 @@
 
 - Автоматическое: при достижении `remainingSeconds <= 0` в `onReceive(timer)` вызывается `finishTimer(force: false)` с задержкой в 1 секунду через `DispatchQueue.main.asyncAfter(deadline: .now() + 1.0)`.
 - Досрочное: при нажатии кнопки "Завершить отдых" вызывается `finishTimer(force: true)` без задержки.
+- Досрочное завершение логируется через аналитику: `analytics.log(.userAction(action: .skipTimer))`.
 - Если таймер истек на основе реального времени (при разворачивании приложения или в `updateRemainingSeconds()`), он не вызывает `onFinish` сразу, а ждет обработки через `checkAndHandleExpiredRestTimer` в ViewModel.
 - `finishTimer(force:)` отменяет таймер через `timer.upstream.connect().cancel()` и вызывает `onFinish(force:)` для обработки завершения в ViewModel.
 
@@ -123,7 +124,7 @@
   - Круговой таймер в центре с отображением оставшегося времени.
   - Кнопка "Завершить отдых" внизу (`.timerScreenFinishButton`) со стилем `SWButtonStyle(mode: .tinted, size: .large)`.
 - Автоматически запускается при появлении экрана (`onAppear` устанавливает `startTime`).
-- Обновляется каждую секунду через `Timer.publish`.
+- Обновляется каждые 0.5 секунды через `Timer.publish`.
 - Автоматически закрывается при достижении 0 секунд.
 - Позволяет досрочно завершить отдых через кнопку "Завершить отдых".
 
@@ -145,6 +146,7 @@
 
 **Обработка завершения таймера**:
 
+- Повторный вызов `handleTimerFinish()` игнорируется: если `currentRestStartTime == nil`, метод завершается без действий (защита от двойной обработки).
 - Звук и вибрация воспроизводятся в `WorkoutScreenViewModel.handleTimerFinish()` только при автоматическом завершении (`force == false`).
 - Фактическое время отдыха засекается в момент закрытия экрана таймера (в `handleTimerFinish` на основе `currentRestStartTime`).
 - Уведомление о завершении отдыха отменяется при закрытии экрана таймера.

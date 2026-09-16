@@ -130,7 +130,6 @@ SotkaWatch Watch App/
 2. **Last Write Wins (LWW) для других случаев:**
    - Для активностей типа `.rest`, `.stretch`, `.sick` применяется стратегия LWW на основе `modifyDate`
    - Последнее изменение побеждает (обновляется `modifyDate` при каждом изменении)
-   - Это соответствует существующей логике разрешения конфликтов при синхронизации с сервером
 
 3. **Проверка перед изменением:**
    - При получении команды `WATCH_COMMAND_SET_ACTIVITY` на iPhone:
@@ -159,7 +158,6 @@ SotkaWatch Watch App/
 **Примечание:**
 
 - Эта стратегия применяется только для конфликтов между часами и iPhone
-- Конфликты при синхронизации с сервером разрешаются по существующей логике LWW в `DailyActivitiesService.downloadServerActivities()`
 
 ## Детальный план реализации
 
@@ -228,12 +226,11 @@ SotkaWatch Watch App/
 
 **Приоритет:** СРЕДНИЙ - критическая проблема решена, требуется валидация на реальных устройствах.
 
-#### 8.5 Документация
+#### 8.5 Документация ✅
 
-- [ ] Обновление `feature-map.md` с информацией о часах
-- [ ] Создание документации по архитектуре часов (если нужно)
-- [ ] Документация API WatchConnectivity
-- [ ] Инструкции по тестированию
+- [x] Обновление `feature-map.md` с информацией о часах (раздел «Приложение для часов»)
+- [x] Документация по архитектуре часов и API WatchConnectivity (этот документ, разделы «Архитектура», «Команды WatchConnectivity», «Формат сообщений WatchConnectivity»)
+- [x] Инструкции по тестированию (`docs/ui-tests-and-screenshots.md` — UI-тесты и скриншоты часов)
 
 #### 8.6 Оптимизация
 
@@ -259,21 +256,9 @@ SotkaWatch Watch App/
 
 **Реализация:** `restTime` синхронизируется через `WatchStatusMessage` и `WatchConnectivityService`. При изменении на `MoreScreen` данные автоматически отправляются на часы через `StatusManager`.
 
-#### 10.9 Опционально: Использование RestTimeEnvironmentKey на часах ⏳ **ОТЛОЖЕНО**
+#### 10.9 Опционально: Использование RestTimeEnvironmentKey на часах ⛔ Снято
 
-**Цель:** Рассмотреть возможность использования `RestTimeEnvironmentKey` для передачи `restTime` через Environment в SwiftUI.
-
-**Действия:**
-
-- [ ] Проанализировать, где на часах используется `restTime` и можно ли использовать Environment
-- [ ] Если уместно, обновить View для использования `@Environment(\.restTime)` вместо передачи через параметры
-- [ ] Обновить инициализацию Environment в корневом View часов для установки `restTime` из `connectivityService`
-- [ ] Запустить тесты и проверить работу
-
-**Ожидаемый результат:**
-
-- `restTime` передается через Environment, если это упрощает код
-- Все тесты проходят
+`RestTimeEnvironmentKey` не существует в кодовой базе. `restTime` передаётся параметрами через `WorkoutPreviewViewModel`/`WorkoutViewModel` и читается из `connectivityService` — пункт неприменим.
 
 #### 10.10 Интеграционные тесты и финальная проверка ✅
 
@@ -501,7 +486,7 @@ extension Constants {
 **Новое приложение:**
 
 - Используются **модели с Codable** для прямой передачи данных (без DTO)
-- Команды передаются как **строковые enum** (WatchCommand: "WATCH_COMMAND_GET_TRAIN_LIST")
+- Команды передаются как **строковые enum** (WatchCommand: "WATCH_COMMAND_SAVE_WORKOUT")
 - Данные сериализуются через JSONEncoder/JSONDecoder
 - Пример: `{"command": "WATCH_COMMAND_SAVE_WORKOUT", "result": {...}}`
 
@@ -571,7 +556,7 @@ extension Constants {
 
 **Новое приложение:**
 
-- Swift 6.0
+- Swift 5.0
 - SwiftData на iPhone (не используется на часах)
 - SwiftUI для часов
 - Codable модели для прямой передачи данных (без DTO)

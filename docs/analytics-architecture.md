@@ -58,7 +58,7 @@
 
 ## 6. Покрытие экранов
 
-- `screenView` внедрен для основных экранов приложения (welcome/online/offline auth, home, infoposts, workout, journal, progress, custom exercises, more/settings).
+- `screenView` внедрен для основных экранов приложения (welcome/offline auth, root, home, infoposts, workout/таймер/превью/редактор упражнений, journal, progress/редактор записи/статистика, custom exercises, more/settings/тема иконки).
 - Ключевые `userAction` и `appError` внедрены в критичных пользовательских сценариях тех же модулей.
 
 ## 7. Текущее состояние внедрения
@@ -66,7 +66,7 @@
 - Инфраструктура аналитики внедрена и используется в прод-коде.
 - Тесты `AnalyticsService` покрывают fan-out и базовые контракты событий.
 - Crashlytics breadcrumbs формируются через связку `trackScreen + userAction`.
-- Debug smoke-check и ручная валидация событий в Firebase выполняются как регрессионная проверка перед релизом.
+- Ручная валидация событий в Firebase (DebugView) выполняется как регрессионная проверка перед релизом.
 
 ## 8. Критерии поддержки в дальнейшем
 

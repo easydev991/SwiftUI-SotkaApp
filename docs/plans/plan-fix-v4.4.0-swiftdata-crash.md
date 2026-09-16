@@ -1,6 +1,6 @@
 # План исправления краша v4.4.0 (SwiftData, `DayActivity.trainings.getter`)
 
-**Статус: ✅ Выполнено (2026-04-10, перепроверено 2026-08-01)**
+**Статус: ✅ Выполнено (2026-04-10, перепроверено 2026-09-16)**
 
 ## Контекст инцидента
 
@@ -11,6 +11,9 @@
   - `DailyActivitiesService.updateExistingActivity(_:with:user:)` (`SwiftUI-SotkaApp/Services/DailyActivitiesService.swift:409-439`)
   - `DailyActivitiesService.createDailyActivity(_:context:)` (`SwiftUI-SotkaApp/Services/DailyActivitiesService.swift:34-59`)
   - `WorkoutPreviewViewModel.saveTrainingAsPassed(...)` (`SwiftUI-SotkaApp/Screens/WorkoutPreview/WorkoutPreviewViewModel.swift:218`)
+
+> Номера строк — на момент инцидента (v4.4.0). После чистки sync-слоя в `ed82f6e9` актуальные позиции: `createDailyActivity` — `DailyActivitiesService.swift:22-87`, `updateExistingActivity` — `:326-371` (сигнатура `(_:with:trainingsSnapshot:user:)`), `saveTrainingAsPassed` — `WorkoutPreviewViewModel.swift:195`.
+
 - Подтвержденный кодом риск:
   - `DayActivity.trainings` объявлен как `@Relationship(deleteRule: .cascade)` в [DayActivity.swift](/Users/Oleg991/Documents/GitHub/SwiftUI-SotkaApp/SwiftUI-SotkaApp/Models/Workout/DayActivity.swift).
   - В `updateExistingActivity` выполняется `existing.trainings.removeAll()`, а затем итерация по `new.trainings` и повторный append в `existing`.

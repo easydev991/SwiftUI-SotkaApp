@@ -201,7 +201,7 @@ open class Snapshot: NSObject {
         return
         #endif
 
-        guard let app else {
+            guard let app else {
             NSLog("XCUIApplication is not set. Please call setupSnapshot(app) before snapshot().")
             return
         }

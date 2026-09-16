@@ -21,33 +21,33 @@ struct WorkoutPreviewButtonsView: View {
     private var notPassedDayButtons: some View {
         VStack(spacing: 12) {
             Button(.workoutPreviewStartTraining, action: onStartTraining)
-            #if os(watchOS)
-                .tint(Color.swAccent)
-                .buttonStyle(.borderedProminent)
-            #else
-                .buttonStyle(SWButtonStyle(mode: .filled, size: .large))
-            #endif
+                #if os(watchOS)
+                    .tint(Color.swAccent)
+                    .buttonStyle(.borderedProminent)
+                #else
+                    .buttonStyle(SWButtonStyle(mode: .filled, size: .large))
+                #endif
                 .accessibilityIdentifier("WorkoutPreview.startTrainingButton")
             Button(.workoutPreviewSaveAsPassed, action: onSave)
-            #if os(watchOS)
-                .tint(Color.swAccent)
-                .buttonStyle(.bordered)
-            #else
-                .buttonStyle(SWButtonStyle(mode: .tinted, size: .large))
-                .accessibilityIdentifier("WorkoutPreview.saveAsPassedButton")
-            #endif
+                #if os(watchOS)
+                    .tint(Color.swAccent)
+                    .buttonStyle(.bordered)
+                #else
+                    .buttonStyle(SWButtonStyle(mode: .tinted, size: .large))
+                    .accessibilityIdentifier("WorkoutPreview.saveAsPassedButton")
+                #endif
         }
     }
 
     private var passedDayButtons: some View {
         HStack(spacing: 12) {
             Button(.workoutPreviewSave, action: onSave)
-            #if os(watchOS)
-                .tint(Color.swAccent)
-                .buttonStyle(.borderedProminent)
-            #else
-                .buttonStyle(SWButtonStyle(mode: .filled, size: .large))
-            #endif
+                #if os(watchOS)
+                    .tint(Color.swAccent)
+                    .buttonStyle(.borderedProminent)
+                #else
+                    .buttonStyle(SWButtonStyle(mode: .filled, size: .large))
+                #endif
                 .disabled(!hasChanges)
                 .accessibilityIdentifier("WorkoutPreview.saveButton")
             // TODO: Кнопка "Продолжить" - показывается только если тренировка была начата, но не завершена
@@ -56,12 +56,12 @@ struct WorkoutPreviewButtonsView: View {
 
     private var workoutCompletedButtons: some View {
         Button(.workoutPreviewSave, action: onSave)
-        #if os(watchOS)
-            .tint(Color.swAccent)
-            .buttonStyle(.borderedProminent)
-        #else
-            .buttonStyle(SWButtonStyle(mode: .filled, size: .large))
-        #endif
+            #if os(watchOS)
+                .tint(Color.swAccent)
+                .buttonStyle(.borderedProminent)
+            #else
+                .buttonStyle(SWButtonStyle(mode: .filled, size: .large))
+            #endif
             .accessibilityIdentifier("WorkoutPreview.saveButton")
     }
 }
