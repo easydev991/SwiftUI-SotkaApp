@@ -25,7 +25,6 @@ extension AllInfopostsTests {
             <img src="..\\img\\1.jpg" class="bbcode_img" />
             <img src="../img/2.jpg" class="bbcode_img" />
             </div>
-            <footer>Footer content</footer>
             </body>
             </html>
             """
@@ -38,10 +37,6 @@ extension AllInfopostsTests {
             // Проверяем, что header удален
             #expect(!result.contains("<header>"))
             #expect(!result.contains("Header content"))
-
-            // Проверяем, что footer удален
-            #expect(!result.contains("<footer>"))
-            #expect(!result.contains("Footer content"))
 
             // Проверяем исправление путей к изображениям
             #expect(result.contains("src=\"img/1.jpg\""))
@@ -158,9 +153,6 @@ extension AllInfopostsTests {
             <div class="full">
             <p>Дополнительная информация</p>
             </div>
-            <footer>
-            <p>Footer content</p>
-            </footer>
             </body>
             </html>
             """
@@ -172,7 +164,6 @@ extension AllInfopostsTests {
             // Assert
             // Проверяем очистку от лишних элементов
             #expect(!result.contains("<header>"))
-            #expect(!result.contains("<footer>"))
             #expect(!result.contains("Вернуться к оглавлению"))
             #expect(!result.contains("<div class=\"full\">"))
 

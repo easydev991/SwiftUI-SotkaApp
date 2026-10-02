@@ -255,7 +255,7 @@ private extension InfopostsService {
     func parseAllInfoposts(for language: String) throws -> [Infopost] {
         var infoposts: [Infopost] = []
 
-        let filenames = orderedFilenames(for: language)
+        let filenames = orderedFilenames()
         logger.debug("Получен список из \(filenames.count) файлов для парсинга")
 
         // Парсим все файлы
@@ -279,15 +279,10 @@ private extension InfopostsService {
         return infoposts
     }
 
-    /// Возвращает упорядоченный список имен файлов инфопостов для указанного языка
-    /// - Parameter language: Язык инфопостов ("ru" или "en")
+    /// Возвращает упорядоченный список имен файлов инфопостов
     /// - Returns: Массив имен файлов в правильном порядке
-    func orderedFilenames(for language: String) -> [String] {
-        var filenames = ["organiz", "aims"] + (1 ... 100).map { "d\($0)" }
-        if language == "ru", Infopost(filename: "d0-women", language: language) != nil {
-            filenames.insert("d0-women", at: 2)
-        }
-        return filenames
+    func orderedFilenames() -> [String] {
+        ["organiz", "aims", "d0-women"] + (1 ... 100).map { "d\($0)" }
     }
 
     /// Получает инфопост для текущего дня

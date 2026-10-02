@@ -18,7 +18,7 @@ SHELL := /bin/bash
 .ONESHELL:
 BUNDLE_EXEC := RBENV_VERSION=$(RUBY_VERSION) bundle exec
 UI_PREFLIGHT_SCRIPT := ./scripts/simulator_ui_preflight.sh
-IOS_SIM_DEST ?= platform=iOS Simulator,name=iPhone 17
+IOS_SIM_DEST ?= platform=iOS Simulator,name=iPhone 18 Pro
 WATCH_SIM_DEST ?= platform=watchOS Simulator,name=Apple Watch Ultra 3 (49mm)
 TEST_DERIVED_DATA_PATH ?= /tmp/SwiftUI-SotkaApp-test-derived-data
 APP_BUNDLE_ID ?= com.oleg991.SwiftUI-SotkaApp
@@ -380,7 +380,7 @@ watch_screenshots:
 build:
 	xcodebuild -project SwiftUI-SotkaApp.xcodeproj -scheme SwiftUI-SotkaApp -sdk iphonesimulator -destination '$(IOS_SIM_DEST)' build
 
-## scan_unused_code: Запустить поиск неиспользуемого кода через Periphery (предварительно собери проект: make build или xcodebuild-mcp build_sim)
+## scan_unused_code: Запустить поиск неиспользуемого кода через Periphery (предварительно собери проект: make build или xcode MCP BuildProject)
 scan_unused_code:
 	@PERIPHERY=$$(command -v periphery 2>/dev/null || echo "$$HOME/.mint/bin/periphery"); \
 	if [ ! -x "$$PERIPHERY" ]; then \

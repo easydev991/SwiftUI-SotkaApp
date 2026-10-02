@@ -17,9 +17,6 @@ build/
 .build/
 /.continue
 
-# Qwen
-.qwen/.env
-
 # Fastlane
 fastlane/report.xml
 *.ipa

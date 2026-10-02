@@ -28,7 +28,7 @@ iOS fitness app (SotkaApp) for tracking 100-day workout programs. Supports iOS 1
 - `make format` - Format with swiftformat
 - `make build` - Build iOS for simulator
 - `make test` - Run iOS unit tests
-- `xcodebuild-mcp build_sim` / `test_sim` - Preferred MCP path
+- `xcode` MCP (`BuildProject` / `RunAllTests`) - Preferred MCP path
 
 ## Style
 - Max line width: 140

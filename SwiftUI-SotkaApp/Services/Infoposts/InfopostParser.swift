@@ -161,16 +161,6 @@ private extension InfopostParser {
         return finalHTML
     }
 
-    func insertBeforeFooterOrAppend(_ block: String, in html: String) -> String {
-        if html.contains("<footer>") {
-            logger.debug("✅ Найден тег <footer> в HTML, вставляем видео блок")
-            return html.replacingOccurrences(of: "<footer>", with: block + "<footer>")
-        }
-
-        logger.warning("⚠️ Тег <footer> не найден в HTML, добавляем видео блок в конец")
-        return html + block
-    }
-
     /// Очищает HTML контент от лишних элементов (как в старом приложении SOTKA-ObjC)
     /// - Parameter html: Исходное HTML содержимое
     /// - Returns: Очищенное HTML содержимое
@@ -220,20 +210,7 @@ private extension InfopostParser {
             }
         }
 
-        // 4. Удаляем содержимое футера между <footer> и </footer>
-        if let footerStartRange = cleanedHTML.range(of: "<footer[^>]*>", options: .regularExpression) {
-            if let footerEndRange = cleanedHTML.range(
-                of: "</footer>",
-                options: .regularExpression,
-                range: footerStartRange.upperBound ..< cleanedHTML.endIndex
-            ) {
-                let contentToRemove = String(cleanedHTML[footerStartRange.lowerBound ..< footerEndRange.upperBound])
-                cleanedHTML = cleanedHTML.replacingOccurrences(of: contentToRemove, with: "")
-                logger.debug("Удален footer контент")
-            }
-        }
-
-        // 5. Удаляем пустые div элементы <div class="full"></div>
+        // 4. Удаляем пустые div элементы <div class="full"></div>
         cleanedHTML = cleanedHTML.replacingOccurrences(of: #"<div class="full"></div>"#, with: "", options: .regularExpression)
 
         logger.debug("Очистка HTML контента завершена")
@@ -409,7 +386,7 @@ private extension InfopostParser {
             let videoBlock = Self
                 .lineBreakWithPadding + makeYouTubeExternalBlock(title: displayTitle, watchURL: watchURL, source: .day) + Self
                 .lineBreakWithPadding
-            let modifiedHTML = insertBeforeFooterOrAppend(videoBlock, in: html)
+            let modifiedHTML = html.replacingOccurrences(of: "</body>", with: "\(videoBlock)</body>")
             logger.info("🎬 YouTube видео успешно добавлено в HTML для дня \(dayNumber)")
             return modifiedHTML
 

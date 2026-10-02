@@ -21,11 +21,11 @@ Follow these repo-specific conventions and commands.
 
 ## Build/Lint/Format Commands
 
-- Primary path (preferred): use `xcodebuild-mcp` tools for build/test/run.
+- Primary path (preferred): use `xcode` MCP tools for build/test/run.
 - Fallback path: use Makefile commands only when MCP/plugin tools are unavailable.
 - `make setup` - Install all tools (Homebrew, rbenv, Ruby, bundler, fastlane, swiftformat).
 - `make format` - Format Swift code with swiftformat + markdown files with markdownlint.
-- `make build` - Build iOS project for simulator from `IOS_SIM_DEST` (default: iPhone 17, latest installed iOS runtime) (fallback).
+- `make build` - Build iOS project for simulator from `IOS_SIM_DEST` (default: iPhone 18 Pro, latest installed iOS runtime) (fallback).
 - `make test` - Run all iOS unit tests (fallback).
 - `make test_watch` - Run all watchOS unit tests on simulator from `WATCH_SIM_DEST` (default: Apple Watch Ultra 3 (49mm), latest installed watchOS runtime) (fallback).
 
@@ -123,7 +123,7 @@ Key `.swiftformat` settings applied by `make format`:
 
 1. Read relevant docs in `docs/` before major edits.
 2. Make smallest safe change set; avoid unrelated refactors.
-3. Run `xcodebuild-mcp` / `Build iOS Apps` build+tests first; if unavailable, use Makefile commands.
+3. Run `xcode` MCP build+tests first; if unavailable, use Makefile commands.
 4. Run `make format` after code changes.
 5. For broad changes, run full test plans.
 6. If touching UI test flows, validate launch argument `UITest` assumptions.
