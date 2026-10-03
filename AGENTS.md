@@ -14,10 +14,17 @@ Follow these repo-specific conventions and commands.
 - Build system: Xcode project (`SwiftUI-SotkaApp.xcodeproj`).
 - Package dependencies: local Swift packages in `SwiftUI-SotkaApp/Libraries/`.
 
+## Hard Constraints (do not violate)
+
+- Read-only mode is permanent: `AppConfiguration.isReadOnlyMode = true` — never re-enable network or auth.
+- Offline-first is mandatory: all data is persisted locally in SwiftData (no network layer).
+- Single-user model: one active user at a time; logout clears all user data.
+- No new legacy sync flags: `isSynced`, `shouldDelete`, `lastModified` are deprecated.
+
 ## Source of Truth for Rules
 
 - Primary contributor rules: `.github/CONTRIBUTING.md`.
-- Project rules: `.agents/rules/` (MDC files with `alwaysApply: true` contain mandatory conventions).
+- Project rules: `.agents/rules/` (MDC files with `alwaysApply: true` contain mandatory conventions). These files auto-load into agent context via the root `opencode.json` → `instructions`.
 
 ## Build/Lint/Format Commands
 
@@ -28,6 +35,7 @@ Follow these repo-specific conventions and commands.
 - `make build` - Build iOS project for simulator from `IOS_SIM_DEST` (default: iPhone 18 Pro, latest installed iOS runtime) (fallback).
 - `make test` - Run all iOS unit tests (fallback).
 - `make test_watch` - Run all watchOS unit tests on simulator from `WATCH_SIM_DEST` (default: Apple Watch Ultra 3 (49mm), latest installed watchOS runtime) (fallback).
+- `make` output is condensed by rtk — use `rtk proxy <cmd>` to see full output instead of rerunning.
 
 ## Read-Only Mode
 
@@ -35,6 +43,7 @@ Follow these repo-specific conventions and commands.
 - The server (`100.workout.su`) closed all social APIs. Auth, sync, and network requests are unavailable.
 - All users behave as offline-only. UI tests and mock bootstrapping still pass `isReadOnlyMode: false` to simulate normal behavior.
 - Do not re-enable network features or auth flows without explicit request.
+- Offline login (`AuthHelper`) is the single sanctioned exception and is NOT a precedent for new auth/network flows.
 
 ## Test Strategy and Framework Conventions
 
@@ -44,6 +53,7 @@ Follow these repo-specific conventions and commands.
 - Prefer deterministic tests with in-memory `ModelContainer` for SwiftData.
 - Use mocks from `SwiftUI-SotkaAppTests/Mocks/` for service isolation.
 - TDD: Red-Green-Refactor cycle. Write tests before implementation.
+- Test run/report rules and gotchas: see `.agents/rules/test-execution.mdc`.
 
 ## Swift Style Rules (swiftformat)
 
@@ -81,19 +91,6 @@ Key `.swiftformat` settings applied by `make format`:
 - Dependency injection via SwiftUI `Environment` (services are `@Observable` classes) and init parameters.
 - Services are assembled in `SwiftUI_SotkaAppApp.init` and injected with `.environment(...)`.
 
-## Offline-First Rules (Mandatory)
-
-- Offline-first is mandatory: all data is persisted locally in SwiftData.
-- The sync layer was removed (server `100.workout.su` closed) — there is no network sync.
-- Only offline login exists (`AuthHelper`, UserDefaults-backed `isAuthorized`, sentinel user).
-- Legacy sync flags (`isSynced`, `shouldDelete`, `lastModified`) remain on models but are `@available(*, deprecated)` — do not add new ones.
-
-## Single-User Data Model
-
-- One active user at a time.
-- On login: user data stored locally.
-- On logout: all user data must be cleared.
-
 ## Imports, Types, and Concurrency
 
 - Prefer protocol types for dependencies.
@@ -115,8 +112,6 @@ Key `.swiftformat` settings applied by `make format`:
 - Never use UIKit/Core Data unless SwiftUI cannot implement required functionality.
 - Never leave unused code after refactoring.
 - Never add code without explicit request.
-- Do not add new sync flags (`isSynced`, `shouldDelete`, `lastModified`) — they are deprecated legacy.
-- Always implement local SwiftData persistence first; no sync layer exists.
 - Test offline functionality for every feature.
 
 ## Agent Workflow Checklist

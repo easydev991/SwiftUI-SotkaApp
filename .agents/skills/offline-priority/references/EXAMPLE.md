@@ -1,59 +1,32 @@
-# Примеры офлайн-приоритета
+# Примеры офлайн-хранения
 
-## Модель с флагами синхронизации
+## Модель без sync-флагов
 
 ```swift
 @Model
 final class SomeModel {
-    // Основные данные
     var id: UUID
     var name: String
-    
-    // Флаги синхронизации (обязательно!)
-    var isSynced: Bool = false
-    var shouldDelete: Bool = false
-    var lastModified: Date = Date()
+    // Только данные. Флаги isSynced/shouldDelete/lastModified — deprecated,
+    // на новые модели не переносим.
 }
 ```
 
 ## Сохранение данных
 
 ```swift
-func saveWorkout(_ workout: Workout) {
-    // 1. Сохраняем локально
-    workout.isSynced = false
-    workout.lastModified = Date()
-    modelContext.insert(workout)
-    
-    // 2. Пытаемся синхронизировать (неблокирущще)
-    Task {
-        await syncService.syncWorkout(workout)
-    }
+func saveWorkout(_ workout: Workout, context: ModelContext) {
+    context.insert(workout)
+    try? context.save() // единственный «бэкенд» — локальный SwiftData
 }
 ```
 
-## Синхронизация данных
+## Очистка при логауте (single-user)
 
 ```swift
-func syncUnsyncedData() async {
-    let unsyncedWorkouts = try? modelContext.fetch(
-        FetchDescriptor<Workout>(
-            predicate: #Predicate { !$0.isSynced }
-        )
-    )
-    
-    await withTaskGroup(of: Void.self) { group in
-        for workout in unsyncedWorkouts ?? [] {
-            group.addTask {
-                do {
-                    try await uploadWorkout(workout)
-                    workout.isSynced = true
-                } catch {
-                    // Ошибка синхронизации - продолжаем работу локально
-                    logger.error("Ошибка синхронизации: \(error)")
-                }
-            }
-        }
-    }
+func logout(context: ModelContext) {
+    try? context.delete(model: Workout.self) // вся сущность, а не «текущего пользователя»
+    try? context.save()
+    AuthHelper.logout() // сброс isAuthorized в UserDefaults
 }
 ```

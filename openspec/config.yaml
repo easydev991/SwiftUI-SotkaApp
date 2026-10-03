@@ -1,9 +1,12 @@
 schema: spec-driven
 
 context: |
-  Language: ru
-  All artifacts must be written in ru.
-  Keep OpenSpec structural headings and SHALL/MUST keywords in English.
+  Language: ru — все артефакты OpenSpec пишутся на русском.
+  Структурные заголовки и ключевые слова SHALL/MUST остаются на английском.
+  Задача считается выполненной только при чистом `make format` и зелёной сборке/тестах
+  (приоритет — xcode MCP, фоллбек — make build/test).
+  Read-only режим: сетевые фичи и авторизация не возвращаются; новые sync-флаги
+  (isSynced/shouldDelete/lastModified) не добавляются — они deprecated.
 
 # Per-artifact rules (optional)
 # Add custom rules for specific artifacts.
