@@ -1,0 +1,18 @@
+---
+description: Правила запуска тестов и отчёта по результатам (один прогон → один отчёт)
+alwaysApply: true
+---
+
+# Запуск тестов: один прогон → один отчёт
+
+1. **Один прогон → один отчёт.** Повторные полные запуски тест-планов ради перечитывания вывода ЗАПРЕЩЕНЫ. Перечитывай вывод через xcode MCP (`GetConsoleOutput`, `GetBuildLog`) или логи сборки.
+2. **Сначала точечно.** Для итераций используй xcode MCP `RunSomeTests` с конкретными идентификаторами тестов (список — `GetTestList`). Полный тест-план (`RunAllTests`) — один раз в конце при широких изменениях.
+3. **Тест-планы и их назначение:**
+   - iOS unit: `SwiftUI-SotkaAppTests/SwiftUI-SotkaAppTests.xctestplan`
+   - iOS UI: `SwiftUI-SotkaAppUITests/SwiftUI-SotkaAppUITests.xctestplan`
+   - watchOS: `SotkaWatch Watch AppTests/SotkaWatch-UnitTests.xctestplan`
+
+   Не переключай активный тест-план без необходимости.
+4. **Watch-тесты медленные** и требуют отдельный watch-симулятор: запускай их только при изменениях в watch-таргете.
+5. **Фоллбек без xcode MCP:** `make test` / `make test_watch`. Destinations бери из Makefile-переменных `IOS_SIM_DEST` / `WATCH_SIM_DEST` — НЕ хардкодь имена девайсов в командах. Вывод `make` конденсируется rtk: если вывод нечитаем, используй `rtk proxy <cmd>`, а не повторный запуск.
+6. **UI-тесты** зависят от launch-аргумента `UITest` и DEBUG-бутстрапа (`ScreenshotDemoData`, `isReadOnlyMode: false` — только в этом режиме).

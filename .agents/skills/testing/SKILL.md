@@ -1,107 +1,112 @@
 ---
 name: testing
-description: Правила написания unit-тестов для iOS приложений
+description: Экспертные правила тестирования iOS/watchOS-приложения на SwiftUI + SwiftData + Observation (MVVM @Observable). Использовать при написании новых unit-тестов, рефакторинге существующих, отладке flaky-тестов, изоляции SwiftData/UserDefaults в тестах, написании и переиспользовании моков, точечном запуске тестов через xcode MCP (GetTestList → RunSomeTests) или make-фоллбек. Unit-тесты — только Swift Testing (@Test, #expect, #require); UI-тесты — XCTest с launch-аргументом UITest.
 ---
-# Правила написания unit-тестов
 
-### Запуск тестов
+# Тестирование: unit-тесты на Swift Testing
 
-- **В первую очередь** используй **xcode** MCP для запуска тестов — это предпочтительный способ для агентов.
-- **Если MCP недоступен или завершился с ошибкой** — используй прямые команды `xcodebuild` или **make test** как запасной вариант.
+## When to use
 
-## Когда применять
+- Пишешь новый unit-тест для сервиса, ViewModel или модели
+- Рефакторишь существующий тест под стандарты проекта
+- Отлаживаешь упавший или flaky-тест
+- Настраиваешь изоляцию SwiftData (in-memory container) или UserDefaults
+- Создаёшь мок или ищешь готовый в `SwiftUI-SotkaAppTests/Mocks/`
+- Запускаешь тесты и не уверен, чем: xcode MCP или make
 
-- При написании новых unit-тестов для iOS-проекта
-- При рефакторинге существующих тестов для соответствия стандартам
-- При тестировании бизнес-логики сервисов и ViewModels
-- При создании мок-клиентов для тестирования интеграции с сервером
-- При написании параметризированных тестов для множества сценариев
+## Agent behavior contract
 
-## Основные принципы
+1. **Unit-тесты — только Swift Testing**: `import Testing`, `@Test`, `#expect`, `#require`, `@Suite`. XCTest — только в `SwiftUI-SotkaAppUITests` для UI-тестов.
+2. **Русские описания обязательно**: `@Test("Должен возвращать пустой массив при отсутствии данных")` и `@Suite("Тесты ReviewManager eligibility и координации")`.
+3. **Без force unwrap — нигде, включая тесты** (`.agents/rules/safe-optional-unwrapping.mdc`). Опционал разворачивай так: `let value = try #require(optionalValue)`, тест получает `throws`.
+4. **`throws`/`async` только по необходимости**: есть `try` → `throws`; нет — без него. Есть `await` → `async`; нет — без него.
+5. **SwiftData — только in-memory**: `ModelConfiguration(isStoredInMemoryOnly: true)`. Тест никогда не пишет в реальный стор. Образец: `ReviewManagerTests.makeContainer()`.
+6. **UserDefaults — только изолированный**: `try MockUserDefaults.create()` (UUID-suite на тест). Никогда `UserDefaults.standard`.
+7. **Моки — из `SwiftUI-SotkaAppTests/Mocks/`** (`MockUserDefaults`, `MockStatusManager`, `MockReviewEventReporter`). Новые создавай только если готового нет; группируй по функциональности.
+8. **TDD: тест раньше реализации** — красный → зелёный → рефакторинг (`.agents/rules/test-driven-development.mdc`).
+9. **Запуск — xcode MCP первым**: `GetTestList` → `RunSomeTests` по 1–2 идентификаторам. Полный прогон (`RunAllTests` / `make test`) — один раз в конце. Правило «один прогон → один отчёт»: `.agents/rules/test-execution.mdc`. Фоллбек при недоступном MCP — `make test`.
+10. **Watch-тесты** (`make test_watch`, таргет `SotkaWatch Watch AppTests`) — только при изменениях watch-таргета.
+11. **UI-тесты — отдельная тема**: XCTest + launch-аргумент `UITest`; DEBUG-бутстрап сидит демо-данными с `isReadOnlyMode: false`. Сюда не смешивать.
+12. **Без сети в тестах**: проект офлайн-first, сервер закрыт — только моки и локальные сторы.
 
-### 1. Технологии тестирования
+## First 60 seconds (triage)
 
-- **Swift Testing** (import Testing) - основной фреймворк
-- **@Test** для тестовых функций
-- **#expect** для проверок
-- **#require** для разворачивания опционалов
+При правке или отладке тестов, в таком порядке:
 
-### 2. Правила написания тестов
+1. Открой существующий тест-файл рядом с тестируемым кодом как образец (см. «Routing map»).
+2. `GetTestList` — найди идентификаторы нужных тестов (grep по `TEST_IDENTIFIER`, `TEST_FILE_PATH`).
+3. `RunSomeTests` по 1–2 идентификаторам — точечная проверка гипотезы.
+4. Тест упал → **читай вывод** (`GetConsoleOutput` с `pattern` по сообщению ошибки), не перезапускай вслепую. Один прогон → один отчёт.
+5. Локально воспроизводишь паттерн из соседнего зелёного теста, правишь, перезапускаешь только затронутые тесты.
+6. В конце — один полный прогон и один отчёт.
 
-#### Синтаксис тестов
+## Анатомия тест-файла
 
-См. примеры синтаксиса в [references/EXAMPLE.md](references/EXAMPLE.md).
+Канонический скелет (как в `ReviewManagerTests.swift`):
 
-#### Описания тестов
+```swift
+import Foundation
+import SwiftData            // если нужен ModelContainer
+@testable import SwiftUI_SotkaApp
+import Testing
 
-- **Обязательно** добавляй описание теста на русском языке в аннотации `@Test`
-- **Используй** краткие и понятные описания того, что тестируется
-- **Пример**: `@Test("Должен возвращать правильный результат для валидных данных")`
+@Suite("Тесты <Что тестируем> — <аспект>")
+@MainActor                  // для ViewModel/сервисов с MainActor-состоянием
+struct FooTests {
+    private func makeContainer() throws -> ModelContainer { ... }   // in-memory
+    private func makeSUT(...) throws -> (Sut, Mock, ...) { ... }     // фабрика SUT
 
-#### Работа с опционалами
+    @Test("Русское описание поведения")
+    func doesThing() async throws {
+        let (sut, ...) = try makeSUT(...)
+        // act
+        let value = try #require(sut.result)
+        #expect(value == expected)
+    }
+}
+```
 
-- **Всегда** разворачивай опционалы перед проверками с помощью `try #require()`
-- **Не используй** знаки вопроса (?) в проверках `#expect`
-- **Пример**: `let value = try #require(optionalValue)` затем `#expect(value == expected)`
+- Один файл — один тестируемый тип; группировка по аспектам — отдельные файлы (`WorkoutPreviewViewModelUpdatePlannedCountTests.swift` и т.п.), общий `@Suite`-заглушка допустима (`WorkoutPreviewViewModelTests.swift`).
+- Проверки без ветвлений: один тест — один сценарий, без `if/else` внутри.
 
-#### Асинхронные тесты
+## Карта таргетов
 
-- **Добавляй `throws`** если в тесте есть `try`
-- **Не добавляй `throws`** если нет `try` в тесте
-- **Добавляй `async`** для асинхронных тестов
-- **Не добавляй `async`** если в тесте нет await
+| Таргет | Фреймворк | Когда трогать |
+|---|---|---|
+| `SwiftUI-SotkaAppTests` | Swift Testing | Вся unit-логика iOS: сервисы, ViewModel, модели |
+| `SwiftUI-SotkaAppUITests` | XCTest + аргумент `UITest` | Только UI-флоу |
+| `SotkaWatch Watch AppTests` | Swift Testing | Только при изменениях watch-таргета |
 
-#### Проверки Bool условий
+Моки живут в `SwiftUI-SotkaAppTests/Mocks/`: `MockUserDefaults`, `MockStatusManager`, `MockReviewEventReporter`.
 
-- **Не используй** равенство для Bool значений
-- **Используй** прямое сравнение: `#expect(isTrue)` или `#expect(isFalse)`
-- **Пример**: `#expect(condition)` вместо `#expect(condition == true)`
+## Routing map
 
-#### Проверка конкретных ошибок
+| Задача | Reference |
+|---|---|
+| Синтаксис `@Test`/`#expect`/`#require`, параметризация, моки, in-memory container — готовые сниппеты | [references/EXAMPLE.md](references/EXAMPLE.md) |
+| Как запустить тесты: xcode MCP, make-фоллбек, watch, UI-тесты | [references/running-tests.md](references/running-tests.md) |
+| Конвенции из правил: TDD, safe unwrapping, офлайн, read-only mode | [references/project-conventions.md](references/project-conventions.md) |
 
-- **Используй** `#expect(throws: ErrorType)` для проверки конкретных типов ошибок
-- **Не используй** do-catch блоки для проверки ожидаемых ошибок
+## Common pitfalls → next best move
 
-См. примеры в [references/EXAMPLE.md](references/EXAMPLE.md).
+| Грабли | Next best move |
+|---|---|
+| `let x = optional!` в тесте | `let x = try #require(optional)` + `throws` на функции |
+| Тест с SwiftData без контейнера бьёт по реальному стору | `ModelContainer(for: ..., configurations: ModelConfiguration(isStoredInMemoryOnly: true))` — сниппет в EXAMPLE.md |
+| `UserDefaults.standard` в тесте → взаимное загрязнение | `try MockUserDefaults.create()` — UUID-suite на каждый тест |
+| Flaky async-тест, «иногда падает» | Пометь suite `@MainActor`, жди через `await`, а не `Task.sleep`; гоняй точечно `RunSomeTests` до стабилизации |
+| Хардкод имени симулятора в команде | Не хардкодь: xcode MCP выбирает сам; в make — переменные `IOS_SIM_DEST` / `WATCH_SIM_DEST` из Makefile |
+| Тест упал → сразу перезапуск | `GetConsoleOutput` → прочитай assertion → правь причину. Перезапуск — не отладка |
+| `#expect(x == true)` | `#expect(x)` / `#expect(!x)` |
+| Ожидаемая ошибка через do-catch | `#expect(throws: MyError.userNotFound) { try sut.method() }` |
+| Дубль существующего мока | Сначала загляни в `SwiftUI-SotkaAppTests/Mocks/` |
 
-#### Параметризированные тесты
+## Verification checklist
 
-- **Используй** параметризированные тесты когда нужно протестировать несколько сценариев с разными аргументами и одинаковой логикой
-- **Добавляй** `arguments:` в аннотацию `@Test` с массивом значений
-- **Параметр функции** должен соответствовать типу аргументов
-- **Не используй в аргументах** ожидаемый результат - в аргументах должны быть только вводные данные
-- **Группируй** тесты с одинаковым сценарием или ожидаемым результатом
-- **Преимущества**: сокращает дублирование кода, делает тесты более читаемыми, легко добавлять новые сценарии
-
-См. примеры в [references/EXAMPLE.md](references/EXAMPLE.md).
-
-#### Комментарии в тестах
-
-- **Лишние комментарии в тестах не нужны** - код должен быть самодокументируемым
-- **Для простых сценариев** комментарии не нужны вообще
-- **Для сложной логики** можно добавить краткий комментарий внутри `#expect`
-- **Не используй** обычные комментарии (`//`) над `#expect`
-- **Чем короче комментарий**, тем лучше
-
-См. примеры в [references/EXAMPLE.md](references/EXAMPLE.md).
-
-### 3. Структура тестов
-
-- **Один тестовый файл на модуль**
-- **Тестировать бизнес-логику** в сервисах
-- **Тестировать ViewModels** с моками
-- **Не тестировать UI** напрямую
-- **Не дублировать** одинаковые сценарии в разных тестах
-- **Пиши простые тесты**, в тестах не должно быть сложной логики и проверки разных сценариев типа "if shouldThrow {} else {}"
-
-### 4. Тестирование интеграции с сервером
-
-- **Используй только мок-клиенты** для тестирования запросов к серверу и для работы со Swift Data (ModelContainer)
-- **Никогда не отправляй** реальные запросы на сервер в тестах
-- **Создавай общие мок-клиенты** в папке с тестами для переиспользования в разных тестовых файлах
-- **Группируй мок-клиенты** по функциональности (например, `MockProgressClient`, `MockAuthClient`)
-- **Используй dependency injection** для передачи мок-клиентов в тестируемые сервисы
-
-## Заключение
-
-При написании unit-тестов всегда следуй этим правилам для обеспечения консистентности и правильности тестового кода в проекте.
+- [ ] `import Testing`; у каждого `@Test`/`@Suite` — русское описание
+- [ ] Нет `!`; опционалы через `try #require`; `throws`/`async` ровно там, где нужны
+- [ ] SwiftData — in-memory container; UserDefaults — изолированный suite, не `.standard`
+- [ ] Моки взяты из `SwiftUI-SotkaAppTests/Mocks/` или обоснованно добавлены туда
+- [ ] Точечный прогон через `RunSomeTests` зелёный; полный прогон — один раз
+- [ ] Отчёт — один, по одному прогону (правило `test-execution.mdc`)
+- [ ] Для watch-таргета прогнан `make test_watch`; для UI — аргумент `UITest` учтён
