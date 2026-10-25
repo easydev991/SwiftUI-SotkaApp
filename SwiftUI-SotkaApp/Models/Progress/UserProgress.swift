@@ -12,11 +12,7 @@ final class UserProgress {
     var pushUps: Int?
     var squats: Int?
     var weight: Float?
-    @available(*, deprecated, message: "Sync-флаг, оставлен для стабильности схемы (сервер закрыт 2026-08-01).")
-    var isSynced = false
     var shouldDelete = false
-    @available(*, deprecated, message: "Sync-timestamp, оставлен для стабильности схемы (сервер закрыт 2026-08-01).")
-    var lastModified = Date.now
 
     /// Связь с пользователем
     @Relationship(inverse: \User.progressResults) var user: User?
@@ -50,8 +46,7 @@ final class UserProgress {
         urlPhotoSide: String? = nil,
         dataPhotoFront: Data? = nil,
         dataPhotoBack: Data? = nil,
-        dataPhotoSide: Data? = nil,
-        lastModified: Date = .now
+        dataPhotoSide: Data? = nil
     ) {
         self.id = id
         self.pullUps = pullUps
@@ -64,7 +59,6 @@ final class UserProgress {
         self.dataPhotoBack = dataPhotoBack
         self.dataPhotoSide = dataPhotoSide
         self.dataPhotoFront = dataPhotoFront
-        self.lastModified = lastModified
     }
 
     /// Проверяет, заполнены ли все результаты прогресса
@@ -177,9 +171,7 @@ extension UserProgress {
         pushUps = model.pushUps.isEmpty ? nil : Int(model.pushUps)
         squats = model.squats.isEmpty ? nil : Int(model.squats)
         weight = model.weight.isEmpty ? nil : Float.fromUIString(model.weight)
-        isSynced = false
         shouldDelete = false
-        lastModified = .now
     }
 
     /// Проверяет, является ли прогресс "пустым" (нет значимых данных)
@@ -218,8 +210,6 @@ extension UserProgress {
         case .back: dataPhotoBack = data
         case .side: dataPhotoSide = data
         }
-        lastModified = .now
-        isSynced = false
     }
 
     /// Достает данные изображения указанного типа
@@ -278,7 +268,6 @@ extension UserProgress: CustomStringConvertible {
         let pushUpsDescription = "pushUps: \(pushUps ?? 0)"
         let squatsDescription = "squats: \(squats ?? 0)"
         let weightDescription = "weight: \(weight ?? 0)"
-        let lastModifiedDescription = "lastModified: \(lastModified)"
         let photoFrontDescription = "urlPhotoFront: \(getPhotoURL(.front) ?? "отсутствует"), hasData: \(getPhotoData(.front) != nil)"
         let photoBackDescription = "urlPhotoBack: \(getPhotoURL(.back) ?? "отсутствует"), hasData: \(getPhotoData(.back) != nil)"
         let photoSideDescription = "urlPhotoSide: \(getPhotoURL(.side) ?? "отсутствует"), hasData: \(getPhotoData(.side) != nil)"
@@ -287,7 +276,6 @@ extension UserProgress: CustomStringConvertible {
             pushUpsDescription,
             squatsDescription,
             weightDescription,
-            lastModifiedDescription,
             photoFrontDescription,
             photoBackDescription,
             photoSideDescription

@@ -163,7 +163,7 @@ struct EditCustomExerciseScreen: View {
             )
         } catch {
             analytics.log(.appError(kind: .customExerciseSaveFailed, error: error))
-            logger.error("Ошибка синхронизации обновления упражнения: \(error)")
+            logger.error("Ошибка сохранения обновления упражнения: \(error)")
         }
     }
 }

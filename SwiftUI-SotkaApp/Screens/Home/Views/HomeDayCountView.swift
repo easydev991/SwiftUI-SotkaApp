@@ -5,16 +5,11 @@ import SwiftUI
 struct HomeDayCountView: View {
     @Environment(\.isIPad) private var isIpad
     private let calculator: DayCalculator
-    private let isSolvingConflict: Bool
 
     /// Инициализатор
-    /// - Parameters:
-    ///   - calculator: Калькулятор текущего дня
-    ///   - isSolvingConflict: `true` - вьюха отображается на экране решения конфликта дат
-    ///   при синхронизации, `false` - обычное отображение
-    init(calculator: DayCalculator, isSolvingConflict: Bool = false) {
+    /// - Parameter calculator: Калькулятор текущего дня
+    init(calculator: DayCalculator) {
         self.calculator = calculator
-        self.isSolvingConflict = isSolvingConflict
     }
 
     var body: some View {
@@ -118,7 +113,7 @@ private extension HomeDayCountView {
 
     @ViewBuilder
     private var rateAppButton: some View {
-        if let appReviewLink = Constants.appReviewURL, !isSolvingConflict {
+        if let appReviewLink = Constants.appReviewURL {
             Link(.rateTheApp, destination: appReviewLink)
                 .buttonStyle(SWButtonStyle(icon: .star, mode: .filled, size: .small))
                 .padding(.top, 8)
@@ -146,13 +141,5 @@ private extension HomeDayCountView {
 #Preview("День 101 (с продлением)") {
     HomeDayCountView(calculator: .init(previewDay: 101, extensionCount: 1))
         .padding()
-}
-
-#Preview("День 100, конфликт дат") {
-    HomeDayCountView(
-        calculator: .init(previewDay: 100),
-        isSolvingConflict: true
-    )
-    .padding()
 }
 #endif

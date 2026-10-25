@@ -1,23 +1,11 @@
 import Foundation
 import SwiftData
 @testable import SwiftUI_SotkaApp
-import SWUtils
 import Testing
 
 @Suite("User Model Tests")
 struct UserTests {
     // MARK: - Private Helper Methods
-
-    /// Вычисляет возраст на основе даты рождения
-    private func calculateAge(from birthDateString: String) -> Int {
-        let birthDate = DateFormatterService.dateFromString(birthDateString, format: .isoShortDate)
-        return Calendar.current.dateComponents([.year], from: birthDate, to: .now).year ?? 0
-    }
-
-    /// Возвращает строку возраста для проверки в genderWithAge
-    private func ageString(from birthDateString: String) -> String {
-        "\(calculateAge(from: birthDateString))"
-    }
 
     /// Создает CustomExercise для тестов
     private func createCustomExercise(id: String, name: String, imageId: Int, user: User) -> CustomExercise {
@@ -29,35 +17,6 @@ struct UserTests {
             modifyDate: Date(),
             user: user
         )
-    }
-
-    // MARK: - avatarUrl Tests
-
-    @Test("avatarUrl с валидным URL")
-    func avatarUrlWithValidUrl() throws {
-        let user = User(id: 1, imageStringURL: "https://example.com/avatar.jpg")
-        let avatarUrl = try #require(user.avatarUrl)
-        #expect(avatarUrl.absoluteString == "https://example.com/avatar.jpg")
-    }
-
-    @Test("avatarUrl с кириллическими символами")
-    func avatarUrlWithCyrillic() throws {
-        let user = User(id: 1, imageStringURL: "https://example.com/аватар.jpg")
-        let avatarUrl = try #require(user.avatarUrl)
-        // URL кодирует кириллические символы, поэтому проверяем закодированную версию
-        #expect(avatarUrl.absoluteString.contains("%D0%B0%D0%B2%D0%B0%D1%82%D0%B0%D1%80"))
-    }
-
-    @Test("avatarUrl с пустой строкой")
-    func avatarUrlWithEmptyString() {
-        let user = User(id: 1, imageStringURL: "")
-        #expect(user.avatarUrl == nil)
-    }
-
-    @Test("avatarUrl с nil значением")
-    func avatarUrlWithNil() {
-        let user = User(id: 1, imageStringURL: nil)
-        #expect(user.avatarUrl == nil)
     }
 
     // MARK: - gender Tests
@@ -93,91 +52,6 @@ struct UserTests {
     func genderWithInvalidCode() {
         let user = User(id: 1, genderCode: 999)
         #expect(user.gender == nil)
-    }
-
-    // MARK: - birthDate Tests
-
-    @Test("birthDate с валидной ISO датой")
-    func birthDateWithValidIsoDate() {
-        let user = User(id: 1, birthDateIsoString: "1990-01-15")
-        let birthDate = user.birthDate
-
-        let calendar = Calendar.current
-        let components = calendar.dateComponents([.year, .month, .day], from: birthDate)
-
-        #expect(components.year == 1990)
-        #expect(components.month == 1)
-        #expect(components.day == 15)
-    }
-
-    @Test("birthDate с пустой строкой")
-    func birthDateWithEmptyString() {
-        let user = User(id: 1, birthDateIsoString: "")
-        let birthDate = user.birthDate
-
-        // Должна вернуть текущую дату по умолчанию
-        let now = Date()
-        let timeInterval = abs(birthDate.timeIntervalSince(now))
-        #expect(timeInterval < 1.0) // Разница должна быть меньше секунды
-    }
-
-    @Test("birthDate с nil значением")
-    func birthDateWithNil() {
-        let user = User(id: 1, birthDateIsoString: nil)
-        let birthDate = user.birthDate
-
-        // Должна вернуть текущую дату по умолчанию
-        let now = Date()
-        let timeInterval = abs(birthDate.timeIntervalSince(now))
-        #expect(timeInterval < 1.0) // Разница должна быть меньше секунды
-    }
-
-    // MARK: - genderWithAge Tests
-
-    @Test("genderWithAge с мужским полом")
-    func genderWithAgeWithMale() {
-        let user = User(id: 1, genderCode: 0, birthDateIsoString: "1990-01-01")
-        let genderWithAge = user.genderWithAge
-
-        // Проверяем, что строка содержит описание пола и возраст
-        #expect(genderWithAge.contains("Мужчина") || genderWithAge.contains("Male"))
-        #expect(genderWithAge.contains(ageString(from: "1990-01-01")))
-    }
-
-    @Test("genderWithAge с женским полом")
-    func genderWithAgeWithFemale() {
-        let user = User(id: 1, genderCode: 1, birthDateIsoString: "1990-01-01")
-        let genderWithAge = user.genderWithAge
-
-        // Проверяем, что строка содержит описание пола и возраст
-        #expect(genderWithAge.contains("Женщина") || genderWithAge.contains("Female"))
-        #expect(genderWithAge.contains(ageString(from: "1990-01-01")))
-    }
-
-    @Test("genderWithAge с неопределенным полом")
-    func genderWithAgeWithUnspecified() {
-        let user = User(id: 1, genderCode: -1, birthDateIsoString: "1990-01-01")
-        let genderWithAge = user.genderWithAge
-
-        // Должна содержать только возраст без пола
-        #expect(!genderWithAge.contains("Мужчина"))
-        #expect(!genderWithAge.contains("Женщина"))
-        #expect(!genderWithAge.contains("Male"))
-        #expect(!genderWithAge.contains("Female"))
-        #expect(genderWithAge.contains(ageString(from: "1990-01-01")))
-    }
-
-    @Test("genderWithAge с nil полом")
-    func genderWithAgeWithNilGender() {
-        let user = User(id: 1, genderCode: nil, birthDateIsoString: "1990-01-01")
-        let genderWithAge = user.genderWithAge
-
-        // Должна содержать только возраст без пола
-        #expect(!genderWithAge.contains("Мужчина"))
-        #expect(!genderWithAge.contains("Женщина"))
-        #expect(!genderWithAge.contains("Male"))
-        #expect(!genderWithAge.contains("Female"))
-        #expect(genderWithAge.contains(ageString(from: "1990-01-01")))
     }
 
     // MARK: - customExerciseCountText Tests
@@ -361,17 +235,6 @@ struct UserTests {
             #expect(user.genderCode == gender.code)
             #expect(user.gender == gender)
         }
-    }
-
-    @Test("Офлайн-инициализатор не устанавливает профильные поля")
-    func offlineInitLeavesProfileFieldsNil() {
-        let user = User(offlineWithGenderCode: Gender.female.code)
-        #expect(user.fullName == nil)
-        #expect(user.email == nil)
-        #expect(user.imageStringURL == nil)
-        #expect(user.cityId == nil)
-        #expect(user.countryId == nil)
-        #expect(user.birthDateIsoString == nil)
     }
 
     // MARK: - activitiesByDay Tests

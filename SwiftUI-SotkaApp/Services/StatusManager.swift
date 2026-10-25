@@ -20,7 +20,6 @@ final class StatusManager: NSObject {
     @ObservationIgnored private let reviewEventReporter: (any ReviewEventReporting)?
     @ObservationIgnored private let sessionProtocol: WCSessionProtocol?
     @ObservationIgnored let modelContainer: ModelContainer
-    private let isReadOnlyMode: Bool
     @ObservationIgnored private var extensionDateKeysSnapshot: Set<Int64> = []
 
     /// Последние отправленные данные статуса для дедупликации
@@ -92,15 +91,13 @@ final class StatusManager: NSObject {
         modelContainer: ModelContainer,
         userDefaults: UserDefaults? = nil,
         watchConnectivitySessionProtocol: WCSessionProtocol? = nil,
-        reviewEventReporter: (any ReviewEventReporting)? = nil,
-        isReadOnlyMode: Bool = AppConfiguration.isReadOnlyMode
+        reviewEventReporter: (any ReviewEventReporting)? = nil
     ) {
         self.customExercisesService = customExercisesService
         self.infopostsService = infopostsService
         self.dailyActivitiesService = dailyActivitiesService
         self.modelContainer = modelContainer
         self.reviewEventReporter = reviewEventReporter
-        self.isReadOnlyMode = isReadOnlyMode
         if let userDefaults {
             self.defaults = userDefaults
         } else {
@@ -192,7 +189,7 @@ final class StatusManager: NSObject {
         }
 
         // Не отправляем данные до завершения первичной загрузки (при запуске приложения)
-        // Это предотвращает лишние синхронизации при первом изменении currentDayCalculator
+        // Это предотвращает лишние отправки на часы при первом изменении currentDayCalculator
         guard didLoadInitialData else {
             logger.debug("Пропускаем отправку данных на часы: первичная загрузка еще не завершена")
             return
@@ -284,10 +281,10 @@ final class StatusManager: NSObject {
         let isAuthorized = (try? context.fetch(FetchDescriptor<User>()).first) != nil
 
         // Если данные еще не загружены и пользователь авторизован, не отправляем Application Context
-        // Application Context будет отправлен после завершения синхронизации с полными данными (currentDay)
+        // Application Context будет отправлен после завершения первичной загрузки (с полными данными currentDay)
         // Это предотвращает отображение неправильного дня на часах
         if !didLoadInitialData, isAuthorized {
-            logger.debug("ApplicationContext не отправлен при активации: данные еще не загружены, будет отправлен после синхронизации")
+            logger.debug("ApplicationContext не отправлен при активации: данные еще не загружены, будет отправлен после первичной загрузки")
             return
         }
 
@@ -739,7 +736,6 @@ final class StatusManager: NSObject {
         // Очистка данных инфопостов в User
         user.setFavoriteInfopostIds([])
         user.setReadInfopostDays([])
-        user.setUnsyncedReadInfopostDays([])
         clearExtensionDates()
         JournalPagePersistence.clear(defaults: defaults)
         let now = Date.now
@@ -751,35 +747,23 @@ final class StatusManager: NSObject {
     /// Добавляет дату продления календаря в локальное хранилище.
     /// - Parameters:
     ///   - date: Дата продления
-    ///   - isSynced: Флаг синхронизации с сервером
-    func addExtensionDate(_ date: Date = .now, isSynced: Bool = false) {
+    /// - Returns: `false`, если продление не сохранено (пользователь не найден)
+    @discardableResult
+    func addExtensionDate(_ date: Date = .now) -> Bool {
         let context = modelContainer.mainContext
         guard let user = fetchCurrentUser(context: context) else {
             logger.error("Не удалось добавить продление: пользователь не найден")
-            return
+            return false
         }
 
         let key = normalizedDateKey(date)
         let existingRecords = extensionRecords(for: user, context: context)
         if let existing = existingRecords.first(where: { normalizedDateKey($0.date) == key }) {
-            var didUpdate = false
-            if existing.shouldDelete {
-                existing.shouldDelete = false
-                didUpdate = true
-            }
-            if isSynced, !existing.isSynced {
-                existing.isSynced = true
-                didUpdate = true
-            }
-            if didUpdate {
-                existing.lastModified = .now
-            }
+            existing.shouldDelete = false
         } else {
             let record = CalendarExtensionRecord(
                 date: dateFromKey(key),
-                isSynced: isSynced,
                 shouldDelete: false,
-                lastModified: .now,
                 user: user
             )
             context.insert(record)
@@ -789,10 +773,12 @@ final class StatusManager: NSObject {
             try context.save()
         } catch {
             logger.error("Ошибка сохранения продления календаря: \(error.localizedDescription)")
+            return false
         }
 
         refreshExtensionSnapshot(for: user, context: context)
         rebuildCurrentDayCalculator(now: .now)
+        return true
     }
 
     /// Удаляет последнее продление календаря (внутренний rollback API).
@@ -859,12 +845,8 @@ final class StatusManager: NSObject {
         }
 
         let context = modelContainer.mainContext
-        guard let user = fetchCurrentUser(context: context) else {
-            logger.error("Не удалось продлить календарь: пользователь не найден")
-            return
-        }
 
-        addExtensionDate(.now, isSynced: user.isOfflineOnly || isReadOnlyMode)
+        guard addExtensionDate(.now) else { return }
 
         let updatedCurrentDay = currentDayCalculator?.currentDay
         let updatedCurrentActivity = updatedCurrentDay.map {
@@ -954,23 +936,14 @@ extension StatusManager {
     enum State {
         case idle
         case isLoadingInitialData
-        case isSynchronizingData
         case error(String)
 
         var isLoading: Bool {
-            isLoadingInitialData || isSyncing
+            isLoadingInitialData
         }
 
         var isLoadingInitialData: Bool {
             if case .isLoadingInitialData = self {
-                true
-            } else {
-                false
-            }
-        }
-
-        var isSyncing: Bool {
-            if case .isSynchronizingData = self {
                 true
             } else {
                 false
@@ -1001,18 +974,7 @@ private extension StatusManager {
         let allRecords = (try? context.fetch(FetchDescriptor<CalendarExtensionRecord>())) ?? []
         return allRecords
             .filter { $0.user?.id == user.id }
-            .sorted { lhs, rhs in
-                if lhs.date != rhs.date {
-                    return lhs.date < rhs.date
-                }
-                if lhs.lastModified != rhs.lastModified {
-                    return lhs.lastModified < rhs.lastModified
-                }
-                if lhs.isSynced != rhs.isSynced {
-                    return lhs.isSynced && !rhs.isSynced
-                }
-                return false
-            }
+            .sorted { $0.date < $1.date }
     }
 
     func normalizedDateKey(_ date: Date) -> CalendarExtensionDateKey {
@@ -1057,9 +1019,7 @@ private extension StatusManager {
             let debugDate = dateFromKey(CalendarExtensionDateKey(index + 1))
             let record = CalendarExtensionRecord(
                 date: debugDate,
-                isSynced: true,
                 shouldDelete: false,
-                lastModified: .now,
                 user: user
             )
             context.insert(record)

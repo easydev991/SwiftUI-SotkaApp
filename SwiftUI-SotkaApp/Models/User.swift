@@ -1,7 +1,6 @@
 import Foundation
 import OSLog
 import SwiftData
-import SWUtils
 
 private let logger = Logger(subsystem: Bundle.sotkaAppBundleId, category: String(describing: User.self))
 
@@ -9,19 +8,7 @@ private let logger = Logger(subsystem: Bundle.sotkaAppBundleId, category: String
 final class User {
     @Attribute(.unique) var id: Int
     var userName: String?
-    @available(*, deprecated, message: "Поле профиля сервера, оставлено для стабильности схемы (сервер закрыт 2026-08-01).")
-    var fullName: String?
-    @available(*, deprecated, message: "Поле профиля сервера, оставлено для стабильности схемы (сервер закрыт 2026-08-01).")
-    var email: String?
-    @available(*, deprecated, message: "Поле профиля сервера, оставлено для стабильности схемы (сервер закрыт 2026-08-01).")
-    var imageStringURL: String?
-    @available(*, deprecated, message: "Поле профиля сервера, оставлено для стабильности схемы (сервер закрыт 2026-08-01).")
-    var cityId: Int?
-    @available(*, deprecated, message: "Поле профиля сервера, оставлено для стабильности схемы (сервер закрыт 2026-08-01).")
-    var countryId: Int?
     var genderCode: Int?
-    @available(*, deprecated, message: "Поле профиля сервера, оставлено для стабильности схемы (сервер закрыт 2026-08-01).")
-    var birthDateIsoString: String?
 
     /// Пользовательские упражнения
     @Relationship(deleteRule: .cascade) var customExercises: [CustomExercise] = []
@@ -35,33 +22,17 @@ final class User {
     /// ID избранных инфопостов (хранится как строка через запятую, например "id1,id2,id3")
     private var favoriteInfopostIdsString = ""
 
-    /// Синхронизированные прочитанные дни инфопостов (хранится как строка через запятую, например "1,2,15")
+    /// Прочитанные дни инфопостов (хранится как строка через запятую, например "1,2,15")
     private var readInfopostDaysString = ""
-
-    /// Несинхронизированные прочитанные дни инфопостов (хранится как строка через запятую, например "1,2,15")
-    @available(*, deprecated, message: "Sync-поле, оставлено для стабильности схемы (сервер закрыт 2026-08-01).")
-    private var unsyncedReadInfopostDaysString = ""
 
     init(
         id: Int,
         userName: String? = nil,
-        fullName: String? = nil,
-        email: String? = nil,
-        imageStringURL: String? = nil,
-        cityID: Int? = nil,
-        countryID: Int? = nil,
-        genderCode: Int? = nil,
-        birthDateIsoString: String? = nil
+        genderCode: Int? = nil
     ) {
         self.id = id
         self.userName = userName
-        self.fullName = fullName
-        self.email = email
-        self.imageStringURL = imageStringURL
-        self.cityId = cityID
-        self.countryId = countryID
         self.genderCode = genderCode
-        self.birthDateIsoString = birthDateIsoString
     }
 
     convenience init(offlineWithGenderCode genderCode: Int) {
@@ -74,10 +45,6 @@ final class User {
 }
 
 extension User {
-    var avatarUrl: URL? {
-        imageStringURL.queryAllowedURL
-    }
-
     var gender: Gender? {
         guard let genderCode else { return nil }
         return Gender(genderCode)
@@ -85,17 +52,6 @@ extension User {
 
     var isOfflineOnly: Bool {
         userName == "offline-user"
-    }
-
-    var genderWithAge: String {
-        let localizedAgeString = String(localized: .ageInYears(age))
-        return genderString.isEmpty
-            ? localizedAgeString
-            : genderString + ", " + localizedAgeString
-    }
-
-    var birthDate: Date {
-        DateFormatterService.dateFromString(birthDateIsoString, format: .isoShortDate)
     }
 
     var customExerciseCountText: String {
@@ -139,17 +95,6 @@ extension User {
     }
 }
 
-private extension User {
-    var genderString: String {
-        guard let gender else { return "" }
-        return gender.description
-    }
-
-    var age: Int {
-        Calendar.current.dateComponents([.year], from: birthDate, to: .now).year ?? 0
-    }
-}
-
 extension User {
     /// ID избранных инфопостов
     private(set) var favoriteInfopostIds: [String] {
@@ -170,17 +115,6 @@ extension User {
         }
         set {
             readInfopostDaysString = newValue.isEmpty ? "" : newValue.map(String.init).joined(separator: ",")
-        }
-    }
-
-    /// Несинхронизированные прочитанные дни инфопостов
-    private(set) var unsyncedReadInfopostDays: [Int] {
-        get {
-            guard !unsyncedReadInfopostDaysString.isEmpty else { return [] }
-            return unsyncedReadInfopostDaysString.split(separator: ",").compactMap { Int($0.trimmingCharacters(in: .whitespaces)) }
-        }
-        set {
-            unsyncedReadInfopostDaysString = newValue.isEmpty ? "" : newValue.map(String.init).joined(separator: ",")
         }
     }
 
@@ -219,10 +153,5 @@ extension User {
     /// Устанавливает весь список прочитанных дней
     func setReadInfopostDays(_ days: [Int]) {
         readInfopostDays = days
-    }
-
-    /// Устанавливает весь список несинхронизированных прочитанных дней
-    func setUnsyncedReadInfopostDays(_ days: [Int]) {
-        unsyncedReadInfopostDays = days
     }
 }

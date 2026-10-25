@@ -12,17 +12,21 @@ final class AudioPlayerManager {
 
     init(session: AVAudioSession = .sharedInstance()) {
         self.session = session
-        // Синхронные setCategory/setActive на main thread дают предупреждение AVAudioSession_iOS.mm
-        // («can lead to UI unresponsiveness») — используем async API.
+        // setCategory существует только в синхронных перегрузках (async-варианта нет),
+        // поэтому исполняем его вне main thread: nonisolated async-метод выполняется
+        // на global executor (SE-0338), а не на MainActor вызывающего Task.
+        // Активацию сессии (setActive) не делаем: Apple рекомендует откладывать её
+        // до начала воспроизведения — AVAudioPlayer.play() активирует сессию сам.
+        // При повышении deployment target до iOS 27 можно перейти на
+        // try await session.activate(options: []).
         Task {
-            await configureAudioSession()
+            await configureCategory()
         }
     }
 
-    private func configureAudioSession() async {
+    private nonisolated func configureCategory() async {
         do {
-            try await session.setCategory(.playback, mode: .default, options: [.mixWithOthers])
-            try await session.setActive(true)
+            try session.setCategory(.playback, mode: .default, options: [.mixWithOthers])
             logger.info("AudioSession успешно настроен")
         } catch {
             logger.error("Ошибка audioSession: \(error.localizedDescription, privacy: .public)")
@@ -56,6 +60,9 @@ final class AudioPlayerManager {
         // shortcut: первый вызов в те же мс после init может сыграть до async-конфигурации сессии
         // (категория .soloAmbient вместо .playback); реальный первый звук — спустя секунды, апгрейд
         // (await-конфигурация в play()) имеет смысл только при появлении реальных глитчей.
+        // AVAudioPlayer.play() активирует сессию на main изнутри AVFoundation — это даёт
+        // os_log «AVAudioSession_iOS.mm:978 Hang Risk» (1 на прогон тестов). Принято: предупреждение
+        // от недр AVFoundation при Apple-рекомендованной отложенной активации, на UX не влияет.
         let result = audioPlayer.play()
         if result {
             logger.info("Звук воспроизводится")

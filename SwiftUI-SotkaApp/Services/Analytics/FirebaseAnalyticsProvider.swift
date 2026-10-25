@@ -29,8 +29,6 @@ struct FirebaseAnalyticsProvider: AnalyticsProvider {
             case let .selectInfopostFontSize(size, id):
                 params["font_size"] = size
                 params["infopost_id"] = id
-            case let .selectSyncSource(source):
-                params["source"] = source
             case let .selectRestTime(seconds):
                 params["rest_time"] = seconds
             case let .selectProfilePhotoSource(source):

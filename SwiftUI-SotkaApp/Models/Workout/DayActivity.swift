@@ -26,9 +26,6 @@ final class DayActivity {
     /// Дата последнего изменения
     var modifyDate: Date
 
-    /// Флаг синхронизации с сервером
-    @available(*, deprecated, message: "Sync-флаг, оставлен для стабильности схемы (сервер закрыт 2026-08-01).")
-    var isSynced = false
     /// Флаг для удаления с сервера
     var shouldDelete = false
 
@@ -62,8 +59,7 @@ final class DayActivity {
         self.createDate = createDate
         self.modifyDate = modifyDate
         self.user = user
-        // Флаги синхронизации устанавливаются по умолчанию
-        self.isSynced = false
+        // Флаг мягкого удаления устанавливается по умолчанию
         self.shouldDelete = false
     }
 }
@@ -118,9 +114,8 @@ extension DayActivity {
         comment = nil
         duration = nil
 
-        // Обновляем флаги синхронизации и даты
+        // Обновляем флаги и даты
         modifyDate = .now
-        isSynced = false
         shouldDelete = false
 
         // Сохраняем оригинальный createDate
@@ -137,7 +132,7 @@ extension DayActivity {
     ///   - user: Пользователь, которому принадлежит активность
     /// - Returns: Новая активность дня
     static func createNonWorkoutActivity(day: Int, activityType: DayActivityType, user: User) -> DayActivity {
-        let activity = DayActivity(
+        DayActivity(
             day: day,
             activityTypeRaw: activityType.rawValue,
             count: nil,
@@ -150,12 +145,6 @@ extension DayActivity {
             modifyDate: .now,
             user: user
         )
-
-        // Установка флагов синхронизации
-        activity.isSynced = false
-        activity.shouldDelete = false
-
-        return activity
     }
 
     /// Преобразование в WorkoutData для передачи на Apple Watch

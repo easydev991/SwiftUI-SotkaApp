@@ -49,8 +49,7 @@ enum MockStatusManager {
             modelContainer: container,
             userDefaults: defaults,
             watchConnectivitySessionProtocol: watchConnectivitySessionProtocol,
-            reviewEventReporter: reviewEventReporter,
-            isReadOnlyMode: false
+            reviewEventReporter: reviewEventReporter
         )
     }
 }

@@ -19,7 +19,7 @@ extension AllWorkoutProgramCreatorTests {
         }
 
         private func createUser(id: Int, context: ModelContext) -> User {
-            let user = User(id: id, userName: "user\(id)", fullName: "User \(id)", email: "user\(id)@test.com")
+            let user = User(id: id, userName: "user\(id)")
             context.insert(user)
             return user
         }

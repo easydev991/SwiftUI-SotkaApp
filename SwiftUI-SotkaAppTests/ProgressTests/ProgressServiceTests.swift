@@ -19,7 +19,7 @@ extension AllProgressTests {
             self.modelContext = modelContainer.mainContext
 
             // Создаем тестового пользователя
-            let user = User(id: 1, userName: "test", email: "test@test.com", cityID: nil)
+            let user = User(id: 1, userName: "test")
             modelContext.insert(user)
             try modelContext.save()
         }
@@ -270,7 +270,6 @@ extension AllProgressTests {
             #expect(progress.pushUps == 25)
             #expect(progress.squats == 35)
             #expect(progress.weight == 75.5)
-            #expect(!progress.isSynced) // Должен быть помечен как несинхронизированный
         }
 
         @Test("saveProgress создает связь с пользователем")
@@ -305,7 +304,6 @@ extension AllProgressTests {
 
             // Проверяем, что прогресс помечен для удаления
             #expect(progress.shouldDelete)
-            #expect(!progress.isSynced)
         }
 
         private func makeService(progress: UserProgress) -> ProgressService {

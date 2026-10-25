@@ -26,7 +26,7 @@
 
 - Фреймворк — XCTest, `SwiftUI-SotkaAppUITests`.
 - Запуск приложения с launch-аргументом `UITest` — обязателен.
-- DEBUG-бутстрап в `SwiftUI_SotkaAppApp`: сид `ScreenshotDemoData` + офлайн-логин с `isReadOnlyMode: false` (имитация нормального режима). Не полагайся на этот флаг вне UI-тестов.
+- DEBUG-бутстрап в `SwiftUI_SotkaAppApp`: сид `ScreenshotDemoData` + офлайн-логин.
 - Unit-логику из UI-тестов не тестируем — она живёт в `SwiftUI-SotkaAppTests`.
 
 ## Структура и стиль

@@ -21,7 +21,6 @@ extension AllWorkoutProgramCreatorTests {
 
         #expect(dayActivity.day == 5)
         #expect(dayActivity.activityType == .workout)
-        #expect(!dayActivity.isSynced)
         #expect(!dayActivity.shouldDelete)
     }
 
@@ -114,7 +113,6 @@ extension AllWorkoutProgramCreatorTests {
         let creator = WorkoutProgramCreator(day: 1)
         let dayActivity = creator.dayActivity
 
-        #expect(!dayActivity.isSynced)
         #expect(!dayActivity.shouldDelete)
     }
 }

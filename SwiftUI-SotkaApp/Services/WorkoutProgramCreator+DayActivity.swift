@@ -22,7 +22,6 @@ extension WorkoutProgramCreator {
             createDate: Date.now,
             modifyDate: Date.now
         )
-        activity.isSynced = false
         activity.shouldDelete = false
         activity.comment = comment
 

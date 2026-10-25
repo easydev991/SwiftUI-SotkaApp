@@ -29,12 +29,7 @@ extension AnalyticsEvent {
         case more
         case workoutSettings = "workout_settings"
         case themeIcon = "theme_icon"
-        case syncJournal = "sync_journal"
-        case syncJournalEntry = "sync_journal_entry"
-        case syncStartDate = "sync_start_date"
-        case syncStartDateHelp = "sync_start_date_help"
         case offlineLogin = "offline_login"
-        case onlineLogin = "online_login"
     }
 
     enum UserAction {
@@ -73,9 +68,6 @@ extension AnalyticsEvent {
         case markInfopostRead
         case selectInfopostDisplayMode(newDisplayMode: String)
         case selectInfopostFontSize(size: String, infopostId: String)
-        case clearSyncJournal
-        case selectSyncSource(source: String)
-        case confirmSyncStartDate
         case createExercise
         case editExercise(exerciseId: String)
         case deleteExercise(exerciseId: String)
@@ -125,9 +117,6 @@ extension AnalyticsEvent {
             case .markInfopostRead: "mark_infopost_read"
             case .selectInfopostDisplayMode: "select_infopost_display_mode"
             case .selectInfopostFontSize: "select_infopost_font_size"
-            case .clearSyncJournal: "clear_sync_journal"
-            case .selectSyncSource: "select_sync_source"
-            case .confirmSyncStartDate: "confirm_sync_start_date"
             case .createExercise: "create_exercise"
             case .editExercise: "edit_exercise"
             case .deleteExercise: "delete_exercise"
@@ -150,11 +139,8 @@ extension AnalyticsEvent {
         case changePasswordFailed = "change_password_failed"
         case progressSaveFailed = "progress_save_failed"
         case progressDeleteFailed = "progress_delete_failed"
-        case customExerciseSyncFailed = "custom_exercise_sync_failed"
         case setIconFailed = "set_icon_failed"
         case infopostFavoriteFailed = "infopost_favorite_failed"
-        case syncStartDateFailed = "sync_start_date_failed"
-        case syncJournalDeleteFailed = "sync_journal_delete_failed"
         case workoutSaveFailed = "workout_save_failed"
         case workoutStartFailed = "workout_start_failed"
         case customExerciseSaveFailed = "custom_exercise_save_failed"
@@ -168,7 +154,6 @@ extension AnalyticsEvent {
         case infopostFavoriteCheckFailed = "infopost_favorite_check_failed"
         case infopostFavoriteListLoadFailed = "infopost_favorite_list_load_failed"
         case infopostParsingFailed = "infopost_parsing_failed"
-        case infopostDaySyncFailed = "infopost_day_sync_failed"
         case infopostSyncWithoutDayFailed = "infopost_sync_without_day_failed"
         case infopostReadStatusCheckFailed = "infopost_read_status_check_failed"
         case progressValidationFailed = "progress_validation_failed"

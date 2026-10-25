@@ -59,8 +59,8 @@ struct StatusManagerLogoutTests {
 
         let user = User(id: 1, userName: "testuser")
         context.insert(user)
-        statusManager.addExtensionDate(Date(timeIntervalSince1970: 1_700_030_001), isSynced: true)
-        statusManager.addExtensionDate(Date(timeIntervalSince1970: 1_700_030_101), isSynced: false)
+        statusManager.addExtensionDate(Date(timeIntervalSince1970: 1_700_030_001))
+        statusManager.addExtensionDate(Date(timeIntervalSince1970: 1_700_030_101))
         try context.save()
 
         let recordsBefore = try context.fetch(FetchDescriptor<CalendarExtensionRecord>())

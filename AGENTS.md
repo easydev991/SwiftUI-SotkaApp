@@ -19,7 +19,7 @@ Follow these repo-specific conventions and commands.
 - Read-only mode is permanent: `AppConfiguration.isReadOnlyMode = true` — never re-enable network or auth.
 - Offline-first is mandatory: all data is persisted locally in SwiftData (no network layer).
 - Single-user model: one active user at a time; logout clears all user data.
-- No new legacy sync flags: `isSynced`, `shouldDelete`, `lastModified` are deprecated.
+- No sync state in models: never add sync flags or server-sync semantics; `shouldDelete` stays a soft-delete flag only.
 
 ## Source of Truth for Rules
 
@@ -48,7 +48,7 @@ Follow these repo-specific conventions and commands.
 
 - The app is permanently in read-only mode: `AppConfiguration.isReadOnlyMode = true`.
 - The server (`100.workout.su`) closed all social APIs. Auth, sync, and network requests are unavailable.
-- All users behave as offline-only. UI tests and mock bootstrapping still pass `isReadOnlyMode: false` to simulate normal behavior.
+- All users behave as offline-only.
 - Do not re-enable network features or auth flows without explicit request.
 - Offline login (`AuthHelper`) is the single sanctioned exception and is NOT a precedent for new auth/network flows.
 
@@ -56,7 +56,7 @@ Follow these repo-specific conventions and commands.
 
 - Unit tests use Swift Testing (`import Testing`, `@Test`, `#expect`, `#require`).
 - UI tests use XCTest and launch app with argument `UITest`.
-- DEBUG-only UI-test bootstrapping in `SwiftUI_SotkaAppApp`: `ScreenshotDemoData` seed + offline login, with `isReadOnlyMode: false`.
+- DEBUG-only UI-test bootstrapping in `SwiftUI_SotkaAppApp`: `ScreenshotDemoData` seed + offline login.
 - Prefer deterministic tests with in-memory `ModelContainer` for SwiftData.
 - Use mocks from `SwiftUI-SotkaAppTests/Mocks/` for service isolation.
 - TDD: Red-Green-Refactor cycle. Write tests before implementation.
@@ -86,10 +86,10 @@ Key `.swiftformat` settings applied by `make format`:
 
 - ViewModels: `...ViewModel` with `@Observable`
 - Services: `...Service` or `...Manager`
-- Protocols: `...Protocol` or gerund (e.g., `WCSessionProtocol`, `ReviewEventReporting`) — no network `...Client` protocols remain
+- Protocols: `...Protocol` or gerund (e.g., `WCSessionProtocol`, `ReviewEventReporting`)
 - SwiftData models: PascalCase without suffix
 - Domain terms: `DayActivity`, `UserProgress`
-- Russian-localized strings: in `.strings`/`.stringsdict` files, NOT hardcoded
+- Russian-localized strings: in String Catalogs (`.xcstrings`), NOT hardcoded
 
 ## Architecture and Design
 

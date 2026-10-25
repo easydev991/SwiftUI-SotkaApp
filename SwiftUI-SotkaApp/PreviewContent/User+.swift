@@ -6,13 +6,7 @@ extension User {
         User(
             id: 280084,
             userName: "DemoUserName",
-            fullName: "DemoFullName",
-            email: "demo_mail@mail.ru",
-            imageStringURL: "https://workout.su/uploads/avatars/2019/10/2019-10-07-01-10-08-yow.jpg",
-            cityID: 1,
-            countryID: 17,
-            genderCode: 0,
-            birthDateIsoString: "1990-10-10"
+            genderCode: 0
         )
     }
 

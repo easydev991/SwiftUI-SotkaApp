@@ -352,18 +352,4 @@ private struct ProgressInputRow: View {
         )
     }
 }
-
-#Preview("Синхронизированный") {
-    NavigationStack {
-        EditProgressScreen(
-            progress: {
-                let progress = UserProgress(id: 1, pullUps: 10, pushUps: 20, squats: 30, weight: 70.5)
-                progress.isSynced = true
-                return progress
-            }(),
-            mode: .metrics,
-            analytics: AnalyticsService(providers: [NoopAnalyticsProvider()])
-        )
-    }
-}
 #endif

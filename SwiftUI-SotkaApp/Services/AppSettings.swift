@@ -193,7 +193,7 @@ final class AppSettings {
             if workoutNotificationsEnabled {
                 if !hasScheduledNotification {
                     scheduleDailyNotification()
-                    logger.info("Уведомления перепланированы после синхронизации")
+                    logger.info("Уведомления перепланированы после проверки запланированных")
                 }
             } else if hasScheduledNotification {
                 // Настройка выключена, но есть запланированные уведомления, значит

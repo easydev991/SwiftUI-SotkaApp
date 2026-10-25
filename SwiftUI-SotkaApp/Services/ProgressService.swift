@@ -77,7 +77,6 @@ final class ProgressService {
         } else {
             logger.info("Прогресс обновлен для дня \(logId)")
         }
-        logger.info("Синхронизация с сервером будет выполнена отдельно")
     }
 
     /// Удаляет прогресс (мягкое удаление)
@@ -87,8 +86,6 @@ final class ProgressService {
         let logShouldDelete = progressModel.shouldDelete
         logger.info("Удаляем прогресс для дня \(logId), текущий shouldDelete: \(logShouldDelete)")
         progressModel.shouldDelete = true
-        progressModel.isSynced = false
-        progressModel.lastModified = .now
         do {
             try context.save()
         } catch {
@@ -97,9 +94,7 @@ final class ProgressService {
         }
         let logNewShouldDelete = progressModel.shouldDelete
         logger
-            .info(
-                "Прогресс для дня \(logId) помечен для удаления, новый shouldDelete: \(logNewShouldDelete), синхронизация с сервером будет выполнена отдельно"
-            )
+            .info("Прогресс для дня \(logId) помечен для удаления, новый shouldDelete: \(logNewShouldDelete)")
     }
 }
 

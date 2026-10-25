@@ -217,7 +217,7 @@ extension WorkoutScreenViewModelTests {
             let expectedTitle3 = ExerciseType.pullups.localizedTitle
             #expect(title3 == expectedTitle3)
 
-            let user = User(id: 1, userName: "testuser", fullName: "Test User", email: "test@example.com")
+            let user = User(id: 1, userName: "testuser")
             context.insert(user)
 
             let customExercise = CustomExercise(
@@ -266,7 +266,7 @@ extension WorkoutScreenViewModelTests {
             let expectedTitle3 = ExerciseType.pushups.localizedTitle
             #expect(title3 == expectedTitle3)
 
-            let user = User(id: 1, userName: "testuser", fullName: "Test User", email: "test@example.com")
+            let user = User(id: 1, userName: "testuser")
             context.insert(user)
 
             let customExercise = CustomExercise(

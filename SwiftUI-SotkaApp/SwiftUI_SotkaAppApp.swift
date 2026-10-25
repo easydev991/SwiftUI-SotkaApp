@@ -38,7 +38,19 @@ struct SwiftUI_SotkaAppApp: App {
         do {
             modelContainer = try ModelContainer(for: schema, configurations: [modelConfiguration])
         } catch {
-            fatalError("Не смогли создать ModelContainer: \(error)")
+            // Миграция стора не удалась: без фолбэка приложение не запустится ни у кого
+            // со старым стором, а экспорта данных в приложении нет — данные всё равно недоступны.
+            // Пересоздаём стор с нуля, чтобы приложение осталось работоспособным.
+            logger
+                .fault(
+                    "Не удалось открыть хранилище (миграция не удалась), пересоздаю с нуля: \(error.localizedDescription)"
+                )
+            Self.deleteStoreFiles(at: modelConfiguration.url)
+            do {
+                modelContainer = try ModelContainer(for: schema, configurations: [modelConfiguration])
+            } catch {
+                fatalError("Не смогли создать ModelContainer после пересоздания хранилища: \(error)")
+            }
         }
         let reviewStorage = ReviewStorage()
         let completionsCounter = WorkoutCompletionsCounter(modelContainer: modelContainer)
@@ -172,10 +184,13 @@ struct SwiftUI_SotkaAppApp: App {
 }
 
 private extension SwiftUI_SotkaAppApp {
-    var isReadOnlyMode: Bool {
-        ProcessInfo.processInfo.arguments.contains("UITest")
-            ? false
-            : AppConfiguration.isReadOnlyMode
+    /// Удаляет файлы хранилища SwiftData (sqlite + wal/shm журналы) перед пересозданием.
+    static func deleteStoreFiles(at storeURL: URL) {
+        let fileManager = FileManager.default
+        for suffix in ["", "-wal", "-shm"] {
+            let fileURL = URL(fileURLWithPath: storeURL.path + suffix)
+            try? fileManager.removeItem(at: fileURL)
+        }
     }
 
     var showLoadingOverlay: Bool {
@@ -205,8 +220,7 @@ private extension SwiftUI_SotkaAppApp {
                 analytics: AnalyticsService(providers: [NoopAnalyticsProvider()])
             ),
             dailyActivitiesService: .init(),
-            modelContainer: modelContainer,
-            isReadOnlyMode: false
+            modelContainer: modelContainer
         )
 
         statusManager.setCurrentDayForDebug(12)

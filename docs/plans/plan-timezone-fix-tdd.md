@@ -66,7 +66,7 @@ Sync-слой удалён, сервер `100.workout.su` закрыт, прил
 ### Подэтап 2.1. Нормализация отправки дат на сервер ⛔ УДАЛЁН
 
 - [x] `DateFormatterService.stringFromFullDate(..., iso: true)` был переведён на UTC перед суффиксом `Z`.
-- [x] Метод и тесты (`DateFormatterServiceTests`, `DayRequestTests`, `ExerciseSnapshotTests`,
+- [x] Метод и тесты (`DateFormatterServiceTests`, `DayRequestTests`,
   `ProgressSyncServiceTests`, `StatusManagerStartNewRunTests`) удалены.
 
 ### Подэтап 2.2. Нормализация чтения дат с сервера ⛔ УДАЛЁН
@@ -102,7 +102,7 @@ Sync-слой удалён, сервер `100.workout.su` закрыт, прил
 
 - [x] `DailyActivitiesGetLastPassedWorkoutTests`, `StatusManagerWorkoutDataPreviousWorkoutTests`
   (покрытие hotfix 1.0).
-- [x] `DateFormatterServiceTests` (UTC serialization), `DayRequestTests`, `ExerciseSnapshotTests`,
+- [x] `DateFormatterServiceTests` (UTC serialization), `DayRequestTests`,
   `StatusManagerStartNewRunTests` (wire-format исходящих дат).
 - [x] `JSONDecoderExtensionTests`, `DateDecodingRoundTripTests` (входящий парсинг).
 - [x] `ProgressSyncServiceTests`, `StatusManagerSyncDateTests` и прочие sync/LWW-тесты.

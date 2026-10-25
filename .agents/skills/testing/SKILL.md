@@ -26,7 +26,7 @@ description: Экспертные правила тестирования iOS/wa
 8. **TDD: тест раньше реализации** — красный → зелёный → рефакторинг (`.agents/rules/test-driven-development.mdc`).
 9. **Запуск — xcode MCP первым**: `GetTestList` → `RunSomeTests` по 1–2 идентификаторам. Полный прогон (`RunAllTests` / `make test`) — один раз в конце. Правило «один прогон → один отчёт»: `.agents/rules/test-execution.mdc`. Фоллбек при недоступном MCP — `make test`.
 10. **Watch-тесты** (`make test_watch`, таргет `SotkaWatch Watch AppTests`) — только при изменениях watch-таргета.
-11. **UI-тесты — отдельная тема**: XCTest + launch-аргумент `UITest`; DEBUG-бутстрап сидит демо-данными с `isReadOnlyMode: false`. Сюда не смешивать.
+11. **UI-тесты — отдельная тема**: XCTest + launch-аргумент `UITest`; DEBUG-бутстрап сидит демо-данными (`ScreenshotDemoData`). Сюда не смешивать.
 12. **Без сети в тестах**: проект офлайн-first, сервер закрыт — только моки и локальные сторы.
 
 ## First 60 seconds (triage)

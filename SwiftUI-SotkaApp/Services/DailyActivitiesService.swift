@@ -55,8 +55,7 @@ final class DailyActivitiesService {
         } else {
             logger.info("[createDailyActivity] Существующая активность не найдена, создаем новую")
             // Создаем новую активность
-            // Установка флагов синхронизации
-            activity.isSynced = false
+            // Сброс флага мягкого удаления
             activity.shouldDelete = false
 
             // Установка текущих дат для новой активности
@@ -80,7 +79,7 @@ final class DailyActivitiesService {
 
         do {
             try context.save()
-            logger.info("[createDailyActivity] ✓ Context сохранен, синхронизация будет выполнена отдельно")
+            logger.info("[createDailyActivity] ✓ Context сохранен")
         } catch {
             logger.error("[createDailyActivity] ✗ Ошибка сохранения: \(error.localizedDescription)")
         }
@@ -91,9 +90,8 @@ final class DailyActivitiesService {
     ///   - activity: Активность для удаления
     ///   - context: Контекст SwiftData
     func deleteDailyActivity(_ activity: DayActivity, context: ModelContext) {
-        // Мягкое удаление: скрываем в UI и синхронизируем удаление с сервером
+        // Мягкое удаление: скрываем запись в UI
         activity.shouldDelete = true
-        activity.isSynced = false
         activity.modifyDate = .now
         do {
             try context.save()
@@ -278,7 +276,6 @@ final class DailyActivitiesService {
             // Обновляем комментарий
             existingActivity.comment = comment
             existingActivity.modifyDate = .now
-            existingActivity.isSynced = false
 
             logger.info("[updateComment] Обновлен комментарий для дня \(day), modifyDate=\(existingActivity.modifyDate)")
         } else {
@@ -297,8 +294,7 @@ final class DailyActivitiesService {
                 user: user
             )
 
-            // Установка флагов синхронизации
-            newActivity.isSynced = false
+            // Сброс флага мягкого удаления
             newActivity.shouldDelete = false
 
             // Вставка активности в контекст
@@ -343,8 +339,7 @@ private extension DailyActivitiesService {
         existing.comment = new.comment
         existing.modifyDate = .now
 
-        // Установка флагов синхронизации
-        existing.isSynced = false
+        // Сброс флага мягкого удаления
         existing.shouldDelete = false
 
         // Убеждаемся, что активность привязана к пользователю

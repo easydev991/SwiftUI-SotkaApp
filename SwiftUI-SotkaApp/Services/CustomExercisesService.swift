@@ -67,7 +67,6 @@ final class CustomExercisesService {
         context: ModelContext
     ) throws {
         exercise.modifyDate = .now
-        exercise.isSynced = false
         try context.save()
         logger.info("Упражнение '\(exercise.name)' отмечено как измененное")
     }
@@ -79,7 +78,6 @@ final class CustomExercisesService {
     func deleteCustomExercise(_ exercise: CustomExercise, context: ModelContext) {
         // Мягкое удаление: скрываем в UI и синхронизируем удаление с сервером
         exercise.shouldDelete = true
-        exercise.isSynced = false
         exercise.modifyDate = .now
         do {
             try context.save()

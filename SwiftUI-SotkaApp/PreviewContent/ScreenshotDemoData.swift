@@ -16,13 +16,7 @@ enum ScreenshotDemoData {
         let user = User(
             id: 280_084,
             userName: "DemoUserName",
-            fullName: "DemoFullName",
-            email: "demo_mail@mail.ru",
-            imageStringURL: nil,
-            cityID: 1,
-            countryID: 17,
-            genderCode: 0,
-            birthDateIsoString: "1990-10-10"
+            genderCode: 0
         )
         context.insert(user)
         try? context.save()

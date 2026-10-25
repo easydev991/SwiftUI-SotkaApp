@@ -49,9 +49,8 @@ let shouldShowInfopost = currentDay <= 100
 
 Используется SwiftData-сущность `CalendarExtensionRecord`:
 
-- `isSynced` — `@available(*, deprecated, message: "Sync-флаг, оставлен для стабильности схемы (сервер закрыт 2026-08-01).")`;
-- `shouldDelete` — резервный флаг (серверного удаления нет);
-- `lastModified` — живое поле, используется как sort comparator;
+- `date` — дата продления (нормализуется до секунды);
+- `shouldDelete` — резервный флаг (всегда `false`: записи удаляются физически через `clearExtensionDates()`/`removeLastExtensionDate()`, фильтрации по флагу нет; при повторном добавлении той же даты выполняется сброс флага);
 - связь с `User` — plain optional без `@Relationship`/`deleteRule`.
 
 ### Очистка данных
@@ -72,7 +71,7 @@ let shouldShowInfopost = currentDay <= 100
 - `GET /100/purchases`
 - `POST /100/purchases/calendars`
 
-Поле `calendars` содержало массив ISO-дат, и применялась merge-логика (union `serverDates`/`localDates`, дедуп по нормализованной UTC-дате, перевод unsynced-записи в `isSynced=true`). Контракт утратил актуальность.
+Поле `calendars` содержало массив ISO-дат; при merge применялись union `serverDates`/`localDates`, дедуп по нормализованной UTC-дате и пометка локальных записей синхронизированными. Контракт утратил актуальность.
 
 > **Историческая справка (sync-слой удалён в `ed82f6e9`):** ранее здесь также была секция «Retry» — `getStatus()` детерминированно вызывал `syncJournalAndProgress()`, что инициировало retry unsynced. Раздел утратил актуальность и удалён.
 
@@ -128,17 +127,7 @@ let shouldShowInfopost = currentDay <= 100
 
 ## Стабилизация UI-тестов и скриншотов
 
-Для `make test_ui` и `make screenshots` внедрён единый preflight симулятора:
-
-- boot/check симулятора;
-- `xcrun simctl privacy grant ...` для обязательных permissions;
-- понятные ошибки при невозможности настройки.
-
-Документация по запуску и troubleshooting:
-
-- `docs/ui-tests-and-screenshots.md`
-
-В `Makefile` добавлены команды preflight и отдельный target `test_ui_preflight_script` для unit-тестов preflight-скрипта.
+Для `make test_ui` и `make screenshots` внедрён единый preflight симулятора (boot/check, grant permissions, понятные ошибки). Запуск и troubleshooting — `docs/ui-tests-and-screenshots.md`. В `Makefile` добавлены команды preflight и отдельный target `test_ui_preflight_script` для unit-тестов preflight-скрипта.
 
 ---
 
@@ -154,37 +143,6 @@ let shouldShowInfopost = currentDay <= 100
 
 ---
 
-## Миграция SwiftData: текущее решение и отложенный шаг
+## Миграция SwiftData
 
-### Что сделано сейчас
-
-- Используется явная текущая `Schema([...])`.
-- Подтверждён safe-open legacy-store тестами, включая апгрейд с релизных схем `4.0/4.1`.
-- Для текущего изменения (`CalendarExtensionRecord`) применяется lightweight-подход.
-
-### Анализ референса `SwiftUI-Days`
-
-В проекте `SwiftUI-Days` после изменения схемы (`colorTag`) наблюдались проблемы, и затем был внедрён явный migration-подход:
-
-- `VersionedSchema` (`ItemSchemaV1/V2/V3`)
-- `SchemaMigrationPlan` (`ItemMigrationPlan`)
-- `ModelContainer(..., migrationPlan: ItemMigrationPlan.self, ...)`
-
-Это подтверждает практическую пользу явной версионированной миграции для долгоживущих схем.
-
-### Текущее продуктовое решение
-
-На этот релиз:
-
-- не внедряем `VersionedSchema/SchemaMigrationPlan` в `SwiftUI-SotkaApp`;
-- делаем реальную проверку upgrade-path на устройстве: App Store build -> TestFlight build из ветки;
-- при отсутствии крэшей/потери данных идём в релиз.
-
-### Отложенная задача (техдолг)
-
-Перед следующим non-lightweight изменением модели данных вернуть отдельную задачу и внедрить:
-
-- `VersionedSchema`
-- `SchemaMigrationPlan`
-
-с отдельным набором миграционных тестов.
+Для `CalendarExtensionRecord` применяется lightweight-подход: явная текущая `Schema([...])`, safe-open legacy-store подтверждён миграционными тестами (включая апгрейд с релизных схем 4.0/4.1). Политика миграций, правила добавления моделей/полей и отложенный переход на `VersionedSchema`/`SchemaMigrationPlan` описаны в `docs/data-migration.md` (единый владелец темы миграций).

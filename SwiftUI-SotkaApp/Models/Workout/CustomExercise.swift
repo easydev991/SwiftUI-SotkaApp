@@ -17,9 +17,6 @@ final class CustomExercise {
     /// Дата последнего изменения упражнения
     var modifyDate: Date
 
-    /// Флаг синхронизации с сервером
-    @available(*, deprecated, message: "Sync-флаг, оставлен для стабильности схемы (сервер закрыт 2026-08-01).")
-    var isSynced = false
     /// Флаг для удаления с сервера
     var shouldDelete = false
 
@@ -40,8 +37,6 @@ final class CustomExercise {
         self.createDate = createDate
         self.modifyDate = modifyDate
         self.user = user
-        // Флаги синхронизации устанавливаются по умолчанию
-        self.isSynced = false
         self.shouldDelete = false
     }
 
@@ -66,19 +61,5 @@ extension CustomExercise {
             return Image(systemName: "questionmark.square")
         }
         return customType.image
-    }
-
-    /// Преобразование в ExerciseSnapshot для конкурентной синхронизации
-    var exerciseSnapshot: ExerciseSnapshot {
-        ExerciseSnapshot(
-            id: id,
-            name: name,
-            imageId: imageId,
-            createDate: createDate,
-            modifyDate: modifyDate,
-            isSynced: isSynced,
-            shouldDelete: shouldDelete,
-            userId: user?.id
-        )
     }
 }

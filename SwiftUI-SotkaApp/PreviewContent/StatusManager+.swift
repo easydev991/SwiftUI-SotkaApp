@@ -14,8 +14,7 @@ extension StatusManager {
                 analytics: AnalyticsService(providers: [NoopAnalyticsProvider()])
             ),
             dailyActivitiesService: DailyActivitiesService(),
-            modelContainer: container,
-            isReadOnlyMode: false
+            modelContainer: container
         )
     }
 
