@@ -31,6 +31,42 @@
         }
       },
       "shouldTranslate" : false
+    },
+    "NSHealthShareUsageDescription" : {
+      "comment" : "Privacy - Health Share Usage Description",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Workout data is used to track your 100-day program progress in the Health app."
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Данные о тренировках используются для отслеживания прогресса 100-дневной программы в приложении «Здоровье»"
+          }
+        }
+      }
+    },
+    "NSHealthUpdateUsageDescription" : {
+      "comment" : "Privacy - Health Update Usage Description",
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "The app saves completed workouts to the Health app."
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Приложение сохраняет выполненные тренировки в приложение «Здоровье»"
+          }
+        }
+      }
     }
   },
   "version" : "1.1"

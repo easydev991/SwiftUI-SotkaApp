@@ -7,6 +7,11 @@ extension WorkoutScreenViewModelTests {
     @Suite("Тесты для getWorkoutResult")
     @MainActor
     struct GetWorkoutResultTests {
+        /// На свежем симуляторе статус notDetermined — add() бросает UNError; provisional выдаётся тихо, без алерта.
+        init() async throws {
+            _ = try? await UNUserNotificationCenter.current().requestAuthorization(options: [.provisional])
+        }
+
         @Test("Должен возвращать результат для полной тренировки типа 'круги'")
         func getWorkoutResultForCompleteCyclesWorkout() async throws {
             let viewModel = WorkoutScreenViewModel()

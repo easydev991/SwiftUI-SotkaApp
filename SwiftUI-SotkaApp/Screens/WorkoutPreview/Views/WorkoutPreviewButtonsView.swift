@@ -7,6 +7,8 @@ struct WorkoutPreviewButtonsView: View {
     let isWorkoutCompleted: Bool
     let onSave: () -> Void
     let onStartTraining: () -> Void
+    /// Watch передаёт canStartTraining; iOS использует дефолт true (memberwise init).
+    var canStartTraining = true
 
     var body: some View {
         if isWorkoutCompleted {
@@ -21,11 +23,12 @@ struct WorkoutPreviewButtonsView: View {
     private var notPassedDayButtons: some View {
         VStack(spacing: 12) {
             Button(.workoutPreviewStartTraining, action: onStartTraining)
+                .disabled(!canStartTraining)
                 #if os(watchOS)
-                    .tint(Color.swAccent)
-                    .buttonStyle(.borderedProminent)
+                .tint(Color.swAccent)
+                .buttonStyle(.borderedProminent)
                 #else
-                    .buttonStyle(SWButtonStyle(mode: .filled, size: .large))
+                .buttonStyle(SWButtonStyle(mode: .filled, size: .large))
                 #endif
                 .accessibilityIdentifier("WorkoutPreview.startTrainingButton")
             Button(.workoutPreviewSaveAsPassed, action: onSave)

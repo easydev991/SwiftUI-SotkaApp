@@ -32,10 +32,17 @@ Follow these repo-specific conventions and commands.
 - Fallback path: use Makefile commands only when MCP/plugin tools are unavailable.
 - `make setup` - Install all tools (Homebrew, rbenv, Ruby, bundler, fastlane, swiftformat).
 - `make format` - Format Swift code with swiftformat + markdown files with markdownlint.
-- `make build` - Build iOS project for simulator from `IOS_SIM_DEST` (default: iPhone 18 Pro, latest installed iOS runtime) (fallback).
+- `make build` - Build iOS project for simulator from `IOS_SIM_DEST` (default: iPhone 17, latest installed iOS runtime) (fallback).
 - `make test` - Run all iOS unit tests (fallback).
-- `make test_watch` - Run all watchOS unit tests on simulator from `WATCH_SIM_DEST` (default: Apple Watch Ultra 3 (49mm), latest installed watchOS runtime) (fallback).
+- `make test_watch` - Run all watchOS unit tests on simulator from `WATCH_SIM_DEST` (default: Apple Watch Ultra 4 (49mm), latest installed watchOS runtime) (fallback).
+- `make testflight` - Build, sign and upload the current build to TestFlight via fastlane.
 - `make` output is condensed by rtk — use `rtk proxy <cmd>` to see full output instead of rerunning.
+
+## Release to TestFlight
+
+- Release pipeline: `fastlane/Fastfile` + shared module `fastlane_common.rb` (repo `ios-fastlane-secrets`); details in `docs/deployment.md`.
+- After adding a capability (HealthKit, push, app groups, watch) to any target, re-run `match --force` for that bundle ID — profiles in the match repo are generated from the entitlements at match time and stay stale otherwise. Symptom: `Provisioning profile "match AppStore …" doesn't include the <capability> capability`.
+- App Store validation requires BOTH `NSHealthUpdateUsageDescription` and `NSHealthShareUsageDescription` in the watch app's Info.plist (even when the app only writes workouts). Set them via `INFOPLIST_KEY_*` build settings and localize in `InfoPlist.xcstrings`.
 
 ## Read-Only Mode
 

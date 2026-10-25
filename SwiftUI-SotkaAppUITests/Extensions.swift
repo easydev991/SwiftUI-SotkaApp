@@ -10,8 +10,8 @@ extension XCUIElement {
     }
 }
 
+@MainActor
 extension XCTestCase {
-    @MainActor
     @discardableResult
     func waitAndTap(timeout: TimeInterval, element: XCUIElement) -> Bool {
         let isElementFound = element.waitForExistence(timeout: timeout)
@@ -21,7 +21,6 @@ extension XCTestCase {
         return isElementFound
     }
 
-    @MainActor
     func waitAndTapOrFail(timeout: TimeInterval = 5, element: XCUIElement) {
         if !waitAndTap(timeout: timeout, element: element) {
             XCTFail("Не нашли элемент \(element)")

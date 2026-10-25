@@ -220,8 +220,7 @@ final class WorkoutViewModel {
 
     /// Проверка и обработка истекшего таймера отдыха при активации приложения
     func checkAndHandleExpiredRestTimer() {
-        guard showTimer else { return }
-        guard let restStartTime = currentRestStartTime else { return }
+        guard showTimer, let restStartTime = currentRestStartTime else { return }
 
         let elapsedTime = Date().timeIntervalSince(restStartTime)
         guard elapsedTime >= TimeInterval(restTime) else { return }
@@ -287,9 +286,10 @@ final class WorkoutViewModel {
             exerciseSteps.count
         }
 
+        let endDate = Date()
         let duration: Int?
         if let startTime = workoutStartTime {
-            let workoutTime = Int(Date().timeIntervalSince(startTime))
+            let workoutTime = Int(endDate.timeIntervalSince(startTime))
             duration = workoutTime + totalRestTime
         } else {
             duration = nil
@@ -303,7 +303,13 @@ final class WorkoutViewModel {
             logger.info("Получение результата тренировки: количество \(countValue), длительность \(durationValue) секунд")
         }
 
-        return WorkoutResult(count: count, duration: duration)
+        return WorkoutResult(
+            count: count,
+            duration: duration,
+            startDate: workoutStartTime,
+            endDate: endDate,
+            isInterrupted: interrupt
+        )
     }
 
     /// Определяет индекс текущего упражнения на основе глобального номера подхода

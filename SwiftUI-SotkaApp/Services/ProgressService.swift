@@ -206,10 +206,8 @@ extension ProgressService {
             guard let index = photoModels.firstIndex(where: { $0.type == type }) else {
                 throw ServiceError.invalidPhotoType
             }
-            guard let data else {
-                throw ServiceError.invalidImageData
-            }
-            guard ImageProcessor.validateImageSize(data),
+            guard let data,
+                  ImageProcessor.validateImageSize(data),
                   ImageProcessor.validateImageFormat(data),
                   let image = UIImage(data: data)
             else {

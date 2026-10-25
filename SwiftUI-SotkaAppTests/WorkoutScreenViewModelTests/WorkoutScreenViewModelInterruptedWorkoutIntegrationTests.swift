@@ -7,6 +7,11 @@ import UserNotifications
 extension WorkoutScreenViewModelTests {
     @Suite("Интеграционные тесты для прерванных тренировок")
     struct InterruptedWorkoutIntegrationTests {
+        /// На свежем симуляторе статус notDetermined — add() бросает UNError; provisional выдаётся тихо, без алерта.
+        init() async throws {
+            _ = try? await UNUserNotificationCenter.current().requestAuthorization(options: [.provisional])
+        }
+
         @Test(
             "Прерывание тренировки с подходами → getWorkoutResult возвращает plannedCount → handleWorkoutResult устанавливает count = plannedCount → displayedCount возвращает plannedCount"
         )

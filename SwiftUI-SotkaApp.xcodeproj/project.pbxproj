@@ -653,6 +653,8 @@
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_KEY_CFBundleDisplayName = "SW Program";
+				INFOPLIST_KEY_NSHealthShareUsageDescription = "Workout data is used to track your 100-day program progress in the Health app.";
+				INFOPLIST_KEY_NSHealthUpdateUsageDescription = "The app saves completed workouts to the Health app.";
 				INFOPLIST_KEY_UISupportedInterfaceOrientations = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown";
 				INFOPLIST_KEY_WKCompanionAppBundleIdentifier = "com.oleg991.SwiftUI-SotkaApp";
 				LD_RUNPATH_SEARCH_PATHS = (
@@ -688,6 +690,8 @@
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_KEY_CFBundleDisplayName = "SW Program";
+				INFOPLIST_KEY_NSHealthShareUsageDescription = "Workout data is used to track your 100-day program progress in the Health app.";
+				INFOPLIST_KEY_NSHealthUpdateUsageDescription = "The app saves completed workouts to the Health app.";
 				INFOPLIST_KEY_UISupportedInterfaceOrientations = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown";
 				INFOPLIST_KEY_WKCompanionAppBundleIdentifier = "com.oleg991.SwiftUI-SotkaApp";
 				LD_RUNPATH_SEARCH_PATHS = (

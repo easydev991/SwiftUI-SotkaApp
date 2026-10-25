@@ -41,7 +41,8 @@ struct HomeView: View {
         .animation(.default, value: viewModel.isAuthorized)
         .fullScreenCover(isPresented: $showEditWorkout) {
             WorkoutPreviewView(
-                connectivityService: viewModel.connectivityService
+                connectivityService: viewModel.connectivityService,
+                healthKitWriting: HealthKitWorkoutWriter()
             )
         }
     }

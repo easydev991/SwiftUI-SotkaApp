@@ -59,8 +59,7 @@ extension WorkoutPreviewTraining {
     /// Турбо-упражнения определяются по typeId >= 93
     /// Пользовательские упражнения (customTypeId != nil) не являются турбо-упражнениями
     var isTurboExercise: Bool {
-        guard customTypeId == nil else { return false }
-        guard let typeId else { return false }
+        guard customTypeId == nil, let typeId else { return false }
         return typeId >= 93
     }
 }

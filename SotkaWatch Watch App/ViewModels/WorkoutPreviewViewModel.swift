@@ -13,12 +13,18 @@ final class WorkoutPreviewViewModel {
 
     @ObservationIgnored let connectivityService: any WatchConnectivityServiceProtocol
 
+    /// Сервис записи в HealthKit.
+    /// В проде инжектируется `HealthKitWorkoutWriter` (в `HomeView`), в тестах — мок.
+    @ObservationIgnored let healthKitWriting: (any HealthKitWorkoutWriting)?
+
     /// Callback, вызываемый после успешного сохранения тренировки
     var onSaveCompleted: (() -> Void)?
 
     // MARK: - State
 
     @ObservationIgnored private var originalSnapshot: DataSnapshot?
+    /// Результат последней завершённой тренировки — источник дат для записи в HealthKit
+    @ObservationIgnored private var lastWorkoutResult: WorkoutResult?
     private(set) var isLoading = false
     var error: TrainingError?
     private(set) var wasOriginallyPassed = false
@@ -80,6 +86,14 @@ final class WorkoutPreviewViewModel {
         return currentSnapshot != originalSnapshot
     }
 
+    /// Определяет, доступна ли кнопка «Начать тренировку» (выбран тип выполнения и есть упражнения)
+    ///
+    /// Используется для блокировки кнопки при `sessionUnavailable` или пустых данных после `loadData`,
+    /// чтобы пользователь не оказался в пустом `fullScreenCover` (Этап 8)
+    var canStartTraining: Bool {
+        selectedExecutionType != nil && !trainings.isEmpty
+    }
+
     /// Отфильтрованные упражнения с count > 0
     ///
     /// Возвращает только те упражнения, у которых count больше 0 (исключает упражнения с count == 0 или count == nil)
@@ -97,11 +111,15 @@ final class WorkoutPreviewViewModel {
     // MARK: - Initialization
 
     /// Инициализатор
-    /// - Parameter connectivityService: Сервис связи с iPhone для получения данных тренировки
+    /// - Parameters:
+    ///   - connectivityService: Сервис связи с iPhone для получения данных тренировки
+    ///   - healthKitWriting: Сервис записи в HealthKit (в проде — `HealthKitWorkoutWriter`, в тестах — мок)
     init(
-        connectivityService: any WatchConnectivityServiceProtocol
+        connectivityService: any WatchConnectivityServiceProtocol,
+        healthKitWriting: (any HealthKitWorkoutWriting)? = nil
     ) {
         self.connectivityService = connectivityService
+        self.healthKitWriting = healthKitWriting
     }
 
     // MARK: - Methods
@@ -109,12 +127,17 @@ final class WorkoutPreviewViewModel {
     /// Загрузка данных тренировки и инициализация ViewModel
     /// - Parameter day: Номер дня программы
     func loadData(day: Int) async {
+        logger.info("start loadData day=\(day)")
         isLoading = true
         error = nil
 
         defer {
             isLoading = false
+            logger.info("loadData completed")
         }
+
+        // Запрос разрешения HealthKit вынесен в отдельный fire-and-forget `requestHealthKitAuthorizationIfNeeded()`
+        // — не блокирует загрузку данных, идемпотентен на уровне системного вызова (см. Этап 8)
 
         do {
             let response = try await connectivityService.requestWorkoutData(day: day)
@@ -127,6 +150,19 @@ final class WorkoutPreviewViewModel {
             // Можно добавить отдельный тип ошибки для сетевых ошибок если нужно
             self.error = nil
         }
+    }
+
+    /// Запрос разрешения на запись в HealthKit (fire-and-forget, отдельно от `loadData`)
+    ///
+    /// Вызывается из `.task` в `WorkoutPreviewView` параллельно с `loadData` —
+    /// вынесение из основного потока `loadData` снимает блокировку UI-воркфлоу
+    /// при показе системного диалога HealthKit (Этап 8). Идемпотентен на уровне
+    /// системного вызова: повторные запросы после первого одобрения/отказа
+    /// возвращаются мгновенно.
+    func requestHealthKitAuthorizationIfNeeded() async {
+        let dayNumberForLogger = dayNumber
+        logger.info("HK authorization requested, day=\(dayNumberForLogger)")
+        await healthKitWriting?.requestWriteAuthorization()
     }
 
     /// Внутренний метод инициализации/обновления данных ViewModel
@@ -270,6 +306,7 @@ final class WorkoutPreviewViewModel {
         count = result.count
         workoutDuration = result.duration
         isWorkoutCompleted = true
+        lastWorkoutResult = result
         let countValue = result.count
         let durationValue = result.duration ?? 0
         logger.info("Обработка результата тренировки: количество \(countValue), длительность \(durationValue) секунд")
@@ -331,7 +368,7 @@ final class WorkoutPreviewViewModel {
         }
 
         // Проверить валидность данных
-        guard selectedExecutionType != nil else {
+        guard let executionType = selectedExecutionType else {
             error = TrainingError.executionTypeNotSelected
             logger.error("Ошибка сохранения: тип выполнения не выбран")
             return
@@ -352,12 +389,6 @@ final class WorkoutPreviewViewModel {
         let result = buildWorkoutResult()
 
         // Отправить через connectivityService
-        guard let executionType = selectedExecutionType else {
-            error = TrainingError.executionTypeNotSelected
-            logger.error("Ошибка сохранения: тип выполнения не выбран")
-            return
-        }
-
         do {
             try await connectivityService.sendWorkoutResult(
                 day: dayNumber,
@@ -376,6 +407,17 @@ final class WorkoutPreviewViewModel {
             let dayNumber = dayNumber
             let commentInfo = comment != nil ? ", комментарий: \(comment!)" : ""
             logger.info("Тренировка для дня \(dayNumber) сохранена\(commentInfo)")
+
+            // Запись в HealthKit — best-effort после успешной отправки на iPhone:
+            // только реально завершённые тренировки с известными датами, прерванные — только в дневник
+            if let healthKitWriting, let lastResult = lastWorkoutResult, !lastResult.isInterrupted,
+               let startDate = lastResult.startDate, let endDate = lastResult.endDate {
+                await healthKitWriting.saveWorkout(startDate: startDate, endDate: endDate)
+            }
+            // Сброс после попытки записи: повторное сохранение (например, правка комментария)
+            // не должно дублировать тренировку в «Здоровье»
+            lastWorkoutResult = nil
+
             onSaveCompleted?()
         } catch {
             logger.error("Ошибка отправки результата тренировки на iPhone: \(error.localizedDescription)")

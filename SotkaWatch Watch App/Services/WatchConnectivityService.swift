@@ -378,6 +378,12 @@ private extension WatchConnectivityService {
                 if let currentActivity {
                     logger.info("Обновление currentActivity из PHONE_COMMAND_AUTH_STATUS: \(currentActivity.rawValue)")
                     self.currentActivity = currentActivity
+                } else if message["currentActivity"] == nil, currentDay != nil {
+                    // Если currentActivity отсутствует в сообщении, но есть currentDay,
+                    // значит активность была удалена (nil опускается при кодировании).
+                    // Без сброса протухшее значение блокирует didSet-уведомление при следующем push.
+                    logger.info("Удаление currentActivity из PHONE_COMMAND_AUTH_STATUS (активность удалена)")
+                    self.currentActivity = nil
                 }
 
                 // Обновляем restTime, если он присутствует в сообщении
@@ -440,7 +446,8 @@ private extension WatchConnectivityService {
 
         // Обработка currentActivity
         if let currentActivity {
-            logger.info("Обновление currentActivity из Application Context: \(currentActivity.rawValue)")
+            let previousActivity = self.currentActivity.map { String($0.rawValue) } ?? "nil"
+            logger.info("Обновление currentActivity из Application Context: \(previousActivity) → \(currentActivity.rawValue)")
             self.currentActivity = currentActivity
         } else if context["currentActivity"] == nil, context["currentDay"] != nil {
             // Если currentActivity отсутствует в контексте, но есть currentDay, значит активность была удалена

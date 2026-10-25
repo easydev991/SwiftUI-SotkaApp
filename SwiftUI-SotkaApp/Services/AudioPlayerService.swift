@@ -1,6 +1,7 @@
 import AVFoundation
 import OSLog
 
+@MainActor
 final class AudioPlayerManager {
     private let logger = Logger(
         subsystem: Bundle.main.bundleIdentifier!,
@@ -11,20 +12,23 @@ final class AudioPlayerManager {
 
     init(session: AVAudioSession = .sharedInstance()) {
         self.session = session
-        configureAudioSession()
+        // Синхронные setCategory/setActive на main thread дают предупреждение AVAudioSession_iOS.mm
+        // («can lead to UI unresponsiveness») — используем async API.
+        Task {
+            await configureAudioSession()
+        }
     }
 
-    private func configureAudioSession() {
+    private func configureAudioSession() async {
         do {
-            try session.setCategory(.playback, mode: .default, options: [.mixWithOthers])
-            try session.setActive(true)
+            try await session.setCategory(.playback, mode: .default, options: [.mixWithOthers])
+            try await session.setActive(true)
             logger.info("AudioSession успешно настроен")
         } catch {
             logger.error("Ошибка audioSession: \(error.localizedDescription, privacy: .public)")
         }
     }
 
-    @MainActor
     @discardableResult
     func setupSound(_ timerSound: TimerSound) -> Bool {
         guard let url = timerSound.bundleURL else {
@@ -43,13 +47,15 @@ final class AudioPlayerManager {
         }
     }
 
-    @MainActor
     @discardableResult
     func play() -> Bool {
         guard let audioPlayer else {
             logger.error("Попытка воспроизвести звук до настройки")
             return false
         }
+        // shortcut: первый вызов в те же мс после init может сыграть до async-конфигурации сессии
+        // (категория .soloAmbient вместо .playback); реальный первый звук — спустя секунды, апгрейд
+        // (await-конфигурация в play()) имеет смысл только при появлении реальных глитчей.
         let result = audioPlayer.play()
         if result {
             logger.info("Звук воспроизводится")
@@ -60,7 +66,6 @@ final class AudioPlayerManager {
     }
 
     /// Останавливаем предыдущий звук, если он играет
-    @MainActor
     func stop() {
         guard let audioPlayer, audioPlayer.isPlaying else {
             return

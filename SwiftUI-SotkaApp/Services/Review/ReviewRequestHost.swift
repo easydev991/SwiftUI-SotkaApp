@@ -40,8 +40,7 @@ private struct ReviewRequestModifier: ViewModifier {
             return
         }
 
-        guard reviewManager.pendingRequest != nil else { return }
-        guard scenePhase == .active else { return }
+        guard reviewManager.pendingRequest != nil, scenePhase == .active else { return }
 
         requestReview()
         reviewManager.markConsumed()

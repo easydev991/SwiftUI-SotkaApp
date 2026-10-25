@@ -279,5 +279,18 @@ extension WorkoutPreviewViewModelTests {
 
             #expect(viewModel.restTime == 120)
         }
+
+        @Test("Должен устанавливать canStartTraining в false при ошибке загрузки данных")
+        func setsCanStartTrainingToFalseWhenLoadFails() async {
+            let connectivityService = MockWatchConnectivityService()
+            connectivityService.mockWorkoutData = nil
+            let viewModel = WorkoutPreviewViewModel(
+                connectivityService: connectivityService
+            )
+
+            await viewModel.loadData(day: 50)
+
+            #expect(!viewModel.canStartTraining)
+        }
     }
 }

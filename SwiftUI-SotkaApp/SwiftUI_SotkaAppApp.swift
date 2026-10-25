@@ -116,8 +116,7 @@ struct SwiftUI_SotkaAppApp: App {
                 if authHelper.isAuthorized {
                     RootScreen()
                         .task(id: scenePhase) {
-                            guard scenePhase == .active else { return }
-                            guard authHelper.isAuthorized else { return }
+                            guard scenePhase == .active, authHelper.isAuthorized else { return }
                             await statusManager.getStatus()
                             await appSettings.syncNotificationSettings()
                         }

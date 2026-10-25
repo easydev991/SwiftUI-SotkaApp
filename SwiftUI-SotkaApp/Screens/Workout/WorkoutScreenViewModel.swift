@@ -228,8 +228,7 @@ final class WorkoutScreenViewModel {
     }
 
     func checkAndHandleExpiredRestTimer(appSettings: AppSettings) {
-        guard showTimer else { return }
-        guard let restStartTime = currentRestStartTime else { return }
+        guard showTimer, let restStartTime = currentRestStartTime else { return }
 
         let elapsedTime = Date().timeIntervalSince(restStartTime)
         guard elapsedTime >= TimeInterval(restTime) else { return }
@@ -308,11 +307,7 @@ final class WorkoutScreenViewModel {
 
     func getExerciseSteps(for trainingId: String) -> [WorkoutStepState] {
         let effectiveType = getEffectiveExecutionType()
-        guard effectiveType == .sets else {
-            return []
-        }
-
-        guard let exerciseIndex = trainings.firstIndex(where: { $0.id == trainingId }) else {
+        guard effectiveType == .sets, let exerciseIndex = trainings.firstIndex(where: { $0.id == trainingId }) else {
             return []
         }
 

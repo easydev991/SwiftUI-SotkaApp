@@ -31,7 +31,7 @@
 
 Когда xcode MCP недоступен или упал:
 
-- `make test` — все iOS unit-тесты, назначение из `IOS_SIM_DEST` (по умолчанию iPhone 18 Pro).
+- `make test` — все iOS unit-тесты, назначение из `IOS_SIM_DEST` (по умолчанию iPhone 17).
 - `make test_watch` — watchOS unit-тесты на симуляторе из `WATCH_SIM_DEST`; нужен свой тест-план `SotkaWatch-UnitTests`. Запускать только при изменениях watch-таргета.
 
 Не хардкодь имена симуляторов в командах — используй переменные Makefile или дай xcode MCP выбрать назначение самому. Полный вывод, если make-вывод обрезан rtk: `rtk proxy <cmd>`.

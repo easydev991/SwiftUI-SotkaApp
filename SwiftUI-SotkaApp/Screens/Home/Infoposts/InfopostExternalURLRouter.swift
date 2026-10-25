@@ -8,11 +8,8 @@ enum InfopostExternalRouteDecision: Equatable {
 
 struct InfopostExternalURLRouter {
     func decision(for requestURL: URL?) -> InfopostExternalRouteDecision {
-        guard let requestURL else {
-            return .allow
-        }
-
-        guard requestURL.scheme?.lowercased() == "sotka",
+        guard let requestURL,
+              requestURL.scheme?.lowercased() == "sotka",
               requestURL.host?.lowercased() == "youtube" else {
             return .allow
         }

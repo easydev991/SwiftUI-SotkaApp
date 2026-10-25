@@ -3,11 +3,11 @@ import SwiftData
 @testable import SwiftUI_SotkaApp
 import Testing
 
+@MainActor
 extension AllWorkoutProgramCreatorTests {
     // MARK: - init(from: DayActivity) Tests
 
     @Test("Должен создавать WorkoutProgramCreator из DayActivity с правильными данными")
-    @MainActor
     func createsFromDayActivityWithCorrectData() throws {
         let container = try ModelContainer(
             for: DayActivity.self,
@@ -64,7 +64,6 @@ extension AllWorkoutProgramCreatorTests {
     }
 
     @Test("Должен преобразовывать DayActivityTraining в WorkoutPreviewTraining")
-    @MainActor
     func convertsDayActivityTrainingToWorkoutPreviewTraining() throws {
         let container = try ModelContainer(
             for: DayActivity.self,
@@ -105,7 +104,6 @@ extension AllWorkoutProgramCreatorTests {
     }
 
     @Test("Должен правильно маппить все поля из DayActivity")
-    @MainActor
     func mapsAllFieldsFromDayActivity() throws {
         let container = try ModelContainer(
             for: DayActivity.self,
@@ -138,7 +136,6 @@ extension AllWorkoutProgramCreatorTests {
     }
 
     @Test("Должен использовать defaultExecutionType когда executeType равен nil")
-    @MainActor
     func usesDefaultExecutionTypeWhenExecuteTypeIsNil() throws {
         let container = try ModelContainer(
             for: DayActivity.self,
@@ -160,7 +157,6 @@ extension AllWorkoutProgramCreatorTests {
     }
 
     @Test("Должен использовать defaultExecutionType для дня 50 когда executeType равен nil")
-    @MainActor
     func usesDefaultExecutionTypeForDay50WhenExecuteTypeIsNil() throws {
         let container = try ModelContainer(
             for: DayActivity.self,
@@ -182,7 +178,6 @@ extension AllWorkoutProgramCreatorTests {
     }
 
     @Test("Должен вычислять plannedCount на основе day и executionType когда plannedCount равен nil")
-    @MainActor
     func calculatesPlannedCountBasedOnDayAndExecutionTypeWhenPlannedCountIsNil() throws {
         let container = try ModelContainer(
             for: DayActivity.self,
@@ -208,7 +203,6 @@ extension AllWorkoutProgramCreatorTests {
     }
 
     @Test("Должен использовать сохраненный plannedCount когда он не равен nil")
-    @MainActor
     func usesSavedPlannedCountWhenItIsNotNil() throws {
         let container = try ModelContainer(
             for: DayActivity.self,
@@ -234,7 +228,6 @@ extension AllWorkoutProgramCreatorTests {
     }
 
     @Test("Должен вычислять plannedCount для дня 50 с типом sets когда plannedCount равен nil")
-    @MainActor
     func calculatesPlannedCountForDay50WithSetsTypeWhenPlannedCountIsNil() throws {
         let container = try ModelContainer(
             for: DayActivity.self,

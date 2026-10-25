@@ -124,7 +124,8 @@ final class HomeViewModel {
     func updateCurrentActivityFromConnectivity(_ activity: DayActivityType?) {
         if activity != currentActivity {
             let activityString = activity.map { String($0.rawValue) } ?? "nil"
-            logger.info("Обновление currentActivity из WatchConnectivityService: \(activityString)")
+            let previousActivity = currentActivity.map { String($0.rawValue) } ?? "nil"
+            logger.info("Обновление currentActivity из WatchConnectivityService: \(previousActivity) → \(activityString)")
             currentActivity = activity
 
             // Если активность изменилась на .workout, загружаем данные тренировки
@@ -170,6 +171,9 @@ final class HomeViewModel {
             error = WatchConnectivityError.sessionUnavailable
             return
         }
+
+        let previousActivity = currentActivity.map { String($0.rawValue) } ?? "nil"
+        logger.info("Выбор активности: день \(day), было \(previousActivity), выбрано \(activityType.rawValue), отправка на iPhone")
 
         isLoading = true
         error = nil

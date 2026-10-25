@@ -2,11 +2,11 @@ import Foundation
 @testable import SwiftUI_SotkaApp
 import Testing
 
+@MainActor
 extension AllWorkoutProgramCreatorTests {
     // MARK: - dayActivity Tests
 
     @Test("Должен создавать DayActivity с правильными базовыми параметрами")
-    @MainActor
     func createsDayActivityWithCorrectBasicParameters() {
         let creator = WorkoutProgramCreator(
             day: 5,
@@ -26,7 +26,6 @@ extension AllWorkoutProgramCreatorTests {
     }
 
     @Test("Должен устанавливать правильные параметры тренировки")
-    @MainActor
     func setsCorrectTrainingParameters() throws {
         let creator = WorkoutProgramCreator(
             day: 5,
@@ -50,7 +49,6 @@ extension AllWorkoutProgramCreatorTests {
     }
 
     @Test("Должен преобразовывать WorkoutPreviewTraining в DayActivityTraining")
-    @MainActor
     func convertsWorkoutPreviewTrainingToDayActivityTraining() throws {
         let trainings = [
             WorkoutPreviewTraining(count: 5, typeId: ExerciseType.pullups.rawValue, sortOrder: 0),
@@ -77,7 +75,6 @@ extension AllWorkoutProgramCreatorTests {
     }
 
     @Test("Должен устанавливать правильные связи между DayActivity и DayActivityTraining")
-    @MainActor
     func setsCorrectRelationshipsBetweenDayActivityAndDayActivityTraining() throws {
         let trainings = [
             WorkoutPreviewTraining(count: 5, typeId: ExerciseType.pullups.rawValue, sortOrder: 0)
@@ -100,7 +97,6 @@ extension AllWorkoutProgramCreatorTests {
     }
 
     @Test("Должен устанавливать правильные даты создания и изменения")
-    @MainActor
     func setsCorrectCreationAndModificationDates() {
         let beforeCreation = Date()
         let creator = WorkoutProgramCreator(day: 1)
@@ -114,7 +110,6 @@ extension AllWorkoutProgramCreatorTests {
     }
 
     @Test("Должен устанавливать правильные флаги синхронизации")
-    @MainActor
     func setsCorrectSyncFlags() {
         let creator = WorkoutProgramCreator(day: 1)
         let dayActivity = creator.dayActivity

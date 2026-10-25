@@ -18,8 +18,8 @@ SHELL := /bin/bash
 .ONESHELL:
 BUNDLE_EXEC := RBENV_VERSION=$(RUBY_VERSION) bundle exec
 UI_PREFLIGHT_SCRIPT := ./scripts/simulator_ui_preflight.sh
-IOS_SIM_DEST ?= platform=iOS Simulator,name=iPhone 18 Pro
-WATCH_SIM_DEST ?= platform=watchOS Simulator,name=Apple Watch Ultra 3 (49mm)
+IOS_SIM_DEST ?= platform=iOS Simulator,name=iPhone 17
+WATCH_SIM_DEST ?= platform=watchOS Simulator,name=Apple Watch Ultra 4 (49mm)
 TEST_DERIVED_DATA_PATH ?= /tmp/SwiftUI-SotkaApp-test-derived-data
 APP_BUNDLE_ID ?= com.oleg991.SwiftUI-SotkaApp
 UI_PREFLIGHT_PERMISSIONS ?= photos,microphone,media-library,motion

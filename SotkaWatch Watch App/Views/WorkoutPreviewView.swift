@@ -1,3 +1,4 @@
+import OSLog
 import SWDesignSystem
 import SwiftUI
 
@@ -10,14 +11,23 @@ struct WorkoutPreviewView: View {
     @State private var viewModel: WorkoutPreviewViewModel
     @State private var showWorkoutView = false
 
+    @ObservationIgnored private let logger = Logger(
+        subsystem: Bundle.main.bundleIdentifier ?? "SotkaWatch",
+        category: String(describing: WorkoutPreviewView.self)
+    )
+
     /// Инициализатор
-    /// - Parameter connectivityService: Сервис связи с iPhone
+    /// - Parameters:
+    ///   - connectivityService: Сервис связи с iPhone
+    ///   - healthKitWriting: Сервис записи в HealthKit (в проде — `HealthKitWorkoutWriter`)
     init(
-        connectivityService: any WatchConnectivityServiceProtocol
+        connectivityService: any WatchConnectivityServiceProtocol,
+        healthKitWriting: (any HealthKitWorkoutWriting)? = nil
     ) {
         _viewModel = State(
             initialValue: .init(
-                connectivityService: connectivityService
+                connectivityService: connectivityService,
+                healthKitWriting: healthKitWriting
             )
         )
     }
@@ -73,6 +83,9 @@ struct WorkoutPreviewView: View {
         .loadingOverlay(if: viewModel.isLoading)
         .task {
             await viewModel.loadData(day: currentDay)
+            // Запрос разрешения HealthKit — идемпотентный, best-effort после загрузки данных.
+            // Отменяется автоматически при уходе вью (SwiftUI .task cancellation).
+            await viewModel.requestHealthKitAuthorizationIfNeeded()
         }
         .onAppear {
             viewModel.onSaveCompleted = {
@@ -217,8 +230,13 @@ private extension WorkoutPreviewView {
                 }
             },
             onStartTraining: {
+                logger
+                    .info(
+                        "Нажата кнопка «Начать тренировку»: day=\(currentDay), canStartTraining=\(viewModel.canStartTraining), trainings.count=\(viewModel.trainings.count)"
+                    )
                 showWorkoutView = true
-            }
+            },
+            canStartTraining: viewModel.canStartTraining
         )
         .accessibilityElement(children: .contain)
         .accessibilityIdentifier("WorkoutPreview.bottomButtonsView")

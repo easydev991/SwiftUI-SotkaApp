@@ -3,11 +3,7 @@ import Foundation
 struct YouTubeLinkNormalizer {
     func normalizedWatchURL(from rawURL: String) -> URL? {
         let sourceURL = normalizeSourceURL(rawURL)
-        guard let url = URL(string: sourceURL) else {
-            return nil
-        }
-
-        guard let videoID = extractVideoID(from: url) else {
+        guard let url = URL(string: sourceURL), let videoID = extractVideoID(from: url) else {
             return nil
         }
 

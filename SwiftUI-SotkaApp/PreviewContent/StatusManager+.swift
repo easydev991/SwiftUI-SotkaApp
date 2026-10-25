@@ -2,9 +2,9 @@
 import Foundation
 import SwiftData
 
+@MainActor
 extension StatusManager {
     /// Превью StatusManager для простых экранов (без продлений календаря)
-    @MainActor
     static var preview: StatusManager {
         let container = PreviewModelContainer.make(with: .preview)
         return StatusManager(
@@ -20,7 +20,6 @@ extension StatusManager {
     }
 
     /// Превью StatusManager с продлением календаря
-    @MainActor
     static var previewWithCalendarExtension: StatusManager {
         let manager = preview
         manager.setCurrentDayForDebug(150)
@@ -28,7 +27,6 @@ extension StatusManager {
     }
 
     /// Превью StatusManager с продлением календаря до 130-го дня
-    @MainActor
     static var previewWithCalendarExtensionDay130: StatusManager {
         let manager = preview
         manager.setCurrentDayForDebug(130)
