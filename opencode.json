@@ -3,10 +3,19 @@
   "instructions": [".agents/rules/*.mdc"],
   "mcp": {
     "xcode": {
+      "type": "local",
+      "command": ["xcrun", "mcpbridge"],
       "enabled": true
     },
     "mobile-mcp": {
-      "enabled": true
+      "type": "local",
+      "command": ["npx", "-y", "@mobilenext/mobile-mcp@latest"],
+      "environment": {
+        "MOBILEMCP_DISABLE_TELEMETRY": "1",
+        "MOBILEMCP_ALLOW_UNSAFE_URLS": "1"
+      },
+      "enabled": true,
+      "timeout": 120000
     }
   }
 }
